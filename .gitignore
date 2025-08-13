@@ -1,0 +1,38 @@
+# Hardhat
+cache
+artifacts
+ignition/deployments/chain-31337
+coverage
+coverage.json
+
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Node
+node_modules/
+
+# TypeScript
+*.tsbuildinfo
+
+# Eslint
+.eslintcache
+
+# Env
+.env*
+!.env*example*
+
+# Log
+logs
+*.log
+
+# VSCode
+.vscode*
+
+# MacOS
+.DS_Store
