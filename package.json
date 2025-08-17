@@ -61,7 +61,7 @@
   },
   "packageManager": "yarn@4.5.1",
   "dependencies": {
-    "@chainlink/contracts": "^0.8.0",
+    "@chainlink/contracts": "^1.4.0",
     "@types/chai": "4.3.7",
     "chai": "4.3.7"
   }
