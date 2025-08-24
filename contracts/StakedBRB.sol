@@ -7,7 +7,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { RouletteClean as Roulette } from "./RouletteClean.sol";
+import { RouletteClean } from "./RouletteClean.sol";
 import { IRoulette } from "./interfaces/IRoulette.sol";
 
 /**
@@ -85,13 +85,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     function initialize(
         address admin,
-        string memory name,
-        string memory symbol,
         uint256 protocolFeeBasisPoints,
         address feeRecipient
     ) external initializer {
         __ERC4626_init(IERC20(BRB_TOKEN));
-        __ERC20_init(name, symbol);
+        __ERC20_init('Staked BRB', 'sBRB');
         __AccessControl_init();
         __UUPSUpgradeable_init();
         
@@ -167,25 +165,28 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.pendingBets += amount;
         
         // Forward the bet to the roulette contract (no longer needs our address as parameter)
-        Roulette(ROULETTE_CONTRACT).bet(from, amount, data);
+        RouletteClean(ROULETTE_CONTRACT).bet(from, amount, data);
         
         emit BetPlaced(from, amount, data);
     }
     
     /**
      * @dev Process roulette results - called by Roulette contract (BATCH PROCESSING)
+     * @dev Implements final-batch profit recognition to prevent double reduction and timing attacks
      * @param payouts Array of payout info for multiple winners/losers
+     * @param isLastBatch Whether this is the final batch for the current round
      */
-    function processRouletteResult(IRoulette.PayoutInfo[] memory payouts) external onlyRole(ROULETTE_ROLE) {
+    function processRouletteResult(IRoulette.PayoutInfo[] memory payouts, bool isLastBatch) external onlyRole(ROULETTE_ROLE) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 payoutsLength = payouts.length;
         uint256 totalBetAmount;
         uint256 totalProtocolFees;
         uint256 totalStakerProfits;
         
+        IRoulette.PayoutInfo memory payoutInfo;
         // Process all payouts in a single transaction
         for (uint256 i; i < payoutsLength;) {
-            IRoulette.PayoutInfo memory payoutInfo = payouts[i];
+            payoutInfo = payouts[i];
             totalBetAmount += payoutInfo.betAmount;
             
             if (payoutInfo.payout > 0) {
@@ -194,16 +195,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                     revert TransferFailed();
                 }
                 emit BetResult(payoutInfo.player, payoutInfo.betAmount, 0, 0, true);
-            } else {
-                // Player loses - split loss between protocol fee and stakers
-                uint256 protocolFee = _calculateProtocolFee(payoutInfo.betAmount);
-                uint256 stakerProfit = payoutInfo.betAmount - protocolFee;
-                
-                totalProtocolFees += protocolFee;
-                totalStakerProfits += stakerProfit;
-                
-                emit BetResult(payoutInfo.player, payoutInfo.betAmount, protocolFee, stakerProfit, false);
             }
+            // Note: We don't process losers' bets here - they remain in the vault
+            // Losers' losses are automatically added to staker profits when we reset pendingBets
             
             unchecked { ++i; }
         }
@@ -211,9 +205,28 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         // Update tracking variables once (batch optimization)
         $.totalBetsProcessed += payoutsLength;
         
-        // Remove all processed bets from pending
-        if ($.pendingBets >= totalBetAmount) {
-            $.pendingBets -= totalBetAmount;
+        // If this is the last batch, reset pendingBets to zero and recognize all profits
+        // This prevents timing attacks by only recognizing profits at the very end
+        if (isLastBatch) {
+            // Calculate total protocol fees from all remaining pending bets
+            uint256 totalPendingBets = $.pendingBets;
+            if (totalPendingBets > 0) {
+                uint256 protocolFee = _calculateProtocolFee(totalPendingBets);
+                uint256 stakerProfit = totalPendingBets - protocolFee;
+                
+                totalProtocolFees += protocolFee;
+                totalStakerProfits += stakerProfit;
+                
+                // Reset pending bets to zero - all profits now recognized
+                $.pendingBets = 0;
+            }
+        } else {
+            // For non-final batches: DON'T decrease pendingBets yet
+            // Winners get paid from vault balance (which includes pending bets)
+            // pendingBets remains unchanged until final batch to prevent double reduction
+            
+            // No change to pendingBets - prevents artificial share price inflation
+            // totalAssets() calculation remains accurate throughout the round
         }
         
         // Update fee tracking

@@ -8,6 +8,7 @@ const RouletteTestSetupModule = buildModule("RouletteTestSetup", (m) => {
   const vrfCoordinatorMock = m.contract("VRFCoordinatorV2_5Mock", [
     100000000000000000n, // 0.1 LINK base fee
     1000000000n, // 0.000001 LINK per gas
+    4_000_000_000_000_000n, // 0.004 ETH per LINK (4000000000000000 wei)
   ]);
 
   // Deploy Mock Automation contracts
@@ -15,11 +16,6 @@ const RouletteTestSetupModule = buildModule("RouletteTestSetup", (m) => {
 
   // Deploy BRB Token
   const brbToken = m.contract("BRB");
-
-  // Get test addresses
-  const admin = m.getAccount(0);
-  const player1 = m.getAccount(1);
-  const player2 = m.getAccount(2);
 
   // VRF settings for testing
   const gamePeriod = 60; // 60 seconds
@@ -31,40 +27,37 @@ const RouletteTestSetupModule = buildModule("RouletteTestSetup", (m) => {
   const numWords = 1;
   const safeBlockConfirmation = 3;
 
-  // Deploy StakedBRB implementation
-  const stakedBRBImpl = m.contract("StakedBRB", [brbToken, "TEMP_ADDRESS"]);
-
-  // Deploy StakedBRB proxy
-  const stakedBRBProxy = m.contract("ERC1967Proxy", [
-    stakedBRBImpl,
-    "0x", // Empty initialization data
-  ]);
-
-  // Cast proxy to StakedBRB interface
-  const stakedBRB = m.contractAt("StakedBRB", stakedBRBProxy);
-
-  // Deploy RouletteClean implementation  
+  // Deploy StakedBRB implementation first
+  const stakedBRBImpl = m.contract("StakedBRB", [brbToken, "0x0000000000000000000000000000000000000000"]);
+  
+  // Deploy RouletteClean implementation with placeholder StakedBRB address
   const rouletteImpl = m.contract("RouletteClean", [
     gamePeriod,
     vrfCoordinatorMock,
     keyHash2Gwei,
-    keyHash30Gwei, 
+    keyHash30Gwei,
     keyHash150Gwei,
     subscriptionId,
     callbackGasLimit,
     numWords,
     safeBlockConfirmation,
-    stakedBRB, // Use proxy address
+    "0x0000000000000000000000000000000000000000", // Will be updated after deployment
   ]);
 
-  // Deploy RouletteClean proxy
+  // Deploy proxies with deterministic addresses
+  const stakedBRBProxy = m.contract("ERC1967Proxy", [
+    stakedBRBImpl,
+    "0x", // Empty initialization data
+  ], { id: "StakedBRBERC1967Proxy" });
+
   const rouletteProxy = m.contract("ERC1967Proxy", [
     rouletteImpl,
     "0x", // Empty initialization data
-  ]);
+  ], { id: "RouletteCleanERC1967Proxy" });
 
-  // Cast proxy to RouletteClean interface
-  const roulette = m.contractAt("RouletteClean", rouletteProxy);
+  // Cast proxies to interfaces
+  const stakedBRB = m.contractAt("StakedBRB", stakedBRBProxy, { id: "StakedBRBProxy" });
+  const roulette = m.contractAt("RouletteClean", rouletteProxy, { id: "RouletteCleanProxy" });
 
   return {
     mockLinkToken,
@@ -73,9 +66,6 @@ const RouletteTestSetupModule = buildModule("RouletteTestSetup", (m) => {
     brbToken,
     stakedBRB,
     roulette,
-    admin,
-    player1,
-    player2,
   };
 });
 

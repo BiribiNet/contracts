@@ -38,7 +38,7 @@ interface IAutomationRegistry2_1 {
  * @title RouletteClean
  * @dev SIMPLE roulette contract - easy to understand
  */
-contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface {
+contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface {
     
     // ========== SIMPLE CONSTANTS ==========
     uint256 private constant TIME_MARGIN = 10; // 10 seconds
@@ -58,7 +58,7 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
     bytes32 private constant MAIN_STORAGE_LOCATION = 0xd1b0e7e1fbb7c3a5f2d4c6e8b9a1c3e5f7b9d1e3f5a7c9e1f3b5d7e9f1a3c500;
     
     // VRF settings
-    uint64 private immutable SUBSCRIPTION_ID;
+    uint256 private immutable SUBSCRIPTION_ID;
     bytes32 private immutable KEY_HASH_2GWEI;
     bytes32 private immutable KEY_HASH_30GWEI;
     bytes32 private immutable KEY_HASH_150GWEI;
@@ -130,6 +130,12 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
     struct TriggerVRF {
         uint256 newLastRoundStartTimestamp;
         uint256 newRoundId;
+    }
+    
+    struct PayoutInfo {
+        address player;
+        uint256 betAmount;
+        uint256 payout;
     }
     
     struct PayoutBatch {
@@ -236,7 +242,7 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
         bytes32 keyHash2Gwei,
         bytes32 keyHash30Gwei,
         bytes32 keyHash150Gwei,
-        uint64 subscriptionId,
+        uint256 subscriptionId,
         uint32 callbackGasLimit,
         uint32 numWords,
         uint16 safeBlockConfirmation,
@@ -272,10 +278,6 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
         $.currentRound = 1;
         $.lastRoundStartTime = block.timestamp;
         
-        // Create VRF subscription and setup Chainlink integration
-        uint256 subId = vrfCoordinator().createSubscription();
-        vrfCoordinator().addConsumer(subId, address(this));
-        
         // Store Keeper addresses
         $.keeperRegistrar = keeperRegistrar;
         $.keeperRegistry = keeperRegistry;
@@ -284,7 +286,7 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
         // Approve LINK for upkeep registration
         IERC20(linkToken).approve(keeperRegistrar, type(uint256).max);
         
-        emit ChainlinkSetupCompleted(subId, keeperRegistrar, keeperRegistry);
+        emit ChainlinkSetupCompleted(SUBSCRIPTION_ID, keeperRegistrar, keeperRegistry);
     }
     
     // ========== MODIFIERS ==========
@@ -507,7 +509,7 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
         if (betType == 0 || betType > BET_ORPHELINS) revert InvalidBetType();
         
         // Validate number parameter based on bet type
-        if (betType == BET_STRAIGHT) { 
+        if (betType == BET_STRAIGHT) {
             // Straight bet: number must be 0-36
             if (number > 36) revert InvalidNumber();
         } else if (betType == BET_SPLIT) {
@@ -718,11 +720,23 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
     function _processBatch(PayoutBatch memory batchData) private {
         RouletteStorage storage $ = _getRouletteStorage();
         
+        // WRITE: Update batch tracking using pre-computed values
+        $.roundBatchesProcessed[batchData.roundId] = batchData.batchIndex + 1;
+        
+        emit BatchProcessed(batchData.roundId, batchData.batchIndex + 1, batchData.payouts.length);
+        
+        if (batchData.isLastBatch) {
+            $.lastRoundPaid = batchData.roundId;
+            emit RoundResolved(batchData.roundId, batchData.winningNumber);
+            
+        }
+
         // Single call to StakedBRB with entire batch
         (bool success, bytes memory returnData) = STAKED_BRB_CONTRACT.call(
             abi.encodeWithSelector(
                 IStakedBRB.processRouletteResult.selector,
-                batchData.payouts
+                batchData.payouts,
+                batchData.isLastBatch
             )
         );
         
@@ -736,19 +750,7 @@ contract RouletteClean is IRoulette, AccessControlUpgradeable, VRFConsumerBaseV2
             }
         }
         
-        // WRITE: Update batch tracking using pre-computed values
-        $.roundBatchesProcessed[batchData.roundId] = batchData.batchIndex + 1;
-        
-        // No need to store totalWinningBets - computed in checkUpkeep when needed
-        
-        // EMIT: Batch processed event
-        emit BatchProcessed(batchData.roundId, batchData.batchIndex + 1, batchData.payouts.length);
-        
-        // WRITE: Mark round complete if this is the last batch
-        if (batchData.isLastBatch) {
-            $.lastRoundPaid = batchData.roundId;
-            emit RoundResolved(batchData.roundId, batchData.winningNumber);
-        }
+ 
     }
     
     /**
