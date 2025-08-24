@@ -88,6 +88,24 @@ async function deployWithCreate() {
   const getUpkeepConfig = await rouletteProxy.read.getUpkeepConfig()
   console.log('getUpkeepConfig', getUpkeepConfig)
 
+  if (rouletteProxy.address.toLowerCase() !== rouletteProxyAddress.toLowerCase()) {
+    throw new Error('Roulette proxy address mismatch')
+  }
+  if (stakedBrbProxy.address.toLowerCase() !== stakedBrbProxyAddress.toLowerCase()) {
+    throw new Error('Staked BRB proxy address mismatch')
+  }
+
+  if (roulette.address.toLowerCase() !== rouletteImpl.toLowerCase()) {
+    throw new Error('Roulette address mismatch')
+  }
+  if (stakedBrb.address.toLowerCase() !== stakedBrbImpl.toLowerCase()) {
+    throw new Error('Staked BRB address mismatch')
+  }
+
+  if (brb.address.toLowerCase() !== brbAddress.toLowerCase()) {
+    throw new Error('BRB address mismatch')
+  }
+
   await brb.write.transfer([player1.account.address, parseEther('1000')], { account: deployer.account })
   return {
     rouletteProxy,

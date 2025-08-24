@@ -1,16 +1,14 @@
 import { viem } from "hardhat";
 import { expect } from "chai";
-import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { parseEther, formatEther, encodePacked, keccak256, toHex, encodeAbiParameters, decodeAbiParameters } from "viem";
+import { parseEther, formatEther, encodeAbiParameters } from "viem";
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
 describe("RouletteClean", function () {
   // Use the shared fixture from deployWithCreate script
-  const deployRouletteFixture = useDeployWithCreateFixture();
 
   describe("Deployment", function () {
     it("Should deploy with correct initial values", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb } = await deployRouletteFixture;
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
 
       const [currentRound, lastRoundPaid, lastRoundStartTime] = await rouletteProxy.read.getCurrentRoundInfo();
       expect(currentRound).to.be.greaterThan(0n); // Should be greater than 0 after initialization
@@ -24,7 +22,7 @@ describe("RouletteClean", function () {
     });
 
     it("Should have correct StakedBRB configuration", async function () {
-      const { stakedBrbProxy, brb } = await deployRouletteFixture;
+      const { stakedBrbProxy, brb } = await useDeployWithCreateFixture();
 
       const [brbToken, rouletteContract, protocolFeeBasisPoints, feeRecipient] = await stakedBrbProxy.read.getVaultConfig();
       expect(brbToken.toLowerCase()).to.equal(brb.address.toLowerCase());
@@ -37,7 +35,7 @@ describe("RouletteClean", function () {
 
   describe("Betting", function () {
     it("Should place a single straight bet", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb } = await deployRouletteFixture;
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
 
       // Check player's initial balance
@@ -73,7 +71,7 @@ describe("RouletteClean", function () {
     });
 
     it("Should place multiple bets in one transaction", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb } = await deployRouletteFixture;
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
 
       // Stake some BRB first
@@ -105,7 +103,7 @@ describe("RouletteClean", function () {
     });
 
     it("Should reject invalid bet types", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb } = await deployRouletteFixture;
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
 
       const stakeAmount = parseEther("100");
@@ -122,19 +120,7 @@ describe("RouletteClean", function () {
         [{ amounts: [betAmount], betTypes: [99n], numbers: [7n] }] // Invalid bet type 99
       );
 
-      // TODO: Fix custom error testing for Viem compatibility
-      // await expect(
-      //   brb.write.bet([stakedBrbProxy.address, betAmount, betData])
-      // ).to.be.revertedWithCustomError(rouletteProxy, "InvalidBetType");
-      
-      // For now, just verify the call reverts (with any error)
-      try {
-        await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
-        expect.fail("Expected call to revert");
-      } catch (error) {
-        // Expected to fail
-        expect(error).to.exist;
-      }
+      await expect(brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })).to.be.rejectedWith("InvalidBetType");
     });
 
     it("Should reject bet amount mismatches", async function () {

@@ -35,12 +35,12 @@ describe("Roulette (Merkle, VRF, Non-Upgradeable) [viem]", function () {
   });
 
   it("should only allow FUNCTIONS_OPERATOR_ROLE to setMerkleRoot", async () => {
-    await expect(roulette.write.setMerkleRoot(["0x0000000000000000000000000000000000000000000000000000000000000000"], { account: user.account })).to.be.reverted;
+    await expect(roulette.write.setMerkleRoot(["0x0000000000000000000000000000000000000000000000000000000000000000"], { account: user.account })).to.be.rejected;
     await expect(roulette.write.setMerkleRoot(["0x0000000000000000000000000000000000000000000000000000000000000000"], { account: functionsOperator.account })).to.emit(roulette, "MerkleRootUpdated");
   });
 
   it("should only allow VRF_OPERATOR_ROLE to requestRandomness", async () => {
-    await expect(roulette.write.requestRandomness([], { account: user.account })).to.be.reverted;
+    await expect(roulette.write.requestRandomness([], { account: user.account })).to.be.rejected;
     await expect(roulette.write.requestRandomness([], { account: owner.account })).to.emit(roulette, "VRFRequested");
   });
 

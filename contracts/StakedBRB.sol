@@ -5,7 +5,6 @@ import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ER
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { RouletteClean } from "./RouletteClean.sol";
 import { IRoulette } from "./interfaces/IRoulette.sol";
@@ -18,10 +17,7 @@ import { IRoulette } from "./interfaces/IRoulette.sol";
  */
 contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     using Math for uint256;
-    
-    // Roles
-    bytes32 public constant ROULETTE_ROLE = keccak256("ROULETTE_ROLE");
-    
+        
     // Immutable addresses for gas optimization
     address private immutable BRB_TOKEN;
     address private immutable ROULETTE_CONTRACT;
@@ -94,7 +90,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         __UUPSUpgradeable_init();
         
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        _grantRole(ROULETTE_ROLE, ROULETTE_CONTRACT);
         
         if (protocolFeeBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
         
@@ -168,6 +163,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         RouletteClean(ROULETTE_CONTRACT).bet(from, amount, data);
         
         emit BetPlaced(from, amount, data);
+
+        // (bool success, bytes memory res) = ROULETTE_CONTRACT.call(abi.encodeWithSelector(RouletteClean.bet.selector, from, amount, data));
+        // if (!success) {
+        //     assembly {
+        //         revert(add(res, 0x20), mload(res))
+        //     }
+        // }
     }
     
     /**
@@ -176,7 +178,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param payouts Array of payout info for multiple winners/losers
      * @param isLastBatch Whether this is the final batch for the current round
      */
-    function processRouletteResult(IRoulette.PayoutInfo[] memory payouts, bool isLastBatch) external onlyRole(ROULETTE_ROLE) {
+    function processRouletteResult(IRoulette.PayoutInfo[] memory payouts, bool isLastBatch) external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 payoutsLength = payouts.length;
         uint256 totalBetAmount;
@@ -191,10 +193,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             
             if (payoutInfo.payout > 0) {
                 // Player wins - pay out from vault
-                if (!IERC20(BRB_TOKEN).transfer(payoutInfo.player, payoutInfo.payout)) {
-                    revert TransferFailed();
-                }
                 emit BetResult(payoutInfo.player, payoutInfo.betAmount, 0, 0, true);
+                IERC20(BRB_TOKEN).transfer(payoutInfo.player, payoutInfo.payout);
             }
             // Note: We don't process losers' bets here - they remain in the vault
             // Losers' losses are automatically added to staker profits when we reset pendingBets
