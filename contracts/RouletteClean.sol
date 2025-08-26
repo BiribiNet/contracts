@@ -446,7 +446,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         // Cache storage reads
         uint256 currentRound = $.currentRound;
         
-        if ($.totalBetsInRound[currentRound] + betsLength > $.maxSupportedBets) {
+        uint256 newTotalBets = $.totalBetsInRound[currentRound] + betsLength;
+        if (newTotalBets > $.maxSupportedBets) {
             revert BetLimitExceeded();
         }
         
@@ -473,10 +474,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         // Validate total amount matches
         if (calculatedTotal != totalValue) revert InvalidBet();
         
-        // EFFICIENT: Increment bet counter ONCE with total count
-        unchecked {
-            $.totalBetsInRound[currentRound] += betsLength;
-        }
+        $.totalBetsInRound[currentRound] = newTotalBets;
 
     }
     
