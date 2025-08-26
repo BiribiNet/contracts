@@ -1,6 +1,6 @@
 import { viem } from "hardhat";
 
-import { encodeFunctionData, getContractAddress, parseEther } from "viem";
+import { encodeAbiParameters, encodeFunctionData, getContractAddress, parseEther } from "viem";
 
 /**
  * Script to deploy contracts with CREATE2 to solve circular dependency
@@ -17,9 +17,9 @@ async function deployWithCreate() {
 
   
   const vrfCoordinator = await viem.deployContract("VRFCoordinatorV2_5Mock", [
-    100000000000000000n, // 0.1 LINK base fee
-    1000000n, // 0.000001 LINK per gas
-    4_000_000_000_000_000n]); // 0.004 ETH per LINK])
+    10000000000000n, // 0.1 LINK base fee
+    1000000000000000000n, // 0.000001 LINK per gas
+    4_000_000_000_000_000_000_000_000n]); // 0.004 ETH per LINK])
   await vrfCoordinator.write.setLINKAndLINKNativeFeed([mockLinkToken.address, aggregator.address])
   const createSubscriptionHash = await vrfCoordinator.write.createSubscription()
   const receipt = await publicClient.waitForTransactionReceipt({ hash: createSubscriptionHash })
@@ -55,7 +55,7 @@ async function deployWithCreate() {
   const initializeStakedBrbData = encodeFunctionData({
     abi: stakedBrb.abi,
     functionName: 'initialize',
-    args: [deployer.account.address, 10000n, deployer.account.address]
+    args: [deployer.account.address, 250n, deployer.account.address] // Changed from 10000 to 250 (2.5%)
   })
 
   const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData]) // #2
@@ -63,19 +63,30 @@ async function deployWithCreate() {
 
   const rouletteProxy = await viem.getContractAt("RouletteClean", rouletteProxyAddress)
   const stakedBrbProxy = await viem.getContractAt("StakedBRB", stakedBrbProxyAddress)
+  
+  // Setup Chainlink for StakedBRB
+  await stakedBrbProxy.write.setupChainlink([mockAutomationRegistry.address, mockAutomationRegistry.address, mockLinkToken.address])
+  await mockLinkToken.write.approve([stakedBrbProxy.address, parseEther('1')])
+  const cleaningUpkeepId = await stakedBrbProxy.write.registerCleaningUpkeep([parseEther('1')])
   await vrfCoordinator.write.addConsumer([subId, rouletteProxyAddress])
 
   // fund subscription
   await mockLinkToken.write.approve([vrfCoordinator.address, parseEther('1')])
-  await vrfCoordinator.write.fundSubscription([subId, parseEther('1')])
+
+  await mockLinkToken.write.setBalance([deployer.account.address, parseEther('1000')])
+  const data = encodeAbiParameters([{ type: 'uint256', name: 'subId' }], [subId]);
+  const txTransferAndCall = await mockLinkToken.write.transferAndCall([vrfCoordinator.address, parseEther('10'), data])
+  const receiptTransferAndCall = await publicClient.waitForTransactionReceipt({ hash: txTransferAndCall })
+  console.log('txTransferAndCall', receiptTransferAndCall.logs)
 
   // Register VRF upkeep
   const approveRoulette = await mockLinkToken.write.approve([rouletteProxyAddress, parseEther('1')])
   await rouletteProxy.write.registerVRFUpkeep([parseEther('1')])
 
   // Register payout upkeeps
-  const approvePayout = await mockLinkToken.write.approve([rouletteProxyAddress, parseEther('10')])
-  const payoutUpkeeps = await rouletteProxy.write.registerPayoutUpkeeps([10n, parseEther('1')])
+  const linkAmount = parseEther('10');
+  await mockLinkToken.write.approve([rouletteProxy.address, linkAmount * 20n], { account: deployer.account }); // Approve total LINK for 20 upkeeps
+  const upkeepIds = await rouletteProxy.write.registerPayoutUpkeeps([20n, linkAmount], { account: deployer.account });
 
   console.log('rouletteProxyAddress', rouletteProxyAddress)
   console.log('stakedBrbProxyAddress', stakedBrbProxyAddress)
@@ -84,6 +95,7 @@ async function deployWithCreate() {
   console.log('brb', brb.address)
   console.log('mockAutomationRegistry', mockAutomationRegistry.address)
   console.log('mockLinkToken', mockLinkToken.address)
+  console.log('cleaningUpkeepId', cleaningUpkeepId) // Log the cleaning upkeep ID
 
   const getUpkeepConfig = await rouletteProxy.read.getUpkeepConfig()
   console.log('getUpkeepConfig', getUpkeepConfig)
@@ -106,7 +118,19 @@ async function deployWithCreate() {
     throw new Error('BRB address mismatch')
   }
 
-  await brb.write.transfer([player1.account.address, parseEther('1000')], { account: deployer.account })
+  // Ensure deployer has a large initial BRB balance for funding players in tests
+  await brb.write.transfer([deployer.account.address, parseEther('1000000')], { account: deployer.account });
+
+  // Fund all relevant player accounts directly in the fixture
+  const [, p1, p2, p3, p4, p5] = await viem.getWalletClients(); // Get all player clients
+  const initialPlayerFundingAmount = parseEther('2000'); // Sufficient for staking and multiple bets
+
+  await brb.write.transfer([p1.account.address, initialPlayerFundingAmount], { account: deployer.account });
+  await brb.write.transfer([p2.account.address, initialPlayerFundingAmount], { account: deployer.account });
+  await brb.write.transfer([p3.account.address, initialPlayerFundingAmount], { account: deployer.account });
+  await brb.write.transfer([p4.account.address, initialPlayerFundingAmount], { account: deployer.account });
+  await brb.write.transfer([p5.account.address, initialPlayerFundingAmount], { account: deployer.account });
+
   return {
     rouletteProxy,
     stakedBrbProxy,
@@ -114,7 +138,8 @@ async function deployWithCreate() {
     mockAutomationRegistry,
     mockLinkToken,
     subId,
-    brb
+    brb,
+    cleaningUpkeepId // Return the cleaningUpkeepId from the fixture
   }
 
 
