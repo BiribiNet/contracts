@@ -19,11 +19,11 @@ const config: HardhatUserConfig = {
   },
   networks,
   gasReporter: {
-    offline: true,
-    enabled: vars.has('REPORT_GAS'),
+    L2: "arbitrum",
+    etherscan: vars.get('ETHERSCAN_API_KEY'),
+    enabled: vars.has('REPORT_GAS') || vars.has('ETHERSCAN_API_KEY'),
     coinmarketcap: vars.get('REPORT_GAS'),
-    gasPrice: 20,
-    currency: 'USD',
+    currency: 'EUR',
   },
   etherscan: {
     apiKey: {
