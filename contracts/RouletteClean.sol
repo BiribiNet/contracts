@@ -87,12 +87,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => Bet[]) roundEvenBets;      // roundId => even bets
         mapping(uint256 => Bet[]) roundLowBets;       // roundId => low bets (1-18)
         mapping(uint256 => Bet[]) roundHighBets;      // roundId => high bets (19-36)
+        mapping(uint256 => Bet[]) roundTrio012Bets;   // roundId => trio 0-1-2 bets
+        mapping(uint256 => Bet[]) roundTrio023Bets;   // roundId => trio 0-2-3 bets
         
         // EUROPEAN SECTION BETS
-        mapping(uint256 => Bet[]) roundVoisinsBets;   // roundId => voisins du zéro bets
-        mapping(uint256 => Bet[]) roundTiersBets;     // roundId => tiers du cylindre bets
-        mapping(uint256 => Bet[]) roundOrphelinsBets; // roundId => orphelins bets
-        
+        // ... existing code ...
+
         mapping(uint256 => RandomResult) randomResults; // roundId => VRF result
         mapping(uint256 => uint256) requestIdToRound; // VRF request => round
     }
@@ -144,11 +144,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         bool even;
         bool low;   // 1-18
         bool high;  // 19-36
+        bool trio012; // Trio 0-1-2
+        bool trio023; // Trio 0-2-3
         
         // EUROPEAN SECTION BETS
-        bool voisins;    // Voisins du zéro
-        bool tiers;      // Tiers du cylindre  
-        bool orphelins;  // Orphelins
+        // ... existing code ...
+
     }
     struct CollectWinningsValues {
         uint256 payoutCount;
@@ -191,9 +192,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     uint256 constant BET_EVEN = 11;       // Even numbers
     uint256 constant BET_LOW = 12;        // Low numbers (1-18)
     uint256 constant BET_HIGH = 13;       // High numbers (19-36)
-    uint256 constant BET_VOISINS = 14;    // Voisins du zéro (17 numbers)
-    uint256 constant BET_TIERS = 15;      // Tiers du cylindre (12 numbers)
-    uint256 constant BET_ORPHELINS = 16;  // Orphelins (8 numbers)
+    uint256 constant BET_TRIO_012 = 14;   // Trio 0-1-2
+    uint256 constant BET_TRIO_023 = 15;   // Trio 0-2-3
     
     // ========== MULTIPLE BETS STRUCTURE ==========
     struct MultipleBets {
@@ -496,7 +496,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         if (amount > 1000 ether) revert InvalidBet(); // Maximum 1000 BRB (1000 * 10**18 wei) per bet
         
         // Validate bet type
-        if (betType == 0 || betType > BET_ORPHELINS) revert InvalidBetType();
+        if (betType == 0 || betType > BET_TRIO_023) revert InvalidBetType();
         
         // Validate number parameter based on bet type
         if (betType == BET_STRAIGHT) {
@@ -520,6 +520,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         } else if (betType == BET_DOZEN) {
             // Dozen bet: 1, 2, or 3  
             if (number == 0 || number > 3) revert InvalidNumber();
+        } else if (betType == BET_TRIO_012) {
+            // Trio bet: number parameter must be 0
+            if (number != 0) revert InvalidNumber();
+        } else if (betType == BET_TRIO_023) {
+            // Trio bet: number parameter must be 0
+            if (number != 0) revert InvalidNumber();
         } else {
             // All other bet types: number parameter must be 0
             if (number != 0) revert InvalidNumber();
@@ -574,15 +580,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             } else if (betType == BET_HIGH) {
                 payout = amount * 2;
                 $.roundHighBets[currentRound].push(newBet);
-            } else if (betType == BET_VOISINS) {
-                payout = amount * 3;
-                $.roundVoisinsBets[currentRound].push(newBet);
-            } else if (betType == BET_TIERS) {
-                payout = amount * 3;
-                $.roundTiersBets[currentRound].push(newBet);
-            } else if (betType == BET_ORPHELINS) {
-                payout = amount * 3;
-                $.roundOrphelinsBets[currentRound].push(newBet);
+            } else if (betType == BET_TRIO_012) {
+                payout = amount * 11;
+                $.roundTrio012Bets[currentRound].push(newBet);
+            } else if (betType == BET_TRIO_023) {
+                payout = amount * 11;
+                $.roundTrio023Bets[currentRound].push(newBet);
             }
         }
     }
@@ -818,9 +821,11 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         }
         
         // EUROPEAN SECTIONS
-        winning.voisins = _isVoisinsNumber(winningNumber);
-        winning.tiers = _isTiersNumber(winningNumber);
-        winning.orphelins = _isOrphelinsNumber(winningNumber);
+        // winning.voisins = _isVoisinsNumber(winningNumber); // Removed
+        // winning.tiers = _isTiersNumber(winningNumber); // Removed
+        // winning.orphelins = _isOrphelinsNumber(winningNumber); // Removed
+        winning.trio012 = _isTrio012Number(winningNumber);
+        winning.trio023 = _isTrio023Number(winningNumber);
         
         // INSIDE BETS (complex - determine which splits, streets, corners, lines win)
         winning.winningSplits = _getWinningSplits(winningNumber);
@@ -931,36 +936,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
     
     /**
-     * @dev Check if number is in Voisins du Zéro section
-     */
-    function _isVoisinsNumber(uint256 num) private pure returns (bool) {
-        // Voisins du zéro: 22,18,29,7,28,12,35,3,26,0,32,15,19,4,21,2,25
-        return (num == 22 || num == 18 || num == 29 || num == 7 || num == 28 ||
-                num == 12 || num == 35 || num == 3 || num == 26 || num == 0 ||
-                num == 32 || num == 15 || num == 19 || num == 4 || num == 21 ||
-                num == 2 || num == 25);
-    }
-    
-    /**
-     * @dev Check if number is in Tiers du Cylindre section  
-     */
-    function _isTiersNumber(uint256 num) private pure returns (bool) {
-        // Tiers du cylindre: 27,13,36,11,30,8,23,10,5,24,16,33
-        return (num == 27 || num == 13 || num == 36 || num == 11 || num == 30 ||
-                num == 8 || num == 23 || num == 10 || num == 5 || num == 24 ||
-                num == 16 || num == 33);
-    }
-    
-    /**
-     * @dev Check if number is in Orphelins section
-     */
-    function _isOrphelinsNumber(uint256 num) private pure returns (bool) {
-        // Orphelins: 1,20,14,31,9,17,34,6
-        return (num == 1 || num == 20 || num == 14 || num == 31 || 
-                num == 9 || num == 17 || num == 34 || num == 6);
-    }
-    
-    /**
      * @dev Generate split ID for two numbers
      */
     function _getSplitId(uint256 num1, uint256 num2) private pure returns (uint256) {
@@ -976,6 +951,20 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 num == 12 || num == 14 || num == 16 || num == 18 || num == 19 ||
                 num == 21 || num == 23 || num == 25 || num == 27 || num == 30 ||
                 num == 32 || num == 34 || num == 36);
+    }
+    
+    /**
+     * @dev Check if number is part of the 0-1-2 trio
+     */
+    function _isTrio012Number(uint256 num) private pure returns (bool) {
+        return num == 0 || num == 1 || num == 2;
+    }
+
+    /**
+     * @dev Check if number is part of the 0-2-3 trio
+     */
+    function _isTrio023Number(uint256 num) private pure returns (bool) {
+        return num == 0 || num == 2 || num == 3;
     }
     
     /**
@@ -1054,17 +1043,17 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         if (winningTypes.high && v.payoutCount < batchSize) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundHighBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
+
+        if (winningTypes.trio012 && v.payoutCount < batchSize) {
+            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio012Bets[roundId], 11, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
+        }
+
+        if (winningTypes.trio023 && v.payoutCount < batchSize) {
+            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio023Bets[roundId], 11, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
+        }
         
         // 9. EUROPEAN SECTION BETS
-        if (winningTypes.voisins && v.payoutCount < batchSize) {
-            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundVoisinsBets[roundId], 3, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
-        }
-        if (winningTypes.tiers && v.payoutCount < batchSize) {
-            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTiersBets[roundId], 3, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
-        }
-        if (winningTypes.orphelins && v.payoutCount < batchSize) {
-            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundOrphelinsBets[roundId], 3, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
-        }
+        // Removed voisins, tiers, orphelins as they are no longer supported
         
         // Use assembly to resize array to actual size
         assembly {
@@ -1187,9 +1176,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         if (winningTypes.high) totalCount += $.roundHighBets[roundId].length;
         
         // 9. EUROPEAN SECTION BETS - array.length is O(1)
-        if (winningTypes.voisins) totalCount += $.roundVoisinsBets[roundId].length;
-        if (winningTypes.tiers) totalCount += $.roundTiersBets[roundId].length;
-        if (winningTypes.orphelins) totalCount += $.roundOrphelinsBets[roundId].length;
+        if (winningTypes.trio012) totalCount += $.roundTrio012Bets[roundId].length;
+        if (winningTypes.trio023) totalCount += $.roundTrio023Bets[roundId].length;
+        // Removed voisins, tiers, orphelins as they are no longer supported
     }
 
     // ========== VIEW FUNCTIONS ==========

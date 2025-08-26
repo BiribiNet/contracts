@@ -161,7 +161,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         _;
     }
     
-    function _getStakedBRBStorage() internal pure returns (StakedBRBStorage storage storageStruct) {
+    function _getStakedBRBStorage() private pure returns (StakedBRBStorage storage storageStruct) {
         bytes32 slot = STORAGE_LOCATION;
         assembly {
             storageStruct.slot := slot
@@ -612,7 +612,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     /// @dev Calculate the safe withdrawal capacity that won't risk payout solvency
     /// @return safeCapacity Maximum amount that can be safely withdrawn immediately
-    function _calculateSafeWithdrawalCapacity() internal view returns (uint256 safeCapacity) {
+    function _calculateSafeWithdrawalCapacity() private view returns (uint256 safeCapacity) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // Get current BRB balance and maxPayout
@@ -641,7 +641,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     /// @dev Remove user from queue efficiently using dynamic array
-    function _removeUserFromQueueEfficient(uint256 index) internal {
+    function _removeUserFromQueueEfficient(uint256 index) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         require(index < $.largeWithdrawalQueue.length, "Index out of bounds");
@@ -671,7 +671,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param payouts Array of payout information
      * @return totalPayouts Sum of all payouts
      */
-    function _calculateTotalPayouts(IRoulette.PayoutInfo[] memory payouts) internal pure returns (uint256 totalPayouts) {
+    function _calculateTotalPayouts(IRoulette.PayoutInfo[] memory payouts) private pure returns (uint256 totalPayouts) {
         uint256 payoutsLength = payouts.length;
         for (uint256 i; i < payoutsLength;) {
             totalPayouts += payouts[i].payout;
@@ -684,7 +684,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param lossAmount Amount lost by player
      * @return protocolFee Amount that goes to protocol
      */
-    function _calculateProtocolFee(uint256 lossAmount) internal view returns (uint256 protocolFee) {
+    function _calculateProtocolFee(uint256 lossAmount) private view returns (uint256 protocolFee) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.protocolFeeBasisPoints == 0) return 0;
         
@@ -773,7 +773,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     /// @param requestedAssets Amount of assets requested
     /// @return isLarge Whether this is a large withdrawal that needs queuing
     /// @return safeAmount Safe amount that can be withdrawn immediately (if not large)
-    function _processWithdrawalRequest(address owner, uint256 requestedAssets) internal returns (bool isLarge, uint256 safeAmount) {        
+    function _processWithdrawalRequest(address owner, uint256 requestedAssets) private returns (bool isLarge, uint256 safeAmount) {        
         // Check if this is a large withdrawal
         isLarge = _isLargeWithdrawal(requestedAssets);
         
@@ -789,8 +789,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         }
     }
     
-    /// @dev Internal function to check if withdrawals are allowed
-    function _checkWithdrawalAllowed() internal view {
+    /// @dev Private function to check if withdrawals are allowed
+    function _checkWithdrawalAllowed() private view {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.lockWithdrawals) {
             revert WithdrawalBlockedDuringBetting();
@@ -804,7 +804,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     /// @dev Check if withdrawal amount is considered "large" and requires special handling
     /// @dev A withdrawal is "large" if it would risk the vault's ability to pay current round winners
-    function _isLargeWithdrawal(uint256 assets) internal view returns (bool) {
+    function _isLargeWithdrawal(uint256 assets) private view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // Get current BRB balance and maxPayout
@@ -821,7 +821,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     /// @dev Pre-validate all conditions for large withdrawal request to prevent reverts
     /// @dev This ensures the withdrawal request will succeed before we return shares
-    function _validateLargeWithdrawalRequest(address owner, uint256 amount) internal view {
+    function _validateLargeWithdrawalRequest(address owner, uint256 amount) private view {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // 1. Check if user is already in queue
@@ -842,7 +842,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     /// @dev Request a large withdrawal and add to queue (validation already done)
-    function _requestLargeWithdrawal(address owner, uint256 amount) internal {
+    function _requestLargeWithdrawal(address owner, uint256 amount) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // ALL CHECKS ALREADY PASSED - Add to queue
@@ -1038,7 +1038,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     /// @dev Get user's position in queue (accounts for cancelled users)
-    function _getUserQueuePosition(address user) internal view returns (uint256) {
+    function _getUserQueuePosition(address user) private view returns (uint256) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // Get user's queue index
