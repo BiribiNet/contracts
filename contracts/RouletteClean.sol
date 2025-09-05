@@ -48,6 +48,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     // StakedBRB contract - only one allowed
     address private immutable STAKED_BRB_CONTRACT;
+
+    struct ComputeTotalWinningBetsData {
+        uint256 totalWinningBets;
+    }
     
     // ========== EIP-7201 STORAGE ==========
     struct RouletteStorage {
@@ -62,7 +66,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         // Uses bitmap where bit N = 1 if batch N has been processed
         // This prevents race conditions and ensures sequential processing
         mapping(uint256 => uint256) roundBatchBitmap; // roundId => bitmap of processed batches
-        
+
+        mapping(uint256 => uint256) totalWinningBets; // roundId => total winning bets
+        mapping(uint256 => bool) totalWinningBetsSet; // roundId => total winning bets set
+        mapping(uint256 => uint256) winningBetsProcessed; // roundId => bet processed
         // CHAINLINK AUTOMATION SETUP
         mapping(address => uint256) forwarders; // forwarder => upkeepId
         address keeperRegistrar;
@@ -105,7 +112,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     struct PerformDataPayload {
         uint256 roundId;
-        uint256 triggerType; // 0 = VRF trigger, 1 = payout users
+        uint256 upkeepType; // 0 = VRF trigger, 1 = compute total winning bets, 2 = payout users
         bytes payload;
     }
     
@@ -121,11 +128,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
     
     struct PayoutBatch {
-        uint256 roundId;
         uint256 totalPayouts;
         PayoutInfo[] payouts; // Pre-computed payouts for this batch
         uint256 batchIndex; // Pre-computed batch index
-        bool isLastBatch; // Pre-computed flag if this is the last batch
     }
     
     struct WinningBetTypes {
@@ -146,10 +151,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         bool high;  // 19-36
         bool trio012; // Trio 0-1-2
         bool trio023; // Trio 0-2-3
-        
-        // EUROPEAN SECTION BETS
-        // ... existing code ...
-
     }
     struct CollectWinningsValues {
         uint256 payoutCount;
@@ -209,7 +210,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event VRFResult(uint256 roundId, uint256 winningNumber);
     event BatchProcessed(uint256 indexed roundId, uint256 batchIndex, uint256 payoutsCount);
     event ChainlinkSetupCompleted(uint256 indexed subscriptionId, address keeperRegistrar, address keeperRegistry);
-    event UpkeepRegistered(uint256 indexed upkeepId, address indexed forwarder, uint32 gasLimit, uint96 linkAmount, uint256 batchIndex, string upkeepType);
+    event UpkeepRegistered(uint256 indexed upkeepId, address indexed forwarder, uint32 gasLimit, uint96 linkAmount, uint256 checkDataLength, string upkeepType);
     event MaxSupportedBetsUpdated(uint256 maxSupportedBets, uint256 totalUpkeeps);
     
     // ========== ERRORS ==========
@@ -339,6 +340,43 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         return upkeepId;
     }
     
+    function registerComputeTotalWinningBetsUpkeep(
+        uint96 linkAmount
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+        RouletteStorage storage $ = _getRouletteStorage();
+        if ($.keeperRegistrar == address(0)) revert ZeroAddress();
+        
+        string memory upkeepName = string.concat(
+            "RouletteClean-ComputeTotalWinningBets-",
+            Strings.toHexString(address(this))
+        );
+
+        IERC20($.linkToken).transferFrom(msg.sender, address(this), linkAmount);
+        
+        uint256 upkeepId = IAutomationRegistrar2_1($.keeperRegistrar).registerUpkeep(
+            IAutomationRegistrar2_1.RegistrationParams({
+                name: upkeepName,
+                encryptedEmail: new bytes(0),
+                upkeepContract: address(this),
+                gasLimit: UPKEEP_GAS_LIMIT, // Use calculated gas limit
+                adminAddress: msg.sender,
+                triggerType: 0, // Conditional trigger
+                checkData: new bytes(1),
+                triggerConfig: new bytes(0),
+                offchainConfig: new bytes(0),
+                amount: linkAmount
+            })
+        );
+
+        if (upkeepId == 0) revert UpkeepRegistrationFailed();
+        
+        // Get forwarder address and register it
+        address forwarder = IAutomationRegistry2_1($.keeperRegistry).getForwarder(upkeepId);
+        $.forwarders[forwarder] = upkeepId;
+        
+        emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmount, 1, "COMPUTE_TOTAL_WINNING_BETS");
+        return upkeepId;
+    }
     /**
      * @dev Register multiple payout upkeeps to support higher bet volumes (admin only)
      * @param upkeepCount Number of payout upkeeps to register
@@ -354,24 +392,28 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         // Transfer total LINK amount needed from caller to this contract
         uint256 totalLinkNeeded = upkeepCount * linkAmountPerUpkeep;
-        if (!IERC20($.linkToken).transferFrom(msg.sender, address(this), totalLinkNeeded)) {
-            revert TransferFailed();
-        }
+        IERC20($.linkToken).transferFrom(msg.sender, address(this), totalLinkNeeded);
         
         uint256[] memory upkeepIds = new uint256[](upkeepCount);
         
+        bytes memory checkData;
+        uint256 checkDataLength;
+        string memory upkeepName;
+        uint256 upkeepId;
+        address forwarder;
         for (uint256 i; i < upkeepCount;) {
             // checkData.length determines batch range: length 1 = batch 0, length 2 = batch 1, etc.
-            bytes memory checkData = new bytes(i + 1);
+            checkData = new bytes(i + 2);
+            checkDataLength = checkData.length;
             
-            string memory upkeepName = string.concat(
+            upkeepName = string.concat(
                 "RouletteClean-Payout-",
-                Strings.toString(i),
+                Strings.toString(checkDataLength),
                 "-",
                 Strings.toHexString(address(this))
             );
             
-            uint256 upkeepId = IAutomationRegistrar2_1($.keeperRegistrar).registerUpkeep(
+            upkeepId = IAutomationRegistrar2_1($.keeperRegistrar).registerUpkeep(
                 IAutomationRegistrar2_1.RegistrationParams({
                     name: upkeepName,
                     encryptedEmail: new bytes(0),
@@ -389,12 +431,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             if (upkeepId == 0) revert UpkeepRegistrationFailed();
             
             // Get forwarder address and register it
-            address forwarder = IAutomationRegistry2_1($.keeperRegistry).getForwarder(upkeepId);
+            forwarder = IAutomationRegistry2_1($.keeperRegistry).getForwarder(upkeepId);
             $.forwarders[forwarder] = upkeepId;
             
             upkeepIds[i] = upkeepId;
             
-            emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmountPerUpkeep, i, "Payout");
+            emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmountPerUpkeep, checkDataLength, "PAYOUT");
             
             unchecked { ++i; }
         }
@@ -613,25 +655,41 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 // Calculate the next scheduled start timestamp
                 performData = abi.encode(PerformDataPayload({
                     roundId: currentRound,
-                    triggerType: 0,
+                    upkeepType: 0,
                     payload: abi.encode(TriggerVRF({
                         newLastRoundStartTimestamp: srt + (elapsed / GAME_PERIOD) * GAME_PERIOD,
                         newRoundId: currentRound + 1
                     }))
                 }));
             }
+
+        } else if (checkData.length == 1) {
+            // COMPUTE TOTAL WINNING BETS: Check if we need to compute total winning bets
+             uint256 roundToBePaid = $.lastRoundPaid + 1;
+             if (roundToBePaid < $.currentRound && $.randomResults[roundToBePaid].set && roundToBePaid > $.lastRoundPaid && !$.totalWinningBetsSet[roundToBePaid]) {
+                uint256 totalWinningBets = _countTotalWinningBets($, roundToBePaid, $.randomResults[roundToBePaid].randomWord, _getWinningBetTypes($.randomResults[roundToBePaid].randomWord));
+                upkeepNeeded = true;
+                performData = abi.encode(PerformDataPayload({
+                    roundId: roundToBePaid,
+                    upkeepType: 1,
+                    payload: abi.encode(ComputeTotalWinningBetsData({
+                        totalWinningBets: totalWinningBets
+                    }))
+                }));
+             }
+
         } else {
             // PAYOUT USERS: Check if we need to pay users from completed rounds
             uint256 roundToBePaid = $.lastRoundPaid + 1;
             
             // Only process if round exists and has VRF result (check lastRoundPaid instead of roundResolved)
-            if (roundToBePaid < $.currentRound && $.randomResults[roundToBePaid].set && roundToBePaid > $.lastRoundPaid) {
+            if (roundToBePaid < $.currentRound && $.randomResults[roundToBePaid].set && roundToBePaid > $.lastRoundPaid && $.totalWinningBetsSet[roundToBePaid]) {
                 // Calculate batch range based on checkData.length
                 // checkData.length == 1: batch 0 (users 0-9)
                 // checkData.length == 2: batch 1 (users 10-19)
                 // checkData.length == n: batch n-1
                 
-                uint256 batchIndex = checkData.length - 1; // 0-indexed
+                uint256 batchIndex = checkData.length - 2; // 0 is for VRF and 1 is for COMPUTE TOTAL WINNING BETS
                 uint256 startIndex = batchIndex * BATCH_SIZE;
                 
                 // ATOMIC CHECK: Only process if this specific batch hasn't been processed yet
@@ -639,7 +697,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 bool batchAlreadyProcessed = (batchBitmap & (1 << batchIndex)) != 0;
                 
                 // Only proceed if this batch can be processed
-                if (!batchAlreadyProcessed) {
+                if (!batchAlreadyProcessed && startIndex < $.totalWinningBets[roundToBePaid]) {
                     uint256 winningNumber = $.randomResults[roundToBePaid].randomWord;
                     WinningBetTypes memory winningTypes = _getWinningBetTypes(winningNumber);
                     
@@ -653,33 +711,14 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                         BATCH_SIZE
                     );
                     
-                    // Process all batches (including empty ones for no-winner rounds)
-                    // Determine if this is the last batch
-                    bool isLastBatch;
-                    if (payouts.length == BATCH_SIZE) {
-                        (PayoutInfo[] memory nextBatchPayouts, ) = _collectWinningPayoutsBatch(
-                            $, 
-                            roundToBePaid, 
-                            winningNumber, 
-                            winningTypes,
-                            startIndex + BATCH_SIZE,
-                            1 // Just check for 1 user instead of full BATCH_SIZE
-                        );
-                        isLastBatch = nextBatchPayouts.length == 0;
-                    } else {
-                        isLastBatch = true;
-                    }
-                    
                     upkeepNeeded = true;
                     performData = abi.encode(PerformDataPayload({
                         roundId: roundToBePaid,
-                        triggerType: 1,
+                        upkeepType: 2,
                         payload: abi.encode(PayoutBatch({
-                            roundId: roundToBePaid,
                             totalPayouts: totalPayouts,
                             payouts: payouts,
-                            batchIndex: batchIndex,
-                            isLastBatch: isLastBatch
+                            batchIndex: batchIndex
                         }))
                     }));
                 }
@@ -693,20 +732,21 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     function performUpkeep(bytes calldata performData) external override onlyForwarders {
         PerformDataPayload memory payload = abi.decode(performData, (PerformDataPayload));
         
-        if (payload.triggerType == 0) {
+        if (payload.upkeepType == 0) {
             // VRF TRIGGER: Start new round and request VRF
             TriggerVRF memory triggerData = abi.decode(payload.payload, (TriggerVRF));
             _triggerVRF(payload.roundId, triggerData);
-        } else if (payload.triggerType == 1) {
+        } else if (payload.upkeepType == 1) {
+            // COMPUTE TOTAL WINNING BETS: Process batch of users for a round
+            ComputeTotalWinningBetsData memory batchData = abi.decode(payload.payload, (ComputeTotalWinningBetsData));
+            _processComputeTotalWinningBets(payload.roundId, batchData);
+        } else if (payload.upkeepType == 2) {
             // PAYOUT USERS: Process batch of users for a round
             PayoutBatch memory batchData = abi.decode(payload.payload, (PayoutBatch));
-            _processBatch(batchData);
+            _processBatch(payload.roundId, batchData);
         }
     }
     
-    /**
-     * @dev Trigger VRF for current round and prepare new round
-     */
     function _triggerVRF(uint256 roundId, TriggerVRF memory triggerData) private {
         RouletteStorage storage $ = _getRouletteStorage();        
         // Update to next round
@@ -731,22 +771,30 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
 
         IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition(triggerData.newRoundId, roundId);
     }
+
+    function _processComputeTotalWinningBets(uint256 roundId, ComputeTotalWinningBetsData memory batchData) private {
+        RouletteStorage storage $ = _getRouletteStorage();
+        $.totalWinningBets[roundId] = batchData.totalWinningBets;
+        $.totalWinningBetsSet[roundId] = true;
+
+    }
     
     /**
      * @dev Process a batch of users for payout - ULTRA MINIMAL: ONLY WRITES, CALLS, EMITS
      * @dev All computations moved to checkUpkeep for maximum gas efficiency
      */
-    function _processBatch(PayoutBatch memory batchData) private {
+    function _processBatch(uint256 roundId, PayoutBatch memory batchData) private {
         RouletteStorage storage $ = _getRouletteStorage();
-        
+        uint256 payoutLength = batchData.payouts.length;
             // ATOMIC WRITE: Mark this specific batch as processed using bitmap
-        $.roundBatchBitmap[batchData.roundId] |= (1 << batchData.batchIndex);
+        $.roundBatchBitmap[roundId] |= (1 << batchData.batchIndex);
+        $.winningBetsProcessed[roundId] += payoutLength;
         
-        emit BatchProcessed(batchData.roundId, batchData.batchIndex + 1, batchData.payouts.length);
-        
-        if (batchData.isLastBatch) {
-            $.lastRoundPaid = batchData.roundId;
-            emit RoundResolved(batchData.roundId);
+        bool isLastBatch = $.winningBetsProcessed[roundId] == $.totalWinningBets[roundId];
+        emit BatchProcessed(roundId, batchData.batchIndex + 1, payoutLength);
+        if (isLastBatch) {
+            $.lastRoundPaid = roundId;
+            emit RoundResolved(roundId);
             
         }
 
@@ -754,10 +802,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         (bool success, bytes memory returnData) = STAKED_BRB_CONTRACT.call(
             abi.encodeWithSelector(
                 IStakedBRB.processRouletteResult.selector,
-                batchData.roundId,
+                roundId,
                 batchData.payouts,
-                batchData.isLastBatch,
-                batchData.totalPayouts
+                batchData.totalPayouts,
+                isLastBatch
             )
         );
         
@@ -1043,15 +1091,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         }
 
         if (winningTypes.trio012 && v.payoutCount < batchSize) {
-            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio012Bets[roundId], 11, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
+            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio012Bets[roundId], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
 
         if (winningTypes.trio023 && v.payoutCount < batchSize) {
-            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio023Bets[roundId], 11, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
+            (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio023Bets[roundId], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
-        
-        // 9. EUROPEAN SECTION BETS
-        // Removed voisins, tiers, orphelins as they are no longer supported
         
         // Use assembly to resize array to actual size
         assembly {
@@ -1255,11 +1300,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 totalWinningBets // Added to return the actual count of winning bets
     ) {
         RouletteStorage storage $ = _getRouletteStorage();
-        
-        // Count processed batches from bitmap
-        uint256 batchBitmap = $.roundBatchBitmap[roundId];
-        batchesProcessed = _countSetBits(batchBitmap);
-        
+        batchesProcessed = _calculateTotalBatches($.winningBetsProcessed[roundId]);
         // Calculate total batches by computing winning bets for resolved rounds
         if ($.randomResults[roundId].set) {
             uint256 winningNumber = $.randomResults[roundId].randomWord;
@@ -1271,7 +1312,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             totalWinningBets = 0; // No winning bets if not resolved
         }
         
-        isFullyProcessed = batchesProcessed >= totalBatches && totalBatches > 0;
+        isFullyProcessed = $.winningBetsProcessed[roundId] == $.totalWinningBets[roundId];
     }
     
     /**
@@ -1281,16 +1322,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         RouletteStorage storage $ = _getRouletteStorage();
         uint256 batchBitmap = $.roundBatchBitmap[roundId];
         return (batchBitmap & (1 << batchIndex)) != 0;
-    }
-    
-    /**
-     * @dev Count the number of set bits in a bitmap (Hamming weight)
-     */
-    function _countSetBits(uint256 bitmap) private pure returns (uint256 count) {
-        while (bitmap != 0) {
-            count += bitmap & 1;
-            bitmap >>= 1;
-        }
     }
     
     function getSecondsFromNextUpkeepWindow() external view returns (uint256) {

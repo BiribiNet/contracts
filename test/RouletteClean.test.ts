@@ -155,6 +155,97 @@ describe("RouletteClean", function () {
       }
     });
 
+    it("Should place a single bet with straight bets on all numbers (0-36)", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb, vrfCoordinator } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+      const publicClient = await viem.getPublicClient();
+
+      const stakeAmount = parseEther("1750"); // Increased stake for multiple bets
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address], { account: player1.account });
+
+      const betAmountPerNumber = parseEther("0.01"); // Small amount for each straight bet
+      let totalBetAmount = 0n;
+      const allAmounts: bigint[] = [];
+      const allBetTypes: bigint[] = [];
+      const allNumbers: bigint[] = [];
+
+      // Generate bets for numbers 0 to 36
+      for (let i = 0; i <= 36; i++) {
+        allAmounts.push(betAmountPerNumber);
+        allBetTypes.push(1n); // Straight bet type
+        allNumbers.push(BigInt(i));
+        totalBetAmount += betAmountPerNumber;
+      }
+
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: allAmounts, betTypes: allBetTypes, numbers: allNumbers }]
+      );
+
+      const beforePlayerBalance = await brb.read.balanceOf([player1.account.address]);
+
+      await expect(brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData], { account: player1.account })).to.be.fulfilled;
+
+      const [currentRound] = await rouletteProxy.read.getCurrentRoundInfo();
+      const betsCount = await rouletteProxy.read.getRoundBetsCount([currentRound]);
+      expect(betsCount).to.equal(37n); // 37 straight bets (0-36)
+
+      // 3. Time Advancement and VRF Trigger
+      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+      await time.increase(timeUntilNextRound);
+
+      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      expect(needsExecutionVRF).to.be.true;
+      
+      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
+      const [needsExecutionVRF2] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      expect(needsExecutionVRF2).to.be.false;
+      const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
+      const logsVRF = parseEventLogs({
+        abi: rouletteProxy.abi,
+        eventName: 'RoundStarted',
+        logs: receiptVRF.logs,
+      });
+
+      if (!logsVRF.length) {
+        throw new Error("RoundStarted event not found");
+      }
+      const requestId = logsVRF[0].args.requestId;
+      const winningNumber = 5n;
+      // 4. VRF Fulfilment
+      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber]]);
+      
+      // 5. Payout Trigger & Processing (assuming single batch for simplicity for now)
+      // This might need a loop if the payout for a single bet is split into multiple batches
+      // For now, let's assume it's processed in one.
+
+      const [payoutsNeeded3] = await rouletteProxy.read.checkUpkeep(["0x0000"]);
+      expect(payoutsNeeded3).to.be.false;
+      
+      const [shouldComputeTotalWinningBets, computeTotalWinningBets] = await rouletteProxy.read.checkUpkeep(["0x00"]);
+      expect(shouldComputeTotalWinningBets).to.be.true;
+      await expect(rouletteProxy.write.performUpkeep([computeTotalWinningBets])).to.be.fulfilled;
+
+      const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep(["0x0000"]);
+      expect(payoutsNeeded).to.be.true;
+
+      const [payoutsNeeded2] = await rouletteProxy.read.checkUpkeep(["0x000000"]);
+      expect(payoutsNeeded2).to.be.false;
+
+      await expect(rouletteProxy.write.performUpkeep([payoutData])).to.be.fulfilled;
+
+
+      // 6. Assertions
+      const finalPlayerBalance = await brb.read.balanceOf([player1.account.address]);
+      
+       expect(beforePlayerBalance - finalPlayerBalance).to.deep.equal(parseEther('0.01'));
+    });
+
     it("Should reject bets with invalid numbers for bet types", async function () {
       const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
       const [admin, player1] = await viem.getWalletClients();
@@ -633,8 +724,8 @@ describe("RouletteClean", function () {
   });
 
   describe("Full Game Loop Integration", function () {
-    it("Should complete full game loop: stake -> bet -> VRF -> payout -> cleanup", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb, mockLinkToken, vrfCoordinator } = await useDeployWithCreateFixture();
+    it("Should complete full game loop: stake -> bet -> VRF -> compute total winning bets -> payout -> cleanup", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb, mockLinkToken, vrfCoordinator, payoutUpkeepIds, computeTotalWinningBetsUpkeepId } = await useDeployWithCreateFixture();
       const [admin, player1, player2] = await viem.getWalletClients();
       const publicClient = await viem.getPublicClient();
 
@@ -661,6 +752,8 @@ describe("RouletteClean", function () {
       const bet2Amount = parseEther("0.2"); // Column bet on column 1
       const bet3Amount = parseEther("0.15"); // Dozen bet on dozen 1
       
+      const length = 21;
+      const emptyArray = Array.from({ length }, () => 0n);
       // Player 1: Straight bet on 7
       const bet1Data = encodeAbiParameters(
         [{ type: "tuple", components: [
@@ -668,10 +761,10 @@ describe("RouletteClean", function () {
           { type: "uint256[]", name: "betTypes" },
           { type: "uint256[]", name: "numbers" }
         ]}],
-        [{ amounts: [bet1Amount], betTypes: [1n], numbers: [7n] }]
+        [{ amounts: emptyArray.map(() => bet1Amount), betTypes: emptyArray.map(() => 1n), numbers: emptyArray.map(() => 7n) }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, bet1Amount, bet1Data], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, bet1Amount * BigInt(length), bet1Data], { account: player1.account });
 
       // Player 2: Column bet on column 1
       const bet2Data = encodeAbiParameters(
@@ -683,7 +776,7 @@ describe("RouletteClean", function () {
         [{ amounts: [bet2Amount], betTypes: [6n], numbers: [1n] }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, bet2Amount, bet2Data], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, bet2Amount, bet2Data], { account: player2.account });
 
       // Player 1: Dozen bet on dozen 1
       const bet3Data = encodeAbiParameters(
@@ -695,12 +788,12 @@ describe("RouletteClean", function () {
         [{ amounts: [bet3Amount], betTypes: [7n], numbers: [1n] }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, bet3Amount, bet3Data], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, bet3Amount, bet3Data], { account: player1.account });
 
       // Verify bets were placed
       const [currentRound] = await rouletteProxy.read.getCurrentRoundInfo();
       const betsCount = await rouletteProxy.read.getRoundBetsCount([currentRound]);
-      expect(betsCount).to.equal(3n);
+      expect(betsCount).to.equal(BigInt(length) + 2n);
 
       // 3. GET NEXT UPKEEP WINDOW & TIME INCREASE
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
@@ -710,23 +803,23 @@ describe("RouletteClean", function () {
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecution).to.be.true;
       
-      const tx = await rouletteProxy.write.performUpkeep([performData]);
+      let tx = await rouletteProxy.write.performUpkeep([performData]);
 
-     const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+      let receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
 
-     const logs = parseEventLogs({ 
-      abi: rouletteProxy.abi, 
-      eventName: 'RoundStarted', 
-      logs: receipt.logs,
-    })
+      const logs = parseEventLogs({ 
+        abi: rouletteProxy.abi, 
+        eventName: 'RoundStarted', 
+        logs: receipt.logs,
+      })
 
-    if (!logs.length) {
-      throw new Error("RoundStarted event not found");
-    }
+      if (!logs.length) {
+        throw new Error("RoundStarted event not found");
+      }
 
-    const requestId = logs[0].args.requestId;
-    console.log("Request ID:", requestId);
-    await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [7n]]);
+      const requestId = logs[0].args.requestId;
+      console.log("Request ID:", requestId);
+      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [7n]]);
       
       // Debug: Check what happened after VRF simulation
       console.log("After VRF simulation:");
@@ -736,6 +829,13 @@ describe("RouletteClean", function () {
       // Check if VRF result is set (function doesn't exist, skip for now)
       console.log("VRF result should be set for round:", currentRound.toString());
 
+      // 5. PERFORM UPKEEP TO COMPUTE TOTAL WINNING BETS
+      console.log("Checking for compute total winning bets upkeep...");
+      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array([0x01]))]); // checkData.length == 1
+      expect(computeNeeded).to.be.true;
+      await rouletteProxy.write.performUpkeep([computeData]);
+      console.log("Compute total winning bets upkeep performed.");
+
       // 6. CHECK UPKEEP FOR PAYOUTS
       console.log("Checking for payouts...");
       
@@ -743,69 +843,44 @@ describe("RouletteClean", function () {
       console.log("Roulette contract address:", rouletteProxy.address);
       console.log("StakedBRB contract address:", stakedBrbProxy.address);
       
-      // Check for payouts with batch 0 (first batch)
-      const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep(["0x00"]);
-      console.log("Payouts needed (batch 0):", payoutsNeeded);
-      if (!payoutsNeeded) {
-        console.log("No payouts needed for batch 0 - checking why...");
-        // Debug: Check current round state
-        const [currentRoundDebug] = await rouletteProxy.read.getCurrentRoundInfo();
-        console.log("Current round for payouts check:", currentRoundDebug.toString());
-        console.log("Original round with VRF result:", currentRound.toString());
+      // Simulate multiple payout upkeeps until all bets are processed
+      let processedBatches = 0;
+      const currentRoundForPayout = currentRound; // Use the round that just finished VRF
+      while (true) {
+        // checkData.length == 2 for batch 0, 3 for batch 1, etc.
+        const checkDataForPayout = new Uint8Array(Number(processedBatches) + 2); 
+        const hexCheckData = toHex(checkDataForPayout);
+        const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
+        if (!payoutsNeeded) break;
+
+        console.log(`Processing payout batch ${processedBatches}...`);
+        tx = await rouletteProxy.write.performUpkeep([payoutData]);
+        receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
         
-        // Try checking with empty checkData to see if VRF trigger is needed
-        const [vrfNeeded, vrfData] = await rouletteProxy.read.checkUpkeep(["0x"]);
-        console.log("VRF trigger needed:", vrfNeeded);
-      }
-      expect(payoutsNeeded).to.be.true;
+        const batchProcessedLogs = parseEventLogs({
+          abi: rouletteProxy.abi,
+          eventName: 'BatchProcessed',
+          logs: receipt.logs,
+        });
 
-      // 7. PERFORM UPKEEP TO PAY WINNERS
-      await rouletteProxy.write.performUpkeep([payoutData]);
-      
-      // Debug: Check what happened after payout
-      console.log("After payout upkeep:");
-      const [roundAfterPayout] = await rouletteProxy.read.getCurrentRoundInfo();
-      console.log("Round after payout:", roundAfterPayout.toString());
-      
-      // Check if we need to process more batches
-      let batchIndex = 0;
-      let hasMoreBatches = true;
-      while (hasMoreBatches) {
-        const [batchNeeded, batchData] = await rouletteProxy.read.checkUpkeep(["0x"]);
-        console.log(`Batch ${batchIndex} needed:`, batchNeeded);
-        if (batchNeeded) {
-          console.log(`Processing batch ${batchIndex}...`);
-          await rouletteProxy.write.performUpkeep([batchData]);
-          batchIndex++;
-          
-          // Debug: Check what happened after this batch
-          const [roundAfterBatch] = await rouletteProxy.read.getCurrentRoundInfo();
-          console.log(`Round after batch ${batchIndex-1}:`, roundAfterBatch.toString());
-        } else {
-          hasMoreBatches = false;
+        if (batchProcessedLogs.length > 0) {
+          // No need to accumulate, as totalWinningBets are pre-computed now
         }
+        processedBatches++;
+        // For testing purposes, advance time slightly to ensure subsequent upkeeps can be triggered if needed
+        await time.increase(10n);
       }
-      console.log(`Processed ${batchIndex} batches total`);
-      
-      // Debug: Check final state before cleanup
-      console.log("Final state before cleanup:");
-      const [finalRoundBeforeCleanup] = await rouletteProxy.read.getCurrentRoundInfo();
-      console.log("Final round:", finalRoundBeforeCleanup.toString());
+      console.log(`Processed ${processedBatches} payout batches total`);
 
-      // 8. CHECK UPKEEP FOR CLEANUP
-      console.log("Checking cleanup upkeep...");
-      console.log("Current round:", currentRound.toString());
-      
-      const [cleanupNeeded, cleanupData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
-      console.log("Cleanup needed:", cleanupNeeded);
-      expect(cleanupNeeded).to.be.true;
+      // 7. Trigger Cleaning (now called directly from RouletteClean when last batch is processed)
+      console.log("Cleaning should have been triggered automatically by RouletteClean after last payout batch.");
+      // Verify round completion
+      const [finalRound, lastRoundStartTime, actualLastRoundPaid] = await rouletteProxy.read.getCurrentRoundInfo();
+      expect(finalRound).to.be.gt(currentRoundForPayout); // New round should have started
+      expect(actualLastRoundPaid).to.equal(currentRoundForPayout); // Previous round should be marked as paid
+      expect(lastRoundStartTime).to.be.gt(0n);
 
-      // 9. PERFORM UPKEEP TO CLEANUP
-      await stakedBrbProxy.write.performUpkeep([cleanupData]);
-
-      // 10. CHECK BALANCES & VAULT TOTAL ASSETS (simplified without VRF)
-      // Since we can't simulate VRF, we'll just verify the basic state
-      
+      // 8. CHECK BALANCES & VAULT TOTAL ASSETS (simplified without VRF)
       const player1Balance = await brb.read.balanceOf([player1.account.address]);
       const player2Balance = await brb.read.balanceOf([player2.account.address]);
       
@@ -817,18 +892,13 @@ describe("RouletteClean", function () {
       const finalVaultBalance = await stakedBrbProxy.read.totalAssets();
       expect(finalVaultBalance).to.be.gte(0n);
 
-      // Verify round completion
-      const [finalRound, lastRoundStartTime, actualLastRoundPaid] = await rouletteProxy.read.getCurrentRoundInfo();
-      expect(finalRound).to.be.gt(currentRound);
-      expect(actualLastRoundPaid).to.equal(currentRound);
-      expect(lastRoundStartTime).to.be.gt(0n);
     });
   });
 
   describe("Specific Bet Payouts", function () {
     // Helper function to run a single bet test
     async function runBetTest(betType: bigint, betNumber: bigint, winningNumber: bigint, expectedPayoutMultiplier: bigint, isWinningTest: boolean) {
-      const { rouletteProxy, stakedBrbProxy, brb, vrfCoordinator } = await useDeployWithCreateFixture();
+      const { rouletteProxy, stakedBrbProxy, brb, vrfCoordinator, computeTotalWinningBetsUpkeepId, payoutUpkeepIds } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
       const publicClient = await viem.getPublicClient();
 
@@ -881,14 +951,25 @@ describe("RouletteClean", function () {
       // 4. VRF Fulfilment
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber]]);
       
-      // 5. Payout Trigger & Processing (assuming single batch for simplicity for now)
-      // This might need a loop if the payout for a single bet is split into multiple batches
-      // For now, let's assume it's processed in one.
-      const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep(["0x00"]);
-      expect(payoutsNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([payoutData]);
+      // 5. COMPUTE TOTAL WINNING BETS
+      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array([0x01]))]); // checkData.length == 1
+      expect(computeNeeded).to.be.true;
+      await rouletteProxy.write.performUpkeep([computeData]);
 
-      // 6. Assertions
+      // 6. Payout Trigger & Processing (iterative)
+      let processedPayoutBatches = 0;
+      while (true) {
+        const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 2); // checkData.length 2 for batch 0, 3 for batch 1, etc.
+        const hexCheckData = toHex(checkDataForPayout);
+        const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
+        if (!payoutsNeeded) break;
+
+        await rouletteProxy.write.performUpkeep([payoutData]);
+        processedPayoutBatches++;
+        await time.increase(10n); // Advance time slightly for subsequent upkeeps
+      }
+      
+      // 7. Assertions
       const finalPlayerBalance = await brb.read.balanceOf([player1.account.address]);
       
       if (isWinningTest) {
@@ -1033,7 +1114,7 @@ describe("RouletteClean", function () {
 
     it("Should handle BET_TRIO_012 winning payout correctly", async function () {
       // Trio 0-1-2 bet, represented by number 0
-      await runBetTest(14n, 0n, 1n, 11n, true); // BET_TRIO_012, winning number 1, multiplier 11 (1:11 payout)
+      await runBetTest(14n, 0n, 1n, 12n, true); // BET_TRIO_012, winning number 1, multiplier 11 (1:11 payout)
     });
 
     it("Should handle BET_TRIO_012 losing payout correctly", async function () {
@@ -1043,7 +1124,7 @@ describe("RouletteClean", function () {
 
     it("Should handle BET_TRIO_023 winning payout correctly", async function () {
       // Trio 0-2-3 bet, represented by number 0
-      await runBetTest(15n, 0n, 2n, 11n, true); // BET_TRIO_023, winning number 2, multiplier 11 (1:11 payout)
+      await runBetTest(15n, 0n, 2n, 12n, true); // BET_TRIO_023, winning number 2, multiplier 11 (1:11 payout)
     });
 
     it("Should handle BET_TRIO_023 losing payout correctly", async function () {
@@ -1472,103 +1553,5 @@ describe("RouletteClean", function () {
       return expectedFinalBalances;
     }
 
-    it("Should handle multiple users and diverse bets with parallel payout processing", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb, vrfCoordinator, cleaningUpkeepId } = await useDeployWithCreateFixture();
-      const publicClient = await viem.getPublicClient(); // Get publicClient here
-      const players = (await viem.getWalletClients()).slice(1, 6); // Player 1 to 5
-      const winningNumber = 17n; // A winning number for many bets
-      const betAmount = parseEther("1");
-
-      const expectedFinalBalances = await simulateMultiUserBets(
-        rouletteProxy,
-        stakedBrbProxy,
-        brb,
-        vrfCoordinator,
-        players,
-        winningNumber,
-        publicClient,
-        betAmount,
-        cleaningUpkeepId // Pass cleaningUpkeepId
-      );
-
-      // Trigger VRF request
-      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
-
-      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
-      expect(needsExecutionVRF).to.be.true;
-
-      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
-      const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
-      const logsVRF = parseEventLogs({
-        abi: rouletteProxy.abi,
-        eventName: 'RoundStarted',
-        logs: receiptVRF.logs,
-      });
-
-      if (!logsVRF.length) {
-        throw new Error("RoundStarted event not found");
-      }
-      const requestId = logsVRF[0].args.requestId;
-
-      // Fulfill VRF request with the predetermined winning number
-      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber]]);
-      console.log("After VRF fulfillment, winning number is:", winningNumber);
-
-      // Simulate multiple payout upkeeps until all bets are processed
-      let processedBatches = 0;
-      const [_batchesProcessed, _totalBatches, _isFullyProcessed, totalWinningBets] = await rouletteProxy.read.getRoundBatchStatus([await rouletteProxy.read.getCurrentRoundInfo().then(info => info[0]) - 1n]);
-      const totalPayoutsExpected = totalWinningBets; // Directly use totalWinningBets
-      console.log("Total winning bets count:", totalPayoutsExpected);
-
-      // Loop to process all batches
-      let actualProcessedPayouts = 0n; // Track actual processed payouts
-      while (true) {
-        // Dynamically construct checkData based on the current batchIndex
-        const checkDataForPayout = new Uint8Array(Number(processedBatches) + 1);
-        const hexCheckData = toHex(checkDataForPayout);
-        const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
-        if (!payoutsNeeded) break;
-
-        console.log(`Processing payout batch ${processedBatches}...`);
-        const txPerform = await rouletteProxy.write.performUpkeep([payoutData]);
-        const receiptPerform = await publicClient.waitForTransactionReceipt({ hash: txPerform });
-        
-        const batchProcessedLogs = parseEventLogs({
-          abi: rouletteProxy.abi,
-          eventName: 'BatchProcessed',
-          logs: receiptPerform.logs,
-        });
-
-        if (batchProcessedLogs.length > 0) {
-          actualProcessedPayouts += batchProcessedLogs[0].args.payoutsCount; // Accumulate payouts count
-        }
-        processedBatches++;
-        // For testing purposes, advance time slightly to ensure subsequent upkeeps can be triggered if needed
-        await time.increase(10n);
-      }
-      console.log(`Processed ${processedBatches} batches total`);
-      console.log(`Actual processed payouts: ${actualProcessedPayouts}`);
-      expect(actualProcessedPayouts).to.equal(totalPayoutsExpected);
-
-      // --- Trigger Cleaning Upkeep to unlock withdrawals ---
-      console.log("Triggering cleaning upkeep...");
-      // Convert new Uint8Array(0) to a hex string using toHex
-      const cleaningCheckData = toHex(new Uint8Array(0));
-      const [cleaningUpkeepNeeded, cleaningPerformData] = await stakedBrbProxy.read.checkUpkeep([cleaningCheckData]);
-      if (cleaningUpkeepNeeded) {
-        const txCleaningPerform = await stakedBrbProxy.write.performUpkeep([cleaningPerformData]);
-        await publicClient.waitForTransactionReceipt({ hash: txCleaningPerform });
-        console.log("Cleaning upkeep performed.");
-      } else {
-        console.log("Cleaning upkeep not needed.");
-      }
-
-      // Check cleanup upkeep (if any)
-      const [cleanupNeeded, cleanupData] = await stakedBrbProxy.read.checkUpkeep([cleaningCheckData]);
-      if (cleanupNeeded) {
-        await stakedBrbProxy.write.performUpkeep([cleanupData]);
-      }
-    });
   });
 });

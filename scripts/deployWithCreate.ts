@@ -75,18 +75,15 @@ async function deployWithCreate() {
 
   await mockLinkToken.write.setBalance([deployer.account.address, parseEther('1000')])
   const data = encodeAbiParameters([{ type: 'uint256', name: 'subId' }], [subId]);
-  const txTransferAndCall = await mockLinkToken.write.transferAndCall([vrfCoordinator.address, parseEther('10'), data])
-  const receiptTransferAndCall = await publicClient.waitForTransactionReceipt({ hash: txTransferAndCall })
-  console.log('txTransferAndCall', receiptTransferAndCall.logs)
-
-  // Register VRF upkeep
-  const approveRoulette = await mockLinkToken.write.approve([rouletteProxyAddress, parseEther('1')])
+  await mockLinkToken.write.transferAndCall([vrfCoordinator.address, parseEther('10'), data])
+  // Register upkeeps
+  const upkeepCount = 20n; // Register 20 payout upkeeps
+  const linkAmount = parseEther('10'); // 10 LINK per upkeep
+  await mockLinkToken.write.approve([rouletteProxy.address, linkAmount * upkeepCount + linkAmount * 2n], { account: deployer.account }); // Approve total LINK for 20 upkeeps
   await rouletteProxy.write.registerVRFUpkeep([parseEther('1')])
+  const upkeepIds = await rouletteProxy.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
+  const upkeepIdsComputeTotalWinningBets = await rouletteProxy.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
 
-  // Register payout upkeeps
-  const linkAmount = parseEther('10');
-  await mockLinkToken.write.approve([rouletteProxy.address, linkAmount * 20n], { account: deployer.account }); // Approve total LINK for 20 upkeeps
-  const upkeepIds = await rouletteProxy.write.registerPayoutUpkeeps([20n, linkAmount], { account: deployer.account });
 
   console.log('rouletteProxyAddress', rouletteProxyAddress)
   console.log('stakedBrbProxyAddress', stakedBrbProxyAddress)
@@ -139,7 +136,9 @@ async function deployWithCreate() {
     mockLinkToken,
     subId,
     brb,
-    cleaningUpkeepId // Return the cleaningUpkeepId from the fixture
+    cleaningUpkeepId, // Return the cleaningUpkeepId from the fixture
+    payoutUpkeepIds: upkeepIds, // Return payout upkeep IDs
+    computeTotalWinningBetsUpkeepId: upkeepIdsComputeTotalWinningBets // Return compute total winning bets upkeep ID
   }
 
 

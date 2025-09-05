@@ -6,6 +6,6 @@ import { deployWithCreate } from "../../scripts/deployWithCreate";
  * Shared fixture that uses the deployWithCreate script
  * This fixture provides all deployed contracts and mock contracts for testing
  */
-export function useDeployWithCreateFixture() {
+export async function useDeployWithCreateFixture() {
   return loadFixture(deployWithCreate);
 }

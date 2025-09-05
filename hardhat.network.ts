@@ -5,6 +5,12 @@ const networks: NetworksUserConfig = {};
 
 networks.hardhat = {};
 
+networks.localhost = {
+  url: 'http://localhost:8545',
+  chainId: 31337,
+  accounts: [vars.get('PRIVATE_KEY')],
+};
+
 if (vars.has('PRIVATE_KEY')) {
   if (vars.has('MAINNET_RPC_URL')) {
     networks.mainnet = {

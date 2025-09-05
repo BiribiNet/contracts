@@ -224,8 +224,9 @@ describe("RouletteClean - Automation", function () {
     it("Should handle insufficient LINK balance", async function () {
       const { rouletteProxy, mockLinkToken } = await useDeployWithCreateFixture();
 
+      const [deployer] = await viem.getWalletClients();
       // Set low LINK balance
-      await mockLinkToken.write.setBalance([rouletteProxy.address, 0n]);
+      await mockLinkToken.write.setBalance([deployer.account.address, 0n]);
 
       // Try to register upkeep
       await expect(

@@ -45,7 +45,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     // Chainlink Automation constants
     uint32 private constant CLEANING_UPKEEP_GAS_LIMIT = 500000; // Gas limit for cleaning upkeep
-    
+
+    error InsufficientBalanceForMaxPayout();
+    error IndexOutOfBounds();
+    error QueueIsEmpty();
+    error UserNotInQueue();
     struct StakedBRBStorage {
         uint256 protocolFeeBasisPoints;  // Protocol fee taken from betting losses (e.g. 250 = 2.5%)
         address feeRecipient;            // Where protocol fees go
@@ -56,6 +60,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 lastRoundResolved;       // Last round that was resolved (for tracking active rounds)
         bool lockWithdrawals;            // Lock withdrawals during vrf & distribution
         mapping(uint256 => uint256) totalPayouts; // Round => total payouts for that round
+        mapping(uint256 => uint256) totalWinningBets; // Round => total winning bets for that round
+        mapping(uint256 => bool) totalWinningBetsSet; // Round => total winning bets set
         mapping(uint256 => uint256) pendingBetsPerRound; // Round => pending bets for that round
         
         // Withdrawal management
@@ -296,7 +302,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         
         emit BetPlaced(from, amount, data);
 
-        require(IERC20(BRB_TOKEN).balanceOf(address(this)) >= nextMaxPayout, "Insufficient balance for max payout");
+        require(IERC20(BRB_TOKEN).balanceOf(address(this)) >= nextMaxPayout, InsufficientBalanceForMaxPayout());
     }
     
     /**
@@ -416,9 +422,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @dev Process roulette results - called by Roulette contract (BATCH PROCESSING)
      * @dev Implements final-batch profit recognition to prevent double reduction and timing attacks
      * @param payouts Array of payout info for multiple winners/losers
-     * @param isLastBatch Whether this is the final batch for the current round
      */
-    function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, bool isLastBatch, uint256 totalPayouts) external onlyRoulette {
+    function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 payoutsLength = payouts.length;
         
@@ -433,10 +438,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             unchecked { ++i; }
         }
 
-        uint256 newTotalPayouts = $.totalPayouts[roundId] + totalPayouts;
-        if (totalPayouts > 0) {
-            $.totalPayouts[roundId] = newTotalPayouts;
-        }
+        $.totalPayouts[roundId] += totalPayouts;
         
         // If this is the last batch, track pending bets for this round
         if (isLastBatch) {
@@ -644,8 +646,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function _removeUserFromQueueEfficient(uint256 index) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
-        require(index < $.largeWithdrawalQueue.length, "Index out of bounds");
-        require($.queueSize > 0, "Queue is empty");
+        require(index < $.largeWithdrawalQueue.length, IndexOutOfBounds());
+        require($.queueSize > 0, QueueIsEmpty());
         
         // Get the user being removed
         address userToRemove = $.largeWithdrawalQueue[index];
@@ -686,7 +688,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function _calculateProtocolFee(uint256 lossAmount) private view returns (uint256 protocolFee) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.protocolFeeBasisPoints == 0) return 0;
+        if (lossAmount == 0 || $.protocolFeeBasisPoints == 0) return 0;
         
         // Use OpenZeppelin's mulDiv for precise fee calculation
         protocolFee = lossAmount.mulDiv(
@@ -1025,7 +1027,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         
         // Get user's position directly from mapping (O(1) access)
         uint256 queueIndex = $.userQueuePosition[msg.sender];
-        require(queueIndex != 0, "User not in queue");
+        require(queueIndex != 0, UserNotInQueue());
         
         // Remove from queue efficiently
         _removeUserFromQueueEfficient(queueIndex);
