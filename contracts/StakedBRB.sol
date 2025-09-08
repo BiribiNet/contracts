@@ -57,6 +57,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 lastRoundPaid;           // Last round that was fully processed (for tracking active rounds)
         uint256 lastRoundResolved;       // Last round that was resolved (for tracking active rounds)
         bool roundTransitionInProgress;  // True when round transition has started but not completed
+        mapping(uint256 => uint256) maxPayoutPerRound; // Round => max payout for that round
         mapping(uint256 => uint256) totalPayouts; // Round => total payouts for that round
         mapping(uint256 => uint256) totalWinningBets; // Round => total winning bets for that round
         mapping(uint256 => bool) totalWinningBetsSet; // Round => total winning bets set
@@ -278,16 +279,18 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function onTokenTransfer(address from, uint256 amount, bytes calldata data) external onlyBRB {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        
+        uint256 currentRound = $.currentRound;
         // Track as pending bet (excluded from totalAssets until resolved)
         $.pendingBets += amount;
         
         // Track pending bets for current round
-        $.pendingBetsPerRound[$.currentRound] += amount;
+        $.pendingBetsPerRound[currentRound] += amount;
         
         // Forward the bet to the roulette contract (no longer needs our address as parameter)
         uint256 maxPayout = RouletteClean(ROULETTE_CONTRACT).bet(from, amount, data);
         uint256 nextMaxPayout = $.maxPayout + maxPayout;
+
+        $.maxPayoutPerRound[currentRound] = nextMaxPayout;
         $.maxPayout = nextMaxPayout;  // Fixed: should be nextMaxPayout, not maxPayout
         
         emit BetPlaced(from, amount, data);
@@ -399,7 +402,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             _processLargeWithdrawalBatchPreComputed(cleaningData.usersToProcess, cleaningData.amountsToProcess, cleaningData.actualProcessCount);
         }
 
-        $.maxPayout = 0;
+        $.maxPayout -= $.maxPayoutPerRound[cleaningData.roundId];
         // 3. UPDATE lastRoundResolved to mark this round as processed
         $.lastRoundResolved = cleaningData.roundId;
         

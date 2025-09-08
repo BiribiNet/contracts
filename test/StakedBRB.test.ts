@@ -374,31 +374,82 @@ describe("StakedBRB", function () {
     });
 
     it("Should queue large withdrawals in FIFO order", async function () {
-      // TODO: Fix FIFO queue position calculation
-      // Scenario is already set up: totalAssets = 2000, maxPayout = 1800, safe capacity = 200
-      // Withdrawals > 200 will be large and queued
+      // Clear all assets first to start fresh
+      await clearAllAssets();
       
-      // Add player2 to the setup
-      await brb.write.approve([stakedBrbProxy.address, parseEther("1000")], { account: player2.account });
-      await stakedBrbProxy.write.deposit([parseEther("1000"), player2.account.address, 0n], { account: player2.account });
+      // Setup scenario where both players deposit before placing bet
+      // This ensures the maxPayout is set correctly for both players
       
-      // Queue multiple withdrawals while round is not over
-      const withdrawAmount = parseEther("300"); // Larger than safe capacity (200)
+      // Ensure both players have enough BRB
+      await brb.write.transfer([player1.account.address, parseEther("2000")], { account: admin.account });
+      await brb.write.transfer([player2.account.address, parseEther("2000")], { account: admin.account });
       
-      // Player 1 (already has shares from beforeEach)
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      // Player 1 deposits
+      await brb.write.approve([stakedBrbProxy.address, parseEther("2000")], { account: player1.account });
+      await stakedBrbProxy.write.deposit([parseEther("2000"), player1.account.address, 0n], { account: player1.account });
       
-      // Player 2
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, parseEther("1000")], { account: player2.account });
+      // Player 2 deposits
+      await brb.write.approve([stakedBrbProxy.address, parseEther("2000")], { account: player2.account });
+      await stakedBrbProxy.write.deposit([parseEther("2000"), player2.account.address, 0n], { account: player2.account });
+      
+      // Now place a bet to create maxPayout scenario
+      const totalAssetsAfterDeposits = await stakedBrbProxy.read.totalAssets();
+      
+      // Get the safe capacity to determine how much we can bet
+      const safeCapacity = await stakedBrbProxy.read.getSafeCapacity();
+      console.log(`Safe capacity: ${safeCapacity}`);
+      
+      // Calculate bet amount based on safe capacity (use a small portion to ensure maxPayout doesn't exceed safe capacity)
+      const betAmount = safeCapacity / 36n; // Use 1/36 of safe capacity to ensure maxPayout (36x) stays within safe capacity
+      console.log(`Calculated bet amount: ${betAmount}`);
+      
+      // Ensure player1 has enough BRB for the bet
+      const player1Balance = await brb.read.balanceOf([player1.account.address]);
+      if (player1Balance < betAmount) {
+        await brb.write.transfer([player1.account.address, betAmount - player1Balance], { account: admin.account });
+      }
+      
+      // Place the bet
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
+      );
+      
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account });
+      
+      // Now check safe capacity after bet
+      const safeCapacityAfterBet = await stakedBrbProxy.read.getSafeCapacity();
+      console.log(`Safe capacity after bet: ${safeCapacityAfterBet}`);
+      
+      // Queue multiple withdrawals - use amount larger than safe capacity
+      const withdrawAmount = safeCapacityAfterBet + parseEther("100"); // Larger than safe capacity
+      console.log(`Withdraw amount: ${withdrawAmount}`);
+      
+      // Player 1 withdrawal
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("2000")], { account: player1.account });
+      
+      // Player 2 withdrawal
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, parseEther("2000")], { account: player2.account });
+      
+      // Debug: Check withdrawal settings after withdrawals
+      const [batchSize, totalPending, queueLength, maxQueueLength] = await stakedBrbProxy.read.getWithdrawalSettings();
+      console.log(`After withdrawals - Batch size: ${batchSize}, Total pending: ${totalPending}, Queue length: ${queueLength}, Max queue length: ${maxQueueLength}`);
       
       // Check queue positions
-      const [, , , pos1] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
-      const [, , , pos2] = await stakedBrbProxy.read.getUserPendingWithdrawal([player2.account.address]);
+      const [, pos1] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
+      const [, pos2] = await stakedBrbProxy.read.getUserPendingWithdrawal([player2.account.address]);
       
       console.log(`Debug FIFO: pos1=${pos1}, pos2=${pos2}`);
-      // For now, just check that both users are in the queue (position > 0)
+      // Check that both users are in the queue (position > 0)
       expect(pos1).to.be.above(0);
       expect(pos2).to.be.above(0);
+      
+      // Check that player1 is before player2 in the queue (FIFO order)
+      expect(pos1).to.be.lessThan(pos2);
     });
 
     it("Should prevent duplicate large withdrawal requests", async function () {
@@ -654,14 +705,11 @@ describe("StakedBRB", function () {
       // 5. NOW PROCESS LARGE WITHDRAWALS
       const [upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
       expect(upkeepNeeded).to.be.true;
+
+      await expect(stakedBrbProxy.write.performUpkeep([_performData], { account: admin.account })).to.not.be.rejected;
       
       console.log(`✅ Full game loop completed! Large withdrawal upkeep needed: ${upkeepNeeded}`);
       console.log(`✅ This test verifies that the complete game loop works correctly with large withdrawals`);
-      
-      // Note: The MaxSharesError during performUpkeep is expected behavior
-      // as it indicates the large withdrawal system is working correctly
-      // The error occurs because the internal _executeLargeWithdrawal function
-      // has strict validation on maxSharesOut parameters
     });
 
     it("Should calculate safe withdrawal capacity correctly", async function () {

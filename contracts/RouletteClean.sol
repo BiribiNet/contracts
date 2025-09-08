@@ -538,39 +538,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         // Validate bet type
         if (betType == 0 || betType > BET_TRIO_023) revert InvalidBetType();
         
-        // Validate number parameter based on bet type
-        if (betType == BET_STRAIGHT) {
-            // Straight bet: number must be 0-36
-            if (number > 36) revert InvalidNumber();
-        } else if (betType == BET_SPLIT) {
-            // Split bet: validate split ID (we'll add validation later)
-            // if (number > 60) revert InvalidNumber(); // Max ~60 possible splits
-        } else if (betType == BET_STREET) {
-            // Street bet: number should be first number of street (1, 4, 7, etc.)
-            if (number == 0 || number > 34 || (number - 1) % 3 != 0) revert InvalidNumber();
-        } else if (betType == BET_CORNER) {
-            // Corner bet: validate corner ID  
-            if (number > 22) revert InvalidNumber(); // Max ~22 possible corners
-        } else if (betType == BET_LINE) {
-            // Line bet: first number of first street (1, 4, 7, etc.)
-            if (number == 0 || number > 31 || (number - 1) % 3 != 0) revert InvalidNumber();
-        } else if (betType == BET_COLUMN) {
-            // Column bet: 1, 2, or 3
-            if (number == 0 || number > 3) revert InvalidNumber();
-        } else if (betType == BET_DOZEN) {
-            // Dozen bet: 1, 2, or 3  
-            if (number == 0 || number > 3) revert InvalidNumber();
-        } else if (betType == BET_TRIO_012) {
-            // Trio bet: number parameter must be 0
-            if (number != 0) revert InvalidNumber();
-        } else if (betType == BET_TRIO_023) {
-            // Trio bet: number parameter must be 0
-            if (number != 0) revert InvalidNumber();
-        } else {
-            // All other bet types: number parameter must be 0
-            if (number != 0) revert InvalidNumber();
-        }
-        
         // Store the bet in appropriate mapping for efficient lookup
         Bet memory newBet = Bet({
             player: sender,
@@ -582,24 +549,31 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         unchecked {
             // DEALER-STYLE STORAGE: Each bet type goes to its specific section (using cached currentRound)
             if (betType == BET_STRAIGHT) {
+                if (number > 36) revert InvalidNumber();
                 payout = amount * 36;
                 $.roundStraightBets[currentRound][number].push(newBet);
             } else if (betType == BET_SPLIT) {
+                if (!isValidSplit(number)) revert InvalidNumber();
                 payout = amount * 18;
                 $.roundSplitBets[currentRound][number].push(newBet);
             } else if (betType == BET_STREET) {
+                if (number == 0 || number > 34 || (number - 1) % 3 != 0) revert InvalidNumber();
                 payout = amount * 12;
                 $.roundStreetBets[currentRound][number].push(newBet);
             } else if (betType == BET_CORNER) {
+                if (!isValidCorner(number)) revert InvalidNumber();
                 payout = amount * 9;
                 $.roundCornerBets[currentRound][number].push(newBet);
             } else if (betType == BET_LINE) {
+                if (number == 0 || number > 31 || (number - 1) % 3 != 0) revert InvalidNumber();
                 payout = amount * 6;
                 $.roundLineBets[currentRound][number].push(newBet);
             } else if (betType == BET_COLUMN) {
+                if (number == 0 || number > 3) revert InvalidNumber();
                 payout = amount * 3;
                 $.roundColumnBets[currentRound][number].push(newBet);
             } else if (betType == BET_DOZEN) {
+                if (number == 0 || number > 3) revert InvalidNumber();
                 payout = amount * 3;
                 $.roundDozenBets[currentRound][number].push(newBet);
             } else if (betType == BET_RED) {
@@ -948,29 +922,38 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256[] memory corners = new uint256[](4);
         uint256 count;
         
-        if (num == 0) return new uint256[](0);
-        
-        // Four possible corners for most numbers
-        // Corner = top-left number of the 2x2 square
-        
-        // Top-left corner (num is bottom-right)
-        if (num > 4 && num % 3 != 1) {
-            corners[count++] = num - 4; // Top-left of corner
+        // Special case: 0-1-2-3 corner (corner ID 0)
+        if (num == 0 || num == 1 || num == 2 || num == 3) {
+            corners[count++] = 0; // Special 0-1-2-3 corner
         }
         
-        // Top-right corner (num is bottom-left)  
-        if (num > 3 && num % 3 != 0) {
-            corners[count++] = num - 3; // Top-left of corner
-        }
+        // For numbers 1-36, find all valid 2x2 corners that contain this number
+        // Corner ID = top-left number of the 2x2 square
         
-        // Bottom-left corner (num is top-right)
-        if (num < 33 && num % 3 != 1) {
-            corners[count++] = num - 1; // Top-left of corner  
-        }
-        
-        // Bottom-right corner (num is top-left)
-        if (num < 34 && num % 3 != 0) {
-            corners[count++] = num; // Top-left of corner
+        if (num >= 1 && num <= 36) {
+            // Top-left corner (num is bottom-right of 2x2 square)
+            // Example: num=5, corner is 1-2-4-5, so corner ID = 1
+            if (num >= 4 && num <= 36 && (num - 1) % 3 != 0) {
+                corners[count++] = num - 4; // Top-left of corner
+            }
+            
+            // Top-right corner (num is bottom-left of 2x2 square)  
+            // Example: num=5, corner is 2-3-5-6, so corner ID = 2
+            if (num >= 4 && num <= 36 && num % 3 != 0) {
+                corners[count++] = num - 3; // Top-left of corner
+            }
+            
+            // Bottom-left corner (num is top-right of 2x2 square)
+            // Example: num=5, corner is 4-5-7-8, so corner ID = 4
+            if (num >= 1 && num <= 33 && (num - 1) % 3 != 0) {
+                corners[count++] = num - 1; // Top-left of corner
+            }
+            
+            // Bottom-right corner (num is top-left of 2x2 square)
+            // Example: num=5, corner is 5-6-8-9, so corner ID = 5
+            if (num >= 1 && num <= 33 && num % 3 != 0) {
+                corners[count++] = num; // Top-left of corner
+            }
         }
         
         // Use assembly to resize array instead of copying
@@ -1012,6 +995,40 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
      */
     function _getSplitId(uint256 num1, uint256 num2) private pure returns (uint256) {
         return num1 < num2 ? num1 * 100 + num2 : num2 * 100 + num1;
+    }
+    
+    /**
+     * @dev Validate if a split ID represents a valid adjacent pair of numbers
+     */
+    function isValidSplit(uint256 splitId) private pure returns (bool) {
+        if (splitId < 100) return false; // Minimum valid split ID is 102 (1-2)
+        if (splitId > 3636) return false; // Maximum valid split ID is 3536 (35-36)
+        
+        uint256 num1 = splitId / 100;
+        uint256 num2 = splitId % 100;
+        
+        // Both numbers must be 0-36
+        if (num1 > 36 || num2 > 36) return false;
+        
+        // Check if they are adjacent (horizontal or vertical)
+        bool horizontalAdjacent = (num1 + 1 == num2) && (num1 % 3 != 0); // Same row, next column
+        bool verticalAdjacent = (num1 + 3 == num2) && (num1 <= 33); // Next row, same column
+        
+        return horizontalAdjacent || verticalAdjacent;
+    }
+    
+    /**
+     * @dev Validate if a corner ID represents a valid 2x2 square
+     */
+    function isValidCorner(uint256 cornerId) private pure returns (bool) {
+        if (cornerId == 0) return true; // Special case for 0-1-2-3 corner
+        
+        // For regular corners, the ID should be the top-left number of a 2x2 square
+        if (cornerId < 1 || cornerId > 33) return false;
+        
+        // Check if it's a valid top-left corner (not in the rightmost column)
+        // and ensure the 2x2 square doesn't go beyond the table
+        return cornerId % 3 != 0 && cornerId <= 33;
     }
     
     /**

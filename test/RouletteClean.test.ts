@@ -478,21 +478,22 @@ describe("RouletteClean", function () {
       }
     });
 
-    it("Should validate outside bets have number parameter as 0", async function () {
+    it("Should validate outside bets work with any number parameter", async function () {
       const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
       const [admin, player1] = await viem.getWalletClients();
 
-      const stakeAmount = parseEther("1000"); // Increased from 100 to 1000 ETH to provide enough balance
+      const stakeAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
       await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
 
-      const betAmount = parseEther("0.1"); // Reduced from 1 to 0.1 ETH
+      const betAmount = parseEther("0.1");
 
-      // Valid outside bets with number = 0
-      const outsideBetTypes = [8, 9, 10, 11, 12, 13]; // RED, BLACK, ODD, EVEN, LOW, HIGH
+      // Outside bets work with any number parameter (the number is ignored for outside bets)
+      const outsideBetTypes = [8, 9, 10, 11, 12, 13, 14, 15]; // RED, BLACK, ODD, EVEN, LOW, HIGH, TRIO_012, TRIO_023
       
       for (const betType of outsideBetTypes) {
-        const betData = encodeAbiParameters(
+        // Test with number = 0
+        const betData0 = encodeAbiParameters(
           [{ type: "tuple", components: [
             { type: "uint256[]", name: "amounts" },
             { type: "uint256[]", name: "betTypes" },
@@ -502,34 +503,173 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData0])
+        ).to.not.be.reverted;
+
+        // Test with number != 0 (should also work since number is ignored for outside bets)
+        const betData5 = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [BigInt(betType)], numbers: [5n] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData5])
         ).to.not.be.reverted;
       }
+    });
 
-      // Invalid outside bets with number != 0
-      for (const betType of outsideBetTypes) {
+    it("Should validate split bets correctly", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+
+      // Valid split bets (adjacent numbers)
+      const validSplits = [102n, 203n, 405n, 506n, 708n, 809n, 104n, 407n, 710n, 1013n, 1316n, 1619n]; // 1-2, 2-3, 4-5, 5-6, 7-8, 8-9, 1-4, 4-7, 7-10, 10-13, 13-16, 16-19
+      
+      for (const splitId of validSplits) {
         const betData = encodeAbiParameters(
           [{ type: "tuple", components: [
             { type: "uint256[]", name: "amounts" },
             { type: "uint256[]", name: "betTypes" },
             { type: "uint256[]", name: "numbers" }
           ]}],
-          [{ amounts: [betAmount], betTypes: [BigInt(betType)], numbers: [5n] }] // Non-zero number
+          [{ amounts: [betAmount], betTypes: [2n], numbers: [splitId] }]
         );
 
-        // TODO: Fix custom error testing for Viem compatibility
-        // await expect(
-        //   brb.write.bet([stakedBrbProxy.address, betAmount, betData])
-        // ).to.be.revertedWithCustomError(rouletteProxy, "InvalidNumber");
-        
-        // Should revert with InvalidNumber error
-        try {
-          await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
-          expect.fail("Expected call to revert with InvalidNumber error");
-        } catch (error: unknown) {
-          // Expected to fail with InvalidNumber error
-          expect((error as Error).message).to.include("InvalidNumber");
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.not.be.reverted;
+      }
+
+      // Invalid split bets (non-adjacent numbers)
+      const invalidSplits = [101n, 103n, 106n, 107n, 110n, 111n, 113n, 116n, 117n, 120n, 999n, 1000n, 3637n]; // 1-1, 1-3, 1-6, 1-7, etc.
+      
+      for (const splitId of invalidSplits) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [2n], numbers: [splitId] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.be.rejected;
+      }
+    });
+
+    it("Should validate split boundary numbers (1, 3, 34, 36)", async function () {
+      const { stakedBrbProxy, brb } = await useDeployWithCreateFixture()
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+
+      // Helper to try a single split ID and expect pass/fail
+      async function expectSplitValidity(splitId: bigint, shouldPass: boolean) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [2n], numbers: [splitId] }]
+        );
+
+        if (shouldPass) {
+          await expect(
+            brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })
+          ).to.not.be.reverted;
+        } else {
+          await expect(
+            brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })
+          ).to.be.rejected;
         }
+      }
+
+      // Number 1 → valid: 1-2 (102), 1-4 (104) | invalid nearby: 1-3 (103), 1-5 (105)
+      await expectSplitValidity(102n, true);
+      await expectSplitValidity(104n, true);
+      await expectSplitValidity(103n, false);
+      await expectSplitValidity(105n, false);
+
+      // Number 3 → valid: 2-3 (203), 3-6 (306) | invalid nearby: 3-4 (304), 1-3 (103)
+      await expectSplitValidity(203n, true);
+      await expectSplitValidity(306n, true);
+      await expectSplitValidity(304n, false);
+      await expectSplitValidity(103n, false);
+
+      // Number 34 → valid: 34-35 (3435), 31-34 (3134) | invalid nearby: 33-34 (3334), 34-37 (3437)
+      await expectSplitValidity(3435n, true);
+      await expectSplitValidity(3134n, true);
+      await expectSplitValidity(3334n, false);
+      await expectSplitValidity(3437n, false);
+
+      // Number 36 → valid: 35-36 (3536), 33-36 (3336) | invalid nearby: 36-37 (3637), 34-36 (3436)
+      await expectSplitValidity(3536n, true);
+      await expectSplitValidity(3336n, true);
+      await expectSplitValidity(3637n, false);
+      await expectSplitValidity(3436n, false);
+    });
+
+    it("Should validate corner bets correctly", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+
+      // Valid corner bets (top-left of 2x2 squares)
+      const validCorners = [0n, 1n, 2n, 4n, 5n, 7n, 8n, 10n, 11n, 13n, 14n, 16n, 17n, 19n, 20n, 22n, 23n, 25n, 26n, 28n, 29n, 31n, 32n];
+      
+      for (const cornerId of validCorners) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [4n], numbers: [cornerId] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.not.be.reverted;
+      }
+
+      // Invalid corner bets (rightmost column numbers)
+      const invalidCorners = [3n, 6n, 9n, 12n, 15n, 18n, 21n, 24n, 27n, 30n, 33n, 34n, 35n, 36n];
+      
+      for (const cornerId of invalidCorners) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [4n], numbers: [cornerId] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.be.rejected;
       }
     });
   });
@@ -620,7 +760,7 @@ describe("RouletteClean", function () {
       const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
       const [admin, player1] = await viem.getWalletClients();
 
-      const stakeAmount = parseEther("1000"); // Increased from 100 to 1000 ETH to provide enough balance
+      const stakeAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
       await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
 
@@ -633,15 +773,148 @@ describe("RouletteClean", function () {
         [{ amounts: [], betTypes: [], numbers: [] }] // Empty arrays
       );
 
-      // TODO: Fix custom error testing for Viem compatibility
-      // await expect(
-      //   brb.write.bet([stakedBrbProxy.address, 0n, betData])
-      // ).to.be.revertedWithCustomError(rouletteProxy, "EmptyBetsArray");
-      
-      // For now, just verify the call reverts
       await expect(
         brb.write.bet([stakedBrbProxy.address, 1n, betData])
       ).to.be.rejectedWith("EmptyBetsArray");
+    });
+
+    it("Should validate straight bet edge cases", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+
+      // Valid straight bets (0-36)
+      for (let i = 0; i <= 36; i++) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [1n], numbers: [BigInt(i)] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.not.be.reverted;
+      }
+
+      // Invalid straight bets (> 36)
+      const invalidNumbers = [37n, 38n, 100n, 1000n];
+      
+      for (const number of invalidNumbers) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [1n], numbers: [number] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.be.rejected;
+      }
+    });
+
+    it("Should validate street bet edge cases", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+
+      // Valid street bets (1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34)
+      const validStreets = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34];
+      
+      for (const street of validStreets) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [3n], numbers: [BigInt(street)] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.not.be.reverted;
+      }
+
+      // Invalid street bets
+      const invalidStreets = [0, 2, 3, 5, 6, 8, 9, 35, 36, 37, 100];
+      
+      for (const street of invalidStreets) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [3n], numbers: [BigInt(street)] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.be.rejected;
+      }
+    });
+
+    it("Should validate line bet edge cases", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+
+      // Valid line bets (1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31)
+      const validLines = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31];
+      
+      for (const line of validLines) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [5n], numbers: [BigInt(line)] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.not.be.reverted;
+      }
+
+      // Invalid line bets
+      const invalidLines = [0, 2, 3, 5, 6, 8, 9, 32, 33, 34, 35, 36, 37, 100];
+      
+      for (const line of invalidLines) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [5n], numbers: [BigInt(line)] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        ).to.be.rejected;
+      }
     });
 
     it("Should handle array length mismatches", async function () {
@@ -1022,6 +1295,46 @@ describe("RouletteClean", function () {
       await runBetTest(4n, 1n, 3n, 0n, false); // BET_CORNER on 1-2-4-5, winning number 3, multiplier 0 (for losing)
     });
 
+    it("Should handle BET_CORNER boundary numbers correctly (1, 3, 34, 36)", async function () {
+      // 1 is in corners: 0 (0-1-2-3) and 1 (1-2-4-5)
+      await runBetTest(4n, 0n, 1n, 9n, true);
+      await runBetTest(4n, 1n, 1n, 9n, true);
+      // 3 is in corners: 0 (0-1-2-3) and 2 (2-3-5-6)
+      await runBetTest(4n, 0n, 3n, 9n, true);
+      await runBetTest(4n, 2n, 3n, 9n, true);
+      // 34 is in corner: 31 (31-32-34-35)
+      await runBetTest(4n, 31n, 34n, 9n, true);
+      // 36 is in corner: 32 (32-33-35-36)
+      await runBetTest(4n, 32n, 36n, 9n, true);
+    });
+
+    it("Should reject invalid BET_CORNER boundary IDs", async function () {
+      const { stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      const stakeAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+      const invalidCornerIds = [3n, 33n, 34n, 35n, 36n, 37n]; // rightmost column + out-of-range
+
+      for (const cornerId of invalidCornerIds) {
+        const betData = encodeAbiParameters(
+          [{ type: "tuple", components: [
+            { type: "uint256[]", name: "amounts" },
+            { type: "uint256[]", name: "betTypes" },
+            { type: "uint256[]", name: "numbers" }
+          ]}],
+          [{ amounts: [betAmount], betTypes: [4n], numbers: [cornerId] }]
+        );
+
+        await expect(
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })
+        ).to.be.rejected;
+      }
+    });
+
     it("Should handle BET_LINE winning payout correctly", async function () {
       // Line bet on 1-6, represented by number 1
       await runBetTest(5n, 1n, 4n, 6n, true); // BET_LINE on 1-6, winning number 4, multiplier 6
@@ -1030,6 +1343,16 @@ describe("RouletteClean", function () {
     it("Should handle BET_LINE losing payout correctly", async function () {
       // Line bet on 1-6, represented by number 1
       await runBetTest(5n, 1n, 7n, 0n, false); // BET_LINE on 1-6, winning number 7, multiplier 0 (for losing)
+    });
+
+    it("Should handle BET_LINE boundary winning payout correctly (31-36)", async function () {
+      // Line bet on 31-36, represented by number 31
+      await runBetTest(5n, 31n, 34n, 6n, true); // winning number inside the line
+    });
+
+    it("Should handle BET_LINE boundary losing payout correctly (31-36)", async function () {
+      // Line bet on 31-36, represented by number 31
+      await runBetTest(5n, 31n, 30n, 0n, false); // winning number outside the line
     });
 
     it("Should handle BET_COLUMN winning payout correctly", async function () {
