@@ -208,9 +208,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event RoundStarted(uint256 roundId, uint256 timestamp, uint256 requestId);
     event RoundResolved(uint256 roundId);
     event VRFResult(uint256 roundId, uint256 winningNumber);
-    event BatchProcessed(uint256 indexed roundId, uint256 batchIndex, uint256 payoutsCount);
-    event ChainlinkSetupCompleted(uint256 indexed subscriptionId, address keeperRegistrar, address keeperRegistry);
-    event UpkeepRegistered(uint256 indexed upkeepId, address indexed forwarder, uint32 gasLimit, uint96 linkAmount, uint256 checkDataLength, string upkeepType);
+    event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
+    event ChainlinkSetupCompleted(uint256 subscriptionId, address keeperRegistrar, address keeperRegistry);
+    event UpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, uint256 checkDataLength, string upkeepType);
     event MaxSupportedBetsUpdated(uint256 maxSupportedBets, uint256 totalUpkeeps);
     
     // ========== ERRORS ==========

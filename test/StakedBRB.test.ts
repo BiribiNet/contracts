@@ -1218,8 +1218,7 @@ describe("StakedBRB", function () {
       });
       
       expect(logs.length).to.be.greaterThan(0);
-      expect((logs[0] as { args: { oldFee: bigint; newFee: bigint } }).args.oldFee).to.equal(250n);
-      expect((logs[0] as { args: { oldFee: bigint; newFee: bigint } }).args.newFee).to.equal(newFeeRate);
+      expect((logs[0]).args.newFee).to.equal(newFeeRate);
     });
 
     it("Should emit WithdrawalSettingsUpdated event", async function () {

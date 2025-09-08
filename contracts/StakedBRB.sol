@@ -107,14 +107,15 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event BetResult(address player, uint256 betAmount, uint256 protocolFee, uint256 stakerProfit, bool isWin);
     event ProfitDistributed(uint256 amount);
     event ProtocolFeeCollected(uint256 amount);
-    event ProtocolFeeRateUpdated(uint256 oldFee, uint256 newFee);
+    event ProtocolFeeRateUpdated(uint256 newFee);
+    event ProtocolFeeRecipientUpdated(address newRecipient);
     event FeeWithdrawn(uint256 amount, address recipient);
     event LargeWithdrawalRequested(address user, uint256 amount);
     event LargeWithdrawalProcessed(address user, uint256 amount);
     event WithdrawalSettingsUpdated(uint256 batchSize);
     event AntiSpamSettingsUpdated(uint256 maxQueueLength);
     event RoundTransition(uint256 previousRound, uint256 newRound);
-    event CleaningUpkeepRegistered(uint256 indexed upkeepId, address indexed forwarder, uint32 gasLimit, uint96 linkAmount, string upkeepType);
+    event CleaningUpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, string upkeepType);
     
     // Errors
     error OnlyBRB();
@@ -207,6 +208,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.lastRoundResolved = 0; // Initialize to 0, will be updated when rounds are processed
         $.lastRoundPaid = 0; // Initialize to 0, will be updated when rounds are completed
         $.roundTransitionInProgress = false; // Initialize to false, no transition in progress initially
+        emit ProtocolFeeRecipientUpdated(feeRecipient);
+        emit ProtocolFeeRateUpdated(protocolFeeBasisPoints);
     }
     
     /**
@@ -689,10 +692,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (newFeeBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
         
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        uint256 oldFee = $.protocolFeeBasisPoints;
         $.protocolFeeBasisPoints = newFeeBasisPoints;
         
-        emit ProtocolFeeRateUpdated(oldFee, newFeeBasisPoints);
+        emit ProtocolFeeRateUpdated(newFeeBasisPoints);
     }
     
     /**
@@ -704,6 +706,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         $.feeRecipient = newRecipient;
+        emit ProtocolFeeRecipientUpdated(newRecipient);
     }
 
     /**
