@@ -104,7 +104,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     // Events
     event BetPlaced(address user, uint256 amount, bytes data);
-    event BetResult(address player, uint256 betAmount, uint256 protocolFee, uint256 stakerProfit, bool isWin);
     event ProfitDistributed(uint256 amount);
     event ProtocolFeeCollected(uint256 amount);
     event ProtocolFeeRateUpdated(uint256 newFee);
