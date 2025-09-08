@@ -68,10 +68,11 @@ async function deployTestnet() {
   // Ensure deployer has enough LINK to fund the subscription
   // This step assumes deployer has LINK. In a real testnet, you'd need to acquire LINK.
   // Note: IERC677's transferAndCall might have different argument types, ensure compatibility.
-  await linkToken.write.transferAndCall([vrfCoordinator.address, parseEther('3'), encodeAbiParameters([{ type: 'uint256', name: 'subId' }], [subId])], { account: deployer.account });
+  const txTransferAndCall = await linkToken.write.transferAndCall([vrfCoordinator.address, parseEther('3'), encodeAbiParameters([{ type: 'uint256', name: 'subId' }], [subId])], { account: deployer.account });
+  await publicClient.waitForTransactionReceipt({ hash: txTransferAndCall });
   console.log("Funded VRF Subscription", subId, "with 3 LINK");
 
-  const getNonce = await publicClient.getTransactionCount({ address: deployer.account.address });
+  const getNonce = await publicClient.getTransactionCount({ address: deployer.account.address, blockTag: 'latest' });
 
   console.log('getNonce', getNonce);
   const brbAddress = getContractAddress({
@@ -115,6 +116,7 @@ async function deployTestnet() {
   const brb = await viem.deployContract("BRB");
   await setTimeoutIsDeployed(brb.address);
 
+  console.log('brb is dployed', brb.address);
   const initializeRouletteData = encodeFunctionData({
     abi: rouletteCleanAbi,
     functionName: 'initialize',

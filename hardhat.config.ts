@@ -50,12 +50,17 @@ const config: HardhatUserConfig = {
     currency: 'EUR',
   },
   etherscan: {
-    apiKey: {
-      xdai: vars.get('GNOSIS_SCAN_API_KEY'),
-      sepolia: vars.get('ETHERSCAN_API_KEY'),
-      mainnet: vars.get('ETHERSCAN_API_KEY'),
-      arbitrumSepolia: vars.get('ETHERSCAN_API_KEY'),
-    },
+    apiKey: vars.get('ETHERSCAN_API_KEY'),
+    customChains: [
+      {
+        network: "arbitrumsepolia",
+        chainId: 421614,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=421614&apikey=" + vars.get('ETHERSCAN_API_KEY'),
+          browserURL: "https://sepolia.arbiscan.io"
+        }
+      },
+    ]
   },
 };
 export default config;
