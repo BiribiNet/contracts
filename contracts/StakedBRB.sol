@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import { ERC4626Upgradeable } from "./external/ERC4626Upgradeable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -26,13 +26,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     address private immutable ROULETTE_CONTRACT;
     
     // Security constants
-    uint256 public constant MINIMUM_DEPOSIT = 1000;
+    uint256 public constant MINIMUM_FIRST_DEPOSIT = 1000;
     uint256 public constant MAX_PROTOCOL_FEE = 10000; // 100% max
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
     
     // Withdrawal constants
-    uint256 public constant DEFAULT_LARGE_WITHDRAWAL_FEE = 0.01 ether; // 0.01 BRB fixed fee
-    uint256 public constant MAX_LARGE_WITHDRAWAL_FEE = 0.1 ether;   // 0.1 BRB max fee
     uint256 public constant DEFAULT_LARGE_WITHDRAWAL_BATCH_SIZE = 5; // Process 5 withdrawals per round transition
     uint256 public constant MAX_LARGE_WITHDRAWAL_BATCH_SIZE = 20;   // Max 20 per round
     
@@ -58,14 +56,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 currentRound;            // Current active round for betting
         uint256 lastRoundPaid;           // Last round that was fully processed (for tracking active rounds)
         uint256 lastRoundResolved;       // Last round that was resolved (for tracking active rounds)
-        bool lockWithdrawals;            // Lock withdrawals during vrf & distribution
+        bool roundTransitionInProgress;  // True when round transition has started but not completed
         mapping(uint256 => uint256) totalPayouts; // Round => total payouts for that round
         mapping(uint256 => uint256) totalWinningBets; // Round => total winning bets for that round
         mapping(uint256 => bool) totalWinningBetsSet; // Round => total winning bets set
         mapping(uint256 => uint256) pendingBetsPerRound; // Round => pending bets for that round
         
         // Withdrawal management
-        uint256 largeWithdrawalFee;      // Fixed fee for large withdrawals (in wei)
         uint256 largeWithdrawalBatchSize; // Number of withdrawals to process per round transition
         
         // Large withdrawal queue - Gas efficient implementation
@@ -128,7 +125,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     error DepositTooSmall();
     error AmountExceedsTotalAssets();
     error ExceedsSafeBettingLimit();
-    error WithdrawalBlockedDuringBetting();
+    error DepositBlockedDuringResolution();
+    error WithdrawalBlockedDuringResolution();
     error LargeWithdrawalPending();
     error InvalidWithdrawalFee();
     error WithdrawalTooLarge();
@@ -141,12 +139,12 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     error UpkeepRegistrationFailed();
     
     modifier onlyBRB() {
-        require(msg.sender == BRB_TOKEN, OnlyBRB());
+        if (msg.sender != BRB_TOKEN) revert OnlyBRB();
         _;
     }
     
     modifier onlyRoulette() {
-        require(msg.sender == ROULETTE_CONTRACT, OnlyRoulette());
+        if (msg.sender != ROULETTE_CONTRACT) revert OnlyRoulette();
         _;
     }
     
@@ -199,13 +197,15 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.feeRecipient = feeRecipient;
         
         // Initialize withdrawal settings with defaults
-        $.largeWithdrawalFee = DEFAULT_LARGE_WITHDRAWAL_FEE;
         $.largeWithdrawalBatchSize = DEFAULT_LARGE_WITHDRAWAL_BATCH_SIZE;
         
         // Initialize anti-spam protection
         $.maxQueueLength = DEFAULT_MAX_QUEUE_LENGTH;
         
         $.currentRound = 1;
+        $.lastRoundResolved = 0; // Initialize to 0, will be updated when rounds are processed
+        $.lastRoundPaid = 0; // Initialize to 0, will be updated when rounds are completed
+        $.roundTransitionInProgress = false; // Initialize to false, no transition in progress initially
     }
     
     /**
@@ -244,16 +244,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function previewRedeem(uint256 shares) public view virtual override returns (uint256) {
         // No exit fees - return standard preview
         return super.previewRedeem(shares);
-    }
-    
-    /**
-     * @dev Override deposit to enforce minimum deposit
-     */
-    function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
-        if (assets < MINIMUM_DEPOSIT && totalSupply() == 0) {
-            revert DepositTooSmall();
-        }
-        return super.deposit(assets, receiver);
     }
     
     /**
@@ -409,11 +399,12 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             _processLargeWithdrawalBatchPreComputed(cleaningData.usersToProcess, cleaningData.amountsToProcess, cleaningData.actualProcessCount);
         }
 
+        $.maxPayout = 0;
         // 3. UPDATE lastRoundResolved to mark this round as processed
         $.lastRoundResolved = cleaningData.roundId;
         
-        // 4. UNLOCK WITHDRAWALS after all operations are complete
-        $.lockWithdrawals = false;
+        // 4. CLEAR round transition flag - deposits/withdrawals are now allowed again
+        $.roundTransitionInProgress = false;
     }
     
 
@@ -467,9 +458,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if ($.keeperRegistrar == address(0)) revert ZeroAmount();
         
         // Transfer LINK from caller to this contract for upkeep funding
-        if (!IERC20($.linkToken).transferFrom(msg.sender, address(this), linkAmount)) {
-            revert TransferFailed();
-        }
+       IERC20($.linkToken).transferFrom(msg.sender, address(this), linkAmount);
         
         string memory upkeepName = string.concat(
             "StakedBRB-Cleaning-",
@@ -510,6 +499,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function onRoundTransition(uint256 newRoundId, uint256 previousRoundId) external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
+        
+        // Mark that a round transition is in progress - this blocks deposits/withdrawals
+        $.roundTransitionInProgress = true;
         
         // Update current round - SINGLE SOURCE OF TRUTH for round state
         // This ensures proper synchronization between StakedBRB and RouletteClean
@@ -617,23 +609,22 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function _calculateSafeWithdrawalCapacity() private view returns (uint256 safeCapacity) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
-        // Get current BRB balance and maxPayout
-        uint256 currentBalance = IERC20(BRB_TOKEN).balanceOf(address(this));
+        // Get current total assets and maxPayout
+        uint256 currentTotalAssets = totalAssets();
         uint256 currentMaxPayout = $.maxPayout;
         
-        // Safe capacity is the difference between balance and maxPayout
-        safeCapacity = currentBalance > currentMaxPayout ? currentBalance - currentMaxPayout : 0;
+        // Safe capacity is the difference between total assets and maxPayout
+        safeCapacity = currentTotalAssets > currentMaxPayout ? currentTotalAssets - currentMaxPayout : 0;
     }
     
     /// @dev Execute a large withdrawal
-    /// @dev Uses standard ERC4626 flow: calculates net amount, burns correct shares, transfers net amount
-    /// @dev Fee remains in vault and is transferred to protocol separately
+    /// @dev Uses standard ERC4626 flow: burns correct shares and transfers full amount to user
     function _executeLargeWithdrawal(address user, uint256 amount) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // Use super.withdraw to handle the standard ERC4626 flow
-        // This automatically burns shares and transfers the net amount to user
-        super.withdraw(amount, user, user);
+        // This automatically burns shares and transfers the full amount to user
+        super.withdraw(amount, user, user, 0);
         
         // Clear pending withdrawal
         $.pendingLargeWithdrawals[user] = 0;
@@ -665,19 +656,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if ($.queueSize == 0) {
             $.queueHead = 0;
             $.queueTail = 0;
-        }
-    }
-    
-    /**
-     * @dev Calculate total payouts from a batch of winning bets
-     * @param payouts Array of payout information
-     * @return totalPayouts Sum of all payouts
-     */
-    function _calculateTotalPayouts(IRoulette.PayoutInfo[] memory payouts) private pure returns (uint256 totalPayouts) {
-        uint256 payoutsLength = payouts.length;
-        for (uint256 i; i < payoutsLength;) {
-            totalPayouts += payouts[i].payout;
-            unchecked { ++i; }
         }
     }
     
@@ -725,7 +703,27 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.feeRecipient = newRecipient;
     }
 
-    
+    /**
+    * @dev Override deposit to enforce minimum deposit
+    */
+    function deposit(uint256 assets, address receiver, uint256 minSharesOut) public override returns (uint256 shares) {
+        if (assets == 0) revert ZeroAmount();
+        if (totalSupply() == 0 && assets < MINIMUM_FIRST_DEPOSIT) {
+            revert DepositTooSmall();
+        }
+        _checkDepositAllowed();
+        return super.deposit(assets, receiver, minSharesOut);
+    }
+
+    function mint(uint256 shares, address receiver, uint256 maxAmountIn) public override returns (uint256 assets) {
+        if (shares == 0) revert ZeroAmount();
+        if (totalSupply() == 0 && shares < MINIMUM_FIRST_DEPOSIT) {
+            revert DepositTooSmall();
+        }
+        _checkDepositAllowed();
+        return super.mint(shares, receiver, maxAmountIn);
+    }
+
     // === Note: No ERC4626 Fee Overrides ===
     // We use pure ERC4626 without deposit/withdrawal fees
     // All fees come from betting losses, handled in processRouletteResult()
@@ -734,74 +732,90 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @dev Override withdraw to implement two-tier withdrawal system
      * @dev Small withdrawals are processed immediately, large withdrawals go to queue
      */
-    function withdraw(uint256 assets, address receiver, address owner) public virtual override noPendingLargeWithdrawal(owner) returns (uint256 shares) {
+    function withdraw(uint256 assets, address receiver, address owner, uint256 maxSharesOut) public override noPendingLargeWithdrawal(owner) returns (uint256 shares) {
+        if (assets == 0) revert ZeroAmount();
+        
         // Check if withdrawal is allowed at all
-        _checkWithdrawalAllowed();
+        _checkWithdrawalAllowed(owner);
         
         // Process withdrawal using shared logic
-        (bool isLarge, uint256 safeAmount) = _processWithdrawalRequest(owner, assets);
+        (bool isLarge, uint256 safeAmount) = _processWithdrawalRequest(assets, owner);
         
         if (isLarge) {
             // Large withdrawal: return shares that will be burned when processed
             return super.previewWithdraw(assets);
         } else {
             // Small withdrawal: process immediately
-            return super.withdraw(safeAmount, receiver, owner);
+            return super.withdraw(safeAmount, receiver, owner, maxSharesOut);
         }
     }
     
     /// @dev Override redeem to implement two-tier withdrawal system (consistent with withdraw)
-    function redeem(uint256 shares, address receiver, address owner) public virtual override noPendingLargeWithdrawal(owner) returns (uint256 assets) {
+    function redeem(uint256 shares, address receiver, address owner, uint256 minAmountOut) public override noPendingLargeWithdrawal(owner) returns (uint256 assets) {
+        if (shares == 0) revert ZeroAmount();
+        
         // Check if withdrawal is allowed at all
-        _checkWithdrawalAllowed();
+        _checkWithdrawalAllowed(owner);
         
         // Calculate assets from shares
         uint256 requestedAssets = super.previewRedeem(shares);
         
         // Process withdrawal using shared logic
-        (bool isLarge,) = _processWithdrawalRequest(owner, requestedAssets);
+        (bool isLarge,) = _processWithdrawalRequest(requestedAssets, owner);
         
         if (isLarge) {
             // Large withdrawal: return assets that will be transferred when processed
             return requestedAssets;
         } else {
             // Small withdrawal: process immediately
-            return super.redeem(shares, receiver, owner);
+            return super.redeem(shares, receiver, owner, minAmountOut);
         }
     }
     
     /// @dev Shared logic for processing withdrawal requests (both withdraw and redeem)
-    /// @param owner Address requesting withdrawal
     /// @param requestedAssets Amount of assets requested
     /// @return isLarge Whether this is a large withdrawal that needs queuing
     /// @return safeAmount Safe amount that can be withdrawn immediately (if not large)
-    function _processWithdrawalRequest(address owner, uint256 requestedAssets) private returns (bool isLarge, uint256 safeAmount) {        
+    function _processWithdrawalRequest(uint256 requestedAssets, address owner) private returns (bool isLarge, uint256 safeAmount) {        
         // Check if this is a large withdrawal
         isLarge = _isLargeWithdrawal(requestedAssets);
         
         if (isLarge) {
+
+            if (owner != msg.sender) { // can't use allowance for queued withdrawals
+                revert UnauthorizedCaller();
+            }
+
             // Pre-validate all conditions to prevent reverts
-            _validateLargeWithdrawalRequest(owner, requestedAssets);
+            _validateLargeWithdrawalRequest(requestedAssets);
             
             // Queue the withdrawal (user keeps shares for now)
-            _requestLargeWithdrawal(owner, requestedAssets);
+            _requestLargeWithdrawal(requestedAssets);
         } else {
             // Small withdrawal: user can get what they requested
             safeAmount = requestedAssets;
         }
     }
+
+    function _checkDepositAllowed() private view {
+       StakedBRBStorage storage $ = _getStakedBRBStorage();
+        // Block deposits during round transitions (from onRoundTransition to cleaning upkeep completion)
+        if ($.roundTransitionInProgress) {
+            revert DepositBlockedDuringResolution();
+        }
+    }
     
     /// @dev Private function to check if withdrawals are allowed
-    function _checkWithdrawalAllowed() private view {
+    function _checkWithdrawalAllowed(address owner) private view {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.lockWithdrawals) {
-            revert WithdrawalBlockedDuringBetting();
+        // Block withdrawals during round transitions (from onRoundTransition to cleaning upkeep completion)
+        if ($.roundTransitionInProgress) {
+            revert WithdrawalBlockedDuringResolution();
         }
-        
-        // Additional safety: check if there are any rounds that haven't been fully processed
-        if ($.lastRoundResolved != $.lastRoundPaid) {
-            revert WithdrawalBlockedDuringBetting();
-        }   
+
+        if ($.pendingLargeWithdrawals[owner] > 0) {
+            revert LargeWithdrawalPending();
+        }
     }
     
     /// @dev Check if withdrawal amount is considered "large" and requires special handling
@@ -809,12 +823,12 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function _isLargeWithdrawal(uint256 assets) private view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
-        // Get current BRB balance and maxPayout
-        uint256 currentBalance = IERC20(BRB_TOKEN).balanceOf(address(this));
+        // Get current total assets and maxPayout
+        uint256 currentTotalAssets = totalAssets();
         uint256 currentMaxPayout = $.maxPayout;
         
         // Calculate safe withdrawal capacity
-        uint256 safeCapacity = currentBalance > currentMaxPayout ? currentBalance - currentMaxPayout : 0;
+        uint256 safeCapacity = currentTotalAssets > currentMaxPayout ? currentTotalAssets - currentMaxPayout : 0;
         
         // Large withdrawal if it exceeds the safe capacity
         // If safeCapacity = 0, all withdrawals are large (no immediate withdrawals allowed)
@@ -823,11 +837,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     /// @dev Pre-validate all conditions for large withdrawal request to prevent reverts
     /// @dev This ensures the withdrawal request will succeed before we return shares
-    function _validateLargeWithdrawalRequest(address owner, uint256 amount) private view {
+    function _validateLargeWithdrawalRequest(uint256 amount) private view {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // 1. Check if user is already in queue
-        if ($.pendingLargeWithdrawals[owner] > 0) {
+        if ($.pendingLargeWithdrawals[msg.sender] > 0) {
             revert LargeWithdrawalPending();
         }
         
@@ -837,31 +851,37 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         }
         
         // 4. Check if user has sufficient balance (prevent fake requests)
-        uint256 userBalance = balanceOf(owner);
+        uint256 userBalance = balanceOf(msg.sender);
         if (userBalance < amount) {
             revert WithdrawalTooLarge();
         }
     }
     
     /// @dev Request a large withdrawal and add to queue (validation already done)
-    function _requestLargeWithdrawal(address owner, uint256 amount) private {
+    function _requestLargeWithdrawal(uint256 amount) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // ALL CHECKS ALREADY PASSED - Add to queue
         
         // Add to pending large withdrawals
-        $.pendingLargeWithdrawals[owner] = amount;
+        $.pendingLargeWithdrawals[msg.sender] = amount;
         $.totalPendingLargeWithdrawals += amount;
         
         uint256 queueTail = $.queueTail;
 
-        // Add to queue (FIFO - First In, First Out)
-        $.largeWithdrawalQueue[queueTail] = owner;
-        $.userQueuePosition[owner] = queueTail; // Store user's position for O(1) access
+        // Ensure the array is large enough before accessing the index
+        // If queueTail is beyond current array length, push to extend it
+        if (queueTail >= $.largeWithdrawalQueue.length) {
+            $.largeWithdrawalQueue.push(msg.sender);
+        } else {
+            $.largeWithdrawalQueue[queueTail] = msg.sender;
+        }
+        
+        $.userQueuePosition[msg.sender] = queueTail; // Store user's position for O(1) access (0-based)
         $.queueTail = queueTail + 1; // No modulo needed for dynamic array
         $.queueSize++;
         
-        emit LargeWithdrawalRequested(owner, amount);
+        emit LargeWithdrawalRequested(msg.sender, amount);
     }
     /**
      * @dev Update large withdrawal batch size (admin only)
@@ -923,6 +943,10 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         totalBRBDeposited = totalAssets();
         exchangeRate = totalShares == 0 ? 1e18 : (totalBRBDeposited * 1e18) / totalShares;
     }
+
+    function getSafeCapacity() external view returns (uint256) {
+        return _calculateSafeWithdrawalCapacity();
+    }
     
     
     /**
@@ -951,40 +975,21 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         return $.pendingBets;
     }
-    
-    /**
-     * @dev Get total vault balance (including pending bets)
-     */
-    function getTotalBalance() external view returns (uint256) {
-        return IERC20(asset()).balanceOf(address(this));
-    }
-    
-    /**
-     * @dev Get current exchange rate
-     */
-    function getExchangeRate() external view returns (uint256) {
-        uint256 supply = totalSupply();
-        if (supply == 0) return 1e18;
-        return (totalAssets() * 1e18) / supply;
-    }
 
     /**
      * @dev Get withdrawal settings and status
-     * @return largeWithdrawalFee Current fixed fee for large withdrawals
      * @return largeWithdrawalBatchSize Current batch size for processing
      * @return totalPendingLargeWithdrawals Total amount of pending large withdrawals
      * @return queueLength Current length of withdrawal queue
      * @return maxQueueLength Maximum allowed queue length
      */
     function getWithdrawalSettings() external view returns (
-        uint256 largeWithdrawalFee,
         uint256 largeWithdrawalBatchSize,
         uint256 totalPendingLargeWithdrawals,
         uint256 queueLength,
         uint256 maxQueueLength
     ) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        largeWithdrawalFee = $.largeWithdrawalFee;
         largeWithdrawalBatchSize = $.largeWithdrawalBatchSize;
         totalPendingLargeWithdrawals = $.totalPendingLargeWithdrawals;
         queueLength = $.queueSize;
@@ -995,22 +1000,16 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @dev Get user's pending large withdrawal information
      * @param user Address to check
      * @return pendingAmount Amount pending for withdrawal
-     * @return estimatedFee Fixed fee that will be charged
-     * @return netAmount Amount user will receive after fees
      * @return queuePosition Position in withdrawal queue (0 = not in queue)
      */
     function getUserPendingWithdrawal(address user) external view returns (
         uint256 pendingAmount,
-        uint256 estimatedFee,
-        uint256 netAmount,
         uint256 queuePosition
     ) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         pendingAmount = $.pendingLargeWithdrawals[user];
         
         if (pendingAmount > 0) {
-            estimatedFee = $.largeWithdrawalFee; // Fixed fee, not percentage
-            netAmount = pendingAmount - estimatedFee;
             queuePosition = _getUserQueuePosition(user); // Restored - accounts for cancelled users
         }
     }
@@ -1027,7 +1026,12 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         
         // Get user's position directly from mapping (O(1) access)
         uint256 queueIndex = $.userQueuePosition[msg.sender];
-        require(queueIndex != 0, UserNotInQueue());
+        
+        // Check if user is actually in the queue by verifying the queue slot contains their address
+        // This handles the case where queueIndex = 0 (first user) and prevents false positives
+        if (queueIndex >= $.largeWithdrawalQueue.length || $.largeWithdrawalQueue[queueIndex] != msg.sender) {
+            revert UserNotInQueue();
+        }
         
         // Remove from queue efficiently
         _removeUserFromQueueEfficient(queueIndex);
@@ -1036,7 +1040,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.pendingLargeWithdrawals[msg.sender] = 0;
         $.totalPendingLargeWithdrawals -= pendingAmount;
         
-        emit LargeWithdrawalProcessed(msg.sender, pendingAmount); // 0 fee for cancellation
+        emit LargeWithdrawalProcessed(msg.sender, pendingAmount);
     }
     
     /// @dev Get user's position in queue (accounts for cancelled users)
@@ -1045,7 +1049,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         
         // Get user's queue index
         uint256 queueIndex = $.userQueuePosition[user];
-        if (queueIndex == 0) return 0; // User not in queue
+        // Check if user is in queue by looking at pendingLargeWithdrawals
+        if ($.pendingLargeWithdrawals[user] == 0) return 0; // User not in queue
         
         // Calculate actual position by counting non-empty slots from queueHead
         uint256 position = 0;

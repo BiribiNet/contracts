@@ -621,10 +621,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 payout = amount * 2;
                 $.roundHighBets[currentRound].push(newBet);
             } else if (betType == BET_TRIO_012) {
-                payout = amount * 11;
+                payout = amount * 12;
                 $.roundTrio012Bets[currentRound].push(newBet);
             } else if (betType == BET_TRIO_023) {
-                payout = amount * 11;
+                payout = amount * 12;
                 $.roundTrio023Bets[currentRound].push(newBet);
             }
         }
@@ -777,6 +777,32 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         $.totalWinningBets[roundId] = batchData.totalWinningBets;
         $.totalWinningBetsSet[roundId] = true;
 
+        // special edge case where no winning bets are set
+        if (batchData.totalWinningBets == 0) {
+            $.lastRoundPaid = roundId;
+            emit RoundResolved(roundId);
+
+            (bool success, bytes memory returnData) = STAKED_BRB_CONTRACT.call(
+                abi.encodeWithSelector(
+                    IStakedBRB.processRouletteResult.selector,
+                    roundId,
+                    new PayoutInfo[](0),
+                    0,
+                    true
+                )
+            );
+        
+            if (!success) {
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 0x20), mload(returnData))
+                    }
+                } else {
+                    revert StakedBRBCallFailed();
+                }
+            }
+        
+        }
     }
     
     /**

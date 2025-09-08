@@ -64,7 +64,7 @@ describe("RouletteClean - Automation", function () {
       // Stake and try to place more bets than supported
       const stakeAmount = parseEther("1000"); // Increased from 500 to 1000 ETH to provide enough balance
       await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
 
       const betAmount = parseEther("0.1"); // Reduced from 10 to 0.1 ETH to avoid balance issues
       const amounts = Array.from({ length: Number(maxSupportedBets) + 1 }, () => betAmount);
@@ -114,7 +114,7 @@ describe("RouletteClean - Automation", function () {
       // Place a bet first
       const stakeAmount = parseEther("100");
       await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
 
       const betAmount = parseEther("0.1"); // Reduced from 10 to 0.1 ETH to avoid balance issues
       const betData = encodeAbiParameters(
@@ -144,7 +144,7 @@ describe("RouletteClean - Automation", function () {
       // Place a bet first
       const stakeAmount = parseEther("100");
       await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
 
       const betAmount = parseEther("0.1"); // Reduced from 10 to 0.1 ETH to avoid balance issues
       const betData = encodeAbiParameters(
