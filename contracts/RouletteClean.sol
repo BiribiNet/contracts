@@ -204,7 +204,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
     
     // ========== EVENTS ==========
-    event BetPlaced(address player, uint256 amount, uint256 betType, uint256 number);
     event RoundStarted(uint256 roundId, uint256 timestamp, uint256 requestId);
     event RoundResolved(uint256 roundId);
     event VRFResult(uint256 roundId, uint256 winningNumber);
