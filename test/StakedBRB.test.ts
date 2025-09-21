@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { checksumAddress, encodeAbiParameters, parseEther, parseEventLogs, toHex } from "viem";
+import { checksumAddress, encodeAbiParameters, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -143,7 +143,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
     }
     
     const totalAssets = await stakedBrbProxy.read.totalAssets();
@@ -419,7 +419,7 @@ describe("StakedBRB", function () {
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
       
       // Now check safe capacity after bet
       const safeCapacityAfterBet = await stakedBrbProxy.read.getSafeCapacity();
@@ -521,7 +521,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       
@@ -582,7 +582,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       
@@ -627,7 +627,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       const excessiveAmount = parseEther("50000"); // More than user has
       
@@ -805,7 +805,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      const tx = await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      const tx = await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
       
       const logs = parseEventLogs({
@@ -824,7 +824,7 @@ describe("StakedBRB", function () {
       const betData = "0x1234";
       
       await expect(
-        stakedBrbProxy.write.onTokenTransfer([admin.account.address, betAmount, betData], { account: player1.account })
+        stakedBrbProxy.write.onTokenTransfer([admin.account.address, betAmount, betData, zeroAddress], { account: player1.account })
       ).to.be.rejectedWith("OnlyBRB");
     });
 
@@ -852,7 +852,7 @@ describe("StakedBRB", function () {
       );
       
       await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] = 
         await stakedBrbProxy.read.getVaultConfig();
@@ -1040,7 +1040,7 @@ describe("StakedBRB", function () {
 
     it("Should only allow BRB token to call onTokenTransfer", async function () {
       await expect(
-        stakedBrbProxy.write.onTokenTransfer([player1.account.address, parseEther("100"), "0x"], { account: player1.account })
+        stakedBrbProxy.write.onTokenTransfer([player1.account.address, parseEther("100"), "0x", zeroAddress], { account: player1.account })
       ).to.be.rejectedWith("OnlyBRB");
     });
 
@@ -1166,7 +1166,7 @@ describe("StakedBRB", function () {
       
       await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
       
-      const tx = await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      const tx = await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
       
       const logs = parseEventLogs({
@@ -1430,7 +1430,7 @@ describe("StakedBRB", function () {
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
       
       // Queue withdrawals (all large withdrawals)
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
@@ -1494,7 +1494,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
 
       await expect(
@@ -1521,7 +1521,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
     });
 
     it("Should process large withdrawals in batches", async function () {
@@ -1635,7 +1635,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // Test scenario where maxPayout is small but withdrawal is large
       // With 1 BRB bet, maxPayout = 36 BRB, so safe capacity = 1000 - 36 = 964 BRB
@@ -1778,7 +1778,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // Total assets should remain the same (pending bets excluded)
       const totalAssetsAfterBet = await stakedBrbProxy.read.totalAssets();
@@ -1820,7 +1820,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // 3. TIME ADVANCEMENT AND VRF TRIGGER
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
@@ -2005,7 +2005,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // 3. Withdraw (small amount)
       const withdrawAmount = parseEther("50");
@@ -2052,7 +2052,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 1800 ETH max)
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // Verify the bet was placed successfully
       const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] = 
@@ -2104,7 +2104,7 @@ describe("StakedBRB", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 5400 ETH max)
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: admin.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // Create withdrawals that will be queued due to maxPayout constraints
       const withdrawAmounts = [parseEther("1500"), parseEther("1500"), parseEther("1500")];

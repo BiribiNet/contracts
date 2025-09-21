@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { encodeAbiParameters, formatEther, parseEther, parseEventLogs, toHex } from "viem";
+import { encodeAbiParameters, formatEther, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -62,7 +62,7 @@ describe("RouletteClean", function () {
       );
 
       // Place bet through BRB token
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
       // TODO: Fix event testing for Viem
       // await expect(...).to.emit(rouletteProxy, "BetPlaced")
 
@@ -95,7 +95,7 @@ describe("RouletteClean", function () {
         [{ amounts: [bet1Amount, bet2Amount], betTypes: [1n, 8n], numbers: [7n, 0n] }] // straight on 7, red bet
       );
 
-      await expect(brb.write.bet([stakedBrbProxy.address, totalAmount, betData], { account: player1.account })).to.not.be.rejected;
+      await expect(brb.write.bet([stakedBrbProxy.address, totalAmount, betData, zeroAddress], { account: player1.account })).to.not.be.rejected;
       // TODO: Fix event testing for Viem
       // await expect(...).to.emit(rouletteProxy, "BetPlaced")
 
@@ -122,7 +122,7 @@ describe("RouletteClean", function () {
         [{ amounts: [betAmount], betTypes: [99n], numbers: [7n] }] // Invalid bet type 99
       );
 
-      await expect(brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })).to.be.rejectedWith("InvalidBetType");
+      await expect(brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account })).to.be.rejectedWith("InvalidBetType");
     });
 
     it("Should reject bet amount mismatches", async function () {
@@ -147,7 +147,7 @@ describe("RouletteClean", function () {
 
       // Verify the call reverts with InvalidBet error (expected behavior)
       try {
-        await brb.write.bet([stakedBrbProxy.address, wrongTotalAmount, betData]);
+        await brb.write.bet([stakedBrbProxy.address, wrongTotalAmount, betData, zeroAddress]);
         expect.fail("Expected call to revert with InvalidBet error");
       } catch (error: unknown) {
         // Expected to fail with InvalidBet error - this is the correct behavior!
@@ -189,7 +189,7 @@ describe("RouletteClean", function () {
 
       const beforePlayerBalance = await brb.read.balanceOf([player1.account.address]);
 
-      await expect(brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData], { account: player1.account })).to.be.fulfilled;
+      await expect(brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account })).to.be.fulfilled;
 
       const [currentRound] = await rouletteProxy.read.getCurrentRoundInfo();
       const betsCount = await rouletteProxy.read.getRoundBetsCount([currentRound]);
@@ -273,7 +273,7 @@ describe("RouletteClean", function () {
       
       // Verify the call reverts with InvalidNumber error (expected behavior)
       try {
-        await brb.write.bet([stakedBrbProxy.address, betAmount, invalidStraightBet]);
+        await brb.write.bet([stakedBrbProxy.address, betAmount, invalidStraightBet, zeroAddress]);
         expect.fail("Expected call to revert with InvalidNumber error");
       } catch (error: unknown) {
         // Expected to fail with InvalidNumber error - this is the correct behavior!
@@ -292,7 +292,7 @@ describe("RouletteClean", function () {
 
       // For now, just verify the call reverts (with any error)
       try {
-        await brb.write.bet([stakedBrbProxy.address, betAmount, invalidStreetBet]);
+        await brb.write.bet([stakedBrbProxy.address, betAmount, invalidStreetBet, zeroAddress]);
         expect.fail("Expected call to revert");
       } catch (error) {
         // Expected to fail
@@ -322,7 +322,7 @@ describe("RouletteClean", function () {
     //     [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
     //   );
 
-    //   await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+    //   await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
     //   // Simulate time passing and trigger VRF
     //   await time.increase(70); // 70 seconds
@@ -369,7 +369,7 @@ describe("RouletteClean", function () {
         );
 
         // Valid bet should not revert
-        await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+        await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
       }
 
       // Invalid street bets
@@ -387,7 +387,7 @@ describe("RouletteClean", function () {
 
         // For now, just verify the call reverts (with any error)
         try {
-          await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+          await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
           expect.fail("Expected call to revert");
         } catch (error) {
           // Expected to fail
@@ -418,7 +418,7 @@ describe("RouletteClean", function () {
         );
 
         // Valid bet should not revert
-        await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+        await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
       }
 
       // Valid dozen bets (1, 2, 3)
@@ -433,7 +433,7 @@ describe("RouletteClean", function () {
         );
 
         // Valid bet should not revert
-        await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+        await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
       }
 
       // Invalid column/dozen bets
@@ -451,7 +451,7 @@ describe("RouletteClean", function () {
 
         // For now, just verify the call reverts (with any error)
         try {
-          await brb.write.bet([stakedBrbProxy.address, betAmount, columnBetData]);
+          await brb.write.bet([stakedBrbProxy.address, betAmount, columnBetData, zeroAddress]);
           expect.fail("Expected call to revert");
         } catch (error) {
           // Expected to fail
@@ -469,7 +469,7 @@ describe("RouletteClean", function () {
 
         // For now, just verify the call reverts (with any error)
         try {
-          await brb.write.bet([stakedBrbProxy.address, betAmount, dozenBetData]);
+          await brb.write.bet([stakedBrbProxy.address, betAmount, dozenBetData, zeroAddress]);
           expect.fail("Expected call to revert");
         } catch (error) {
           // Expected to fail
@@ -503,7 +503,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData0])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData0, zeroAddress])
         ).to.not.be.reverted;
 
         // Test with number != 0 (should also work since number is ignored for outside bets)
@@ -517,7 +517,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData5])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData5, zeroAddress])
         ).to.not.be.reverted;
       }
     });
@@ -546,7 +546,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.not.be.reverted;
       }
 
@@ -564,7 +564,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.be.rejected;
       }
     });
@@ -592,11 +592,11 @@ describe("RouletteClean", function () {
 
         if (shouldPass) {
           await expect(
-            brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })
+            brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account })
           ).to.not.be.reverted;
         } else {
           await expect(
-            brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })
+            brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account })
           ).to.be.rejected;
         }
       }
@@ -650,7 +650,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.not.be.reverted;
       }
 
@@ -668,7 +668,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.be.rejected;
       }
     });
@@ -774,7 +774,7 @@ describe("RouletteClean", function () {
       );
 
       await expect(
-        brb.write.bet([stakedBrbProxy.address, 1n, betData])
+        brb.write.bet([stakedBrbProxy.address, 1n, betData, zeroAddress])
       ).to.be.rejectedWith("EmptyBetsArray");
     });
 
@@ -800,7 +800,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.not.be.reverted;
       }
 
@@ -818,7 +818,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.be.rejected;
       }
     });
@@ -847,7 +847,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.not.be.reverted;
       }
 
@@ -865,7 +865,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.be.rejected;
       }
     });
@@ -894,7 +894,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.not.be.reverted;
       }
 
@@ -912,7 +912,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
         ).to.be.rejected;
       }
     });
@@ -937,12 +937,12 @@ describe("RouletteClean", function () {
 
       // TODO: Fix custom error testing for Viem compatibility
       // await expect(
-      //   brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+      //   brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
       // ).to.be.revertedWithCustomError(rouletteProxy, "ArrayLengthMismatch");
       
       // For now, just verify the call reverts
       await expect(
-        brb.write.bet([stakedBrbProxy.address, betAmount, betData])
+        brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress])
       ).to.be.rejectedWith("ArrayLengthMismatch");
     });
 
@@ -966,12 +966,12 @@ describe("RouletteClean", function () {
 
       // TODO: Fix custom error testing for Viem compatibility
       // await expect(
-      //   brb.write.bet([stakedBrbProxy.address, 0n, betData])
+      //   brb.write.bet([stakedBrbProxy.address, 0n, betData, zeroAddress])
       // ).to.be.revertedWithCustomError(rouletteProxy, "ZeroAmount");
       
       // For now, just verify the call reverts
       await expect(
-        brb.write.bet([stakedBrbProxy.address, 0n, betData])
+        brb.write.bet([stakedBrbProxy.address, 0n, betData, zeroAddress])
       ).to.be.rejectedWith("ZeroAmount");
 
       // Test zero individual bet amount
@@ -986,12 +986,12 @@ describe("RouletteClean", function () {
 
       // TODO: Fix custom error testing for Viem compatibility
       // await expect(
-      //   brb.write.bet([stakedBrbProxy.address, 0n, zeroBetData])
+      //   brb.write.bet([stakedBrbProxy.address, 0n, zeroBetData, zeroAddress])
       // ).to.be.revertedWithCustomError(rouletteProxy, "ZeroAmount");
       
       // For now, just verify the call reverts
       await expect(
-        brb.write.bet([stakedBrbProxy.address, 0n, zeroBetData])
+        brb.write.bet([stakedBrbProxy.address, 0n, zeroBetData, zeroAddress])
       ).to.be.rejectedWith("ZeroAmount");
     });
   });
@@ -1037,7 +1037,7 @@ describe("RouletteClean", function () {
         [{ amounts: emptyArray.map(() => bet1Amount), betTypes: emptyArray.map(() => 1n), numbers: emptyArray.map(() => 7n) }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, bet1Amount * BigInt(length), bet1Data], { account: player1.account });
+      await brb.write.bet([stakedBrbProxy.address, bet1Amount * BigInt(length), bet1Data, zeroAddress], { account: player1.account });
 
       // Player 2: Column bet on column 1
       const bet2Data = encodeAbiParameters(
@@ -1049,7 +1049,7 @@ describe("RouletteClean", function () {
         [{ amounts: [bet2Amount], betTypes: [6n], numbers: [1n] }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, bet2Amount, bet2Data], { account: player2.account });
+      await brb.write.bet([stakedBrbProxy.address, bet2Amount, bet2Data, zeroAddress], { account: player2.account });
 
       // Player 1: Dozen bet on dozen 1
       const bet3Data = encodeAbiParameters(
@@ -1061,7 +1061,7 @@ describe("RouletteClean", function () {
         [{ amounts: [bet3Amount], betTypes: [7n], numbers: [1n] }]
       );
       
-      await brb.write.bet([stakedBrbProxy.address, bet3Amount, bet3Data], { account: player1.account });
+      await brb.write.bet([stakedBrbProxy.address, bet3Amount, bet3Data, zeroAddress], { account: player1.account });
 
       // Verify bets were placed
       const [currentRound] = await rouletteProxy.read.getCurrentRoundInfo();
@@ -1199,7 +1199,7 @@ describe("RouletteClean", function () {
         ]}],
         [{ amounts: [betAmount], betTypes: [betType], numbers: [betNumber] }]
       );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account });
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
 
       // 3. Time Advancement and VRF Trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
@@ -1330,7 +1330,7 @@ describe("RouletteClean", function () {
         );
 
         await expect(
-          brb.write.bet([stakedBrbProxy.address, betAmount, betData], { account: player1.account })
+          brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account })
         ).to.be.rejected;
       }
     });
@@ -1871,7 +1871,7 @@ describe("RouletteClean", function () {
         );
 
         // Make a single bet call for all of the player's bets
-        await brb.write.bet([stakedBrbProxy.address, totalPlayerBetAmount, playerAllBetsData], { account: player.account });
+        await brb.write.bet([stakedBrbProxy.address, totalPlayerBetAmount, playerAllBetsData, zeroAddress], { account: player.account });
       }
       return expectedFinalBalances;
     }

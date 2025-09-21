@@ -75,33 +75,39 @@ async function deployTestnet() {
   const getNonce = await publicClient.getTransactionCount({ address: deployer.account.address, blockTag: 'latest' });
 
   console.log('getNonce', getNonce);
-  const brbAddress = getContractAddress({
+  const brbReferalAddress = getContractAddress({
     from: deployer.account.address,
     nonce: BigInt(getNonce),
     opcode: 'CREATE'
   });
 
-  const rouletteImplAddress = getContractAddress({
+  const brbAddress = getContractAddress({
     from: deployer.account.address,
     nonce: BigInt(getNonce + 1),
     opcode: 'CREATE'
   });
 
-  const stakedBrbImplAddress = getContractAddress({
+  const rouletteImplAddress = getContractAddress({
     from: deployer.account.address,
     nonce: BigInt(getNonce + 2),
     opcode: 'CREATE'
   });
 
-  const rouletteProxyAddress = getContractAddress({
+  const stakedBrbImplAddress = getContractAddress({
     from: deployer.account.address,
     nonce: BigInt(getNonce + 3),
     opcode: 'CREATE'
   });
 
-  const stakedBrbProxyAddress = getContractAddress({
+  const rouletteProxyAddress = getContractAddress({
     from: deployer.account.address,
     nonce: BigInt(getNonce + 4),
+    opcode: 'CREATE'
+  });
+
+  const stakedBrbProxyAddress = getContractAddress({
+    from: deployer.account.address,
+    nonce: BigInt(getNonce + 5),
     opcode: 'CREATE'
   });
 
@@ -113,7 +119,9 @@ async function deployTestnet() {
   const safeBlockConfirmation = 1;
   const gamePeriod = 60n;
 
-  const brb = await viem.deployContract("BRB");
+  const brbReferal = await viem.deployContract("BRBReferal");
+
+  const brb = await viem.deployContract("BRB", []);
   await setTimeoutIsDeployed(brb.address);
 
   console.log('brb is dployed', brb.address);
@@ -131,12 +139,16 @@ async function deployTestnet() {
 
   const rouletteCleanFactory = await viem.deployContract("RouletteClean", [gamePeriod, VRF_COORDINATOR_ADDRESS, keyHash2Gwei, keyHash30Gwei, keyHash150Gwei, subId, callbackGasLimit, numWords, safeBlockConfirmation, stakedBrbProxyAddress]);
   
+  if (brbReferalAddress.toLowerCase() !== brbReferal.address.toLowerCase()) {
+    throw new Error('BRB Referral address mismatch');
+  }
+
   if (rouletteCleanFactory.address.toLowerCase() !== rouletteImplAddress.toLowerCase()) {
     throw new Error('Roulette implementation address mismatch');
   }
 
   await setTimeoutIsDeployed(rouletteCleanFactory.address);
-  const stakedBrbFactory = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress]);
+  const stakedBrbFactory = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress, brbReferalAddress]);
   if (stakedBrbFactory.address.toLowerCase() !== stakedBrbImplAddress.toLowerCase()) {
     throw new Error('Staked BRB implementation address mismatch');
   }
@@ -207,7 +219,7 @@ async function deployTestnet() {
   try {
     await hre.run("verify:verify", {
       address: stakedBrbImplAddress,
-      constructorArguments: [brbAddress, rouletteProxyAddress]
+      constructorArguments: [brbAddress, rouletteProxyAddress, brbReferalAddress]
     });
   } catch (error) {
     console.log('Error verifying stakedBrbImplAddress', error);
@@ -242,6 +254,19 @@ async function deployTestnet() {
   } catch (error) {
     console.log('Error verifying rouletteProxy', error);
   }
+
+  await sleep(verificationTimeout);
+
+  try {
+    await hre.run("verify:verify", {
+      address: brbReferalAddress,
+      constructorArguments: []
+    });
+  } catch (error) {
+    console.log('Error verifying rouletteProxy', error);
+  }
+
+  
 
   console.log('rouletteProxyAddress', rouletteProxyAddress);
   console.log('stakedBrbProxyAddress', stakedBrbProxyAddress);
