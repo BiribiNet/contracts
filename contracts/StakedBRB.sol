@@ -5,10 +5,10 @@ import { ERC4626Upgradeable } from "./external/ERC4626Upgradeable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { BRBReferal } from "./BRBReferal.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { RouletteClean } from "./RouletteClean.sol";
 import { IRoulette } from "./interfaces/IRoulette.sol";
+import { IERC20Mintable } from "./interfaces/IERC20Mintable.sol";
+import { IERC20Burnable } from "./interfaces/IERC20Burnable.sol";
 import { IAutomationRegistrar2_1 } from "./interfaces/IAutomationRegistrar2_1.sol";
 import { IAutomationRegistry2_1 } from "./interfaces/IAutomationRegistry2_1.sol";
 import { AutomationCompatibleInterface } from "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
@@ -26,7 +26,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     address private immutable BRB_TOKEN;
     address private immutable ROULETTE_CONTRACT;
     address private immutable JACKPOT_CONTRACT;
-    BRBReferal private immutable BRB_REFERRAL;
+    IERC20Mintable private immutable BRB_REFERRAL;
     // Security constants
     uint256 public constant MINIMUM_FIRST_DEPOSIT = 1000;
     uint256 public constant MAX_PROTOCOL_FEE = 10000; // 100% max
@@ -99,11 +99,15 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 queueLength;
     }
 
+    struct Fees {
+        uint256 protocolFees;
+        uint256 burnAmount;
+        uint256 jackpotAmount;
+    }
+
     struct CleaningUpkeepData {
         uint256 roundId;
-        uint256 totalFees;
-        uint256 jackpotAmount;
-        uint256 burnAmount;
+        Fees fees;
         bool hasWithdrawals; // Whether to also process large withdrawals
         address[] usersToProcess; // Pre-computed users to process for withdrawals
         uint256[] amountsToProcess; // Pre-computed amounts for each user
@@ -182,7 +186,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         }
     }
     
-    constructor(address brbToken, address rouletteContract, BRBReferal brbReferal, address jackpotContract) {
+    constructor(address brbToken, address rouletteContract, IERC20Mintable brbReferal, address jackpotContract) {
         BRB_TOKEN = brbToken;
         ROULETTE_CONTRACT = rouletteContract;
         BRB_REFERRAL = brbReferal;
@@ -264,7 +268,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         return super.previewRedeem(shares);
     }
 
-    function getBRBReferal() external view returns (BRBReferal) {
+    function getBRBReferal() external view returns (IERC20Mintable) {
         return BRB_REFERRAL;
     }
     
@@ -308,7 +312,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.pendingBetsPerRound[currentRound] += amount;
         
         // Forward the bet to the roulette contract (no longer needs our address as parameter)
-        uint256 maxPayout = RouletteClean(ROULETTE_CONTRACT).bet(from, amount, data);
+        uint256 maxPayout = IRoulette(ROULETTE_CONTRACT).bet(from, amount, data);
         uint256 nextMaxPayout = $.maxPayout + maxPayout;
 
         $.maxPayoutPerRound[currentRound] = nextMaxPayout;
@@ -337,8 +341,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (checkData.length == 0) {
             StakedBRBStorage storage $ = _getStakedBRBStorage();
             if ($.lastRoundPaid > $.lastRoundResolved) {
-                 // Check if we need to process protocol fees AND large withdrawals
                 uint256 queueSize = $.queueSize;
+                 // Check if we need to process protocol fees AND large withdrawals
                 CheckUpkeepVars memory v = CheckUpkeepVars({
                     roundToProcess: $.lastRoundResolved + 1,
                     actualProcessCount: 0,
@@ -351,7 +355,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                 uint256 roundPendingBets = $.pendingBetsPerRound[v.roundToProcess];
                 uint256 roundTotalPayouts = $.totalPayouts[v.roundToProcess];
                 uint256 roundNetLoss = roundPendingBets > roundTotalPayouts ? roundPendingBets - roundTotalPayouts : 0;
-                (uint256 roundProtocolFees, uint256 roundBurnAmount, uint256 roundJackpotAmount) = _calculateProtocolFee(roundNetLoss);
 
                 // Pre-compute all withdrawal data for performUpkeep
                 uint256 withdrawalsToProcess = queueSize > v.batchSize ? v.batchSize : queueSize;
@@ -384,6 +387,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                             }
                         }
                         currentIndex++;
+                        i++;
                         maxIterations--;
                     }
                 }
@@ -391,9 +395,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                 upkeepNeeded = true;
                 performData = abi.encode(CleaningUpkeepData({
                     roundId: v.roundToProcess,
-                    burnAmount: roundBurnAmount,
-                    jackpotAmount: roundJackpotAmount,
-                    totalFees: roundProtocolFees,
+                    fees: _calculateProtocolFee(roundNetLoss),
                     hasWithdrawals: v.hasWithdrawals,
                     usersToProcess: usersToProcess,
                     amountsToProcess: amountsToProcess,
@@ -417,13 +419,17 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // 1. PROCESS PROTOCOL FEES (if any)
-        if (cleaningData.totalFees > 0) {
+        if (cleaningData.fees.protocolFees > 0) {
             // Transfer protocol fees to fee recipient
-            IERC20(BRB_TOKEN).transfer($.feeRecipient, cleaningData.totalFees);
-            emit ProtocolFeeCollected(cleaningData.totalFees);
+            IERC20(BRB_TOKEN).transfer($.feeRecipient, cleaningData.fees.protocolFees);
+            emit ProtocolFeeCollected(cleaningData.fees.protocolFees);
         }
-        if (cleaningData.jackpotAmount > 0) {
-            IERC20(BRB_TOKEN).transfer(JACKPOT_CONTRACT, cleaningData.jackpotAmount);
+        if (cleaningData.fees.jackpotAmount > 0) {
+            IERC20(BRB_TOKEN).transfer(JACKPOT_CONTRACT, cleaningData.fees.jackpotAmount);
+        }
+
+        if (cleaningData.fees.burnAmount > 0) {
+            IERC20Burnable(BRB_TOKEN).burn(cleaningData.fees.burnAmount);
         }
         
         // 2. PROCESS LARGE WITHDRAWALS (if needed)
@@ -691,24 +697,24 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     /**
      * @dev Calculate protocol fee from betting loss using OpenZeppelin's math
      * @param lossAmount Amount lost by player
-     * @return protocolFee Amount that goes to protocol
+     * @return fee Amount that goes to protocol
      */
-    function _calculateProtocolFee(uint256 lossAmount) private view returns (uint256 protocolFee, uint256 burnAmount, uint256 jackpotAmount) {
+    function _calculateProtocolFee(uint256 lossAmount) private view returns (Fees memory fee) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if (lossAmount == 0) return (0, 0, 0);
+        if (lossAmount == 0) return (fee);
 
-        jackpotAmount = lossAmount.mulDiv(
+        fee.jackpotAmount = lossAmount.mulDiv(
             $.jackpotBasisPoints, 
             _BASIS_POINT_SCALE, 
             Math.Rounding.Floor  // Round down
         );
         // Use OpenZeppelin's mulDiv for precise fee calculation
-        protocolFee = lossAmount.mulDiv(
+        fee.protocolFees = lossAmount.mulDiv(
             $.protocolFeeBasisPoints, 
             _BASIS_POINT_SCALE, 
             Math.Rounding.Floor  // Round down
         );
-        burnAmount = lossAmount.mulDiv(
+        fee.burnAmount = lossAmount.mulDiv(
             $.burnBasisPoints, 
             _BASIS_POINT_SCALE, 
             Math.Rounding.Floor  // Round down
@@ -716,7 +722,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
     }
     
-    // === Protocol Fee Management ===
+    // === Protocol Fees Management ===
     
     /**
      * @dev Update protocol fee rate taken from betting losses (only admin)
@@ -781,7 +787,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         return super.mint(shares, receiver, maxAmountIn);
     }
 
-    // === Note: No ERC4626 Fee Overrides ===
+    // === Note: No ERC4626 Fees Overrides ===
     // We use pure ERC4626 without deposit/withdrawal fees
     // All fees come from betting losses, handled in processRouletteResult()
     
@@ -1009,26 +1015,15 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         return _calculateSafeWithdrawalCapacity();
     }
     
-    
-    /**
-     * @dev Get current protocol fee rate
-     */
-    function getProtocolFeeRate() external view returns (uint256) {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        return $.protocolFeeBasisPoints;
-    }
-    
     /**
      * @dev Preview protocol fee for a given loss amount
      * @param lossAmount Amount that would be lost in betting
-     * @return protocolFee Amount that would go to protocol
-     * @return burnAmount Amount that would go to burn
-     * @return jackpotAmount Amount that would go to jackpot
+     * @return fee Amount that would go to protocol
      * @return stakerProfit Amount that would go to stakers
      */
-    function previewProtocolFee(uint256 lossAmount) external view returns (uint256 protocolFee, uint256 burnAmount, uint256 jackpotAmount, uint256 stakerProfit) {
-        (protocolFee, burnAmount, jackpotAmount) = _calculateProtocolFee(lossAmount);
-        stakerProfit = lossAmount - (protocolFee + burnAmount + jackpotAmount);
+    function previewProtocolFee(uint256 lossAmount) external view returns (Fees memory fee, uint256 stakerProfit) {
+        fee = _calculateProtocolFee(lossAmount);
+        stakerProfit = lossAmount - (fee.protocolFees + fee.burnAmount + fee.jackpotAmount);
     }
     
     /**

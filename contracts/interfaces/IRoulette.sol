@@ -7,4 +7,6 @@ interface IRoulette {
         uint256 betAmount;
         uint256 payout;
     }
+
+    function bet(address player, uint256 amount, bytes calldata data) external returns (uint256);
 }

@@ -6,8 +6,8 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract BRBReferal is ERC20 {
     error Unauthorized();
     address private immutable ROULETTE_CONTRACT;
-    constructor() ERC20("BiRiBi Referral", "BRBR") {
-        ROULETTE_CONTRACT = msg.sender;
+    constructor(address rouletteContract) ERC20("BiRiBi Referral", "BRBR") {
+        ROULETTE_CONTRACT = rouletteContract;
     }
 
     function mint(address to, uint256 amount) external {

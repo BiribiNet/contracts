@@ -172,14 +172,16 @@ describe("StakedBRB", function () {
 
   describe("Deployment and Initialization", function () {
     it("Should deploy with correct initial values", async function () {
-      const [brbToken, rouletteContract, protocolFeeBasisPoints, feeRecipient, pendingBets] = 
+      const [brbToken, rouletteContract, protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate, feeRecipient, pendingBets] = 
         await stakedBrbProxy.read.getVaultConfig();
       
       expect(brbToken.toLowerCase()).to.equal(brb.address.toLowerCase());
       expect(rouletteContract.toLowerCase()).to.equal(rouletteProxy.address.toLowerCase());
-      expect(protocolFeeBasisPoints).to.equal(250n); // 2.5%
+      expect(protocolFeeBasisPoints).to.equal(300n); // 3%
       expect(feeRecipient.toLowerCase()).to.equal(admin.account.address.toLowerCase());
       expect(pendingBets).to.equal(0n);
+      expect(burnFeeRate).to.equal(50n); // 0.5%
+      expect(jackpotFeeRate).to.equal(150n); // 1.5%
     });
 
     it("Should have correct ERC4626 properties", async function () {
@@ -682,7 +684,7 @@ describe("StakedBRB", function () {
       const requestId = logsVRF[0].args.requestId;
 
       // 2. VRF Fulfilment
-      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [7n]]); // Use 7 as winning number
+      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [7n, 10n]]); // Use 7 as winning number
       
       // 3. COMPUTE TOTAL WINNING BETS
       const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array([0x01]))]); // checkData.length == 1
@@ -736,14 +738,20 @@ describe("StakedBRB", function () {
   describe("Protocol Fee Management", function () {
     it("Should calculate protocol fees correctly", async function () {
       const lossAmount = parseEther("1000");
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
+      const [, , protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate, , ] = await stakedBrbProxy.read.getVaultConfig();
+      const [{ protocolFees, burnAmount, jackpotAmount }, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
       
       // With 2.5% fee rate (250 basis points)
-      const expectedFee = (lossAmount * 250n) / 10000n;
-      const expectedProfit = lossAmount - expectedFee;
+      const expectedFee = lossAmount * protocolFeeBasisPoints / 10000n;
+      const expectedBurn = lossAmount * burnFeeRate / 10000n;
+      const expectedJackpot = lossAmount * jackpotFeeRate / 10000n;
+
+      const expectedProfit = lossAmount - (expectedFee + expectedBurn + expectedJackpot);
       
-      expect(protocolFee).to.equal(expectedFee);
+      expect(protocolFees).to.equal(expectedFee);
       expect(stakerProfit).to.equal(expectedProfit);
+      expect(burnAmount).to.equal(expectedBurn);
+      expect(jackpotAmount).to.equal(expectedJackpot);
     });
 
     it("Should update protocol fee rate", async function () {
@@ -770,7 +778,7 @@ describe("StakedBRB", function () {
       
       await stakedBrbProxy.write.setFeeRecipient([newRecipient], { account: admin.account });
       
-      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, feeRecipient, _pendingBets] = 
+      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _burnFeeRate, _jackpotFeeRate, feeRecipient, _pendingBets] = 
         await stakedBrbProxy.read.getVaultConfig();
       
       expect(checksumAddress(feeRecipient)).to.equal(checksumAddress(newRecipient));
@@ -854,7 +862,7 @@ describe("StakedBRB", function () {
       await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
-      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] = 
+      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _burnFeeRate, _jackpotFeeRate, _feeRecipient, pendingBets] = 
         await stakedBrbProxy.read.getVaultConfig();
       
       expect(pendingBets).to.equal(betAmount);
@@ -990,8 +998,8 @@ describe("StakedBRB", function () {
     });
 
     it("Should return correct protocol fee rate", async function () {
-      const feeRate = await stakedBrbProxy.read.getProtocolFeeRate();
-      expect(feeRate).to.equal(250n); // 2.5%
+      const [, , protocolFeeBasisPoints, , , , ] = await stakedBrbProxy.read.getVaultConfig();
+      expect(protocolFeeBasisPoints).to.equal(300n); // 3%
     });
 
     it("Should return correct pending bets", async function () {
@@ -1082,14 +1090,15 @@ describe("StakedBRB", function () {
       // This tests the _getStakedBRBStorage function
       // We can't directly test this, but we can verify the storage is working
       // by checking that state changes persist
-      
-      const initialFeeRate = await stakedBrbProxy.read.getProtocolFeeRate();
-      expect(initialFeeRate).to.equal(250n);
+
+      const [, , protocolFeeBasisPoints, , , , ] = await stakedBrbProxy.read.getVaultConfig();
+      expect(protocolFeeBasisPoints).to.equal(300n);
       
       await stakedBrbProxy.write.setProtocolFeeRate([500n], { account: admin.account });
       
-      const newFeeRate = await stakedBrbProxy.read.getProtocolFeeRate();
-      expect(newFeeRate).to.equal(500n);
+      const [, , protocolFeeBasisPoints2, , , , ] = await stakedBrbProxy.read.getVaultConfig();
+
+      expect(protocolFeeBasisPoints2).to.equal(500n);
     });
 
     it("Should handle round state correctly", async function () {
@@ -1097,7 +1106,7 @@ describe("StakedBRB", function () {
       // This would require integration with the roulette contract
       // For now, we test the initial state
       
-      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] = 
+      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _burnFeeRate, _jackpotFeeRate, _feeRecipient, pendingBets] = 
         await stakedBrbProxy.read.getVaultConfig();
       
       expect(pendingBets).to.equal(0n); // No pending bets initially
@@ -1116,26 +1125,30 @@ describe("StakedBRB", function () {
 
     it("Should handle large numbers in fee calculations", async function () {
       const largeAmount = parseEther("1000000"); // 1M BRB
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([largeAmount]);
+      const [{ burnAmount, jackpotAmount, protocolFees }, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([largeAmount]);
       
+      const [, , protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate, , ] = await stakedBrbProxy.read.getVaultConfig();
       // With 2.5% fee rate
-      const expectedFee = (largeAmount * 250n) / 10000n;
-      const expectedProfit = largeAmount - expectedFee;
+      const expectedFee = (largeAmount * protocolFeeBasisPoints) / 10000n;
+      const expectedBurn = (largeAmount * burnFeeRate) / 10000n;
+      const expectedJackpot = (largeAmount * jackpotFeeRate) / 10000n;
+      const expectedProfit = largeAmount - (expectedFee + expectedBurn + expectedJackpot);
       
-      expect(protocolFee).to.equal(expectedFee);
+      expect(protocolFees).to.equal(expectedFee);
+      expect(burnAmount).to.equal(expectedBurn);
+      expect(jackpotAmount).to.equal(expectedJackpot);
       expect(stakerProfit).to.equal(expectedProfit);
     });
 
     it("Should handle rounding in fee calculations", async function () {
       // Test with amount that doesn't divide evenly
       const amount = 1001n; // 1001 wei
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([amount]);
-      const [, , protocolFeeBasisPoints, , ] = await stakedBrbProxy.read.getVaultConfig();
+      const [, , protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate, , ] = await stakedBrbProxy.read.getVaultConfig();
       // With 2.5% fee rate, should round up
       const basicPointScale = 10000n;
       
-      const feeAmount = BigInt(Math.ceil(Number(amount * protocolFeeBasisPoints) / Number(basicPointScale)));
-      expect(protocolFee).to.equal(feeAmount);
+      const feeAmount = BigInt(Math.floor(Number(amount * protocolFeeBasisPoints) / Number(basicPointScale)) + Math.floor(Number(amount * burnFeeRate) / Number(basicPointScale)) + Math.floor(Number(amount * jackpotFeeRate) / Number(basicPointScale)));
+      const [, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([amount]);
       expect(stakerProfit).to.equal(amount - feeAmount);
     });
   });
@@ -1271,10 +1284,12 @@ describe("StakedBRB", function () {
     it("Should handle maximum values correctly", async function () {
       const maxFeeRate = 10000n; // MAX_PROTOCOL_FEE
       
+      await stakedBrbProxy.write.setBurnFeeRate([0n], { account: admin.account });
+      await stakedBrbProxy.write.setJackpotFeeRate([0n], { account: admin.account });
       await stakedBrbProxy.write.setProtocolFeeRate([maxFeeRate], { account: admin.account });
-      
-      const feeRate = await stakedBrbProxy.read.getProtocolFeeRate();
-      expect(feeRate).to.equal(maxFeeRate);
+
+      const [, , protocolFeeBasisPoints, , , , ] = await stakedBrbProxy.read.getVaultConfig();
+      expect(protocolFeeBasisPoints).to.equal(maxFeeRate);
     });
 
     it("Should handle empty arrays in roulette result processing", async function () {
@@ -1722,40 +1737,49 @@ describe("StakedBRB", function () {
 
   describe("Protocol Fee Edge Cases", function () {
     it("Should handle zero loss amount", async function () {
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([0n]);
+      const [{ burnAmount, jackpotAmount, protocolFees}, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([0n]);
       
-      expect(protocolFee).to.equal(0n);
+      expect(burnAmount).to.equal(0n);
+      expect(jackpotAmount).to.equal(0n);
+      expect(protocolFees).to.equal(0n);
       expect(stakerProfit).to.equal(0n);
     });
 
     it("Should handle zero fee rate", async function () {
       await stakedBrbProxy.write.setProtocolFeeRate([0n], { account: admin.account });
-      
+      await stakedBrbProxy.write.setBurnFeeRate([0n], { account: admin.account });
+      await stakedBrbProxy.write.setJackpotFeeRate([0n], { account: admin.account });
       const lossAmount = parseEther("1000");
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
+      const [{ burnAmount, jackpotAmount, protocolFees}, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
       
-      expect(protocolFee).to.equal(0n);
+      expect(burnAmount).to.equal(0n);
+      expect(jackpotAmount).to.equal(0n);
+      expect(protocolFees).to.equal(0n);
       expect(stakerProfit).to.equal(lossAmount);
     });
 
     it("Should handle maximum fee rate", async function () {
+      await stakedBrbProxy.write.setBurnFeeRate([0n], { account: admin.account });
+      await stakedBrbProxy.write.setJackpotFeeRate([0n], { account: admin.account });
       await stakedBrbProxy.write.setProtocolFeeRate([10000n], { account: admin.account });
-      
+
       const lossAmount = parseEther("1000");
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
+      const [{ protocolFees }, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
       
-      expect(protocolFee).to.equal(lossAmount);
+      expect(protocolFees).to.equal(lossAmount);
       expect(stakerProfit).to.equal(0n);
     });
 
     it("Should round up protocol fees correctly", async function () {
       // Test with a small amount that would result in fractional fees
       const lossAmount = 1n; // 1 wei
-      const [protocolFee, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
+      const [{ protocolFees, burnAmount, jackpotAmount }, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
       
       // With 2.5% fee rate, 1 wei should round up to 1 wei
-      expect(protocolFee).to.equal(1n);
-      expect(stakerProfit).to.equal(0n);
+      expect(protocolFees).to.equal(0n);
+      expect(stakerProfit).to.equal(1n);
+      expect(burnAmount).to.equal(0n);
+      expect(jackpotAmount).to.equal(0n);
     });
   });
 
@@ -1804,6 +1828,7 @@ describe("StakedBRB", function () {
       betAmount: bigint,
       withdrawAmount: bigint,
       winningNumber: bigint,
+      jackpotNumber: bigint,
       expectedFinalBalance: bigint
     ) {
       // 1. DEPOSIT
@@ -1845,7 +1870,7 @@ describe("StakedBRB", function () {
       const requestId = logsVRF[0].args.requestId;
       
       // 4. VRF FULFILLMENT
-      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber]]);
+      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
       
       // 5. COUNT WINNERS (0x00) - ALWAYS DONE
       const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep(["0x00"]);
@@ -1886,14 +1911,14 @@ describe("StakedBRB", function () {
       const betAmount = parseEther("1");
       const withdrawAmount = parseEther("50");
       const winningNumber = 7n; // Winning number
-      
+      const jackpotNumber = 10n;
       // Expected: initial balance - deposit + withdrawal (withdrawal happens before VRF, so it's included in the final balance)
       // Initial balance is 2000 ETH, deposit is 1000 ETH, withdrawal is 50 ETH
       // Note: bet win goes to admin (who placed the bet), not to player
       // Final = 2000 - 1000 + 50 = 1050 ETH
       const expectedFinalBalance = parseEther("2000") - depositAmount + withdrawAmount;
       
-      await runCompleteGameLoopTest(depositAmount, betAmount, withdrawAmount, winningNumber, expectedFinalBalance);
+      await runCompleteGameLoopTest(depositAmount, betAmount, withdrawAmount, winningNumber, jackpotNumber, expectedFinalBalance);
     });
 
     it("Should handle complete deposit -> bet -> withdrawal flow with losing bet", async function () {
@@ -1901,14 +1926,14 @@ describe("StakedBRB", function () {
       const betAmount = parseEther("1");
       const withdrawAmount = parseEther("50");
       const winningNumber = 8n; // Different from bet number (7)
-      
+      const jackpotNumber = 10n;
       // Expected: initial balance - deposit + withdrawal (withdrawal happens before VRF, so it's included in the final balance)
       // Initial balance is 2000 ETH, deposit is 1000 ETH, withdrawal is 50 ETH
       // Note: bet loss affects admin (who placed the bet), not player
       // Final = 2000 - 1000 + 50 = 1050 ETH
       const expectedFinalBalance = parseEther("2000") - depositAmount + withdrawAmount;
       
-      await runCompleteGameLoopTest(depositAmount, betAmount, withdrawAmount, winningNumber, expectedFinalBalance);
+      await runCompleteGameLoopTest(depositAmount, betAmount, withdrawAmount, winningNumber, jackpotNumber, expectedFinalBalance);
     });
 
     it("Should handle large withdrawal in complete game loop", async function () {
@@ -1917,6 +1942,7 @@ describe("StakedBRB", function () {
       
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       const winningNumber = 7n;
+      const jackpotNumber = 10n;
       
       // Calculate proper maxSharesOut to avoid MaxSharesError
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
@@ -1948,7 +1974,7 @@ describe("StakedBRB", function () {
       });
       
       const requestId = logsVRF[0].args.requestId;
-      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber]]);
+      await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
       
       // Count winners (0x00) - ALWAYS DONE
       const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep(["0x00"]);
@@ -2053,9 +2079,8 @@ describe("StakedBRB", function () {
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 1800 ETH max)
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
-      
       // Verify the bet was placed successfully
-      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] = 
+      const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _burnFeeRate, _jackpotFeeRate, _feeRecipient, pendingBets] = 
         await stakedBrbProxy.read.getVaultConfig();
       expect(pendingBets).to.equal(betAmount);
       
