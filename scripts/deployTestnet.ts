@@ -83,8 +83,8 @@ async function deployTestnet() {
   const keyHash150Gwei = "0xff8dedfbfa60af186cf3c830acbc32c05aae823045ae5ea7da1e45fbfaba4f92"
   const callbackGasLimit = 100000n
   const numWords = 2n
-  const safeBlockConfirmation = 3
-  const gamePeriod = 60n
+  const safeBlockConfirmation = 1
+  const gamePeriod = 120n
   
   // Fee structure (basis points)
   const teamFeeBasisPoints = 300n    // 3%

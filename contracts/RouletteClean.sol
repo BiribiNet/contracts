@@ -236,6 +236,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event ChainlinkSetupCompleted(uint256 subscriptionId, address keeperRegistrar, address keeperRegistry);
     event UpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, uint256 checkDataLength, string upkeepType);
     event MaxSupportedBetsUpdated(uint256 maxSupportedBets, uint256 totalUpkeeps);
+    event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerShare, uint256 jackpotWinnerCount);
     
     // ========== ERRORS ==========
     error InvalidBet();
@@ -828,6 +829,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 jackpotWinnerShare: batchData.jackpotWinnerShare,
                 jackpotWinnerCount: batchData.jackpotWinnerCount
             });
+            emit JackpotResultEvent(roundId, batchData.jackpotWinnerShare, batchData.jackpotWinnerCount);
         }
         $.totalWinningBetsSet[roundId] = true;
 
