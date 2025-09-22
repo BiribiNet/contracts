@@ -8,8 +8,12 @@ contract BRB is ERC20 {
         _mint(msg.sender, 30_000_000 * 10 ** decimals());
     }
 
-    function bet(IERC677Receiver to, uint256 amount, bytes calldata data) external {
+    function bet(IERC677Receiver to, uint256 amount, bytes calldata data, address referral) external {
         _transfer(msg.sender, address(to), amount);
-        to.onTokenTransfer(msg.sender, amount, data);
+        to.onTokenTransfer(msg.sender, amount, data, referral);
+    }
+
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
     }
 }

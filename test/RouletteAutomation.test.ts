@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { checksumAddress, encodeAbiParameters, keccak256, parseEther, toHex } from "viem";
+import { checksumAddress, encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -82,7 +82,7 @@ describe("RouletteClean - Automation", function () {
       );
 
       await expect(
-        brb.write.bet([stakedBrbProxy.address, totalAmount, betData], { account: admin.account })
+        brb.write.bet([stakedBrbProxy.address, totalAmount, betData, zeroAddress], { account: admin.account })
       ).to.be.rejectedWith("BetLimitExceeded");
 
       // But 10 bets should work
@@ -101,7 +101,7 @@ describe("RouletteClean - Automation", function () {
       );
 
       await expect(
-        brb.write.bet([stakedBrbProxy.address, validTotalAmount, validBetData], { account: admin.account })
+        brb.write.bet([stakedBrbProxy.address, validTotalAmount, validBetData, zeroAddress], { account: admin.account })
       ).to.be.fulfilled;
     });
   });
@@ -126,7 +126,7 @@ describe("RouletteClean - Automation", function () {
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
       );
 
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
       await time.increase(timeUntilNextRound);
@@ -156,7 +156,7 @@ describe("RouletteClean - Automation", function () {
         [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
       );
 
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData]);
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
       await time.increase(timeUntilNextRound);

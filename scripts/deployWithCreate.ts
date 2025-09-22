@@ -27,40 +27,68 @@ async function deployWithCreate() {
 
   const getNonce = await publicClient.getTransactionCount({ address: deployer.account.address })
   
-  const [brbAddress, rouletteImpl, stakedBrbImpl, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 5 }, async (_, i) => {
+  const [jackpotContractImpl, brbReferalAddress, brbAddress, rouletteImpl, stakedBrbImpl, jackpotContractProxyAddress, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 8 }, async (_, i) => {
     return getContractAddress({ 
       from: deployer.account.address,
       nonce: BigInt(getNonce + i)
     })
   }))
 
-  const brb = await viem.deployContract("BRB") // #1
+  const jackpotContract = await viem.deployContract("JackpotContract", [brbAddress, rouletteProxyAddress])
+  const brbReferal = await viem.deployContract("BRBReferal", [rouletteProxyAddress]) // #1
+  const brb = await viem.deployContract("BRB", []) // #2
 
   const keyHash2Gwei = "0x9fe0eebf5e446e3c998ec9bb19951541aee00bb90ea201ae456421a2ded86805"
   const keyHash30Gwei = "0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15"
   const keyHash150Gwei = "0xff8dedfbfa60af186cf3c830acbc32c05aae823045ae5ea7da1e45fbfaba4f92"
   const callbackGasLimit = 100000n
-  const numWords = 1n
+  const numWords = 2n;
   const safeBlockConfirmation = 3;
   const gamePeriod = 60n;
-  const roulette = await viem.deployContract("RouletteClean", [gamePeriod, vrfCoordinator.address, keyHash2Gwei, keyHash30Gwei, keyHash150Gwei, subId, callbackGasLimit, numWords, safeBlockConfirmation, stakedBrbProxyAddress]) // #2
-  const stakedBrb = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress]) // #3
+  const teamFeeBasisPoints = 300n;
+  const burnFeeBasisPoints = 50n;
+  const jackpotFeeBasisPoints = 150n;
+  const params = {
+    gamePeriod,
+    vrfCoordinator: vrfCoordinator.address,
+    keyHash2Gwei,
+    keyHash30Gwei,
+    keyHash150Gwei,
+    subscriptionId: subId,
+    callbackGasLimit,
+    numWords,
+    safeBlockConfirmation,
+    stakedBRBContract: stakedBrbProxyAddress,
+    linkToken: mockLinkToken.address,
+    jackpotContract: jackpotContractProxyAddress,
+    brbToken: brbAddress
+  }
+  const roulette = await viem.deployContract("RouletteClean", [params]) // #2
+  const stakedBrb = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress, brbReferalAddress, jackpotContractProxyAddress]) // #3
+
+  const initializeJackpotContractData = encodeFunctionData({
+    abi: jackpotContract.abi,
+    functionName: 'initialize',
+    args: [deployer.account.address]
+  })
 
   const initializeRouletteData = encodeFunctionData({
     abi: roulette.abi,
     functionName: 'initialize',
-    args: [deployer.account.address, mockAutomationRegistry.address, mockAutomationRegistry.address, mockLinkToken.address]
+    args: [parseEther('1'), deployer.account.address, mockAutomationRegistry.address, mockAutomationRegistry.address, mockLinkToken.address]
   })
 
   const initializeStakedBrbData = encodeFunctionData({
     abi: stakedBrb.abi,
     functionName: 'initialize',
-    args: [deployer.account.address, 250n, deployer.account.address] // Changed from 10000 to 250 (2.5%)
+    args: [deployer.account.address, teamFeeBasisPoints, burnFeeBasisPoints, jackpotFeeBasisPoints, deployer.account.address] // Changed from 10000 to 250 (2.5%)
   })
 
+  const _jackpotContractProxy = await viem.deployContract("ERC1967Proxy", [jackpotContractImpl, initializeJackpotContractData]) // #2
   const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData]) // #2
   const stakedBrbProxyContract = await viem.deployContract("ERC1967Proxy", [stakedBrbImpl, initializeStakedBrbData]) // #3
 
+  const jackpotContractProxy = await viem.getContractAt("JackpotContract", _jackpotContractProxy.address)
   const rouletteProxy = await viem.getContractAt("RouletteClean", rouletteProxyAddress)
   const stakedBrbProxy = await viem.getContractAt("StakedBRB", stakedBrbProxyAddress)
   
@@ -97,6 +125,16 @@ async function deployWithCreate() {
   const getUpkeepConfig = await rouletteProxy.read.getUpkeepConfig()
   console.log('getUpkeepConfig', getUpkeepConfig)
 
+  if (jackpotContract.address.toLowerCase() !== jackpotContractImpl.toLowerCase()) {
+    throw new Error('Jackpot contract address mismatch')
+  }
+  if (jackpotContractProxy.address.toLowerCase() !== jackpotContractProxyAddress.toLowerCase()) {
+    throw new Error('Jackpot contract proxy address mismatch')
+  }
+  if (brbReferalAddress.toLowerCase() !== brbReferal.address.toLowerCase()) {
+    throw new Error('BRB Referral address mismatch')
+  }
+
   if (rouletteProxy.address.toLowerCase() !== rouletteProxyAddress.toLowerCase()) {
     throw new Error('Roulette proxy address mismatch')
   }
@@ -131,6 +169,7 @@ async function deployWithCreate() {
   return {
     rouletteProxy,
     stakedBrbProxy,
+    jackpotContract: jackpotContractProxy,
     vrfCoordinator,
     mockAutomationRegistry,
     mockLinkToken,
