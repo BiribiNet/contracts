@@ -5,6 +5,7 @@ import { ERC4626Upgradeable } from "./external/ERC4626Upgradeable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IRoulette } from "./interfaces/IRoulette.sol";
 import { IERC20Mintable } from "./interfaces/IERC20Mintable.sol";
@@ -766,24 +767,21 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         emit ProtocolFeeRecipientUpdated(newRecipient);
     }
 
+    function depositWithPermit(uint256 assets, address receiver, uint256 minSharesOut, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external returns (uint256 shares) {
+        try IERC20Permit(BRB_TOKEN).permit(msg.sender, address(this), assets, deadline, v, r, s) {} catch {}
+        _checkDepositAllowed(assets);
+        return super.deposit(assets, receiver, minSharesOut);
+    }
     /**
     * @dev Override deposit to enforce minimum deposit
     */
     function deposit(uint256 assets, address receiver, uint256 minSharesOut) public override returns (uint256 shares) {
-        if (assets == 0) revert ZeroAmount();
-        if (totalSupply() == 0 && assets < MINIMUM_FIRST_DEPOSIT) {
-            revert DepositTooSmall();
-        }
-        _checkDepositAllowed();
+        _checkDepositAllowed(assets);
         return super.deposit(assets, receiver, minSharesOut);
     }
 
     function mint(uint256 shares, address receiver, uint256 maxAmountIn) public override returns (uint256 assets) {
-        if (shares == 0) revert ZeroAmount();
-        if (totalSupply() == 0 && shares < MINIMUM_FIRST_DEPOSIT) {
-            revert DepositTooSmall();
-        }
-        _checkDepositAllowed();
+        _checkDepositAllowed(shares);
         return super.mint(shares, receiver, maxAmountIn);
     }
 
@@ -860,12 +858,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         }
     }
 
-    function _checkDepositAllowed() private view {
-       StakedBRBStorage storage $ = _getStakedBRBStorage();
-        // Block deposits during round transitions (from onRoundTransition to cleaning upkeep completion)
-        if ($.roundTransitionInProgress) {
-            revert DepositBlockedDuringResolution();
+    function _checkDepositAllowed(uint256 amount) private view {
+        if (amount == 0) revert ZeroAmount();
+        if (totalSupply() == 0 && amount < MINIMUM_FIRST_DEPOSIT) {
+            revert DepositTooSmall();
         }
+        // Block deposits during round transitions (from onRoundTransition to cleaning upkeep completion)
+        if (_getStakedBRBStorage().roundTransitionInProgress) revert DepositBlockedDuringResolution();
     }
     
     /// @dev Private function to check if withdrawals are allowed

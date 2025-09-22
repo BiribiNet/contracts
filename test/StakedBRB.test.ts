@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { checksumAddress, encodeAbiParameters, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
+import { checksumAddress, encodeAbiParameters, parseEther, parseEventLogs, parseSignature, toHex, zeroAddress, type WalletClient } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -289,6 +289,350 @@ describe("StakedBRB", function () {
       expect(await stakedBrbProxy.read.previewMint([shares])).to.equal(depositAmount);
       expect(await stakedBrbProxy.read.previewWithdraw([depositAmount])).to.equal(shares);
       expect(await stakedBrbProxy.read.previewRedeem([shares])).to.equal(depositAmount);
+    });
+  });
+
+  describe("Deposit With Permit (EIP-2612)", function () {
+    async function createPermitSignature(
+      owner: WalletClient,
+      spender: string,
+      value: bigint,
+      deadline: bigint,
+      nonce?: bigint
+    ) {
+      // Get contract details
+      const name = await brb.read.name();
+      const version = '1';
+      const chainId = await publicClient.getChainId();
+      const verifyingContract = brb.address;
+      
+      // Get nonce if not provided
+      if (nonce === undefined) {
+        nonce = await brb.read.nonces([owner!.account!.address]);
+      }
+
+      // EIP-712 domain
+      const domain = {
+        name,
+        version,
+        chainId,
+        verifyingContract,
+      };
+
+      // EIP-2612 Permit typehash
+      const types = {
+        Permit: [
+          { name: "owner", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "nonce", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+        ],
+      };
+
+      const message = {
+        owner: owner!.account!.address,
+        spender,
+        value,
+        nonce,
+        deadline,
+      };
+
+      // Sign the structured data
+      const signature = await owner!.signTypedData({
+        domain,
+        types,
+        primaryType: "Permit",
+        message,
+        account: owner!.account!
+      });
+
+      return parseSignature(signature);
+    }
+
+    it("Should allow deposit with valid permit signature", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour from now
+      
+      // Create permit signature
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      // Get initial balances
+      const initialBrbBalance = await brb.read.balanceOf([player1.account.address]);
+      const initialShares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
+
+      // Deposit with permit
+      const tx = await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player1.account.address,
+        0n, // minSharesOut
+        deadline,
+        Number(v),
+        r,
+        s
+      ], { account: player1.account });
+
+      // Verify the deposit worked
+      const finalBrbBalance = await brb.read.balanceOf([player1.account.address]);
+      const finalShares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
+
+      expect(finalBrbBalance).to.equal(initialBrbBalance - depositAmount);
+      expect(finalShares).to.be.greaterThan(initialShares);
+      expect(await stakedBrbProxy.read.totalAssets()).to.be.greaterThan(0);
+    });
+
+    it("Should work with minimum first deposit using permit", async function () {
+      const depositAmount = parseEther("1000"); // Above minimum
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Create permit signature
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      // Deposit with permit (should work as it's above minimum)
+      await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player1.account.address,
+        0n,
+        deadline,
+        Number(v),
+        r,
+        s
+      ], { account: player1.account });
+
+      expect(await stakedBrbProxy.read.balanceOf([player1.account.address])).to.be.greaterThan(0);
+    });
+
+    it("Should reject deposit with expired permit", async function () {
+      const depositAmount = parseEther("1000");
+      const expiredDeadline = BigInt(Math.floor(Date.now() / 1000) - 3600); // 1 hour ago
+      
+      // Create permit signature with expired deadline
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        expiredDeadline
+      );
+
+      // Should revert due to expired deadline
+      await expect(
+        stakedBrbProxy.write.depositWithPermit([
+          depositAmount,
+          player1.account.address,
+          0n,
+          expiredDeadline,
+          Number(v),
+          r,
+          s
+        ], { account: player1.account })
+      ).to.be.rejected;
+    });
+
+    it("Should reject deposit with invalid permit signature", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Create permit signature for different amount
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        parseEther("500"), // Different amount
+        deadline
+      );
+
+      // Should revert due to signature mismatch
+      await expect(
+        stakedBrbProxy.write.depositWithPermit([
+          depositAmount, // Using different amount than signed
+          player1.account.address,
+          0n,
+          deadline,
+          Number(v),
+          r,
+          s
+        ], { account: player1.account })
+      ).to.be.rejected;
+    });
+
+    it("Should reject deposit with reused permit (nonce replay)", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Create permit signature
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      // First deposit should work
+      await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player1.account.address,
+        0n,
+        deadline,
+        Number(v),
+        r,
+        s
+      ], { account: player1.account });
+
+      // Transfer more BRB to player1 for second attempt
+      await brb.write.transfer([player1.account.address, depositAmount], { account: admin.account });
+
+      // Second deposit with same signature should fail (nonce already used)
+      await expect(
+        stakedBrbProxy.write.depositWithPermit([
+          depositAmount,
+          player1.account.address,
+          0n,
+          deadline,
+          Number(v),
+          r,
+          s
+        ], { account: player1.account })
+      ).to.be.rejected;
+    });
+
+    it("Should handle permit failure gracefully and still attempt deposit", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Pre-approve the transfer (so permit failure won't block deposit)
+      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
+
+      // Create invalid permit signature (wrong spender)
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        player2.account.address, // Wrong spender
+        depositAmount,
+        deadline
+      );
+
+      // Should still work because of pre-approval, permit failure is caught
+      await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player1.account.address,
+        0n,
+        deadline,
+        Number(v),
+        r,
+        s
+      ], { account: player1.account });
+
+      expect(await stakedBrbProxy.read.balanceOf([player1.account.address])).to.be.greaterThan(0);
+    });
+
+    it("Should work for different receivers with permit", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Create permit signature
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      // Deposit with permit, but shares go to player2
+      await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player2.account.address, // Different receiver
+        0n,
+        deadline,
+        Number(v),
+        r,
+        s
+      ], { account: player1.account });
+
+      // Player1 should have paid, player2 should have received shares
+      expect(await stakedBrbProxy.read.balanceOf([player2.account.address])).to.be.greaterThan(0);
+      expect(await stakedBrbProxy.read.balanceOf([player1.account.address])).to.equal(0);
+    });
+
+    it("Should respect minSharesOut parameter", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Create permit signature
+      const { r, s, v } = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      // Set unreasonably high minSharesOut
+      const unreasonableMinShares = parseEther("2000"); // More than possible
+
+      // Should revert due to insufficient shares output
+      await expect(
+        stakedBrbProxy.write.depositWithPermit([
+          depositAmount,
+          player1.account.address,
+          unreasonableMinShares,
+          deadline,
+          Number(v),
+          r,
+          s
+        ], { account: player1.account })
+      ).to.be.rejected;
+    });
+
+    it("Should handle multiple users with permits in sequence", async function () {
+      const depositAmount = parseEther("1000");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      
+      // Player1 deposit with permit
+      const sig1 = await createPermitSignature(
+        player1,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player1.account.address,
+        0n,
+        deadline,
+        Number(sig1.v),
+        sig1.r,
+        sig1.s
+      ], { account: player1.account });
+
+      // Player2 deposit with permit
+      const sig2 = await createPermitSignature(
+        player2,
+        stakedBrbProxy.address,
+        depositAmount,
+        deadline
+      );
+
+      await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player2.account.address,
+        0n,
+        deadline,
+        Number(sig2.v),
+        sig2.r,
+        sig2.s
+      ], { account: player2.account });
+
+      // Both should have shares
+      expect(await stakedBrbProxy.read.balanceOf([player1.account.address])).to.be.greaterThan(0);
+      expect(await stakedBrbProxy.read.balanceOf([player2.account.address])).to.be.greaterThan(0);
     });
   });
 

@@ -15,7 +15,7 @@ import '@openzeppelin/hardhat-upgrades';
 import networks from './hardhat.network';
 
 const defaultSettings: SolcUserConfig['settings'] = {
-  optimizer: { enabled: true}
+  optimizer: { enabled: true }
 };
 
 type ContractMap = Record<string, { abi: object }>;

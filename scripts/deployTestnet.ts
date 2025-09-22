@@ -93,7 +93,9 @@ async function deployTestnet() {
 
   // Deploy contracts in correct order
   const jackpotContract = await viem.deployContract("JackpotContract", [brbAddress, rouletteProxyAddress])
+  await setTimeoutIsDeployed(jackpotContract.address);
   const brbReferal = await viem.deployContract("BRBReferal", [rouletteProxyAddress])
+  await setTimeoutIsDeployed(brbReferal.address);
   const brb = await viem.deployContract("BRB")
   await setTimeoutIsDeployed(brb.address);
 
@@ -165,15 +167,17 @@ async function deployTestnet() {
   
   // Register upkeeps for RouletteClean
   const upkeepCount = 20n; // Register 20 payout upkeeps
-  const linkAmount = parseEther('1'); // 1 LINK per upkeep
+  const linkAmount = parseEther('0.2'); // 1 LINK per upkeep
   tx = await linkToken.write.approve([rouletteProxy.address, linkAmount * upkeepCount + linkAmount * 2n], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx });
   
   tx = await rouletteProxy.write.registerVRFUpkeep([linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx });
   
-  const upkeepIds = await rouletteProxy.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
-  const upkeepIdsComputeTotalWinningBets = await rouletteProxy.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
+  tx = await rouletteProxy.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
+  await publicClient.waitForTransactionReceipt({ hash: tx });
+  tx = await rouletteProxy.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
+  await publicClient.waitForTransactionReceipt({ hash: tx });
 
 
   await sleep(30 * 1000);
@@ -312,10 +316,7 @@ async function deployTestnet() {
     automationRegistryAddress: AUTOMATION_REGISTRY_ADDRESS,
     linkTokenAddress: LINK_TOKEN_ADDRESS,
     subId,
-    brb,
-    cleaningUpkeepId,
-    payoutUpkeepIds: upkeepIds,
-    computeTotalWinningBetsUpkeepId: upkeepIdsComputeTotalWinningBets
+    brb
   }
 }
 
