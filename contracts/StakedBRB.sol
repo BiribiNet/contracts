@@ -117,7 +117,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     // Events
     event BetPlaced(address user, uint256 amount, bytes data);
-    event ProtocolFeeCollected(uint256 amount);
     event ProtocolFeeRateUpdated(uint256 newFee);
     event BurnFeeRateUpdated(uint256 newFee);
     event JackpotFeeRateUpdated(uint256 newFee);
@@ -423,7 +422,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (cleaningData.fees.protocolFees > 0) {
             // Transfer protocol fees to fee recipient
             IERC20(BRB_TOKEN).transfer($.feeRecipient, cleaningData.fees.protocolFees);
-            emit ProtocolFeeCollected(cleaningData.fees.protocolFees);
         }
         if (cleaningData.fees.jackpotAmount > 0) {
             IERC20(BRB_TOKEN).transfer(JACKPOT_CONTRACT, cleaningData.fees.jackpotAmount);
