@@ -4,7 +4,6 @@ pragma solidity ^0.8.27;
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "hardhat/console.sol";
 
 contract JackpotContract is AccessControlUpgradeable, UUPSUpgradeable {
     error OnlyRoulette();
@@ -24,7 +23,6 @@ contract JackpotContract is AccessControlUpgradeable, UUPSUpgradeable {
     }
 
     function jackpotWin(address[] memory winners, uint256 winnerShare) external {
-        console.log("Receiving jackpot win");
         if (msg.sender != ROULETTE_CONTRACT) revert OnlyRoulette();
         uint256 winnersLength = winners.length;
         for (uint256 i; i < winnersLength;) {

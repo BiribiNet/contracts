@@ -238,7 +238,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 totalBalance = IERC20(asset()).balanceOf(address(this));
 
-        return totalBalance - ($.pendingBets + $.jackpotAmount); // Directly subtract pendingBets
+        return totalBalance - $.pendingBets; // Directly subtract pendingBets
     }
     
     // === ERC4626 Preview Overrides (OpenZeppelin Pattern) ===
@@ -315,7 +315,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 maxPayout = IRoulette(ROULETTE_CONTRACT).bet(from, amount, data);
         uint256 nextMaxPayout = $.maxPayout + maxPayout;
 
-        $.maxPayoutPerRound[currentRound] = nextMaxPayout;
+        $.maxPayoutPerRound[currentRound] += maxPayout;
         $.maxPayout = nextMaxPayout;  // Fixed: should be nextMaxPayout, not maxPayout
         
         emit BetPlaced(from, amount, data);
@@ -417,7 +417,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function _processCleaning(CleaningUpkeepData memory cleaningData) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        
+        $.maxPayout -= $.maxPayoutPerRound[cleaningData.roundId];
+        // 3. UPDATE lastRoundResolved to mark this round as processed
+        $.lastRoundResolved = cleaningData.roundId;
         // 1. PROCESS PROTOCOL FEES (if any)
         if (cleaningData.fees.protocolFees > 0) {
             // Transfer protocol fees to fee recipient
@@ -435,10 +437,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (cleaningData.hasWithdrawals) {
             _processLargeWithdrawalBatchPreComputed(cleaningData.usersToProcess, cleaningData.amountsToProcess, cleaningData.actualProcessCount);
         }
-
-        $.maxPayout -= $.maxPayoutPerRound[cleaningData.roundId];
-        // 3. UPDATE lastRoundResolved to mark this round as processed
-        $.lastRoundResolved = cleaningData.roundId;
         
         // 4. CLEAR round transition flag - deposits/withdrawals are now allowed again
         $.roundTransitionInProgress = false;
