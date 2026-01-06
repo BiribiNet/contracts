@@ -7,13 +7,15 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { AutomationCompatibleInterface } from "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 import { IRoulette } from "./interfaces/IRoulette.sol";
 import { IERC20Mintable } from "./interfaces/IERC20Mintable.sol";
 import { IERC20Burnable } from "./interfaces/IERC20Burnable.sol";
 import { IAutomationRegistrar2_1 } from "./interfaces/IAutomationRegistrar2_1.sol";
 import { IAutomationRegistry2_1 } from "./interfaces/IAutomationRegistry2_1.sol";
-import { AutomationCompatibleInterface } from "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { IBRB } from "./interfaces/IBRB.sol";
+
 /**
  * @title StakedBRB Unified
  * @dev ERC4626 vault with built-in roulette betting and protocol fees
@@ -450,22 +452,10 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param payouts Array of payout info for multiple winners/losers
      */
     function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external onlyRoulette {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        uint256 payoutsLength = payouts.length;
-        
-        IRoulette.PayoutInfo memory payoutInfo;
-        // Process all payouts in a single transaction
-        for (uint256 i; i < payoutsLength;) {
-            payoutInfo = payouts[i];
-            IERC20(BRB_TOKEN).transfer(payoutInfo.player, payoutInfo.payout);
-            // Note: We don't process losers' bets here - they remain in the vault
-            // Losers' losses are automatically added to staker profits when we reset pendingBets
-            
-            unchecked { ++i; }
-        }
+        StakedBRBStorage storage $ = _getStakedBRBStorage();        
 
         $.totalPayouts[roundId] += totalPayouts;
-        
+
         // If this is the last batch, track pending bets for this round
         if (isLastBatch) {
             // Store pending bets for this round (for fee calculation)
@@ -479,6 +469,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             // NOTE: Withdrawals remain locked until cleaning upkeep processes large withdrawals
             // This ensures proper order: process withdrawals first, then unlock
         } 
+        IBRB(BRB_TOKEN).transferBatch(payouts);
     }
 
 

@@ -53,6 +53,7 @@ async function deployTestnet() {
   const createSubscriptionHash = await vrfCoordinator.write.createSubscription();
   const receipt = await publicClient.waitForTransactionReceipt({ hash: createSubscriptionHash });
   const subId = BigInt(receipt.logs[0]!.topics[1]!);
+
   console.log("New VRF Subscription ID:", subId);
 
   // Option 2: Use an existing subscription ID (uncomment and replace if preferred)
@@ -70,7 +71,7 @@ async function deployTestnet() {
   console.log('getNonce', getNonce);
   
   // Pre-compute all contract addresses for circular dependency resolution
-  const [jackpotContractImpl, brbReferalAddress, brbAddress, rouletteImpl, stakedBrbImpl, jackpotContractProxyAddress, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 8 }, async (_, i) => {
+  const [jackpotContractImpl, brbReferalAddress, brbAddress, rouletteLibAddress, rouletteImpl, stakedBrbImpl, jackpotContractProxyAddress, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 9 }, async (_, i) => {
     return getContractAddress({ 
       from: deployer.account.address,
       nonce: BigInt(getNonce + i)
@@ -118,7 +119,14 @@ async function deployTestnet() {
     brbToken: brbAddress
   }
   
-  const rouletteCleanFactory = await viem.deployContract("RouletteClean", [params]);
+  const rouletteLib = await viem.deployContract("RouletteLib");
+  await setTimeoutIsDeployed(rouletteLib.address);
+  
+  const rouletteCleanFactory = await viem.deployContract("RouletteClean", [params], {
+    libraries: {
+      RouletteLib: rouletteLib.address
+    }
+  });
   
   await setTimeoutIsDeployed(rouletteCleanFactory.address);
   const stakedBrbFactory = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress, brbReferalAddress, jackpotContractProxyAddress]);
@@ -290,12 +298,23 @@ async function deployTestnet() {
     console.log('Error verifying jackpotContractProxy', error);
   }
 
+  await sleep(verificationTimeout);
+  
+  try {
+    await hre.run("verify:verify", {
+      address: rouletteLibAddress,
+    });
+  } catch (error) {
+    console.log('Error verifying rouletteLib', error);
+  }
+
   
 
   console.log('=== DEPLOYMENT COMPLETE ===');
   console.log('jackpotContractProxy', jackpotContractProxy.address);
   console.log('rouletteProxyAddress', rouletteProxyAddress);
   console.log('stakedBrbProxyAddress', stakedBrbProxyAddress);
+  console.log('rouletteLibAddress', rouletteLibAddress);
   console.log('jackpotContractImpl', jackpotContractImpl);
   console.log('rouletteImpl', rouletteImpl);
   console.log('stakedBrbImpl', stakedBrbImpl);

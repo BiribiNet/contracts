@@ -1009,7 +1009,7 @@ describe("StakedBRB", function () {
       
       // 1. Time Advancement and VRF Trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;
@@ -2193,7 +2193,7 @@ describe("StakedBRB", function () {
       
       // 3. TIME ADVANCEMENT AND VRF TRIGGER
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
       
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
 
@@ -2304,7 +2304,7 @@ describe("StakedBRB", function () {
       
       // 5. COMPLETE GAME LOOP
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
       
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;

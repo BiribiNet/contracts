@@ -293,7 +293,6 @@ abstract contract ERC4626Upgradeable is Initializable, ERC20Upgradeable {
         // slither-disable-next-line reentrancy-no-eth
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, address(this), assets);
         _mint(receiver, shares);
-
         emit Deposit(caller, receiver, assets, shares);
     }
 
@@ -318,9 +317,9 @@ abstract contract ERC4626Upgradeable is Initializable, ERC20Upgradeable {
         // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
         // shares are burned and after the assets are transferred, which is a valid state.
         _burn(owner, shares);
+        emit Withdraw(caller, receiver, owner, assets, shares);
         SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
 
-        emit Withdraw(caller, receiver, owner, assets, shares);
     }
 
     function _decimalsOffset() internal view virtual returns (uint8) {

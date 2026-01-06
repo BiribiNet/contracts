@@ -8,15 +8,15 @@ networks.hardhat = {};
 networks.localhost = {
   url: 'http://localhost:8545',
   chainId: 31337,
-  accounts: [vars.get('PRIVATE_KEY')],
+  accounts: [vars.get('BRB_KEY')],
 };
 
-if (vars.has('PRIVATE_KEY')) {
+if (vars.has('BRB_KEY')) {
   if (vars.has('MAINNET_RPC_URL')) {
     networks.mainnet = {
       url: vars.get('MAINNET_RPC_URL'),
       chainId: 1,
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -24,7 +24,7 @@ if (vars.has('PRIVATE_KEY')) {
     networks.holesky = {
       url: vars.get('HOLESKY_RPC_URL'),
       chainId: 17000,
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -33,7 +33,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('SEPOLIA_RPC_URL'),
       chainId: 11155111,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -42,7 +42,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('GOERLI_RPC_URL'),
       chainId: 5,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -51,7 +51,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('GNOSIS_RPC_URL'),
       chainId: 100,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -60,7 +60,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('SOKOL_RPC_URL'),
       chainId: 77,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -69,7 +69,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('BSC_RPC_URL'),
       chainId: 56,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -78,7 +78,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('BSCTEST_RPC_URL'),
       chainId: 97,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -87,7 +87,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('MATIC_RPC_URL'),
       chainId: 137,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -96,7 +96,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('MUMBAI_RPC_URL'),
       chainId: 80001,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -105,7 +105,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('ARBITRUM_RPC_URL'),
       chainId: 42161,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -114,7 +114,7 @@ if (vars.has('PRIVATE_KEY')) {
       url: vars.get('ARBITRUM_SEPOLIA_RPC_URL'),
       chainId: 421614,
       gasPrice: 'auto',
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 
@@ -122,7 +122,7 @@ if (vars.has('PRIVATE_KEY')) {
     networks.tenderly = {
       url: vars.get('TENDERLY_RPC_URL'),
       chainId: 1,
-      accounts: [vars.get('PRIVATE_KEY')],
+      accounts: [vars.get('BRB_KEY')],
     };
   }
 }

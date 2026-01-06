@@ -199,7 +199,7 @@ describe("RouletteClean", function () {
 
       // 3. Time Advancement and VRF Trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;
@@ -1073,7 +1073,7 @@ describe("RouletteClean", function () {
 
       // 3. GET NEXT UPKEEP WINDOW & TIME INCREASE
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       // 4. PERFORM UPKEEP TO TRIGGER VRF
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
@@ -1498,7 +1498,7 @@ describe("RouletteClean", function () {
 
       // Time advancement and VRF trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;
@@ -1581,16 +1581,22 @@ describe("RouletteClean", function () {
       await brb.write.transfer([jackpotContract.address, jackpotFund], { account: admin.account });
 
       // Fund each player and have them stake + place jackpot-qualifying bets
+      // Fund each player and have them stake + place jackpot-qualifying bets
       const playerBalancesBeforeBets = new Map<string, bigint>();
-      for (const player of jackpotPlayers) {
-        // Transfer additional BRB to player if needed
+      for (let i = 0; i < jackpotPlayers.length; i++) {
+        const player = jackpotPlayers[i];
+        // Vary bet amounts: Player 1 bets 1x, Player 2 bets 2x, etc.
+        const playerBetAmount = bigBetAmount * BigInt(i + 1);
+
+        // Transfer additional BRB to player if needed (needs more for larger bets)
         const currentBalance = await brb.read.balanceOf([player.account.address]);
-        if (currentBalance < parseEther("300")) {
-          await brb.write.transfer([player.account.address, parseEther("100")], { account: admin.account });
+        const reducedAmount = parseEther("500");
+        if (currentBalance < reducedAmount) {
+          await brb.write.transfer([player.account.address, reducedAmount], { account: admin.account });
         }
 
         // Stake BRB
-        const stakeAmount = parseEther("100");
+        const stakeAmount = reducedAmount; // Stake enough to cover larger bets
         await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player.account });
         await stakedBrbProxy.write.deposit([stakeAmount, player.account.address, 0n], { account: player.account });
 
@@ -1604,17 +1610,17 @@ describe("RouletteClean", function () {
             { type: "uint256[]", name: "betTypes" },
             { type: "uint256[]", name: "numbers" }
           ]}],
-          [{ amounts: [bigBetAmount], betTypes: [1n], numbers: [targetNumber] }]
+          [{ amounts: [playerBetAmount], betTypes: [1n], numbers: [targetNumber] }]
         );
 
-        await brb.write.bet([stakedBrbProxy.address, bigBetAmount, betData, zeroAddress], { account: player.account });
+        await brb.write.bet([stakedBrbProxy.address, playerBetAmount, betData, zeroAddress], { account: player.account });
       }
 
-      console.log(`${jackpotPlayers.length} players placed jackpot-qualifying bets on number ${targetNumber}`);
+      console.log(`${jackpotPlayers.length} players placed variable jackpot-qualifying bets on number ${targetNumber}`);
 
       // Time advancement and VRF trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;
@@ -1671,23 +1677,31 @@ describe("RouletteClean", function () {
       }
 
       // Verify all players received their share of jackpot + regular payout
-      const expectedJackpotSharePerPlayer = jackpotFund / BigInt(jackpotPlayers.length);
-      const expectedRegularPayout = bigBetAmount * 36n; // 36x total payout (includes original bet)
+      const totalJackpotBetAmount = jackpotPlayers.reduce((acc, _, i) => acc + (bigBetAmount * BigInt(i + 1)), 0n);
+      
+      console.log(`Total jackpot bet amount: ${formatEther(totalJackpotBetAmount)} BRB`);
 
-      for (const player of jackpotPlayers) {
+      for (let i = 0; i < jackpotPlayers.length; i++) {
+        const player = jackpotPlayers[i];
+        const playerBetAmount = bigBetAmount * BigInt(i + 1);
+        
+        // Expected jackpot share = (playerBetAmount * jackpotFund) / totalJackpotBetAmount (floor rounding)
+        const expectedJackpotShare = playerBetAmount * jackpotFund / totalJackpotBetAmount;
+        const expectedRegularPayout = playerBetAmount * 36n;
+
         const finalBalance = await brb.read.balanceOf([player.account.address]);
         const initialBalance = playerBalancesBeforeBets.get(player.account.address)!;
-        const expectedTotal = initialBalance - bigBetAmount + expectedRegularPayout + expectedJackpotSharePerPlayer;
+        const expectedTotal = initialBalance - playerBetAmount + expectedRegularPayout + expectedJackpotShare;
         
         expect(finalBalance).to.equal(expectedTotal);
+        console.log(`Player ${i+1} (bet ${formatEther(playerBetAmount)}) won ${formatEther(expectedJackpotShare)} BRB from jackpot`);
       }
-
-      console.log(`Each of ${jackpotPlayers.length} players won ${formatEther(expectedJackpotSharePerPlayer)} BRB from jackpot!`);
       console.log(`Total jackpot distributed: ${formatEther(jackpotFund)} BRB`);
 
       // Verify jackpot contract is empty
       const finalJackpotBalance = await brb.read.balanceOf([jackpotContract.address]);
-      expect(finalJackpotBalance).to.equal(0n);
+      // can accumulate dust that's why we use lt
+      expect(Number(finalJackpotBalance)).to.be.lt(5);
     });
 
     it("Should handle case where no jackpot winners exist", async function () {
@@ -1722,7 +1736,7 @@ describe("RouletteClean", function () {
 
       // Time advancement and VRF trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;
@@ -1829,7 +1843,7 @@ describe("RouletteClean", function () {
 
       // Time advancement and VRF trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;
@@ -1954,7 +1968,7 @@ describe("RouletteClean", function () {
 
       // Time advancement and VRF trigger
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecutionVRF).to.be.true;

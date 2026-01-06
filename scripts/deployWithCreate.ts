@@ -27,7 +27,7 @@ async function deployWithCreate() {
 
   const getNonce = await publicClient.getTransactionCount({ address: deployer.account.address })
   
-  const [jackpotContractImpl, brbReferalAddress, brbAddress, rouletteImpl, stakedBrbImpl, jackpotContractProxyAddress, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 8 }, async (_, i) => {
+  const [jackpotContractImpl, brbReferalAddress, brbAddress, rouletteLibAddress, rouletteImpl, stakedBrbImpl, jackpotContractProxyAddress, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 9 }, async (_, i) => {
     return getContractAddress({ 
       from: deployer.account.address,
       nonce: BigInt(getNonce + i)
@@ -63,7 +63,12 @@ async function deployWithCreate() {
     jackpotContract: jackpotContractProxyAddress,
     brbToken: brbAddress
   }
-  const roulette = await viem.deployContract("RouletteClean", [params]) // #2
+  const rouletteLib = await viem.deployContract("RouletteLib");
+  const roulette = await viem.deployContract("RouletteClean", [params], {
+    libraries: {
+      RouletteLib: rouletteLib.address,
+    },
+  }) // #2
   const stakedBrb = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress, brbReferalAddress, jackpotContractProxyAddress]) // #3
 
   const initializeJackpotContractData = encodeFunctionData({
@@ -115,6 +120,7 @@ async function deployWithCreate() {
 
   console.log('rouletteProxyAddress', rouletteProxyAddress)
   console.log('stakedBrbProxyAddress', stakedBrbProxyAddress)
+  console.log('rouletteLibAddress', rouletteLibAddress)
   console.log('rouletteImpl', rouletteImpl)
   console.log('stakedBrbImpl', stakedBrbImpl)
   console.log('brb', brb.address)

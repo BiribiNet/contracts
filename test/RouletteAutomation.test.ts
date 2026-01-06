@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { checksumAddress, encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress } from "viem";
+import { checksumAddress, encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress, parseEventLogs } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -39,6 +39,45 @@ describe("RouletteClean - Automation", function () {
       const [maxSupportedBets, registeredUpkeepCount, batchSize, upkeepGasLimit] = await rouletteProxy.read.getUpkeepConfig();
       expect(maxSupportedBets).to.be.gte(10n);
       expect(registeredUpkeepCount).to.be.gte(1n);
+    });
+
+    it("Should handle sequential calls to registerPayoutUpkeeps", async function () {
+      const { rouletteProxy, mockLinkToken } = await useDeployWithCreateFixture();
+      const publicClient = await viem.getPublicClient();
+
+      const [, initialCount] = await rouletteProxy.read.getUpkeepConfig();
+
+      // 1. First registration (2 upkeeps)
+      const tx1 = await rouletteProxy.write.registerPayoutUpkeeps([2n, parseEther("2")]);
+      const receipt1 = await publicClient.waitForTransactionReceipt({ hash: tx1 });
+      const logs1 = parseEventLogs({
+        abi: rouletteProxy.abi,
+        eventName: 'UpkeepRegistered',
+        logs: receipt1.logs,
+      });
+
+      expect(logs1.length).to.equal(2);
+      // indices should start at initialCount
+      // checkDataLength = i + 2
+      expect(logs1[0].args.checkDataLength).to.equal(initialCount + 2n);
+      expect(logs1[1].args.checkDataLength).to.equal(initialCount + 3n);
+
+      // 2. Second registration (2 upkeeps)
+      const tx2 = await rouletteProxy.write.registerPayoutUpkeeps([2n, parseEther("2")]);
+      const receipt2 = await publicClient.waitForTransactionReceipt({ hash: tx2 });
+      const logs2 = parseEventLogs({
+        abi: rouletteProxy.abi,
+        eventName: 'UpkeepRegistered',
+        logs: receipt2.logs,
+      });
+
+      expect(logs2.length).to.equal(2);
+      expect(logs2[0].args.checkDataLength).to.equal(initialCount + 4n); // (initial + 2) + 2
+      expect(logs2[1].args.checkDataLength).to.equal(initialCount + 5n); // (initial + 3) + 2
+
+      // Verify total count
+      const [, registeredUpkeepCount] = await rouletteProxy.read.getUpkeepConfig();
+      expect(registeredUpkeepCount).to.equal(initialCount + 4n);
     });
 
     it("Should reject upkeep registration from non-admin", async function () {
@@ -129,7 +168,7 @@ describe("RouletteClean - Automation", function () {
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
 
       // Check upkeep
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
@@ -159,7 +198,7 @@ describe("RouletteClean - Automation", function () {
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
       const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      await time.increase(timeUntilNextRound);
+      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
       // Check upkeep
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
       expect(needsExecution).to.be.true;
