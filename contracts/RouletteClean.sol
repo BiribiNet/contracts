@@ -20,10 +20,11 @@ import { RouletteLib } from "./RouletteLib.sol";
  * @dev SIMPLE roulette contract - easy to understand
  */
 contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface {
+    error MaxUpkeepLimitReached();
     
     // ========== SIMPLE CONSTANTS ==========
-    uint256 private constant TIME_MARGIN = 10; // 10 seconds
-    uint32 private constant BATCH_SIZE = 10; // Users per batch for payout processing
+    uint256 private constant TIME_MARGIN = 15; // 10 seconds
+    uint32 private constant BATCH_SIZE = 35; // Users per batch for payout processing
     
     // GAS LIMIT CALCULATION FOR WORST-CASE SCENARIO (all bets win)
     uint32 private constant BASE_GAS_OVERHEAD = 100000; // Base transaction overhead
@@ -74,6 +75,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         address jackpotContract;
         address brbToken;
     }
+
+    struct TestDebug {
+        uint256 rouletteNumber;
+        uint256 jackpotNumber;
+        bool isSet;
+    }
     
     // ========== EIP-7201 STORAGE ==========
     struct RouletteStorage {
@@ -123,11 +130,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => JackpotResult) jackpotResult; // roundId => jackpot result
         mapping(uint256 => RandomResult) randomResults; // roundId => VRF result
         mapping(uint256 => uint256) requestIdToRound; // VRF request => round
+        mapping(uint256 => TestDebug) forcedNumbers;
     }
     
     // ========== UPKEEP STRUCTS ==========
     struct RandomResult {
-        uint256 randomWord;
+        uint256 winningNumber;
         uint256 jackpotNumber;
         bool set; // Whether VRF result is available
     }
@@ -398,6 +406,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         address forwarder;
         uint256 oldRegisteredUpkeepCount = $.registeredUpkeepCount;
         uint256 newRegisteredUpkeepCount = oldRegisteredUpkeepCount + upkeepCount;
+        if (newRegisteredUpkeepCount > 256) revert MaxUpkeepLimitReached();
         for (uint256 i = oldRegisteredUpkeepCount; i < newRegisteredUpkeepCount;) {
             // checkData.length determines batch range: length 1 = batch 0, length 2 = batch 1, etc.
             checkData = new bytes(i + 2);
@@ -647,7 +656,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
              uint256 roundToBePaid = $.lastRoundPaid + 1;
              RandomResult memory result = $.randomResults[roundToBePaid];
              if (roundToBePaid < $.currentRound && result.set && roundToBePaid > $.lastRoundPaid && !$.totalWinningBetsSet[roundToBePaid]) {
-                uint256 random = result.randomWord;
+                uint256 random = result.winningNumber;
                 (uint256 totalWinningBets, uint256 jackpotWinnerCount, uint256 totalJackpotBetAmount) = _countTotalWinningBets($, roundToBePaid, random, result.jackpotNumber, RouletteLib.getWinningBetTypes(random));
                 upkeepNeeded = true;
                 performData = abi.encode(PerformDataPayload({
@@ -684,7 +693,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                        $, 
                        roundToBePaid, 
                        startIndex, 
-                       $.randomResults[roundToBePaid].randomWord,
+                       $.randomResults[roundToBePaid].winningNumber,
                        jackpotRes.jackpotAmount,
                        jackpotRes.totalJackpotBetAmount
                    );
@@ -698,7 +707,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                         }))
                    }));
                 } else if (!batchAlreadyProcessed && startIndex < $.totalWinningBets[roundToBePaid]) {
-                    uint256 winningNumber = $.randomResults[roundToBePaid].randomWord;
+                    uint256 winningNumber = $.randomResults[roundToBePaid].winningNumber;
                     RouletteLib.WinningBetTypes memory winningTypes = RouletteLib.getWinningBetTypes(winningNumber);
                     // Get winning payouts ONLY for this specific batch range
                     (IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts) = _collectWinningPayoutsBatch(
@@ -855,9 +864,15 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 winningNumber = randomWords[0] % 37; // 0-36
         uint256 jackpotNumber = randomWords[1] % 37; // 0-36
         
+        // TODO TEST DEBUG TO REMOVE
+        if ($.forcedNumbers[roundToResolve].isSet) {
+            winningNumber = $.forcedNumbers[roundToResolve].rouletteNumber;
+            jackpotNumber = $.forcedNumbers[roundToResolve].jackpotNumber;
+        }
+
         // Store the VRF result for batch processing
         $.randomResults[roundToResolve] = RandomResult({
-            randomWord: winningNumber,
+            winningNumber: winningNumber,
             jackpotNumber: jackpotNumber,
             set: true
         });
@@ -1003,7 +1018,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 startIndex,
         uint256 endIndex,
         uint256 totalPayouts
-    ) private view returns (uint256 newCurrentIndex, uint256 newPayoutCount, uint256) {
+    ) private view returns (uint256, uint256, uint256) {
         SkipOrProcessSimpleBetsValues memory v = SkipOrProcessSimpleBetsValues({
             betsLength: bets.length,
             batchStart: startIndex > currentIndex ? startIndex - currentIndex : 0,
@@ -1156,9 +1171,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     /**
      * @dev Get round VRF result
      */
-    function getRoundResult(uint256 roundId) external view returns (uint256 winningNumber, bool isSet) {
-        RandomResult memory result = _getRouletteStorage().randomResults[roundId];
-        return (result.randomWord, result.set);
+    function getRoundResult(uint256 roundId) external view returns (RandomResult memory) {
+        return _getRouletteStorage().randomResults[roundId];
     }
     
     /**
@@ -1175,6 +1189,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 elapsed = block.timestamp - srt;
         uint256 remainder = elapsed % gamePeriod;
         return (elapsed >= gamePeriod && remainder <= TIME_MARGIN) ? 0 : gamePeriod - remainder; // 0 if in upkeep window, otherwise time until next window
+    }
+
+    // test debug to remove
+    function testForceNumber(uint256 rouletteNumber, uint256 jackpotNumber) external {
+        RouletteStorage storage $ = _getRouletteStorage();
+        $.forcedNumbers[$.currentRound] = TestDebug({ rouletteNumber: rouletteNumber, jackpotNumber: jackpotNumber, isSet: true });
     }
     
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}

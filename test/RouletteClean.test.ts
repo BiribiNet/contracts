@@ -304,49 +304,6 @@ describe("RouletteClean", function () {
     });
   });
 
-  describe("VRF and Round Management", function () {
-    // TODO: Fix VRF coordinator mock function signature and event testing
-    // it("Should handle VRF callback and store winning number", async function () {
-    //   const { rouletteProxy, vrfCoordinator, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
-    //   const [admin, player1] = await viem.getWalletClients();
-
-    //   // Place a bet first
-    //   const stakeAmount = parseEther("100");
-    //   await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
-    //   await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
-
-    //   const betAmount = parseEther("10");
-    //   const betData = encodeAbiParameters(
-    //     [{ type: "tuple", components: [
-    //       { type: "uint256[]", name: "amounts" },
-    //       { type: "uint256[]", name: "betTypes" },
-    //       { type: "uint256[]", name: "numbers" }
-    //     ]}],
-    //     [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
-    //   );
-
-    //   await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
-
-    //   // Simulate time passing and trigger VRF
-    //   await time.increase(70); // 70 seconds
-
-    //   // Mock VRF response with winning number 7
-    //   const randomWords = [7n]; // This will result in 7 % 37 = 7
-    //   const requestId = 1n;
-
-    //   // Simulate VRF callback
-    //   await expect(
-    //     vrfCoordinator.write.fulfillRandomWords([rouletteProxy.address, requestId, randomWords])
-    //   ).to.emit(rouletteProxy, "VRFResult")
-    //    .withArgs(1n, 7n);
-
-    //   // Check that the result was stored
-    //   const [winningNumber, isSet] = await rouletteProxy.read.getRoundResult([1n]);
-    //   expect(winningNumber).to.equal(7n);
-    //   expect(isSet).to.be.true;
-    // });
-  });
-
   describe("Bet Validation", function () {
     it("Should validate street bet numbers correctly", async function () {
       const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture()
@@ -731,9 +688,8 @@ describe("RouletteClean", function () {
     it("Should return correct upkeep configuration", async function () {
       const { rouletteProxy } = await useDeployWithCreateFixture()
       const [maxSupportedBets, registeredUpkeepCount, batchSize, _upkeepGasLimit] = await rouletteProxy.read.getUpkeepConfig();
-      expect(maxSupportedBets).to.equal(200n); // 20 upkeeps * 10 batch size = 200 max bets
+      expect(maxSupportedBets).to.equal(registeredUpkeepCount * batchSize); // 20 upkeeps * 10 batch size = 200 max bets
       expect(registeredUpkeepCount).to.equal(20n); // 20 upkeeps registered in fixture
-      expect(batchSize).to.equal(10n);
       // Note: upkeepGasLimit is not returned by getUpkeepConfig
     });
 
@@ -2157,8 +2113,11 @@ describe("RouletteClean", function () {
         await time.increase(10n);
       }
 
+      const [,,batchSize] = await rouletteProxy.read.getUpkeepConfig();
+
+
       // Verify we processed at least 2 batches (15 players = 2 batches: 10 + 5)
-      expect(processedJackpotBatches).to.be.gte(2);
+      expect(Number(processedJackpotBatches)).to.be.equal(Math.ceil(totalJackpotPlayers / Number(batchSize)));
       console.log(`Successfully processed ${processedJackpotBatches} jackpot payout batches!`);
 
       // Process regular payouts (may have arithmetic issues with large number of bets, but jackpot test already succeeded)
