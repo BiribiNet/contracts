@@ -56,7 +56,7 @@ library RouletteLib {
     /**
      * @dev Get all splits that include this number
      */
-    function getWinningSplits(uint256 num) public pure returns (uint256[] memory) {
+    function getWinningSplits(uint256 num) private pure returns (uint256[] memory) {
         uint256[] memory splits = new uint256[](10); // Max 4 splits per number
         uint256 count;
         
@@ -80,7 +80,7 @@ library RouletteLib {
     /**
      * @dev Get street number for this number
      */
-    function getWinningStreets(uint256 num) public pure returns (uint256) {
+    function getWinningStreets(uint256 num) private pure returns (uint256) {
         if (num == 0) return 0; // Zero has no standard street
         
         return ((num - 1) / 3) * 3 + 1; // First number of the street
@@ -89,7 +89,7 @@ library RouletteLib {
     /**
      * @dev Get all corners that include this number
      */
-    function getWinningCorners(uint256 num) public pure returns (uint256[] memory) {
+    function getWinningCorners(uint256 num) private pure returns (uint256[] memory) {
         uint256[] memory corners = new uint256[](4);
         uint256 count;
         
@@ -139,7 +139,7 @@ library RouletteLib {
     /**
      * @dev Get lines that include this number  
      */
-    function getWinningLines(uint256 num) public pure returns (uint256[] memory) {
+    function getWinningLines(uint256 num) private pure returns (uint256[] memory) {
         unchecked {
             if (num == 0) return new uint256[](0);
 
@@ -168,7 +168,7 @@ library RouletteLib {
     /**
      * @dev Generate split ID for two numbers
      */
-    function getSplitId(uint256 num1, uint256 num2) public pure returns (uint256) {
+    function getSplitId(uint256 num1, uint256 num2) private pure returns (uint256) {
         unchecked {
             return num1 < num2 ? num1 * 100 + num2 : num2 * 100 + num1;
         }
@@ -177,7 +177,7 @@ library RouletteLib {
     /**
      * @dev Validate if a split ID represents a valid adjacent pair of numbers
      */
-    function isValidSplit(uint256 splitId) public pure returns (bool) {
+    function isValidSplit(uint256 splitId) internal pure returns (bool) {
         unchecked {
             if (splitId > 3636 || splitId < 100) return false; // Maximum valid split ID is 3536 (35-36)
 
@@ -198,7 +198,7 @@ library RouletteLib {
     /**
      * @dev Validate if a corner ID represents a valid 2x2 square
      */
-    function isValidCorner(uint256 cornerId) public pure returns (bool) {
+    function isValidCorner(uint256 cornerId) internal pure returns (bool) {
         unchecked {
             if (cornerId == 0) return true; // Special case for 0-1-2-3 corner
 
@@ -214,7 +214,7 @@ library RouletteLib {
     /**
      * @dev Check if number is red
      */
-    function isRedNumber(uint256 num) public pure returns (bool) {
+    function isRedNumber(uint256 num) private pure returns (bool) {
         unchecked {
             // Red numbers in European roulette: 1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36
             return (num == 1 || num == 3 || num == 5 || num == 7 || num == 9 ||
@@ -227,7 +227,7 @@ library RouletteLib {
     /**
      * @dev Check if number is part of the 0-1-2 trio
      */
-    function isTrio012Number(uint256 num) public pure returns (bool) {
+    function isTrio012Number(uint256 num) private pure returns (bool) {
         unchecked {
             return num == 0 || num == 1 || num == 2;
         }
@@ -236,7 +236,7 @@ library RouletteLib {
     /**
      * @dev Check if number is part of the 0-2-3 trio
      */
-    function isTrio023Number(uint256 num) public pure returns (bool) {
+    function isTrio023Number(uint256 num) private pure returns (bool) {
         unchecked {
             return num == 0 || num == 2 || num == 3;
         }

@@ -1181,6 +1181,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     function getRoundBetsCount(uint256 roundId) external view returns (uint256) {
         return _getRouletteStorage().totalBetsInRound[roundId];
     }
+
+    function getChainlinkConfig() external view returns (uint256, bytes32, bytes32, bytes32, uint32, uint32, uint16) {
+        return (SUBSCRIPTION_ID, KEY_HASH_2GWEI, KEY_HASH_30GWEI, KEY_HASH_150GWEI, CALLBACK_GAS_LIMIT, NUMWORDS, SAFE_BLOCK_CONFIRMATION);
+    }
     
     function getSecondsFromNextUpkeepWindow() external view returns (uint256) {
         RouletteStorage storage $ = _getRouletteStorage();
