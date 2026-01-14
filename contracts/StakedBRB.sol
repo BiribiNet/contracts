@@ -128,7 +128,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event LargeWithdrawalProcessed(address user, uint256 amount);
     event WithdrawalSettingsUpdated(uint256 batchSize);
     event AntiSpamSettingsUpdated(uint256 maxQueueLength);
-    event RoundTransition(uint256 previousRound, uint256 newRound);
     event CleaningUpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, string upkeepType);
     
     // Errors
@@ -532,8 +531,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         // Update current round - SINGLE SOURCE OF TRUTH for round state
         // This ensures proper synchronization between StakedBRB and RouletteClean
         $.currentRound = newRoundId;
-        
-        emit RoundTransition(previousRoundId, newRoundId);
     }
     
     /// @dev Process a batch of large withdrawals using pre-computed data from checkUpkeep

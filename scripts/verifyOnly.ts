@@ -38,25 +38,25 @@ async function deployTestnet() {
 
   console.log('getNonce', getNonce);
 
-  const rouletteImplAddress = "0xb09476DA20CA3Df6AA660184961E65ef96EB2dBC"
+  const rouletteImplAddress = "0xbaCBB6d3e3df6026F0E81C576a48a6f7E688Fa5d"
 
-  const stakedBrbImplAddress = "0xdf2a80DdAeaF07AdA88d7b3F31edda788948EeC8"
+  const stakedBrbImplAddress = "0x61eF35255636358F0cc7Ab2f782450D4Fa7c6ab8"
 
   const rouletteProxyAddress = "0x5A4D9D411132d4247B0e0e7C5175dAc4104D7c85"
 
   const stakedBrbProxyAddress = "0x049E244A074234E4596f17f76Ca8Ff9CD78E3AB2"
 
-  const brb = "0x485295dedd3d416f2324f4ae07d51f70e516ac57"
+  const brb = "0xd668bdced1118370d4da405daa00f3be0342704b"
 
-  const subId = 100861783258177609004941587294708163389386576030640366580929760818517555028236n;
+  const subId = 26531196765974151358709140329787225196823068344908665663262807689266309667077n;
 
-  const keyHash2Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be" // Example Key Hash for Chainlink VRF
-  const keyHash30Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be" // Example Key Hash
-  const keyHash150Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be" // Example Key Hash
-  const callbackGasLimit = 300000n
-  const numWords = 1n
-  const safeBlockConfirmation = 1;
-  const gamePeriod = 60n;
+  const keyHash2Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+  const keyHash30Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+  const keyHash150Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+  const callbackGasLimit = 250000n
+  const numWords = 2n
+  const safeBlockConfirmation = 1
+  const gamePeriod = 120n
 
 
   const initializeRouletteData = encodeFunctionData({
