@@ -1,0 +1,73 @@
+# Biribi Roulette Events Pipeline
+# Tracks: RoundStarted, VRFResult, ComputedPayouts, JackpotResultEvent, BatchProcessed, RoundResolved
+#
+# SETUP:
+# 1. Upload roulette-events-abi.json to a GitHub Gist and get the raw URL
+# 2. Replace YOUR_CONTRACT_ADDRESS with your deployed RouletteClean proxy address
+# 3. Replace YOUR_ABI_GIST_RAW_URL with your gist raw URL
+# 4. Choose the correct dataset for your chain (see sources section)
+
+name: biribi-roulette-events
+resource_size: m
+
+sources:
+  # Choose the correct dataset for your chain:
+  # - arbitrum.raw_logs (Arbitrum One)
+  # - arbitrum-sepolia.raw_logs (Arbitrum Sepolia testnet)
+  # - base.raw_logs (Base)
+  # - ethereum.raw_logs (Ethereum Mainnet)
+  raw_logs:
+    type: dataset
+    dataset_name: arbitrum.raw_logs
+    version: 1.0.0
+    start_at: latest
+
+transforms:
+  # Decode events using contract ABI - filter by address first
+  decoded_events:
+    type: sql
+    primary_key: id
+    sql: |
+      SELECT
+        id,
+        address,
+        _gs_log_decode(
+          _gs_fetch_abi('YOUR_ABI_GIST_RAW_URL', 'raw'),
+          topics,
+          data
+        ) as decoded,
+        block_number,
+        block_timestamp,
+        transaction_hash,
+        log_index,
+        _gs_op
+      FROM raw_logs
+      WHERE address = lower('YOUR_CONTRACT_ADDRESS')
+
+  # Extract and format event data
+  roulette_events:
+    type: sql
+    primary_key: id
+    sql: |
+      SELECT
+        id,
+        address,
+        decoded.event_signature AS `event_signature`,
+        decoded.event_params[1] AS param1,
+        decoded.event_params[2] AS param2,
+        decoded.event_params[3] AS param3,
+        block_number,
+        block_timestamp,
+        transaction_hash,
+        log_index,
+        _gs_op
+      FROM decoded_events
+      WHERE decoded IS NOT NULL
+
+sinks:
+  webhook_events:
+    type: webhook
+    from: roulette_events
+    url: >-
+      https://biribi-ivory.vercel.app/api/mirror?secret=e8b4f9517b0b54769af3618271f821e88dc61dda120deddb99f27b689dbc929d
+    one_row_per_request: false

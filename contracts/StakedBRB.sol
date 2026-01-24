@@ -520,9 +520,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @dev This ensures both contracts stay synchronized and state is properly reset
      * @dev Also processes queued large withdrawals in batches
      * @param newRoundId ID of the new round starting
-     * @param previousRoundId ID of the round that just finished
      */
-    function onRoundTransition(uint256 newRoundId, uint256 previousRoundId) external onlyRoulette {
+    function onRoundTransition(uint256 newRoundId) external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
         // Mark that a round transition is in progress - this blocks deposits/withdrawals

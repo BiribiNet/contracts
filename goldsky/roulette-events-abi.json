@@ -1,0 +1,58 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "requestId", "type": "uint256"}
+    ],
+    "name": "RoundStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "winningNumber", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "jackpotNumber", "type": "uint256"}
+    ],
+    "name": "VRFResult",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "totalWinningBets", "type": "uint256"}
+    ],
+    "name": "ComputedPayouts",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "jackpotWinnerCount", "type": "uint256"}
+    ],
+    "name": "JackpotResultEvent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "batchIndex", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "payoutsCount", "type": "uint256"}
+    ],
+    "name": "BatchProcessed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"}
+    ],
+    "name": "RoundResolved",
+    "type": "event"
+  }
+]

@@ -1246,10 +1246,9 @@ describe("StakedBRB", function () {
   describe("Round Transition", function () {
     it("Should handle round transitions correctly", async function () {
       const _newRoundId = 2n;
-      const _previousRoundId = 1n;
       
       await expect(
-        stakedBrbProxy.write.onRoundTransition([_newRoundId, _previousRoundId], { account: player1.account })
+        stakedBrbProxy.write.onRoundTransition([_newRoundId], { account: player1.account })
       ).to.be.rejectedWith("OnlyRoulette");
     });
 
@@ -1404,7 +1403,7 @@ describe("StakedBRB", function () {
 
     it("Should only allow roulette contract to call onRoundTransition", async function () {
       await expect(
-        stakedBrbProxy.write.onRoundTransition([2n, 1n], { account: player1.account })
+        stakedBrbProxy.write.onRoundTransition([2n], { account: player1.account })
       ).to.be.rejectedWith("OnlyRoulette");
     });
 

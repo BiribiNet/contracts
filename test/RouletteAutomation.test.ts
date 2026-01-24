@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { checksumAddress, encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress, parseEventLogs } from "viem";
+import { checksumAddress, encodeAbiParameters, keccak256, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -237,15 +237,35 @@ describe("RouletteClean - Automation", function () {
     it("Should handle round transitions", async function () {
       const { rouletteProxy } = await useDeployWithCreateFixture();
 
+      // Get constants from contract
+      const [, , gamePeriod,] = await rouletteProxy.read.getConstants();
+
       // Get current round info
-      const [currentRound, lastRoundPaid, lastRoundStartTime] = await rouletteProxy.read.getCurrentRoundInfo();
+      const [currentRound] = await rouletteProxy.read.getCurrentRoundInfo();
       
-      // Simulate time passing
-      await time.increase(70); // More than game period
+      // Simulate time passing (more than game period)
+      await time.increase(gamePeriod + 1n);
       
       // Check if new round should start
       const [newRound] = await rouletteProxy.read.getCurrentRoundInfo();
       expect(newRound).to.be.gte(currentRound);
+    });
+
+    it("Should return correct constants from getConstants()", async function () {
+      const { rouletteProxy } = await useDeployWithCreateFixture();
+
+      const [timeMargin, batchSize, gamePeriod, upkeepGasLimit] = await rouletteProxy.read.getConstants();
+      
+      // Verify constants are reasonable values
+      expect(timeMargin).to.equal(25n); // TIME_MARGIN = 25 seconds
+      expect(batchSize).to.equal(35n); // BATCH_SIZE = 35
+      expect(gamePeriod).to.be.gt(0n); // GAME_PERIOD should be positive
+      expect(upkeepGasLimit).to.be.gt(0n); // UPKEEP_GAS_LIMIT should be positive
+      
+      // Verify upkeep gas limit calculation: BASE_GAS_OVERHEAD + (BATCH_SIZE * GAS_PER_WINNING_BET)
+      // BASE_GAS_OVERHEAD = 100000, GAS_PER_WINNING_BET = 50000
+      const expectedGasLimit = 100000n + (batchSize * 50000n);
+      expect(upkeepGasLimit).to.equal(expectedGasLimit);
     });
   });
 

@@ -5,5 +5,5 @@ import { IRoulette } from "./IRoulette.sol";
 
 interface IStakedBRB {
     function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external;
-    function onRoundTransition(uint256 newRoundId, uint256 previousRoundId) external;
+    function onRoundTransition(uint256 newRoundId) external;
 }

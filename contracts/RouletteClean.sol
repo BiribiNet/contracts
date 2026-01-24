@@ -23,7 +23,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     error MaxUpkeepLimitReached();
     
     // ========== SIMPLE CONSTANTS ==========
-    uint256 private constant TIME_MARGIN = 15; // 10 seconds
+    uint256 private constant TIME_MARGIN = 25; // 25 seconds
     uint32 private constant BATCH_SIZE = 35; // Users per batch for payout processing
     
     // GAS LIMIT CALCULATION FOR WORST-CASE SCENARIO (all bets win)
@@ -228,6 +228,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event UpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, uint256 checkDataLength, string upkeepType);
     event MaxSupportedBetsUpdated(uint256 maxSupportedBets, uint256 totalUpkeeps);
     event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
+    event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
     
     // ========== ERRORS ==========
     error InvalidBet();
@@ -774,7 +775,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         emit RoundStarted(triggerData.newRoundId, triggerData.newLastRoundStartTimestamp, requestId);
 
-        IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition(triggerData.newRoundId, roundId);
+        IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition(triggerData.newRoundId);
     }
 
     function _processJackpotPayout(uint256 roundId, JackpotPayoutPayload memory batchJackpotPayout) private {
@@ -826,6 +827,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             $.lastRoundPaid = roundId;
             emit RoundResolved(roundId);
             IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, new IRoulette.PayoutInfo[](0), 0, true);
+        } else {
+            emit ComputedPayouts(roundId, batchData.totalWinningBets);
         }
     }
     
@@ -1166,6 +1169,13 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     ) {
         RouletteStorage storage $ = _getRouletteStorage();
         return ($.currentRound, $.lastRoundStartTime, $.lastRoundPaid);
+    }
+
+    /**
+     * @dev Get contract constants
+     */
+    function getConstants() external view returns (uint256, uint256, uint256, uint32) {
+        return (TIME_MARGIN, BATCH_SIZE, GAME_PERIOD, UPKEEP_GAS_LIMIT);
     }
 
     /**

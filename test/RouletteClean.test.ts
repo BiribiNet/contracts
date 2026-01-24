@@ -688,9 +688,13 @@ describe("RouletteClean", function () {
     it("Should return correct upkeep configuration", async function () {
       const { rouletteProxy } = await useDeployWithCreateFixture()
       const [maxSupportedBets, registeredUpkeepCount, batchSize, _upkeepGasLimit] = await rouletteProxy.read.getUpkeepConfig();
-      expect(maxSupportedBets).to.equal(registeredUpkeepCount * batchSize); // 20 upkeeps * 10 batch size = 200 max bets
+      
+      // Verify batchSize matches contract constant
+      const [, contractBatchSize, ,] = await rouletteProxy.read.getConstants();
+      expect(batchSize).to.equal(contractBatchSize);
+      
+      expect(maxSupportedBets).to.equal(registeredUpkeepCount * batchSize);
       expect(registeredUpkeepCount).to.equal(20n); // 20 upkeeps registered in fixture
-      // Note: upkeepGasLimit is not returned by getUpkeepConfig
     });
 
     it("Should check if more bets can be placed", async function () {
@@ -699,7 +703,7 @@ describe("RouletteClean", function () {
 
       expect(maxSupportedBets).to.equal(registeredUpkeepCount * batchSize);
 
-      // 1 upkeep registered, so maxSupportedBets = 10
+      // maxSupportedBets = registeredUpkeepCount * batchSize
       const canPlace1 = await rouletteProxy.read.canPlaceBets([1n]);
       expect(canPlace1).to.be.true; // Can place 1 bet
 

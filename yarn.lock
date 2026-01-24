@@ -3969,6 +3969,56 @@ __metadata:
   languageName: node
   linkType: hard
 
+"biribi@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "biribi@workspace:."
+  dependencies:
+    "@chainlink/contracts": "npm:^1.4.0"
+    "@eslint/js": "npm:^9.29.0"
+    "@nomicfoundation/ethereumjs-util": "npm:^9.0.4"
+    "@nomicfoundation/hardhat-chai-matchers": "npm:^2.0.9"
+    "@nomicfoundation/hardhat-ethers": "npm:^3.0.9"
+    "@nomicfoundation/hardhat-ignition": "npm:^0.15.11"
+    "@nomicfoundation/hardhat-ignition-viem": "npm:^0.15.11"
+    "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.12"
+    "@nomicfoundation/hardhat-toolbox": "npm:^6.1.0"
+    "@nomicfoundation/hardhat-toolbox-viem": "npm:^3.0.0"
+    "@nomicfoundation/hardhat-verify": "npm:^2.0.14"
+    "@nomicfoundation/hardhat-viem": "npm:^2.0.6"
+    "@nomicfoundation/ignition-core": "npm:^0.15.11"
+    "@openzeppelin/contracts": "npm:^5.3.0"
+    "@openzeppelin/contracts-upgradeable": "npm:^5.3.0"
+    "@openzeppelin/hardhat-upgrades": "npm:^3.9.0"
+    "@types/chai": "npm:4.3.7"
+    "@types/chai-as-promised": "npm:^7.1.8"
+    "@types/eslint-config-prettier": "npm:^6.11.3"
+    "@types/eslint__js": "npm:^8.42.3"
+    "@types/fs-extra": "npm:^11.0.4"
+    "@types/mocha": "npm:^10.0.10"
+    "@types/node": "npm:^22.15.31"
+    "@wagmi/cli": "npm:^2.5.1"
+    chai: "npm:4.3.7"
+    dotenv: "npm:^16.5.0"
+    eslint: "npm:^9.29.0"
+    eslint-config-prettier: "npm:^9.1.0"
+    eslint-plugin-perfectionist: "npm:^3.9.1"
+    ethers: "npm:6.14.4"
+    fs-extra: "npm:^11.3.0"
+    hardhat: "npm:^2.24.3"
+    hardhat-gas-reporter: "npm:^2.3.0"
+    hardhat-tracer: "npm:^3.2.1"
+    jiti: "npm:^2.4.2"
+    prettier: "npm:^3.5.3"
+    prettier-plugin-solidity: "npm:^1.4.3"
+    solidity-coverage: "npm:^0.8.16"
+    ts-node: "npm:^10.9.2"
+    tsconfig-paths: "npm:^4.2.0"
+    typescript: "npm:^5.8.3"
+    typescript-eslint: "npm:^8.34.0"
+    viem: "npm:^2.31.6"
+  languageName: unknown
+  linkType: soft
+
 "blakejs@npm:^1.1.0":
   version: 1.2.1
   resolution: "blakejs@npm:1.2.1"
@@ -7873,56 +7923,6 @@ __metadata:
   checksum: 10c0/59933e8501727ba13ad73ef4a04d5280b3717fd650408460c987392efe9d7be2040778ed8ebe933c5cbd63da3dcc37919c141ef8af0a54a6e4fca5a2af177bfe
   languageName: node
   linkType: hard
-
-"reusd@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "reusd@workspace:."
-  dependencies:
-    "@chainlink/contracts": "npm:^1.4.0"
-    "@eslint/js": "npm:^9.29.0"
-    "@nomicfoundation/ethereumjs-util": "npm:^9.0.4"
-    "@nomicfoundation/hardhat-chai-matchers": "npm:^2.0.9"
-    "@nomicfoundation/hardhat-ethers": "npm:^3.0.9"
-    "@nomicfoundation/hardhat-ignition": "npm:^0.15.11"
-    "@nomicfoundation/hardhat-ignition-viem": "npm:^0.15.11"
-    "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.12"
-    "@nomicfoundation/hardhat-toolbox": "npm:^6.1.0"
-    "@nomicfoundation/hardhat-toolbox-viem": "npm:^3.0.0"
-    "@nomicfoundation/hardhat-verify": "npm:^2.0.14"
-    "@nomicfoundation/hardhat-viem": "npm:^2.0.6"
-    "@nomicfoundation/ignition-core": "npm:^0.15.11"
-    "@openzeppelin/contracts": "npm:^5.3.0"
-    "@openzeppelin/contracts-upgradeable": "npm:^5.3.0"
-    "@openzeppelin/hardhat-upgrades": "npm:^3.9.0"
-    "@types/chai": "npm:4.3.7"
-    "@types/chai-as-promised": "npm:^7.1.8"
-    "@types/eslint-config-prettier": "npm:^6.11.3"
-    "@types/eslint__js": "npm:^8.42.3"
-    "@types/fs-extra": "npm:^11.0.4"
-    "@types/mocha": "npm:^10.0.10"
-    "@types/node": "npm:^22.15.31"
-    "@wagmi/cli": "npm:^2.5.1"
-    chai: "npm:4.3.7"
-    dotenv: "npm:^16.5.0"
-    eslint: "npm:^9.29.0"
-    eslint-config-prettier: "npm:^9.1.0"
-    eslint-plugin-perfectionist: "npm:^3.9.1"
-    ethers: "npm:6.14.4"
-    fs-extra: "npm:^11.3.0"
-    hardhat: "npm:^2.24.3"
-    hardhat-gas-reporter: "npm:^2.3.0"
-    hardhat-tracer: "npm:^3.2.1"
-    jiti: "npm:^2.4.2"
-    prettier: "npm:^3.5.3"
-    prettier-plugin-solidity: "npm:^1.4.3"
-    solidity-coverage: "npm:^0.8.16"
-    ts-node: "npm:^10.9.2"
-    tsconfig-paths: "npm:^4.2.0"
-    typescript: "npm:^5.8.3"
-    typescript-eslint: "npm:^8.34.0"
-    viem: "npm:^2.31.6"
-  languageName: unknown
-  linkType: soft
 
 "reusify@npm:^1.0.4":
   version: 1.1.0
