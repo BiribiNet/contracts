@@ -51,7 +51,7 @@ async function deployTestnet() {
   // Option 1: Create a new subscription
   console.log("Creating new VRF subscription...")
   const createSubscriptionHash = await vrfCoordinator.write.createSubscription();
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: createSubscriptionHash });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: createSubscriptionHash, confirmations: 2 });
   const subId = BigInt(receipt.logs[0]!.topics[1]!);
 
   console.log("New VRF Subscription ID:", subId);
@@ -63,7 +63,7 @@ async function deployTestnet() {
   // This step assumes deployer has LINK. In a real testnet, you'd need to acquire LINK.
   // Note: IERC677's transferAndCall might have different argument types, ensure compatibility.
   const txTransferAndCall = await linkToken.write.transferAndCall([vrfCoordinator.address, parseEther('3'), encodeAbiParameters([{ type: 'uint256', name: 'subId' }], [subId])], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: txTransferAndCall });
+  await publicClient.waitForTransactionReceipt({ hash: txTransferAndCall, confirmations: 2 });
   console.log("Funded VRF Subscription", subId, "with 3 LINK");
 
   const getNonce = await publicClient.getTransactionCount({ address: deployer.account.address, blockTag: 'latest' });
@@ -150,13 +150,14 @@ async function deployTestnet() {
     functionName: 'initialize',
     args: [deployer.account.address, teamFeeBasisPoints, burnFeeBasisPoints, jackpotFeeBasisPoints, deployer.account.address]
   });
-  // Deploy proxies
+  // Deploy proxies (must wait for each to be mined to avoid nonce conflicts)
   const _jackpotContractProxy = await viem.deployContract("ERC1967Proxy", [jackpotContractImpl, initializeJackpotContractData])
-  const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData])
-  const stakedBrbProxyContract = await viem.deployContract("ERC1967Proxy", [stakedBrbImpl, initializeStakedBrbData])
-  
   await setTimeoutIsDeployed(_jackpotContractProxy.address);
+  
+  const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData])
   await setTimeoutIsDeployed(rouletteProxyContract.address);
+  
+  const stakedBrbProxyContract = await viem.deployContract("ERC1967Proxy", [stakedBrbImpl, initializeStakedBrbData])
   await setTimeoutIsDeployed(stakedBrbProxyContract.address);
   // Get contract instances
   const jackpotContractProxy = await viem.getContractAt("JackpotContract", _jackpotContractProxy.address)
@@ -166,26 +167,26 @@ async function deployTestnet() {
   // Setup Chainlink for StakedBRB
   await stakedBrbProxy.write.setupChainlink([AUTOMATION_REGISTRAR_ADDRESS, AUTOMATION_REGISTRY_ADDRESS, LINK_TOKEN_ADDRESS])
   let tx = await linkToken.write.approve([stakedBrbProxy.address, parseEther('1')], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   const cleaningUpkeepId = await stakedBrbProxy.write.registerCleaningUpkeep([parseEther('1')])
   
   // Add VRF consumer
   tx = await vrfCoordinator.write.addConsumer([subId, rouletteProxyAddress], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
   // Register upkeeps for RouletteClean
   const upkeepCount = 20n; // Register 20 payout upkeeps
   const linkAmount = parseEther('0.2'); // 1 LINK per upkeep
   tx = await linkToken.write.approve([rouletteProxy.address, linkAmount * upkeepCount + linkAmount * 2n], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
   tx = await rouletteProxy.write.registerVRFUpkeep([linkAmount], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
   tx = await rouletteProxy.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   tx = await rouletteProxy.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
 
 
   await sleep(30 * 1000);

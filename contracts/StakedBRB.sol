@@ -118,7 +118,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     // Events
-    event BetPlaced(address user, uint256 amount, bytes data);
+    event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
     event ProtocolFeeRateUpdated(uint256 newFee);
     event BurnFeeRateUpdated(uint256 newFee);
     event JackpotFeeRateUpdated(uint256 newFee);
@@ -319,7 +319,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.maxPayoutPerRound[currentRound] += maxPayout;
         $.maxPayout = nextMaxPayout;  // Fixed: should be nextMaxPayout, not maxPayout
         
-        emit BetPlaced(from, amount, data);
+        emit BetPlaced(from, amount, data, currentRound);
 
         require(IERC20(BRB_TOKEN).balanceOf(address(this)) >= nextMaxPayout, InsufficientBalanceForMaxPayout());
         if (referral != address(0)) {

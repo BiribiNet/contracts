@@ -6,6 +6,10 @@ import { subtask, vars, type HardhatUserConfig } from 'hardhat/config';
 import type { SolcUserConfig } from 'hardhat/types';
 import 'hardhat-tracer'
 
+// Uncomment this to verify on Tenderly
+// import * as tdly from "@tenderly/hardhat-tenderly";
+
+// Comment this to verify on Tenderly
 import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-toolbox-viem';
 import '@nomicfoundation/hardhat-chai-matchers';
@@ -42,6 +46,7 @@ const config: HardhatUserConfig = {
     compilers: [{ version: '0.8.27', settings: defaultSettings }],
   },
   networks,
+  // comment this below to verify on Tenderly
   gasReporter: {
     L2: "arbitrum",
     etherscan: vars.get('ETHERSCAN_API_KEY'),
