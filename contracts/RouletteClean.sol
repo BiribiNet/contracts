@@ -825,8 +825,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         // special edge case where no winning bets are set
         if (batchData.totalWinningBets == 0) {
             $.lastRoundPaid = roundId;
-            emit RoundResolved(roundId);
             IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, new IRoulette.PayoutInfo[](0), 0, true);
+            emit RoundResolved(roundId);
         } else {
             emit ComputedPayouts(roundId, batchData.totalWinningBets);
         }
@@ -845,13 +845,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         bool isLastBatch = $.winningBetsProcessed[roundId] == $.totalWinningBets[roundId];
         emit BatchProcessed(roundId, batchData.batchIndex + 1, payoutLength);
+        // Single call to StakedBRB with entire batch
+        IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch);
         if (isLastBatch) {
             $.lastRoundPaid = roundId;
             emit RoundResolved(roundId);  
         }
-        // Single call to StakedBRB with entire batch
-        IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch);
-        
     }
     
     /**

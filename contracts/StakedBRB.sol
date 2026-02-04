@@ -456,7 +456,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();        
 
-        $.totalPayouts[roundId] += totalPayouts;
 
         // If this is the last batch, track pending bets for this round
         if (isLastBatch) {
@@ -467,10 +466,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             
             // Update lastRoundPaid to track completed rounds
             $.lastRoundPaid = roundId;
+
+            if (totalPayouts == 0) return;
             
             // NOTE: Withdrawals remain locked until cleaning upkeep processes large withdrawals
             // This ensures proper order: process withdrawals first, then unlock
-        } 
+        }
+        $.totalPayouts[roundId] += totalPayouts;
+
         IBRB(BRB_TOKEN).transferBatch(payouts);
     }
 
