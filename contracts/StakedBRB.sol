@@ -129,7 +129,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event WithdrawalSettingsUpdated(uint256 batchSize);
     event AntiSpamSettingsUpdated(uint256 maxQueueLength);
     event CleaningUpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, string upkeepType);
-    event RoundCleaned(uint256 roundId);
+    event RoundCleaned(uint256 roundId, Fees fees);
     
     // Errors
     error OnlyBRB();
@@ -443,7 +443,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         // 4. CLEAR round transition flag - deposits/withdrawals are now allowed again
         $.roundTransitionInProgress = false;
 
-        emit RoundCleaned(cleaningData.roundId);
+        emit RoundCleaned(cleaningData.roundId, cleaningData.fees);
     }
     
 
