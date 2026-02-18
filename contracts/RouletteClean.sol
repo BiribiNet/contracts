@@ -54,12 +54,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     address private immutable JACKPOT_CONTRACT;
     address private immutable BRB_TOKEN;
 
-    struct ComputeTotalWinningBetsData {
-        uint256 totalWinningBets;
-        uint256 jackpotWinnerCount;
-        uint256 totalJackpotBetAmount; // Sum of all bets eligible for jackpot (for proportional share)
-    }
-
     struct ConstructorParams {
         uint256 gamePeriod;
         address vrfCoordinator;
@@ -75,7 +69,74 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         address jackpotContract;
         address brbToken;
     }
-
+    
+    // ========== BET STRUCTS ==========
+    struct Bet {
+        address player;
+        uint256 amount;
+        uint256 number; // Primary number/identifier for the bet
+    }
+    
+    struct MultipleBets {
+        uint256[] amounts;   // Array of bet amounts
+        uint256[] betTypes;  // Array of bet types
+        uint256[] numbers;   // Array of numbers (0 for non-straight bets)
+    }
+    
+    // ========== UPKEEP STRUCTS ==========
+    struct ComputeTotalWinningBetsData {
+        uint256 totalWinningBets;
+        uint256 jackpotWinnerCount;
+        uint256 totalJackpotBetAmount; // Sum of all bets eligible for jackpot (for proportional share)
+    }
+    
+    struct RandomResult {
+        uint256 winningNumber;
+        uint256 jackpotNumber;
+        bool set; // Whether VRF result is available
+    }
+    
+    struct JackpotPayoutPayload {
+        IRoulette.PayoutInfo[] payouts;
+        uint256 batchIndex;
+    }
+    
+    struct JackpotResult {
+        uint256 totalJackpotBetAmount; // Total bet amount on winning jackpot number (denominator for proportional calc)
+        uint256 jackpotWinnerCount;
+        uint256 jackpotAmount; // Jackpot pool at time of win (numerator for proportional calc)
+    }
+    
+    struct PerformDataPayload {
+        uint256 roundId;
+        uint256 upkeepType; // 0 = VRF trigger, 1 = compute total winning bets, 2 = payout users
+        bytes payload;
+    }
+    
+    struct TriggerVRF {
+        uint256 newLastRoundStartTimestamp;
+        uint256 newRoundId;
+    }
+    
+    struct PayoutBatch {
+        uint256 totalPayouts;
+        IRoulette.PayoutInfo[] payouts; // Pre-computed payouts for this batch
+        uint256 batchIndex; // Pre-computed batch index
+    }
+    
+    struct CollectWinningsValues {
+        uint256 payoutCount;
+        uint256 totalPayouts;
+        uint256 currentIndex;
+        uint256 endIndex;
+    }
+    
+    struct SkipOrProcessSimpleBetsValues {
+        uint256 betsLength;
+        uint256 batchStart;
+        uint256 batchEnd;
+    }
+    
     struct TestDebug {
         uint256 rouletteNumber;
         uint256 jackpotNumber;
@@ -131,67 +192,28 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => RandomResult) randomResults; // roundId => VRF result
         mapping(uint256 => uint256) requestIdToRound; // VRF request => round
         mapping(uint256 => TestDebug) forcedNumbers;
+        
+        // OPTIMIZED MAXPAYOUT TRACKING
+        mapping(uint256 => uint256) roundMaxStraightBet;  // roundId => max total straight bet amount across all numbers (single SLOAD)
+        mapping(uint256 => mapping(uint256 => uint256)) roundStraightBetsTotal; // roundId => number => total straight bets (big + small) for per-number tracking
+        mapping(uint256 => uint256) roundMaxStreetBet;    // roundId => max total street bet amount across all streets (single SLOAD)
+        mapping(uint256 => mapping(uint256 => uint256)) roundStreetBetsTotal;   // roundId => streetId => total street bets for per-street tracking
+        mapping(uint256 => uint256) roundRedBetsSum;      // roundId => total red bets
+        mapping(uint256 => uint256) roundBlackBetsSum;    // roundId => total black bets
+        mapping(uint256 => uint256) roundOddBetsSum;      // roundId => total odd bets
+        mapping(uint256 => uint256) roundEvenBetsSum;     // roundId => total even bets
+        mapping(uint256 => uint256) roundLowBetsSum;       // roundId => total low bets
+        mapping(uint256 => uint256) roundHighBetsSum;     // roundId => total high bets
+        mapping(uint256 => mapping(uint256 => uint256)) roundDozenBetsSum;   // roundId => dozen => total dozen bets
+        mapping(uint256 => mapping(uint256 => uint256)) roundColumnBetsSum;  // roundId => column => total column bets
+        mapping(uint256 => uint256) roundOtherBetsPayout; // roundId => sum of splits/corners/lines/trios payouts (streets excluded)
     }
     
-    // ========== UPKEEP STRUCTS ==========
-    struct RandomResult {
-        uint256 winningNumber;
-        uint256 jackpotNumber;
-        bool set; // Whether VRF result is available
-    }
-
-    struct JackpotPayoutPayload {
-        IRoulette.PayoutInfo[] payouts;
-        uint256 batchIndex;
-    }
-
-    struct JackpotResult {
-        uint256 totalJackpotBetAmount; // Total bet amount on winning jackpot number (denominator for proportional calc)
-        uint256 jackpotWinnerCount;
-        uint256 jackpotAmount; // Jackpot pool at time of win (numerator for proportional calc)
-    }
-    
-    struct PerformDataPayload {
-        uint256 roundId;
-        uint256 upkeepType; // 0 = VRF trigger, 1 = compute total winning bets, 2 = payout users
-        bytes payload;
-    }
-    
-    struct TriggerVRF {
-        uint256 newLastRoundStartTimestamp;
-        uint256 newRoundId;
-    }
-    
-    struct PayoutBatch {
-        uint256 totalPayouts;
-        IRoulette.PayoutInfo[] payouts; // Pre-computed payouts for this batch
-        uint256 batchIndex; // Pre-computed batch index
-    }
-    
-    struct CollectWinningsValues {
-        uint256 payoutCount;
-        uint256 totalPayouts;
-        uint256 currentIndex;
-        uint256 endIndex;
-    }
-
-    struct SkipOrProcessSimpleBetsValues {
-        uint256 betsLength;
-        uint256 batchStart;
-        uint256 batchEnd;
-    }
     
     function _getRouletteStorage() private pure returns (RouletteStorage storage $) {
         assembly {
             $.slot := MAIN_STORAGE_LOCATION
         }
-    }
-    
-    // ========== COMPLETE BET STRUCTURE ==========
-    struct Bet {
-        address player;
-        uint256 amount;
-        uint256 number; // Primary number/identifier for the bet
     }
     
     // ========== BET TYPES (European Roulette) ==========
@@ -210,13 +232,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     uint256 constant BET_HIGH = 13;       // High numbers (19-36)
     uint256 constant BET_TRIO_012 = 14;   // Trio 0-1-2
     uint256 constant BET_TRIO_023 = 15;   // Trio 0-2-3
-    
-    // ========== MULTIPLE BETS STRUCTURE ==========
-    struct MultipleBets {
-        uint256[] amounts;   // Array of bet amounts
-        uint256[] betTypes;  // Array of bet types
-        uint256[] numbers;   // Array of numbers (0 for non-straight bets)
-    }
     
     // ========== EVENTS ==========
     event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
@@ -509,8 +524,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 amount = bets.amounts[i];
                 calculatedTotal += amount;
 
-                // Validate and store bet
-                maxPayout += _validateAndStoreBet(
+                // Validate and store bet (now tracks optimized components)
+                _validateAndStoreBet(
                     sender,
                     amount,
                     bets.betTypes[i],
@@ -527,9 +542,19 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             if (calculatedTotal != totalValue) revert InvalidBet();
 
             $.totalBetsInRound[currentRound] = newTotalBets;
+            
+            // Calculate optimized maxPayout from tracked components
+            maxPayout = _calculateMaxPayoutFromStorage(currentRound, $);
         }
     }
     
+    /**
+     * @dev Calculate maxPayout from storage (separate function to avoid stack too deep)
+     */
+    function _calculateMaxPayoutFromStorage(uint256 roundId, RouletteStorage storage $) private view returns (uint256) {
+        // Pass storage references directly to library - no memory copying
+        return ((RouletteLib.calculateStraightStreetComponents(roundId, $.roundMaxStraightBet, $.roundMaxStreetBet) + RouletteLib.calculatePairComponents(roundId, $.roundRedBetsSum, $.roundBlackBetsSum, $.roundOddBetsSum, $.roundEvenBetsSum, $.roundLowBetsSum, $.roundHighBetsSum) + RouletteLib.calculateMaxPayoutPart2(roundId, $.roundDozenBetsSum, $.roundColumnBetsSum) + $.roundOtherBetsPayout[roundId]) * RouletteLib.SAFETY_BUFFER_BPS) / 10000;
+    }
     /**
      * @dev Validate and store a single bet
      */
@@ -561,6 +586,13 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             if (betType == BET_STRAIGHT) {
                 if (number > 36) revert InvalidNumber();
                 payout = amount * 36;
+                // Track total bets on this number (big + small) - single SLOAD
+                uint256 totalOnThisNumber = $.roundStraightBetsTotal[currentRound][number] + amount;
+                $.roundStraightBetsTotal[currentRound][number] = totalOnThisNumber;
+                // Update max straight bet if this number's total exceeds current max
+                if (totalOnThisNumber > $.roundMaxStraightBet[currentRound]) {
+                    $.roundMaxStraightBet[currentRound] = totalOnThisNumber;
+                }
                 if (amount >= minJackpotCondition) {
                     $.roundBigStraightBets[currentRound][number].push(newBet);
                     $.roundBigStraightBetsSum[currentRound][number] += amount;
@@ -571,50 +603,84 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 if (!RouletteLib.isValidSplit(number)) revert InvalidNumber();
                 payout = amount * 18;
                 $.roundSplitBets[currentRound][number].push(newBet);
+                // Track in other bets payout (non-optimized)
+                $.roundOtherBetsPayout[currentRound] += payout;
             } else if (betType == BET_STREET) {
                 if (number == 0 || number > 34 || (number - 1) % 3 != 0) revert InvalidNumber();
                 payout = amount * 12;
                 $.roundStreetBets[currentRound][number].push(newBet);
+                // Track total street bets on this street ID (single SLOAD)
+                uint256 totalOnThisStreet = $.roundStreetBetsTotal[currentRound][number] + amount;
+                $.roundStreetBetsTotal[currentRound][number] = totalOnThisStreet;
+                // Update max street bet if this street's total exceeds current max
+                uint256 currentMaxStreet = $.roundMaxStreetBet[currentRound];
+                if (totalOnThisStreet > currentMaxStreet) {
+                    $.roundMaxStreetBet[currentRound] = totalOnThisStreet;
+                }
             } else if (betType == BET_CORNER) {
                 if (!RouletteLib.isValidCorner(number)) revert InvalidNumber();
                 payout = amount * 9;
                 $.roundCornerBets[currentRound][number].push(newBet);
+                // Track in other bets payout (non-optimized)
+                $.roundOtherBetsPayout[currentRound] += payout;
             } else if (betType == BET_LINE) {
                 if (number == 0 || number > 31 || (number - 1) % 3 != 0) revert InvalidNumber();
                 payout = amount * 6;
                 $.roundLineBets[currentRound][number].push(newBet);
+                // Track in other bets payout (non-optimized)
+                $.roundOtherBetsPayout[currentRound] += payout;
             } else if (betType == BET_COLUMN) {
                 if (number == 0 || number > 3) revert InvalidNumber();
                 payout = amount * 3;
                 $.roundColumnBets[currentRound][number].push(newBet);
+                // Track column bets sum for optimization
+                $.roundColumnBetsSum[currentRound][number] += amount;
             } else if (betType == BET_DOZEN) {
                 if (number == 0 || number > 3) revert InvalidNumber();
                 payout = amount * 3;
                 $.roundDozenBets[currentRound][number].push(newBet);
+                // Track dozen bets sum for optimization
+                $.roundDozenBetsSum[currentRound][number] += amount;
             } else if (betType == BET_RED) {
                 payout = amount * 2;
                 $.roundRedBets[currentRound].push(newBet);
+                // Track red bets sum for optimization
+                $.roundRedBetsSum[currentRound] += amount;
             } else if (betType == BET_BLACK) {
                 payout = amount * 2;
                 $.roundBlackBets[currentRound].push(newBet);
+                // Track black bets sum for optimization
+                $.roundBlackBetsSum[currentRound] += amount;
             } else if (betType == BET_ODD) {
                 payout = amount * 2;
                 $.roundOddBets[currentRound].push(newBet);
+                // Track odd bets sum for optimization
+                $.roundOddBetsSum[currentRound] += amount;
             } else if (betType == BET_EVEN) {
                 payout = amount * 2;
                 $.roundEvenBets[currentRound].push(newBet);
+                // Track even bets sum for optimization
+                $.roundEvenBetsSum[currentRound] += amount;
             } else if (betType == BET_LOW) {
                 payout = amount * 2;
                 $.roundLowBets[currentRound].push(newBet);
+                // Track low bets sum for optimization
+                $.roundLowBetsSum[currentRound] += amount;
             } else if (betType == BET_HIGH) {
                 payout = amount * 2;
                 $.roundHighBets[currentRound].push(newBet);
+                // Track high bets sum for optimization
+                $.roundHighBetsSum[currentRound] += amount;
             } else if (betType == BET_TRIO_012) {
                 payout = amount * 12;
                 $.roundTrio012Bets[currentRound].push(newBet);
+                // Track in other bets payout (non-optimized)
+                $.roundOtherBetsPayout[currentRound] += payout;
             } else if (betType == BET_TRIO_023) {
                 payout = amount * 12;
                 $.roundTrio023Bets[currentRound].push(newBet);
+                // Track in other bets payout (non-optimized)
+                $.roundOtherBetsPayout[currentRound] += payout;
             }
         }
     }
@@ -1202,12 +1268,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 elapsed = block.timestamp - srt;
         uint256 remainder = elapsed % gamePeriod;
         return (elapsed >= gamePeriod && remainder <= TIME_MARGIN) ? 0 : gamePeriod - remainder; // 0 if in upkeep window, otherwise time until next window
-    }
-
-    // test debug to remove
-    function testForceNumber(uint256 rouletteNumber, uint256 jackpotNumber) external {
-        RouletteStorage storage $ = _getRouletteStorage();
-        $.forcedNumbers[$.currentRound] = TestDebug({ rouletteNumber: rouletteNumber, jackpotNumber: jackpotNumber, isSet: true });
     }
     
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}

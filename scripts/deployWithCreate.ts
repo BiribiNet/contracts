@@ -164,7 +164,7 @@ async function deployWithCreate() {
 
   // Fund all relevant player accounts directly in the fixture
   const [, p1, p2, p3, p4, p5] = await viem.getWalletClients(); // Get all player clients
-  const initialPlayerFundingAmount = parseEther('2000'); // Sufficient for staking and multiple bets
+  const initialPlayerFundingAmount = parseEther('15000'); // Increased to cover 10000 token deposits + betting
 
   await brb.write.transfer([p1.account.address, initialPlayerFundingAmount], { account: deployer.account });
   await brb.write.transfer([p2.account.address, initialPlayerFundingAmount], { account: deployer.account });

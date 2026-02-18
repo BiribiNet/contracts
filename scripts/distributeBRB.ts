@@ -8,8 +8,8 @@ interface RecipientsConfig {
 }
 
 const main = async () => {
-    const brb = await viem.getContractAt("BRB", "0x59f1b9ec56f3e73687820af17c0d71b134fc43e2");
-    const stakedBrbProxy = await viem.getContractAt("StakedBRB", "0x6Eae6dD7c11d2B9C748a2D6Af2e3B2f0589ec279");
+    const brb = await viem.getContractAt("BRB", "0xd95b00e30a7246578fc1f0e2847bef26b01ac13e");
+    const stakedBrbProxy = await viem.getContractAt("StakedBRB", "0x7e6b398dc60F6AEa169ec15E2410D43D6eC3AE45");
     const [deployer] = await viem.getWalletClients();
     const publicClient = await viem.getPublicClient();
 

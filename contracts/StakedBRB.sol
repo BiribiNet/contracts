@@ -143,6 +143,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     error ExceedsSafeBettingLimit();
     error DepositBlockedDuringResolution();
     error WithdrawalBlockedDuringResolution();
+    error CancelLargeWithdrawalBlockedDuringResolution();
     error LargeWithdrawalPending();
     error InvalidWithdrawalFee();
     error WithdrawalTooLarge();
@@ -1023,6 +1024,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
 
     /**
+     * @dev Get current maxPayout (cumulative max payout for active round)
+     */
+    function getMaxPayout() external view returns (uint256) {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
+        return $.maxPayout;
+    }
+
+    /**
      * @dev Get withdrawal settings and status
      * @return largeWithdrawalBatchSize Current batch size for processing
      * @return totalPendingLargeWithdrawals Total amount of pending large withdrawals
@@ -1067,6 +1076,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function cancelLargeWithdrawal() external {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
+        if ($.roundTransitionInProgress) revert CancelLargeWithdrawalBlockedDuringResolution();
         uint256 pendingAmount = $.pendingLargeWithdrawals[msg.sender];
         if (pendingAmount == 0) revert LargeWithdrawalPending(); // User not in queue
         

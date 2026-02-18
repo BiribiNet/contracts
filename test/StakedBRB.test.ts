@@ -92,26 +92,27 @@ describe("StakedBRB", function () {
       console.log(`Calculated bet amount: ${betAmount} (totalAssets / 36)`);
       
       // Calculate the maxPayout for this bet
-      const betMaxPayout = betAmount * 36n;
+      // Note: The contract applies a safety buffer of 110% (SAFETY_BUFFER_BPS = 11000)
+      // So maxPayout = (betAmount * 36) * 11000 / 10000 = betAmount * 39.6
+      const SAFETY_BUFFER_BPS = 11000n;
+      const betMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
       maxPayout = betMaxPayout;
       
-      // Since we can't get current maxPayout directly, we'll ensure we have enough balance
-      // for the new bet's maxPayout. The contract will check: vault balance >= (currentMaxPayout + newMaxPayout)
-      // We'll be conservative and ensure we have enough for a large maxPayout
-      const estimatedCurrentMaxPayout = 0n; // Assume no previous bets for simplicity
-      const totalMaxPayout = estimatedCurrentMaxPayout + betMaxPayout;
+      // Use actual current maxPayout for isolation (works with clean or pre-existing state)
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const totalMaxPayout = existingMaxPayout + betMaxPayout;
       
-      console.log(`Estimated current maxPayout: ${estimatedCurrentMaxPayout}, New bet maxPayout: ${betMaxPayout}, Total maxPayout: ${totalMaxPayout}`);
+      console.log(`Existing maxPayout: ${existingMaxPayout}, New bet maxPayout: ${betMaxPayout}, Total maxPayout: ${totalMaxPayout}`);
       
-      // For the contract's check, we need to ensure the vault has enough BRB balance
-      // to cover the TOTAL maxPayout (current + new). The contract checks: vault balance >= totalMaxPayout
+      // For the contract's check: balance + betAmount >= totalMaxPayout, so balance >= totalMaxPayout - betAmount
       const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
-      console.log(`Vault balance: ${vaultBalance}, Total maxPayout needed: ${totalMaxPayout}`);
+      const requiredBalance = totalMaxPayout > betAmount ? totalMaxPayout - betAmount : 0n;
+      console.log(`Vault balance: ${vaultBalance}, Total maxPayout needed: ${totalMaxPayout}, Required balance: ${requiredBalance}`);
       
       // Transfer enough BRB to the vault to satisfy the contract's check
-      if (vaultBalance < totalMaxPayout) {
-        const neededAmount = totalMaxPayout - vaultBalance;
-        console.log(`Vault needs ${neededAmount} more BRB to cover total maxPayout of ${totalMaxPayout}`);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance;
+        console.log(`Vault needs ${neededAmount} more BRB to cover required balance of ${requiredBalance}`);
         await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
         const newVaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
         console.log(`Vault balance after transfer: ${newVaultBalance}`);
@@ -695,13 +696,10 @@ describe("StakedBRB", function () {
   });
 
   describe("Large Withdrawal System", function () {
-    beforeEach(async function () {
-      // Setup scenario with a bet to create maxPayout
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
-    });
-
     it("Should identify large withdrawals correctly", async function () {
-      // Scenario is already set up in beforeEach: totalAssets = 2000, maxPayout = 1908, safe capacity = 92
+      // Isolated: set up scenario for this test only (deposit + bet)
+      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      // totalAssets = 2000, maxPayout set, safe capacity ~92. Withdrawals > 92 should be large
       // Withdrawals > 92 should be considered large and queued
       
       const withdrawAmount = parseEther("100"); // Larger than safe capacity (92)
@@ -720,11 +718,8 @@ describe("StakedBRB", function () {
     });
 
     it("Should queue large withdrawals in FIFO order", async function () {
-      // Clear all assets first to start fresh
-      await clearAllAssets();
-      
-      // Setup scenario where both players deposit before placing bet
-      // This ensures the maxPayout is set correctly for both players
+      // Isolated: start from clean fixture state (maxPayout = 0). No shared beforeEach bet.
+      // Setup: both players deposit, then place one bet to create maxPayout scenario.
       
       // Ensure both players have enough BRB
       await brb.write.transfer([player1.account.address, parseEther("2000")], { account: admin.account });
@@ -753,6 +748,26 @@ describe("StakedBRB", function () {
       const player1Balance = await brb.read.balanceOf([player1.account.address]);
       if (player1Balance < betAmount) {
         await brb.write.transfer([player1.account.address, betAmount - player1Balance], { account: admin.account });
+      }
+      
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // IMPORTANT: Account for existing cumulative maxPayout from previous bets
+      // The contract checks AFTER bet transfer: balance_after >= nextMaxPayout
+      // Where: balance_after = balance_before + betAmount
+      // And: nextMaxPayout = existingMaxPayout + newBetMaxPayout
+      // So: balance_before + betAmount >= existingMaxPayout + newBetMaxPayout
+      // Therefore: balance_before >= existingMaxPayout + newBetMaxPayout - betAmount
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+      // Ensure we don't underflow
+      const requiredBalanceBeforeBet = nextMaxPayout > betAmount ? nextMaxPayout - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      if (vaultBalance < requiredBalanceBeforeBet) {
+        const neededAmount = requiredBalanceBeforeBet - vaultBalance + parseEther("100");
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
       // Place the bet
@@ -799,10 +814,11 @@ describe("StakedBRB", function () {
     });
 
     it("Should prevent duplicate large withdrawal requests", async function () {
-      // Scenario is already set up: totalAssets = 2000, maxPayout = 1908, safe capacity = 92
-      // Any withdrawal > 92 will be large
+      // Isolated: set up scenario for this test only
+      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      // Any withdrawal > safe capacity will be large
       
-      const withdrawAmount = parseEther("100"); // Larger than safe capacity (92)
+      const withdrawAmount = parseEther("100"); // Larger than safe capacity
       
       // First request should succeed
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
@@ -814,14 +830,10 @@ describe("StakedBRB", function () {
     });
 
     it("Should enforce queue size limits", async function () {
-      // Set a small queue limit for testing
+      // Isolated: start from clean state, set up deposits and one bet ourselves
       await stakedBrbProxy.write.setMaxQueueLength([2n], { account: admin.account });
       
-      // Clear all assets first to start fresh
-      await clearAllAssets();
-      
-      // Setup large withdrawal scenario for all users - deposit all users first
-      await setupLargeWithdrawalScenario(parseEther("2000"), false); // Don't place bet yet
+      await setupLargeWithdrawalScenario(parseEther("2000"), false); // Deposit only
       
       // Ensure player2 has enough BRB and deposit
       const player2Balance = await brb.read.balanceOf([player2.account.address]);
@@ -848,14 +860,15 @@ describe("StakedBRB", function () {
       const betAmount = safeCapacity / 36n; // Use 2% of safe capacity to ensure maxPayout (36x) stays within safe capacity
       console.log(`Calculated bet amount: ${betAmount}`);
       
-      // Ensure vault has enough balance for the bet
+      // Ensure vault has enough balance for the bet (with safety buffer). Use getMaxPayout for isolation.
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+      const requiredBalance = nextMaxPayout > betAmount ? nextMaxPayout - betAmount : 0n;
       const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
-      const betMaxPayout = betAmount * 36n;
-      console.log(`Vault balance: ${vaultBalance}, Bet max payout: ${betMaxPayout}`);
-      
-      if (vaultBalance < betMaxPayout) {
-        const neededAmount = betMaxPayout - vaultBalance;
-        console.log(`Vault needs ${neededAmount} more BRB to cover bet max payout`);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100");
         await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
@@ -865,13 +878,11 @@ describe("StakedBRB", function () {
           { type: "uint256[]", name: "betTypes" },
           { type: "uint256[]", name: "numbers" }
         ]}],
-        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
-      const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
-      
-      // Calculate proper maxSharesOut to avoid MaxSharesError
+      const withdrawAmount = parseEther("150");
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
@@ -895,10 +906,7 @@ describe("StakedBRB", function () {
     });
 
     it("Should allow users to cancel large withdrawal requests", async function () {
-      // Clear all assets first to start fresh
-      await clearAllAssets();
-      
-      // Setup large withdrawal scenario - deposit first
+      // Isolated: start from clean state, deposit then place bet
       await setupLargeWithdrawalScenario(parseEther("2000"), false);
       
       // Get the safe capacity to determine how much we can bet
@@ -909,14 +917,15 @@ describe("StakedBRB", function () {
       const betAmount = safeCapacity / 36n; // Use 2% of safe capacity to ensure maxPayout (36x) stays within safe capacity
       console.log(`Calculated bet amount: ${betAmount}`);
       
-      // Ensure vault has enough balance for the bet
+      // Ensure vault has enough balance for the bet (use getMaxPayout for isolation)
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+      const requiredBalance = nextMaxPayout > betAmount ? nextMaxPayout - betAmount : 0n;
       const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
-      const betMaxPayout = betAmount * 36n;
-      console.log(`Vault balance: ${vaultBalance}, Bet max payout: ${betMaxPayout}`);
-      
-      if (vaultBalance < betMaxPayout) {
-        const neededAmount = betMaxPayout - vaultBalance;
-        console.log(`Vault needs ${neededAmount} more BRB to cover bet max payout`);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100");
         await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
@@ -926,11 +935,11 @@ describe("StakedBRB", function () {
           { type: "uint256[]", name: "betTypes" },
           { type: "uint256[]", name: "numbers" }
         ]}],
-        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
-      const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
+      const withdrawAmount = parseEther("150");
       
       // Calculate proper maxSharesOut to avoid MaxSharesError
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
@@ -956,15 +965,27 @@ describe("StakedBRB", function () {
     });
 
     it("Should revert when trying to cancel non-existent withdrawal", async function () {
+      // Isolated: no setup; player1 has no pending withdrawal. Cancel should revert.
       await expect(
         stakedBrbProxy.write.cancelLargeWithdrawal({ account: player1.account })
       ).to.be.rejectedWith("LargeWithdrawalPending");
     });
 
     it("Should revert when withdrawal amount exceeds balance", async function () {
-      // Create maxPayout scenario with small bet
-      const betAmount = parseEther("1"); // Much smaller bet
-      await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
+      // Isolated: deposit + small bet so we have maxPayout; then try to withdraw more than balance
+      const depositAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      
+      const betAmount = parseEther("1");
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = (existingMaxPayout + newBetMaxPayout) > betAmount ? (existingMaxPayout + newBetMaxPayout) - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        await brb.write.transfer([stakedBrbProxy.address, requiredBalance - vaultBalance + parseEther("100")], { account: admin.account });
+      }
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
           { type: "uint256[]", name: "amounts" },
@@ -984,13 +1005,10 @@ describe("StakedBRB", function () {
   });
 
   describe("Large Withdrawal Processing", function () {
-    beforeEach(async function () {
-      // Setup: create scenario with queued withdrawals using proper large withdrawal setup
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
-    });
-
     it("Should process large withdrawals through upkeep", async function () {
-      // First, ensure we have a large withdrawal queued
+      // Isolated: set up scenario for this test only (deposit + bet)
+      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      // Queue a large withdrawal
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       
       // Calculate the actual shares needed for this withdrawal
@@ -1059,12 +1077,11 @@ describe("StakedBRB", function () {
     });
 
     it("Should calculate safe withdrawal capacity correctly", async function () {
-      // This tests the internal _calculateSafeWithdrawalCapacity function
-      // We can test this indirectly by checking when withdrawals are considered large
+      // Isolated: set up scenario so we have non-zero balance and maxPayout
+      await setupLargeWithdrawalScenario(parseEther("2000"), true);
       
       const currentBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
-      // For testing purposes, assume maxPayout is 0 (all withdrawals are large)
-      const maxPayout = 0n;
+      const maxPayout = await stakedBrbProxy.read.getMaxPayout();
       
       // The safe capacity should be currentBalance - maxPayout
       const _expectedSafeCapacity = currentBalance > maxPayout ? currentBalance - maxPayout : 0n;
@@ -1426,13 +1443,21 @@ describe("StakedBRB", function () {
   describe("Betting Integration", function () {
     it("Should handle betting through onTokenTransfer", async function () {
       // First, ensure the vault has enough balance for max payout
+      // Note: The contract applies a safety buffer of 110% (SAFETY_BUFFER_BPS = 11000)
+      const SAFETY_BUFFER_BPS = 11000n;
       const vaultBalance = await stakedBrbProxy.read.totalAssets();
       const betAmount = parseEther("1");
-      const maxPayout = betAmount * 36n; // Straight bet has 36x payout
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n; // Straight bet has 36x payout with 110% safety buffer
       
       // If vault doesn't have enough balance, fund it
-      if (vaultBalance < maxPayout) {
-        const neededAmount = maxPayout - vaultBalance;
+      // IMPORTANT: Account for existing cumulative maxPayout from previous bets
+      // The contract checks: balance + betAmount >= existingMaxPayout + newBetMaxPayout
+      // So: balance >= existingMaxPayout + newBetMaxPayout - betAmount
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const nextMaxPayout = existingMaxPayout + maxPayout;
+      const requiredBalance = nextMaxPayout - betAmount;
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
         await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
@@ -1472,12 +1497,20 @@ describe("StakedBRB", function () {
       const betAmount = parseEther("1");
       
       // First, ensure the vault has enough balance for max payout
+      // Note: The contract applies a safety buffer of 110% (SAFETY_BUFFER_BPS = 11000)
+      const SAFETY_BUFFER_BPS = 11000n;
       const vaultBalance = await stakedBrbProxy.read.totalAssets();
-      const maxPayout = betAmount * 36n; // Straight bet has 36x payout
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n; // Straight bet has 36x payout with 110% safety buffer
       
       // If vault doesn't have enough balance, fund it
-      if (vaultBalance < maxPayout) {
-        const neededAmount = maxPayout - vaultBalance;
+      // IMPORTANT: Account for existing cumulative maxPayout from previous bets
+      // The contract checks: balance + betAmount >= existingMaxPayout + newBetMaxPayout
+      // So: balance >= existingMaxPayout + newBetMaxPayout - betAmount
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const nextMaxPayout = existingMaxPayout + maxPayout;
+      const requiredBalance = nextMaxPayout - betAmount;
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
         await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
@@ -1789,12 +1822,20 @@ describe("StakedBRB", function () {
       const betAmount = parseEther("1");
       
       // First, ensure the vault has enough balance for max payout
+      // Note: The contract applies a safety buffer of 110% (SAFETY_BUFFER_BPS = 11000)
+      const SAFETY_BUFFER_BPS = 11000n;
       const vaultBalance = await stakedBrbProxy.read.totalAssets();
-      const maxPayout = betAmount * 36n; // Straight bet has 36x payout
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n; // Straight bet has 36x payout with 110% safety buffer
       
       // If vault doesn't have enough balance, fund it
-      if (vaultBalance < maxPayout) {
-        const neededAmount = maxPayout - vaultBalance;
+      // IMPORTANT: Account for existing cumulative maxPayout from previous bets
+      // The contract checks: balance + betAmount >= existingMaxPayout + newBetMaxPayout
+      // So: balance >= existingMaxPayout + newBetMaxPayout - betAmount
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const nextMaxPayout = existingMaxPayout + maxPayout;
+      const requiredBalance = nextMaxPayout - betAmount;
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
         await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
@@ -2055,9 +2096,13 @@ describe("StakedBRB", function () {
       
       // Ensure vault has enough balance for the bet
       const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
-      const betMaxPayout = betAmount * 36n;
-      if (vaultBalance < betMaxPayout) {
-        await brb.write.transfer([stakedBrbProxy.address, betMaxPayout - vaultBalance], { account: admin.account });
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      const SAFETY_BUFFER_BPS = 11000n;
+      const betMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = betMaxPayout - betAmount;
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
       }
       
       // Ensure player1 has enough BRB for the bet
@@ -2132,6 +2177,15 @@ describe("StakedBRB", function () {
       
       // Create maxPayout scenario
       const betAmount = parseEther("1");
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = maxPayout > betAmount ? maxPayout - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Add buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
           { type: "uint256[]", name: "amounts" },
@@ -2150,56 +2204,48 @@ describe("StakedBRB", function () {
   });
 
   describe("Large Withdrawal Processing - Advanced", function () {
-    beforeEach(async function () {
-      // Setup: create scenario with queued withdrawals
-      const depositAmount = parseEther("1000");
-      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
-      
-      // Create maxPayout scenario with small bet
-      const betAmount = parseEther("1"); // Much smaller bet
-      await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
-      const betData = encodeAbiParameters(
-        [{ type: "tuple", components: [
-          { type: "uint256[]", name: "amounts" },
-          { type: "uint256[]", name: "betTypes" },
-          { type: "uint256[]", name: "numbers" }
-        ]}],
-        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7
-      );
-      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
-    });
+    // No shared beforeEach: each test is isolated (clean fixture or own setup).
 
     it("Should process large withdrawals in batches", async function () {
-      // Clear all assets first to start fresh
-      await clearAllAssets();
-      
-      // Setup large withdrawal scenario for all users - deposit all users first
-      await setupLargeWithdrawalScenario(parseEther("2000"), false); // Don't place bet yet
-      
-      // Add player2 and player3 deposits before placing the bet
+      // Cancel any pending so clearAllAssets can redeem (noPendingLargeWithdrawal)
+      for (const account of [player1, player2, player3]) {
+        const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([account.account.address]);
+        if (pendingAmount > 0n) {
+          await stakedBrbProxy.write.cancelLargeWithdrawal({ account: account.account });
+        }
+      }
+      // Isolated: one setup - deposit all three users, then one bet (no second setup that wipes state)
+      await setupLargeWithdrawalScenario(parseEther("2000"), false);
       const depositAmount = parseEther("500");
-      
-      // Ensure player2 has enough BRB
-      const player2Balance = await brb.read.balanceOf([player2.account.address]);
-      if (player2Balance < depositAmount) {
-        await brb.write.transfer([player2.account.address, depositAmount - player2Balance], { account: admin.account });
+      for (const [player, name] of [[player2, "player2"], [player3, "player3"]] as const) {
+        const bal = await brb.read.balanceOf([player.account.address]);
+        if (bal < depositAmount) {
+          await brb.write.transfer([player.account.address, depositAmount - bal], { account: admin.account });
+        }
+        await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player.account });
+        await stakedBrbProxy.write.deposit([depositAmount, player.account.address, 0n], { account: player.account });
       }
-      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
-      
-      // Ensure player3 has enough BRB
-      const player3Balance = await brb.read.balanceOf([player3.account.address]);
-      if (player3Balance < depositAmount) {
-        await brb.write.transfer([player3.account.address, depositAmount - player3Balance], { account: admin.account });
+      // Place one bet to create maxPayout (use getMaxPayout for balance check)
+      const totalAssets = await stakedBrbProxy.read.totalAssets();
+      const betAmount = totalAssets / 36n;
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = (existingMaxPayout + newBetMaxPayout) > betAmount ? (existingMaxPayout + newBetMaxPayout) - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        await brb.write.transfer([stakedBrbProxy.address, requiredBalance - vaultBalance + parseEther("100")], { account: admin.account });
       }
-      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player3.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player3.account.address, 0n], { account: player3.account });
+      const player1Balance = await brb.read.balanceOf([player1.account.address]);
+      if (player1Balance < betAmount) {
+        await brb.write.transfer([player1.account.address, betAmount - player1Balance], { account: admin.account });
+      }
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [{ type: "uint256[]", name: "amounts" }, { type: "uint256[]", name: "betTypes" }, { type: "uint256[]", name: "numbers" }]}],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
+      );
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
       
-      // Now place the bet to create maxPayout scenario
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
-      
-      // Set small batch size for testing
       await stakedBrbProxy.write.setLargeWithdrawalBatchSize([2n], { account: admin.account });
       
       // Queue multiple withdrawals - use amount large enough to trigger large withdrawal
@@ -2224,13 +2270,8 @@ describe("StakedBRB", function () {
     });
 
     it("Should handle queue removal efficiently", async function () {
-      // Clear all assets first to start fresh
-      await clearAllAssets();
-      
-      // Setup large withdrawal scenario for all users - deposit all users first
-      await setupLargeWithdrawalScenario(parseEther("2000"), false); // Don't place bet yet
-      
-      // Ensure player2 has enough BRB
+      // Isolated: deposit player1 and player2, place one bet, then queue withdrawals and cancel
+      await setupLargeWithdrawalScenario(parseEther("2000"), false);
       const depositAmount = parseEther("500");
       const player2Balance = await brb.read.balanceOf([player2.account.address]);
       if (player2Balance < depositAmount) {
@@ -2239,10 +2280,27 @@ describe("StakedBRB", function () {
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
       await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
       
-      // Now place the bet to create maxPayout scenario
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      const totalAssets = await stakedBrbProxy.read.totalAssets();
+      const betAmount = totalAssets / 36n;
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = (existingMaxPayout + newBetMaxPayout) > betAmount ? (existingMaxPayout + newBetMaxPayout) - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        await brb.write.transfer([stakedBrbProxy.address, requiredBalance - vaultBalance + parseEther("100")], { account: admin.account });
+      }
+      const p1Bal = await brb.read.balanceOf([player1.account.address]);
+      if (p1Bal < betAmount) {
+        await brb.write.transfer([player1.account.address, betAmount - p1Bal], { account: admin.account });
+      }
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [{ type: "uint256[]", name: "amounts" }, { type: "uint256[]", name: "betTypes" }, { type: "uint256[]", name: "numbers" }]}],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
+      );
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
       
-      // Queue multiple withdrawals - use amount large enough to trigger large withdrawal
+      // Queue multiple withdrawals
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       
       // Calculate proper maxSharesOut to avoid MaxSharesError
@@ -2271,7 +2329,11 @@ describe("StakedBRB", function () {
     });
 
     it("Should calculate safe withdrawal capacity with zero maxPayout", async function () {
-      // First, create maxPayout scenario with a bet
+      // Isolated: player1 must have shares (deposit first)
+      const depositAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      // Create maxPayout scenario with a bet
       const betAmount = parseEther("1");
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
@@ -2297,7 +2359,10 @@ describe("StakedBRB", function () {
     });
 
     it("Should handle queue bounds correctly", async function () {
-      // Test basic queue functionality without complex large withdrawal scenarios
+      // Isolated: player1 must have shares (deposit first)
+      const depositAmount = parseEther("1000");
+      await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
       // Set a small queue limit for testing
       await stakedBrbProxy.write.setMaxQueueLength([2n], { account: admin.account });
       
@@ -2425,6 +2490,15 @@ describe("StakedBRB", function () {
       
       // Place a bet
       const betAmount = parseEther("1");
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = maxPayout > betAmount ? maxPayout - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Add buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
           { type: "uint256[]", name: "amounts" },
@@ -2467,6 +2541,21 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
       
       // 2. PLACE BET
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // IMPORTANT: Account for existing cumulative maxPayout from previous bets
+      // The contract checks: balance + betAmount >= existingMaxPayout + newBetMaxPayout
+      // So: balance >= existingMaxPayout + newBetMaxPayout - betAmount
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+      const requiredBalance = nextMaxPayout - betAmount;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+      
       await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
@@ -2544,10 +2633,10 @@ describe("StakedBRB", function () {
       const winningNumber = 7n; // Winning number
       const jackpotNumber = 10n;
       // Expected: initial balance - deposit + withdrawal (withdrawal happens before VRF, so it's included in the final balance)
-      // Initial balance is 2000 ETH, deposit is 1000 ETH, withdrawal is 50 ETH
+      // Initial balance is 15000 ETH, deposit is 1000 ETH, withdrawal is 50 ETH
       // Note: bet win goes to admin (who placed the bet), not to player
-      // Final = 2000 - 1000 + 50 = 1050 ETH
-      const expectedFinalBalance = parseEther("2000") - depositAmount + withdrawAmount;
+      // Final = 15000 - 1000 + 50 = 14050 ETH
+      const expectedFinalBalance = parseEther("15000") - depositAmount + withdrawAmount;
       
       await runCompleteGameLoopTest(depositAmount, betAmount, withdrawAmount, winningNumber, jackpotNumber, expectedFinalBalance);
     });
@@ -2558,11 +2647,8 @@ describe("StakedBRB", function () {
       const withdrawAmount = parseEther("50");
       const winningNumber = 8n; // Different from bet number (7)
       const jackpotNumber = 10n;
-      // Expected: initial balance - deposit + withdrawal (withdrawal happens before VRF, so it's included in the final balance)
-      // Initial balance is 2000 ETH, deposit is 1000 ETH, withdrawal is 50 ETH
-      // Note: bet loss affects admin (who placed the bet), not player
-      // Final = 2000 - 1000 + 50 = 1050 ETH
-      const expectedFinalBalance = parseEther("2000") - depositAmount + withdrawAmount;
+      // Expected: initial balance - deposit + withdrawal (player1 starts with 15000 from fixture)
+      const expectedFinalBalance = parseEther("15000") - depositAmount + withdrawAmount;
       
       await runCompleteGameLoopTest(depositAmount, betAmount, withdrawAmount, winningNumber, jackpotNumber, expectedFinalBalance);
     });
@@ -2653,7 +2739,18 @@ describe("StakedBRB", function () {
       
       // 2. Place bet
       const betAmount = parseEther("1");
-      await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // When bet is placed, balance increases by betAmount, so we need:
+      // currentBalance + betAmount >= maxPayout = betAmount * 39.6
+      // So: currentBalance >= betAmount * 38.6
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = maxPayout > betAmount ? maxPayout - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("1000"); // Larger buffer for safety
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
           { type: "uint256[]", name: "amounts" },
@@ -2697,17 +2794,25 @@ describe("StakedBRB", function () {
       expect(totalAssetsAfterDeposits).to.equal(parseEther("2000"));
       
       // Create maxPayout scenario by placing a large bet to force large withdrawals to be queued
-      // For a straight bet (36x payout), a 50 ETH bet would create 1800 ETH maxPayout
+      // For a straight bet (36x payout), a 50 ETH bet would create 1980 ETH maxPayout (with 110% buffer)
       // This should make 800 ETH withdrawals be considered "large"
       const betAmount = parseEther("50");
-      await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = maxPayout > betAmount ? maxPayout - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Add buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
           { type: "uint256[]", name: "amounts" },
           { type: "uint256[]", name: "betTypes" },
           { type: "uint256[]", name: "numbers" }
         ]}],
-        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 1800 ETH max)
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 1980 ETH max with buffer)
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       // Verify the bet was placed successfully
@@ -2748,17 +2853,25 @@ describe("StakedBRB", function () {
       expect(totalAssetsAfterDeposits).to.equal(parseEther("6000"));
       
       // Create maxPayout scenario with a large bet to trigger large withdrawal logic
-      // For a straight bet (36x payout), a 150 ETH bet would create 5400 ETH maxPayout
-      // This should make 1500 ETH withdrawals be considered "large" (since 6000 - 5400 = 600 < 1500)
+      // For a straight bet (36x payout), a 150 ETH bet would create 5940 ETH maxPayout (with 110% buffer)
+      // This should make 1500 ETH withdrawals be considered "large" (since 6000 - 5940 = 60 < 1500)
       const betAmount = parseEther("150");
-      await brb.write.transfer([stakedBrbProxy.address, betAmount], { account: admin.account });
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = maxPayout > betAmount ? maxPayout - betAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Add buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
       const betData = encodeAbiParameters(
         [{ type: "tuple", components: [
           { type: "uint256[]", name: "amounts" },
           { type: "uint256[]", name: "betTypes" },
           { type: "uint256[]", name: "numbers" }
         ]}],
-        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 5400 ETH max)
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }] // BET_STRAIGHT on number 7 (36x payout = 5940 ETH max with buffer)
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       

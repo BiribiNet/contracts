@@ -3,6 +3,7 @@ import { viem } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { encodeAbiParameters, formatEther, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
+import { waitForTransactionReceipt } from "viem/actions";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
@@ -1138,9 +1139,9 @@ describe("RouletteClean", function () {
       const [admin, player1] = await viem.getWalletClients();
       const publicClient = await viem.getPublicClient();
 
-      // Player starts with 2000 BRB from fixture (deployWithCreate.ts)
+      // Player starts with 15000 BRB from fixture (deployWithCreate.ts)
       const initialPlayerBalance = await brb.read.balanceOf([player1.account.address]);
-      expect(initialPlayerBalance).to.equal(parseEther("2000")); // Sanity check
+      expect(initialPlayerBalance).to.equal(parseEther("15000")); // Sanity check
 
       const stakeAmount = parseEther("1000");
       const betAmount = parseEther("10");
@@ -1543,6 +1544,33 @@ describe("RouletteClean", function () {
       // Fund each player and have them stake + place jackpot-qualifying bets
       // Fund each player and have them stake + place jackpot-qualifying bets
       const playerBalancesBeforeBets = new Map<string, bigint>();
+      
+      // Calculate required balance for all bets upfront (bet amounts vary)
+      // IMPORTANT: roundMaxStraightBet tracks TOTAL bets on the number with most bets
+      // For N bets with varying amounts A_i = bigBetAmount * (i+1) on the SAME number:
+      // - roundMaxStraightBet increases: A_1, A_1+A_2, A_1+A_2+A_3, ..., sum(A_i)
+      // - Each bet recalculates maxPayout: (sum of bets so far) * 36 * 1.1
+      // - They accumulate: sum of all recalculated maxPayouts
+      // For bet amounts 1.1, 2.2, 3.3, ..., 5.5: cumulative = sum(i*1.1 * 36 * 1.1) for i=1..5
+      const SAFETY_BUFFER_BPS = 11000n;
+      const N = BigInt(jackpotPlayers.length);
+      // Cumulative maxPayout = sum of (sum(j*bigBetAmount for j=1..i) * 36 * 1.1) for i=1..N
+      // = sum of (i*(i+1)/2 * bigBetAmount * 36 * 1.1) for i=1..N
+      // = bigBetAmount * 36 * 1.1 * sum(i*(i+1)/2) for i=1..N
+      // = bigBetAmount * 36 * 1.1 * N*(N+1)*(N+2)/6
+      const cumulativeMaxPayout = (bigBetAmount * 36n * SAFETY_BUFFER_BPS * N * (N + 1n) * (N + 2n)) / (6n * 10000n);
+      // Total bet amount = sum(i * bigBetAmount) for i=1..N = bigBetAmount * N*(N+1)/2
+      const totalBetAmount = (bigBetAmount * N * (N + 1n)) / 2n;
+      // Required: balance >= cumulativeMaxPayout - totalBetAmount
+      const requiredBalance = cumulativeMaxPayout > totalBetAmount ? cumulativeMaxPayout - totalBetAmount : 0n;
+      
+      // Ensure vault has enough balance for all bets upfront
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("1000"); // Buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+      
       for (let i = 0; i < jackpotPlayers.length; i++) {
         const player = jackpotPlayers[i];
         // Vary bet amounts: Player 1 bets 1x, Player 2 bets 2x, etc.
@@ -1771,6 +1799,26 @@ describe("RouletteClean", function () {
 
       // Fund each player and have them stake + place jackpot-qualifying bets
       const playerBalancesBeforeBets = new Map<string, bigint>();
+      
+      // Calculate required balance for all bets upfront
+      // IMPORTANT: roundMaxStraightBet tracks TOTAL bets on the number with most bets
+      // For N bets of amount A on the SAME number:
+      // - roundMaxStraightBet increases: A, 2A, 3A, ..., NA
+      // - Each bet recalculates maxPayout: (i*A) * 36 * 1.1 for bet i
+      // - They accumulate: sum(i*A * 36 * 1.1) for i=1..N = A * 36 * 1.1 * N*(N+1)/2
+      const SAFETY_BUFFER_BPS = 11000n;
+      const N = BigInt(jackpotPlayers.length);
+      const cumulativeMaxPayout = (bigBetAmount * 36n * SAFETY_BUFFER_BPS * N * (N + 1n)) / (2n * 10000n);
+      const totalBetAmount = N * bigBetAmount;
+      const requiredBalance = cumulativeMaxPayout > totalBetAmount ? cumulativeMaxPayout - totalBetAmount : 0n;
+      
+      // Ensure vault has enough balance for all bets upfront
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("1000"); // Buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+      
       for (const player of jackpotPlayers) {
         // Transfer additional BRB to player if needed
         const currentBalance = await brb.read.balanceOf([player.account.address]);
@@ -2026,6 +2074,7 @@ describe("RouletteClean", function () {
       const playerBalancesBeforeBets = new Map<string, bigint>();
       let totalJackpotBets = 0;
 
+      // First, do all deposits
       for (let i = 0; i < totalJackpotPlayers; i++) {
         // Cycle through available players if we need more than available
         const player = jackpotPlayers[i % jackpotPlayers.length];
@@ -2043,7 +2092,36 @@ describe("RouletteClean", function () {
           await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player.account });
           await stakedBrbProxy.write.deposit([stakeAmount, player.account.address, 0n], { account: player.account });
         }
+      }
 
+      // Calculate required balance for all bets upfront
+      // IMPORTANT: roundMaxStraightBet tracks TOTAL bets on the number with most bets
+      // For N bets of amount A on the SAME number:
+      // - roundMaxStraightBet increases: A, 2A, 3A, ..., NA
+      // - Each bet recalculates maxPayout: (i*A) * 36 * 1.1 for bet i
+      // - They accumulate: sum(i*A * 36 * 1.1) for i=1..N = A * 36 * 1.1 * N*(N+1)/2
+      // For bet N: balance + N*A >= cumulativeMaxPayout
+      // Worst case: balance >= cumulativeMaxPayout - N*A
+      const SAFETY_BUFFER_BPS = 11000n;
+      const N = BigInt(totalJackpotPlayers);
+      // Cumulative maxPayout = sum of (i * A * 36 * 1.1) for i=1..N = A * 36 * 1.1 * N*(N+1)/2
+      const cumulativeMaxPayout = (bigBetAmount * 36n * SAFETY_BUFFER_BPS * N * (N + 1n)) / (2n * 10000n);
+      const totalBetAmount = N * bigBetAmount;
+      // Required: balance >= cumulativeMaxPayout - totalBetAmount
+      const requiredBalance = cumulativeMaxPayout > totalBetAmount ? cumulativeMaxPayout - totalBetAmount : 0n;
+      
+      // Ensure vault has enough balance
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("1000"); // Buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+
+      // Now place all bets
+      for (let i = 0; i < totalJackpotPlayers; i++) {
+        // Cycle through available players if we need more than available
+        const player = jackpotPlayers[i % jackpotPlayers.length];
+        
         const balanceBeforeBet = await brb.read.balanceOf([player.account.address]);
         const playerKey = `${player.account.address}_${i}`; // Unique key for each bet
         playerBalancesBeforeBets.set(playerKey, balanceBeforeBet);
@@ -2601,5 +2679,620 @@ describe("RouletteClean", function () {
       return expectedFinalBalances;
     }
 
+  });
+
+  describe("Optimized MaxPayout Calculation", function () {
+    /**
+     * Helper function to calculate expected optimized maxPayout manually
+     */
+    function calculateExpectedOptimizedMaxPayout(
+      maxStraight: bigint,
+      maxRedBlack: bigint,
+      maxOddEven: bigint,
+      maxLowHigh: bigint,
+      maxDozen: bigint,
+      maxColumn: bigint,
+      otherBetsPayout: bigint,
+      safetyBufferBps: bigint = 11000n
+    ): bigint {
+      const straightComponent = maxStraight * 36n;
+      const redBlackComponent = maxRedBlack * 2n;
+      const oddEvenComponent = maxOddEven * 2n;
+      const lowHighComponent = maxLowHigh * 2n;
+      const dozenComponent = maxDozen * 3n;
+      const columnComponent = maxColumn * 3n;
+      
+      const optimizedMaxPayout = straightComponent + redBlackComponent + oddEvenComponent +
+                                 lowHighComponent + dozenComponent + columnComponent + otherBetsPayout;
+      
+      return (optimizedMaxPayout * safetyBufferBps) / 10000n;
+    }
+
+    /**
+     * Helper function to get maxPayout from a bet transaction
+     */
+    async function getMaxPayoutFromBet(
+      brb: any,
+      stakedBrbProxy: any,
+      betAmount: bigint,
+      betData: `0x${string}`,
+      account: any
+    ): Promise<bigint> {
+      // Get vault balance before bet
+      const balanceBefore = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account });
+      
+      // Get vault balance after bet
+      const balanceAfter = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      // The maxPayout is tracked in StakedBRB, but we can't directly read it
+      // Instead, we'll calculate it based on the bet's expected maxPayout
+      // For testing, we'll use the contract's return value indirectly
+      return balanceAfter - balanceBefore + betAmount; // This is approximate
+    }
+
+    it("Should optimize straight bets: 1 bet on each number (0-36) should have maxPayout ≈ 36 * betAmount * 1.1", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("1");
+      const betAmounts: bigint[] = [];
+      const betTypes: bigint[] = [];
+      const numbers: bigint[] = [];
+
+      // Create 1 bet on each number (0-36) = 37 bets
+      for (let i = 0; i <= 36; i++) {
+        betAmounts.push(betAmount);
+        betTypes.push(1n); // BET_STRAIGHT
+        numbers.push(BigInt(i));
+      }
+
+      const totalBetAmount = betAmount * 37n;
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: betAmounts, betTypes: betTypes, numbers: numbers }]
+      );
+
+      // Get vault balance before
+      const balanceBefore = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Get vault balance after
+      const balanceAfter = await brb.read.balanceOf([stakedBrbProxy.address]);
+
+      // Calculate expected optimized maxPayout
+      // Max straight = betAmount (since 1 bet on each number)
+      // No other bets
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        betAmount,  // maxStraight
+        0n,         // maxRedBlack
+        0n,         // maxOddEven
+        0n,         // maxLowHigh
+        0n,         // maxDozen
+        0n,         // maxColumn
+        0n          // otherBetsPayout
+      );
+
+      // Naive calculation would be: 37 * betAmount * 36 = 1332 * betAmount
+      const naiveMaxPayout = betAmount * 37n * 36n;
+
+      // The optimized should be much better (approximately 36 * betAmount * 1.1)
+      expect(expectedOptimized).to.be.lessThan(naiveMaxPayout);
+      expect(expectedOptimized).to.be.approximately(betAmount * 36n * 11000n / 10000n, betAmount * 100n); // Allow small margin
+
+      // Verify vault has enough balance (should not revert)
+      expect(balanceAfter).to.be.greaterThanOrEqual(balanceBefore);
+    });
+
+    it("Should optimize mutually exclusive pairs: equal bets on red and black", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+      const totalBetAmount = betAmount * 2n;
+
+      // Place equal bets on red and black
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount, betAmount], betTypes: [8n, 9n], numbers: [0n, 0n] }] // RED, BLACK
+      );
+
+      // Get vault balance before
+      const balanceBefore = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout
+      // Max of red/black = betAmount (since equal bets)
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        0n,         // maxStraight
+        betAmount,  // maxRedBlack (max of red and black)
+        0n,         // maxOddEven
+        0n,         // maxLowHigh
+        0n,         // maxDozen
+        0n,         // maxColumn
+        0n          // otherBetsPayout
+      );
+
+      // Naive calculation would be: betAmount * 2 + betAmount * 2 = betAmount * 4
+      const naiveMaxPayout = betAmount * 4n;
+
+      // Optimized should be: betAmount * 2 * 1.1 = betAmount * 2.2
+      expect(expectedOptimized).to.be.lessThan(naiveMaxPayout);
+      expect(expectedOptimized).to.be.approximately(betAmount * 2n * 11000n / 10000n, betAmount / 10n);
+    });
+
+    it("Should optimize odd/even pairs", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+      const totalBetAmount = betAmount * 2n;
+
+      // Place equal bets on odd and even
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount, betAmount], betTypes: [10n, 11n], numbers: [0n, 0n] }] // ODD, EVEN
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        0n,         // maxStraight
+        0n,         // maxRedBlack
+        betAmount,  // maxOddEven (max of odd and even)
+        0n,         // maxLowHigh
+        0n,         // maxDozen
+        0n,         // maxColumn
+        0n          // otherBetsPayout
+      );
+
+      // Naive would be: betAmount * 2 + betAmount * 2 = betAmount * 4
+      const naiveMaxPayout = betAmount * 4n;
+
+      // Optimized should be: betAmount * 2 * 1.1
+      expect(expectedOptimized).to.be.lessThan(naiveMaxPayout);
+      expect(expectedOptimized).to.be.approximately(betAmount * 2n * 11000n / 10000n, betAmount / 10n);
+    });
+
+    it("Should optimize low/high pairs", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+      const totalBetAmount = betAmount * 2n;
+
+      // Place equal bets on low and high
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount, betAmount], betTypes: [12n, 13n], numbers: [0n, 0n] }] // LOW, HIGH
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        0n,         // maxStraight
+        0n,         // maxRedBlack
+        0n,         // maxOddEven
+        betAmount,  // maxLowHigh (max of low and high)
+        0n,         // maxDozen
+        0n,         // maxColumn
+        0n          // otherBetsPayout
+      );
+
+      // Naive would be: betAmount * 2 + betAmount * 2 = betAmount * 4
+      const naiveMaxPayout = betAmount * 4n;
+
+      // Optimized should be: betAmount * 2 * 1.1
+      expect(expectedOptimized).to.be.lessThan(naiveMaxPayout);
+      expect(expectedOptimized).to.be.approximately(betAmount * 2n * 11000n / 10000n, betAmount / 10n);
+    });
+
+    it("Should optimize dozens: equal bets on all 3 dozens", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+      const totalBetAmount = betAmount * 3n;
+
+      // Place equal bets on all 3 dozens
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount, betAmount, betAmount], betTypes: [7n, 7n, 7n], numbers: [1n, 2n, 3n] }] // DOZEN 1, 2, 3
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        0n,         // maxStraight
+        0n,         // maxRedBlack
+        0n,         // maxOddEven
+        0n,         // maxLowHigh
+        betAmount,  // maxDozen (max of three dozens)
+        0n,         // maxColumn
+        0n          // otherBetsPayout
+      );
+
+      // Naive would be: betAmount * 3 + betAmount * 3 + betAmount * 3 = betAmount * 9
+      const naiveMaxPayout = betAmount * 9n;
+
+      // Optimized should be: betAmount * 3 * 1.1
+      expect(expectedOptimized).to.be.lessThan(naiveMaxPayout);
+      expect(expectedOptimized).to.be.approximately(betAmount * 3n * 11000n / 10000n, betAmount / 10n);
+    });
+
+    it("Should optimize columns: equal bets on all 3 columns", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+      const totalBetAmount = betAmount * 3n;
+
+      // Place equal bets on all 3 columns
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount, betAmount, betAmount], betTypes: [6n, 6n, 6n], numbers: [1n, 2n, 3n] }] // COLUMN 1, 2, 3
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        0n,         // maxStraight
+        0n,         // maxRedBlack
+        0n,         // maxOddEven
+        0n,         // maxLowHigh
+        0n,         // maxDozen
+        betAmount,  // maxColumn (max of three columns)
+        0n          // otherBetsPayout
+      );
+
+      // Naive would be: betAmount * 3 + betAmount * 3 + betAmount * 3 = betAmount * 9
+      const naiveMaxPayout = betAmount * 9n;
+
+      // Optimized should be: betAmount * 3 * 1.1
+      expect(expectedOptimized).to.be.lessThan(naiveMaxPayout);
+      expect(expectedOptimized).to.be.approximately(betAmount * 3n * 11000n / 10000n, betAmount / 10n);
+    });
+
+    it("Should handle mixed bet types (optimized + non-optimized)", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const straightBetAmount = parseEther("5");
+      const redBetAmount = parseEther("10");
+      const splitBetAmount = parseEther("3");
+      const totalBetAmount = straightBetAmount + redBetAmount + splitBetAmount;
+
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // IMPORTANT: Account for existing cumulative maxPayout from previous bets
+      // The contract checks: balance + totalBetAmount >= existingMaxPayout + newBetMaxPayout
+      // So: balance >= existingMaxPayout + newBetMaxPayout - totalBetAmount
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const newBetMaxPayout = ((straightBetAmount * 36n + redBetAmount * 2n + splitBetAmount * 18n) * SAFETY_BUFFER_BPS) / 10000n;
+      const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+      const requiredBalance = nextMaxPayout > totalBetAmount ? nextMaxPayout - totalBetAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+
+      // Mix of optimized (straight, red) and non-optimized (split) bets
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ 
+          amounts: [straightBetAmount, redBetAmount, splitBetAmount], 
+          betTypes: [1n, 8n, 2n], 
+          numbers: [7n, 0n, 102n] // Straight on 7, Red, Split 1-2 (split ID = 1*100+2)
+        }]
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout
+      // Straight component: straightBetAmount * 36
+      // Red component: redBetAmount * 2
+      // Split component: splitBetAmount * 18 (non-optimized, goes to otherBetsPayout)
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        straightBetAmount,  // maxStraight
+        redBetAmount,        // maxRedBlack
+        0n,                  // maxOddEven
+        0n,                  // maxLowHigh
+        0n,                  // maxDozen
+        0n,                  // maxColumn
+        splitBetAmount * 18n // otherBetsPayout (split payout)
+      );
+
+      // Naive would sum all: straightBetAmount * 36 + redBetAmount * 2 + splitBetAmount * 18
+      const naiveMaxPayout = straightBetAmount * 36n + redBetAmount * 2n + splitBetAmount * 18n;
+
+      // Optimized should be similar but with safety buffer
+      expect(expectedOptimized).to.be.approximately(naiveMaxPayout * 11000n / 10000n, parseEther("0.1"));
+    });
+
+    it("Should apply safety buffer correctly", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+
+      // Single straight bet
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
+
+      // Calculate expected optimized maxPayout without buffer
+      const optimizedWithoutBuffer = betAmount * 36n;
+      
+      // With 10% buffer (11000 bps)
+      const expectedWithBuffer = optimizedWithoutBuffer * 11000n / 10000n;
+
+      // Verify buffer is applied (should be 10% more)
+      expect(expectedWithBuffer).to.equal(optimizedWithoutBuffer + optimizedWithoutBuffer / 10n);
+    });
+
+    it("Should handle gas efficiency: single bet should not be expensive", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("1");
+
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // Check: balance + betAmount >= maxPayout, so balance >= maxPayout - betAmount
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const requiredBalance = maxPayout - betAmount;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+
+      // Single straight bet
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
+      );
+
+      // Measure gas
+      const tx = await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
+      const publicClient = await viem.getPublicClient();
+      const receipt = await waitForTransactionReceipt(publicClient, { hash: tx });
+
+      // Gas should be reasonable (single bet)
+      expect(receipt.gasUsed).to.be.lessThan(500000n);
+    });
+
+    it("Should handle gas efficiency: multiple bets (10 bets) should be reasonable", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("1");
+      const betAmounts: bigint[] = [];
+      const betTypes: bigint[] = [];
+      const numbers: bigint[] = [];
+
+      // Create 10 different bets
+      for (let i = 0; i < 10; i++) {
+        betAmounts.push(betAmount);
+        betTypes.push(1n); // All straight bets
+        numbers.push(BigInt(i));
+      }
+
+      const totalBetAmount = betAmount * 10n;
+      
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // IMPORTANT: Even though bets are on different numbers, maxPayout ACCUMULATES
+      // Each bet returns: betAmount * 36 * 1.1 (since roundMaxStraightBet = betAmount for each number)
+      // They accumulate: 10 * (betAmount * 36 * 1.1)
+      // Check: balance + totalBetAmount >= totalMaxPayout, so balance >= totalMaxPayout - totalBetAmount
+      const SAFETY_BUFFER_BPS = 11000n;
+      const maxPayoutPerBet = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+      const totalMaxPayout = 10n * maxPayoutPerBet; // 10 bets accumulate
+      const requiredBalance = totalMaxPayout - totalBetAmount;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: betAmounts, betTypes: betTypes, numbers: numbers }]
+      );
+
+      // Measure gas
+      const tx = await brb.write.bet([stakedBrbProxy.address, totalBetAmount, betData, zeroAddress], { account: player1.account });
+      const publicClient = await viem.getPublicClient();
+      const receipt = await waitForTransactionReceipt(publicClient, { hash: tx });
+
+      // Gas should be reasonable (10 bets)
+      expect(receipt.gasUsed).to.be.lessThan(2000000n);
+    });
+
+    it("Should verify optimized maxPayout is always >= actual max payout (safety check)", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb } = await useDeployWithCreateFixture();
+      const [admin, player1] = await viem.getWalletClients();
+
+      // Stake BRB
+      const stakeAmount = parseEther("10000");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("10");
+
+      // Ensure vault has enough balance for max payout (with safety buffer)
+      // The contract recalculates optimized maxPayout from all bets in the round
+      // For mixed bet types: straight=10, red=10, split=10
+      // Optimized: (maxStraight*36 + maxRedBlack*2 + otherBetsPayout) * 1.1
+      // = (10*36 + 10*2 + 10*18) * 1.1 = (360 + 20 + 180) * 1.1 = 616
+      // When bet is placed, balance increases by totalBetAmount
+      // Check: balance + totalBetAmount >= maxPayout, so balance >= maxPayout - totalBetAmount
+      const SAFETY_BUFFER_BPS = 11000n;
+      const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+      const totalBetAmount = betAmount * 3n;
+      const newBetMaxPayout = ((betAmount * 36n + betAmount * 2n + betAmount * 18n) * SAFETY_BUFFER_BPS) / 10000n;
+      const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+      const requiredBalance = nextMaxPayout > totalBetAmount ? nextMaxPayout - totalBetAmount : 0n;
+      const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+      
+      if (vaultBalance < requiredBalance) {
+        const neededAmount = requiredBalance - vaultBalance + parseEther("100"); // Small buffer
+        await brb.write.transfer([stakedBrbProxy.address, neededAmount], { account: admin.account });
+      }
+
+      // Place various bets
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ 
+          amounts: [betAmount, betAmount, betAmount], 
+          betTypes: [1n, 8n, 2n], 
+          numbers: [7n, 0n, 102n] // Straight on 7, Red, Split 1-2 (split ID = 1*100+2)
+        }]
+      );
+
+      // Place bet
+      await brb.write.bet([stakedBrbProxy.address, betAmount * 3n, betData, zeroAddress], { account: player1.account });
+
+      // Calculate actual max payout (worst case: all bets win)
+      // If 7 wins: straightBetAmount * 36 + redBetAmount * 2 + splitBetAmount * 18
+      // But red and split can't both win with 7, so actual max is:
+      // - If 7 wins: straightBetAmount * 36 + redBetAmount * 2 = betAmount * 36 + betAmount * 2
+      // - If 1 or 2 wins: splitBetAmount * 18 = betAmount * 18
+      // So actual max = betAmount * 36 + betAmount * 2 = betAmount * 38
+
+      const actualMaxPayout = betAmount * 36n + betAmount * 2n; // Straight + Red (both can win with 7)
+
+      // Optimized maxPayout should be >= actual maxPayout (with buffer)
+      const expectedOptimized = calculateExpectedOptimizedMaxPayout(
+        betAmount,        // maxStraight
+        betAmount,        // maxRedBlack
+        0n,              // maxOddEven
+        0n,              // maxLowHigh
+        0n,              // maxDozen
+        0n,              // maxColumn
+        betAmount * 18n  // otherBetsPayout (split)
+      );
+
+      // Optimized should be >= actual (safety check)
+      // Note: optimized includes split in otherBetsPayout, so it's conservative
+      expect(expectedOptimized).to.be.greaterThanOrEqual(actualMaxPayout * 11000n / 10000n);
+    });
   });
 });

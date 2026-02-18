@@ -1,8 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
+import { IRoulette } from "./interfaces/IRoulette.sol";
+
 library RouletteLib {
+    /**
+     * @dev Safety buffer constant (110% = 10% safety buffer)
+     */
+    uint256 internal constant SAFETY_BUFFER_BPS = 11000;
     
+    /**
+     * @dev Struct for optimized maxPayout calculation components
+     */
+    struct MaxPayoutComponents {
+        uint256 straightComponent;
+        uint256 streetComponent;
+        uint256 redBlackComponent;
+        uint256 oddEvenComponent;
+        uint256 lowHighComponent;
+        uint256 dozenComponent;
+        uint256 columnComponent;
+        uint256 otherComponent;
+    }
+    
+
     struct WinningBetTypes {
         // INSIDE BETS
         uint256[] winningSplits;    // Split IDs that win
@@ -19,6 +40,17 @@ library RouletteLib {
         bool high;
         bool trio012;
         bool trio023;
+    }
+
+    function max(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            z := xor(x, mul(xor(x, y), gt(y, x)))
+        }
+    }
+
+    function max3(uint256 x, uint256 y, uint256 z) internal pure returns (uint256) {
+        return max(max(x, y), z);
     }
 
     /**
@@ -241,4 +273,67 @@ library RouletteLib {
             return num == 0 || num == 2 || num == 3;
         }
     }
+    
+    /**
+     * @dev Calculate straight and street components
+     */
+    function calculateStraightStreetComponents(
+        uint256 roundId,
+        mapping(uint256 => uint256) storage maxStraightBet,
+        mapping(uint256 => uint256) storage maxStreetBet
+    ) internal view returns (uint256) {
+        unchecked {
+            return (maxStraightBet[roundId] * 36) + (maxStreetBet[roundId] * 12);
+        }
+    }
+    
+    /**
+     * @dev Calculate pair components (red/black, odd/even, low/high)
+     */
+    function calculatePairComponents(
+        uint256 roundId,
+        mapping(uint256 => uint256) storage redBetsSum,
+        mapping(uint256 => uint256) storage blackBetsSum,
+        mapping(uint256 => uint256) storage oddBetsSum,
+        mapping(uint256 => uint256) storage evenBetsSum,
+        mapping(uint256 => uint256) storage lowBetsSum,
+        mapping(uint256 => uint256) storage highBetsSum
+    ) internal view returns (uint256) {
+        unchecked {
+            uint256 redBlackComponent = max(redBetsSum[roundId], blackBetsSum[roundId]) * 2;
+            uint256 oddEvenComponent = max(oddBetsSum[roundId], evenBetsSum[roundId]) * 2;
+            uint256 lowHighComponent = max(lowBetsSum[roundId], highBetsSum[roundId]) * 2;
+            return redBlackComponent + oddEvenComponent + lowHighComponent;
+        }
+    }
+    
+    /**
+     * @dev Calculate optimized maxPayout components part 2 (dozens, columns, other)
+     * @param roundId Round ID to calculate maxPayout for
+     * @param dozenBetsSum Storage reference
+     * @param columnBetsSum Storage reference
+     * @return Sum of dozen, column, and other components
+     */
+    function calculateMaxPayoutPart2(
+        uint256 roundId,
+        mapping(uint256 => mapping(uint256 => uint256)) storage dozenBetsSum,
+        mapping(uint256 => mapping(uint256 => uint256)) storage columnBetsSum
+    ) internal view returns (uint256) {
+        unchecked {
+            uint256 dozenComponent = max3(
+                dozenBetsSum[roundId][1],
+                dozenBetsSum[roundId][2],
+                dozenBetsSum[roundId][3]
+            ) * 3;
+            
+            uint256 columnComponent = max3(
+                columnBetsSum[roundId][1],
+                columnBetsSum[roundId][2],
+                columnBetsSum[roundId][3]
+            ) * 3;
+            
+            return dozenComponent + columnComponent;
+        }
+    }
+    
 }
