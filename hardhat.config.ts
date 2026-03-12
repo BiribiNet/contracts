@@ -8,6 +8,7 @@ import 'hardhat-tracer'
 
 // Uncomment this to verify on Tenderly
 // import * as tdly from "@tenderly/hardhat-tenderly";
+// tdly.setup()
 
 // Comment this to verify on Tenderly
 import '@nomicfoundation/hardhat-ethers';

@@ -431,11 +431,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (cleaningData.fees.jackpotAmount > 0) {
             IERC20(BRB_TOKEN).transfer(JACKPOT_CONTRACT, cleaningData.fees.jackpotAmount);
         }
-
         if (cleaningData.fees.burnAmount > 0) {
             IERC20Burnable(BRB_TOKEN).burn(cleaningData.fees.burnAmount);
         }
-        
         // 2. PROCESS LARGE WITHDRAWALS (if needed)
         if (cleaningData.hasWithdrawals) {
             _processLargeWithdrawalBatchPreComputed(cleaningData.usersToProcess, cleaningData.amountsToProcess, cleaningData.actualProcessCount);

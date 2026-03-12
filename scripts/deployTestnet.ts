@@ -85,17 +85,17 @@ async function deployTestnet() {
   const callbackGasLimit = 250000n
   const numWords = 2n
   const safeBlockConfirmation = 1
-  const gamePeriod = 120n
+  const gamePeriod = 80n
   
   // Fee structure (basis points)
-  const teamFeeBasisPoints = 300n    // 3%
+  const teamFeeBasisPoints = 200n    // 2%
   const burnFeeBasisPoints = 50n     // 0.5%
-  const jackpotFeeBasisPoints = 150n // 1.5%
+  const jackpotFeeBasisPoints = 250n // 2.5%
 
   // Deploy contracts in correct order
   const jackpotContract = await viem.deployContract("JackpotContract", [brbAddress, rouletteProxyAddress])
   await setTimeoutIsDeployed(jackpotContract.address);
-  const brbReferal = await viem.deployContract("BRBReferal", [rouletteProxyAddress])
+  const brbReferal = await viem.deployContract("BRBReferal", [stakedBrbProxyAddress])
   await setTimeoutIsDeployed(brbReferal.address);
   const brb = await viem.deployContract("BRB")
   await setTimeoutIsDeployed(brb.address);
@@ -282,7 +282,7 @@ async function deployTestnet() {
   try {
     await hre.run("verify:verify", {
       address: brbReferalAddress,
-      constructorArguments: [rouletteProxyAddress]
+      constructorArguments: [stakedBrbProxyAddress]
     });
   } catch (error) {
     console.log('Error verifying brbReferal', error);
