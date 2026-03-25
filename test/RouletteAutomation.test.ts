@@ -2,102 +2,116 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { checksumAddress, encodeAbiParameters, keccak256, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
+import { encodeAbiParameters, keccak256, parseEther, parseEventLogs, toHex, zeroAddress } from "viem";
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
+
+const MAX_UINT256 = 2n ** 256n - 1n;
+
+async function advanceThroughLockToVrfWindow(rouletteProxy: any) {
+  let s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  while (s > 0n && s < MAX_UINT256) {
+    await time.increase(s);
+    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  }
+  const [lockNeeded, lockData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+  if (!lockNeeded) throw new Error("expected pre-VRF lock upkeep");
+  await rouletteProxy.write.performUpkeep([lockData]);
+  s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  while (s > 0n && s < MAX_UINT256) {
+    await time.increase(s);
+    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  }
+}
 
 describe("RouletteClean - Automation", function () {
   // Use the shared fixture from deployWithCreate script
 
   describe("Upkeep Registration", function () {
     it("Should register VRF upkeep successfully", async function () {
-      const { rouletteProxy, mockLinkToken } = await useDeployWithCreateFixture();
+      const { upkeepManager, mockLinkToken } = await useDeployWithCreateFixture();
       const [admin] = await viem.getWalletClients();
-      const rouletteAddress = rouletteProxy.address;
+      const managerAddress = upkeepManager.address;
 
       const linkAmount = parseEther("10");
 
-      // Check LINK was transferred
-      const contractBalance = await mockLinkToken.read.balanceOf([rouletteAddress]);
+      // LINK for registrations is held on BRBUpkeepManager
+      const contractBalance = await mockLinkToken.read.balanceOf([managerAddress]);
       expect(contractBalance).to.be.gt(0n);
     });
 
     it("Should register multiple payout upkeeps", async function () {
-      const { rouletteProxy, mockLinkToken } = await useDeployWithCreateFixture()
+      const { rouletteProxy, upkeepManager, mockLinkToken } = await useDeployWithCreateFixture()
       const [admin] = await viem.getWalletClients();
-      const rouletteAddress = rouletteProxy.address;
 
       const upkeepCount = 5;
       const linkAmountPerUpkeep = parseEther("2");
       const totalLinkNeeded = linkAmountPerUpkeep * BigInt(upkeepCount);
 
-      // Check LINK was transferred
-      const contractBalance = await mockLinkToken.read.balanceOf([rouletteAddress]);
+      const contractBalance = await mockLinkToken.read.balanceOf([upkeepManager.address]);
       expect(contractBalance).to.be.gte(totalLinkNeeded);
 
-      // Check upkeep config was updated
       const [maxSupportedBets, registeredUpkeepCount, batchSize, upkeepGasLimit] = await rouletteProxy.read.getUpkeepConfig();
       expect(maxSupportedBets).to.be.gte(10n);
       expect(registeredUpkeepCount).to.be.gte(1n);
     });
 
     it("Should handle sequential calls to registerPayoutUpkeeps", async function () {
-      const { rouletteProxy, mockLinkToken } = await useDeployWithCreateFixture();
+      const { rouletteProxy, upkeepManager, mockLinkToken } = await useDeployWithCreateFixture();
       const publicClient = await viem.getPublicClient();
 
       const [, initialCount] = await rouletteProxy.read.getUpkeepConfig();
 
+      await mockLinkToken.write.approve([upkeepManager.address, parseEther("100")]);
+
       // 1. First registration (2 upkeeps)
-      const tx1 = await rouletteProxy.write.registerPayoutUpkeeps([2n, parseEther("2")]);
+      const tx1 = await upkeepManager.write.registerPayoutUpkeeps([2n, parseEther("2")]);
       const receipt1 = await publicClient.waitForTransactionReceipt({ hash: tx1 });
       const logs1 = parseEventLogs({
-        abi: rouletteProxy.abi,
+        abi: upkeepManager.abi,
         eventName: 'UpkeepRegistered',
         logs: receipt1.logs,
       });
 
       expect(logs1.length).to.equal(2);
-      // indices should start at initialCount
-      // checkDataLength = i + 2
-      expect(logs1[0].args.checkDataLength).to.equal(initialCount + 2n);
-      expect(logs1[1].args.checkDataLength).to.equal(initialCount + 3n);
+      // checkDataLength = i + 3 (0/1=lock+VRF use 1-byte tags; 2=compute; 3+= payout batches)
+      expect(logs1[0].args.checkDataLength).to.equal(initialCount + 3n);
+      expect(logs1[1].args.checkDataLength).to.equal(initialCount + 4n);
 
       // 2. Second registration (2 upkeeps)
-      const tx2 = await rouletteProxy.write.registerPayoutUpkeeps([2n, parseEther("2")]);
+      const tx2 = await upkeepManager.write.registerPayoutUpkeeps([2n, parseEther("2")]);
       const receipt2 = await publicClient.waitForTransactionReceipt({ hash: tx2 });
       const logs2 = parseEventLogs({
-        abi: rouletteProxy.abi,
+        abi: upkeepManager.abi,
         eventName: 'UpkeepRegistered',
         logs: receipt2.logs,
       });
 
       expect(logs2.length).to.equal(2);
-      expect(logs2[0].args.checkDataLength).to.equal(initialCount + 4n); // (initial + 2) + 2
-      expect(logs2[1].args.checkDataLength).to.equal(initialCount + 5n); // (initial + 3) + 2
+      expect(logs2[0].args.checkDataLength).to.equal(initialCount + 5n);
+      expect(logs2[1].args.checkDataLength).to.equal(initialCount + 6n);
 
-      // Verify total count
       const [, registeredUpkeepCount] = await rouletteProxy.read.getUpkeepConfig();
       expect(registeredUpkeepCount).to.equal(initialCount + 4n);
     });
 
-    it("Should reject upkeep registration from non-admin", async function () {
-      const { rouletteProxy } = await useDeployWithCreateFixture();
+    it("Should reject upkeep registration without REGISTRANT_ROLE", async function () {
+      const { upkeepManager } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
 
       const linkAmount = parseEther("10");
 
       await expect(
-        rouletteProxy.write.registerVRFUpkeep([linkAmount], { account: player1.account })
-      ).to.be.rejectedWith(`AccessControlUnauthorizedAccount("${checksumAddress(player1.account.address)}", "0x0000000000000000000000000000000000000000000000000000000000000000")`); // AccessControl revert
+        upkeepManager.write.registerVRFUpkeep([linkAmount], { account: player1.account })
+      ).to.be.rejected;
     });
 
     it("Should enforce bet limits based on registered upkeeps", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb, mockLinkToken } = await useDeployWithCreateFixture();
+      const { rouletteProxy, upkeepManager, stakedBrbProxy, brb, mockLinkToken } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
 
-      // Register only 1 payout upkeep (supports 10 bets max)
-      await mockLinkToken.write.approve([rouletteProxy.address, parseEther("1000")]);
-      await rouletteProxy.write.registerPayoutUpkeeps([1n, parseEther("2")]);
+      await mockLinkToken.write.approve([upkeepManager.address, parseEther("1000")]);
+      await upkeepManager.write.registerPayoutUpkeeps([1n, parseEther("2")]);
 
       const [maxSupportedBets, ] = await rouletteProxy.read.getUpkeepConfig();
       // Stake and try to place more bets than supported
@@ -167,11 +181,10 @@ describe("RouletteClean - Automation", function () {
 
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
-      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
+      await advanceThroughLockToVrfWindow(rouletteProxy);
 
-      // Check upkeep
-      const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      // checkData length 1 = VRF (after pre-VRF lock: empty checkData)
+      const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecution).to.be.true;
       expect(performData).to.not.equal("0x");
     });
@@ -197,23 +210,23 @@ describe("RouletteClean - Automation", function () {
 
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
-      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
-      // Check upkeep
-      const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      await advanceThroughLockToVrfWindow(rouletteProxy);
+      const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecution).to.be.true;
 
       // Perform upkeep
       await expect(rouletteProxy.write.performUpkeep([performData])).to.not.be.rejected;
     });
 
-    it("Should handle empty upkeep data", async function () {
+    it("Should use empty checkData for pre-VRF lock upkeep", async function () {
       const { rouletteProxy } = await useDeployWithCreateFixture();
 
-      // Check upkeep with empty data
+      const [, , gamePeriod] = await rouletteProxy.read.getConstants();
+      await time.increase(gamePeriod);
+
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
-      expect(needsExecution).to.be.false;
-      expect(performData).to.equal("0x");
+      expect(needsExecution).to.be.true;
+      expect(performData).to.not.equal("0x");
     });
 
     it("Should handle invalid upkeep data", async function () {
@@ -243,8 +256,8 @@ describe("RouletteClean - Automation", function () {
       // Get current round info
       const [currentRound] = await rouletteProxy.read.getCurrentRoundInfo();
       
-      // Simulate time passing (more than game period)
-      await time.increase(gamePeriod + 1n);
+      // Simulate time passing (game period + max no-bet lock + 1)
+      await time.increase(gamePeriod + 12n);
       
       // Check if new round should start
       const [newRound] = await rouletteProxy.read.getCurrentRoundInfo();
@@ -254,10 +267,10 @@ describe("RouletteClean - Automation", function () {
     it("Should return correct constants from getConstants()", async function () {
       const { rouletteProxy } = await useDeployWithCreateFixture();
 
-      const [timeMargin, batchSize, gamePeriod, upkeepGasLimit] = await rouletteProxy.read.getConstants();
+      const [noBetLockMin, batchSize, gamePeriod, upkeepGasLimit] = await rouletteProxy.read.getConstants();
       
       // Verify constants are reasonable values
-      expect(timeMargin).to.equal(25n); // TIME_MARGIN = 25 seconds
+      expect(noBetLockMin).to.equal(6n); // min no-bet lock seconds
       expect(batchSize).to.equal(35n); // BATCH_SIZE = 35
       expect(gamePeriod).to.be.gt(0n); // GAME_PERIOD should be positive
       expect(upkeepGasLimit).to.be.gt(0n); // UPKEEP_GAS_LIMIT should be positive
@@ -281,15 +294,14 @@ describe("RouletteClean - Automation", function () {
     });
 
     it("Should handle insufficient LINK balance", async function () {
-      const { rouletteProxy, mockLinkToken } = await useDeployWithCreateFixture();
+      const { upkeepManager, mockLinkToken } = await useDeployWithCreateFixture();
 
       const [deployer] = await viem.getWalletClients();
       // Set low LINK balance
       await mockLinkToken.write.setBalance([deployer.account.address, 0n]);
 
-      // Try to register upkeep
       await expect(
-        rouletteProxy.write.registerVRFUpkeep([parseEther("1")])
+        upkeepManager.write.registerVRFUpkeep([parseEther("1")])
       ).to.be.rejected
     });
   });

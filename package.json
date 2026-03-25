@@ -19,7 +19,8 @@
     "deploy:frame:v1tov2:tenderly": "hardhat run scripts/deployFactoryFrameV1ToV2.ts --network tenderly",
     "coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
     "clean": "hardhat clean",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "update:subgraph:abis": "node scripts/update-subgraph-abis.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

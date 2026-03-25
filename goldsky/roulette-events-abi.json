@@ -2,11 +2,11 @@
   {
     "anonymous": false,
     "inputs": [
-      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
-      {"indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256"},
-      {"indexed": false, "internalType": "uint256", "name": "requestId", "type": "uint256"}
+      {"indexed": true, "internalType": "uint256", "name": "newRoundId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "requestId", "type": "uint256"},
+      {"indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256"}
     ],
-    "name": "RoundStarted",
+    "name": "VrfRequested",
     "type": "event"
   },
   {

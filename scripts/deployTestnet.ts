@@ -71,7 +71,18 @@ async function deployTestnet() {
   console.log('getNonce', getNonce);
   
   // Pre-compute all contract addresses for circular dependency resolution
-  const [jackpotContractImpl, brbReferalAddress, brbAddress, rouletteLibAddress, rouletteImpl, stakedBrbImpl, jackpotContractProxyAddress, rouletteProxyAddress, stakedBrbProxyAddress] = await Promise.all(Array.from({ length: 9 }, async (_, i) => {
+  const [
+    jackpotContractImpl,
+    brbReferalAddress,
+    brbAddress,
+    rouletteLibAddress,
+    upkeepManagerAddress,
+    rouletteImpl,
+    stakedBrbImpl,
+    jackpotContractProxyAddress,
+    stakedBrbProxyAddress,
+    rouletteProxyAddress
+  ] = await Promise.all(Array.from({ length: 10 }, async (_, i) => {
     return getContractAddress({ 
       from: deployer.account.address,
       nonce: BigInt(getNonce + i)
@@ -102,6 +113,23 @@ async function deployTestnet() {
 
   console.log('brb is deployed', brb.address);
   
+  const rouletteLib = await viem.deployContract("RouletteLib");
+  await setTimeoutIsDeployed(rouletteLib.address);
+
+  const upkeepManagerFactory = await viem.deployContract("BRBUpkeepManager", [
+    rouletteProxyAddress,
+    stakedBrbProxyAddress,
+    LINK_TOKEN_ADDRESS,
+    AUTOMATION_REGISTRAR_ADDRESS,
+    AUTOMATION_REGISTRY_ADDRESS,
+    deployer.account.address,
+    deployer.account.address,
+  ]);
+  await setTimeoutIsDeployed(upkeepManagerFactory.address);
+  if (upkeepManagerFactory.address.toLowerCase() !== upkeepManagerAddress.toLowerCase()) {
+    throw new Error("BRBUpkeepManager address mismatch");
+  }
+
   // Create RouletteClean parameters object
   const params = {
     gamePeriod,
@@ -116,11 +144,9 @@ async function deployTestnet() {
     stakedBRBContract: stakedBrbProxyAddress,
     linkToken: LINK_TOKEN_ADDRESS,
     jackpotContract: jackpotContractProxyAddress,
-    brbToken: brbAddress
+    brbToken: brbAddress,
+    upkeepManager: upkeepManagerFactory.address,
   }
-  
-  const rouletteLib = await viem.deployContract("RouletteLib");
-  await setTimeoutIsDeployed(rouletteLib.address);
   
   const rouletteCleanFactory = await viem.deployContract("RouletteClean", [params], {
     libraries: {
@@ -129,7 +155,13 @@ async function deployTestnet() {
   });
   
   await setTimeoutIsDeployed(rouletteCleanFactory.address);
-  const stakedBrbFactory = await viem.deployContract("StakedBRB", [brbAddress, rouletteProxyAddress, brbReferalAddress, jackpotContractProxyAddress]);
+  const stakedBrbFactory = await viem.deployContract("StakedBRB", [
+    brbAddress,
+    rouletteProxyAddress,
+    brbReferalAddress,
+    jackpotContractProxyAddress,
+    upkeepManagerFactory.address,
+  ]);
   await setTimeoutIsDeployed(stakedBrbFactory.address);
   
   // Prepare initialization data
@@ -142,7 +174,7 @@ async function deployTestnet() {
   const initializeRouletteData = encodeFunctionData({
     abi: rouletteCleanFactory.abi,
     functionName: 'initialize',
-    args: [parseEther('1'), deployer.account.address, AUTOMATION_REGISTRAR_ADDRESS, AUTOMATION_REGISTRY_ADDRESS, LINK_TOKEN_ADDRESS]
+    args: [parseEther('1'), deployer.account.address]
   });
 
   const initializeStakedBrbData = encodeFunctionData({
@@ -154,21 +186,23 @@ async function deployTestnet() {
   const _jackpotContractProxy = await viem.deployContract("ERC1967Proxy", [jackpotContractImpl, initializeJackpotContractData])
   await setTimeoutIsDeployed(_jackpotContractProxy.address);
   
-  const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData])
-  await setTimeoutIsDeployed(rouletteProxyContract.address);
-  
   const stakedBrbProxyContract = await viem.deployContract("ERC1967Proxy", [stakedBrbImpl, initializeStakedBrbData])
   await setTimeoutIsDeployed(stakedBrbProxyContract.address);
+  
+  const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData])
+  await setTimeoutIsDeployed(rouletteProxyContract.address);
   // Get contract instances
   const jackpotContractProxy = await viem.getContractAt("JackpotContract", _jackpotContractProxy.address)
   const rouletteProxy = await viem.getContractAt("RouletteClean", rouletteProxyAddress);
   const stakedBrbProxy = await viem.getContractAt("StakedBRB", stakedBrbProxyAddress);
 
-  // Setup Chainlink for StakedBRB
-  await stakedBrbProxy.write.setupChainlink([AUTOMATION_REGISTRAR_ADDRESS, AUTOMATION_REGISTRY_ADDRESS, LINK_TOKEN_ADDRESS])
-  let tx = await linkToken.write.approve([stakedBrbProxy.address, parseEther('1')], { account: deployer.account });
+  const liquidityEscrow = await viem.deployContract("StakedBRBLiquidityEscrow", [brbAddress, stakedBrbProxyAddress])
+  let tx = await stakedBrbProxy.write.setLiquidityEscrow([liquidityEscrow.address], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
-  const cleaningUpkeepId = await stakedBrbProxy.write.registerCleaningUpkeep([parseEther('1')])
+  tx = await linkToken.write.approve([upkeepManagerFactory.address, parseEther('1')], { account: deployer.account });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
+  const cleaningTxHash = await upkeepManagerFactory.write.registerStakedBrbCleaningUpkeep([parseEther('1')], { account: deployer.account });
+  await publicClient.waitForTransactionReceipt({ hash: cleaningTxHash, confirmations: 2 });
   
   // Add VRF consumer
   tx = await vrfCoordinator.write.addConsumer([subId, rouletteProxyAddress], { account: deployer.account });
@@ -177,15 +211,15 @@ async function deployTestnet() {
   // Register upkeeps for RouletteClean
   const upkeepCount = 20n; // Register 20 payout upkeeps
   const linkAmount = parseEther('0.2'); // 1 LINK per upkeep
-  tx = await linkToken.write.approve([rouletteProxy.address, linkAmount * upkeepCount + linkAmount * 2n], { account: deployer.account });
+  tx = await linkToken.write.approve([upkeepManagerFactory.address, linkAmount * upkeepCount + linkAmount * 3n], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
-  tx = await rouletteProxy.write.registerVRFUpkeep([linkAmount], { account: deployer.account });
+  tx = await upkeepManagerFactory.write.registerVRFUpkeep([linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
-  tx = await rouletteProxy.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
+  tx = await upkeepManagerFactory.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
-  tx = await rouletteProxy.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
+  tx = await upkeepManagerFactory.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
 
 
@@ -216,6 +250,9 @@ async function deployTestnet() {
   if (brb.address.toLowerCase() !== brbAddress.toLowerCase()) {
     throw new Error('BRB address mismatch');
   }
+  if (upkeepManagerFactory.address.toLowerCase() !== upkeepManagerAddress.toLowerCase()) {
+    throw new Error('BRBUpkeepManager address mismatch');
+  }
 
   const verificationTimeout = 10000;
   try {
@@ -230,6 +267,24 @@ async function deployTestnet() {
   
   try {
     await hre.run("verify:verify", {
+      address: upkeepManagerAddress,
+      constructorArguments: [
+        rouletteProxyAddress,
+        stakedBrbProxyAddress,
+        LINK_TOKEN_ADDRESS,
+        AUTOMATION_REGISTRAR_ADDRESS,
+        AUTOMATION_REGISTRY_ADDRESS,
+        deployer.account.address,
+        deployer.account.address,
+      ],
+    });
+  } catch (error) {
+    console.log('Error verifying upkeepManager', error);
+  }
+  await sleep(verificationTimeout);
+
+  try {
+    await hre.run("verify:verify", {
       address: rouletteImpl,
       constructorArguments: [params]
     });
@@ -241,7 +296,13 @@ async function deployTestnet() {
   try {
     await hre.run("verify:verify", {
       address: stakedBrbImpl,
-      constructorArguments: [brbAddress, rouletteProxyAddress, brbReferalAddress, jackpotContractProxyAddress]
+      constructorArguments: [
+        brbAddress,
+        rouletteProxyAddress,
+        brbReferalAddress,
+        jackpotContractProxyAddress,
+        upkeepManagerAddress,
+      ]
     });
   } catch (error) {
     console.log('Error verifying stakedBrbImpl', error);
@@ -323,7 +384,7 @@ async function deployTestnet() {
   console.log('brb', brb.address);
   console.log('automationRegistry', AUTOMATION_REGISTRY_ADDRESS);
   console.log('linkToken', LINK_TOKEN_ADDRESS);
-  console.log('cleaningUpkeepId', cleaningUpkeepId);
+  console.log('stakedBrbCleaningUpkeepTx', cleaningTxHash);
 
   const getUpkeepConfig = await rouletteProxy.read.getUpkeepConfig();
   console.log('getUpkeepConfig', getUpkeepConfig);

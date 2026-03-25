@@ -3,7 +3,9 @@ import type { NetworksUserConfig } from 'hardhat/types';
 
 const networks: NetworksUserConfig = {};
 
-networks.hardhat = {};
+networks.hardhat = {
+  allowUnlimitedContractSize: true,
+};
 
 networks.localhost = {
   url: 'http://localhost:8545',
