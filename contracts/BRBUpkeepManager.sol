@@ -3,12 +3,10 @@ pragma solidity ^0.8.27;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { AutomationCompatibleInterface } from "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 import { Strings } from "./external/Strings.sol";
 import { IAutomationRegistrar2_1 } from "./interfaces/IAutomationRegistrar2_1.sol";
 import { IAutomationRegistry2_1 } from "./interfaces/IAutomationRegistry2_1.sol";
 import { IBRBUpkeepManager } from "./interfaces/IBRBUpkeepManager.sol";
-import { IStakedBRBCleaning } from "./interfaces/IStakedBRBCleaning.sol";
 
 /**
  * @title BRBUpkeepManager
@@ -16,7 +14,7 @@ import { IStakedBRBCleaning } from "./interfaces/IStakedBRBCleaning.sol";
  *      DEFAULT_ADMIN cannot add/remove forwarders directly — only successful `registerUpkeep` adds a forwarder.
  *      Use REGISTRANT_ROLE for ops that may register upkeeps; admin only manages roles.
  */
-contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager, AutomationCompatibleInterface {
+contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
     bytes32 public constant REGISTRANT_ROLE = keccak256("REGISTRANT_ROLE");
 
     uint32 private constant BASE_GAS_OVERHEAD = 100000;
@@ -38,7 +36,7 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager, AutomationCompati
 
     /// @dev forwarder => Chainlink upkeep id for **RouletteClean** upkeeps only
     mapping(address => uint256) private _rouletteForwarderToUpkeepId;
-    /// @dev forwarder => Chainlink upkeep id for **StakedBRB cleaning** (manager is upkeep contract)
+    /// @dev forwarder => Chainlink upkeep id for **StakedBRB cleaning** (vault is upkeep contract)
     mapping(address => uint256) private _stakedBrbCleaningForwarderToUpkeepId;
 
     uint256 private _registeredPayoutUpkeepCount;
@@ -47,8 +45,6 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager, AutomationCompati
     error ZeroAmount();
     error UpkeepRegistrationFailed();
     error MaxPayoutUpkeepLimitReached();
-    error UnauthorizedStakedBrbCleaningForwarder();
-
     event UpkeepRegistered(
         uint256 indexed upkeepId,
         address indexed forwarder,
@@ -109,18 +105,7 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager, AutomationCompati
         return _stakedBrbCleaningForwarderToUpkeepId[forwarder] != 0;
     }
 
-    /// @inheritdoc AutomationCompatibleInterface
-    function checkUpkeep(bytes calldata checkData) external view override returns (bool upkeepNeeded, bytes memory performData) {
-        return IStakedBRBCleaning(STAKED_BRB).checkCleaningUpkeep(checkData);
-    }
-
-    /// @inheritdoc AutomationCompatibleInterface
-    function performUpkeep(bytes calldata performData) external override {
-        if (_stakedBrbCleaningForwarderToUpkeepId[msg.sender] == 0) revert UnauthorizedStakedBrbCleaningForwarder();
-        IStakedBRBCleaning(STAKED_BRB).executeCleaningUpkeep(performData);
-    }
-
-    /// @dev Register StakedBRB cleaning upkeep; `upkeepContract` is this manager. Requires REGISTRANT_ROLE.
+    /// @dev Register StakedBRB cleaning upkeep; `upkeepContract` is {StakedBRB} (same pattern as roulette upkeeps). Requires REGISTRANT_ROLE.
     function registerStakedBrbCleaningUpkeep(uint96 linkAmount) external onlyRole(REGISTRANT_ROLE) returns (uint256 upkeepId) {
         if (linkAmount == 0) revert ZeroAmount();
         IERC20(LINK_TOKEN).transferFrom(msg.sender, address(this), linkAmount);
@@ -129,7 +114,7 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager, AutomationCompati
             IAutomationRegistrar2_1.RegistrationParams({
                 name: "StakedBRB-Cleaning",
                 encryptedEmail: new bytes(0),
-                upkeepContract: address(this),
+                upkeepContract: STAKED_BRB,
                 gasLimit: STAKED_BRB_CLEANING_GAS_LIMIT,
                 adminAddress: msg.sender,
                 triggerType: 0,

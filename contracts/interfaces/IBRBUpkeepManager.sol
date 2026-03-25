@@ -9,7 +9,7 @@ interface IBRBUpkeepManager {
     /// @dev True if `forwarder` may call {RouletteClean.performUpkeep} (roulette upkeeps).
     function isAuthorizedForwarder(address forwarder) external view returns (bool);
 
-    /// @dev True if `forwarder` may call {BRBUpkeepManager.performUpkeep} for StakedBRB cleaning.
+    /// @dev True if `forwarder` may call {StakedBRB.performUpkeep} for cleaning (registered via registrar).
     function isStakedBrbCleaningForwarder(address forwarder) external view returns (bool);
 
     function maxSupportedBets() external view returns (uint256);
