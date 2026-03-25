@@ -906,9 +906,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio023Bets[roundId], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
         
-        // Use assembly to resize array to actual size
+        // Resize array to actual payout count
         assembly {
-            mstore(tempPayouts, mload(v))
+            mstore(tempPayouts, mload(v)) // v.payoutCount is first field of CollectWinningsValues
         }
 
         return (tempPayouts, v.totalPayouts);
