@@ -167,14 +167,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event LiquidityOpsPerUpkeepUpdated(uint32 ops);
     /// @dev Single log when cleaning upkeep completes: settled round (fees) + new betting boundary (mirrors prior RoundCleaned + RoundStarted).
     event RoundCleaningCompleted(
-        uint256 indexed cleanedRoundId,
-        uint256 indexed newRoundId,
+        uint256 cleanedRoundId,
+        uint256 newRoundId,
         uint256 boundaryTimestamp,
         Fees fees
     );
     event LiquidityEscrowSet(address escrow);
-    event QueuedLiquidityRejected(address indexed payer, uint256 assets, uint8 reason);
-    event WithdrawalEjected(address indexed user, uint8 reason);
+    event QueuedLiquidityRejected(address payer, uint256 assets, uint8 reason);
+    event WithdrawalEjected(address user, uint8 reason);
     /// @dev Emitted when Roulette signals the betting window has closed (pre-VRF); `roundId` is {StakedBRB} `currentRound` at that moment.
     event BettingWindowClosed(uint256 roundId);
     
