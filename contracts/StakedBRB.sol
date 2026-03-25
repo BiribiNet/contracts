@@ -163,13 +163,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     // Events
-    event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
+    event BetPlaced(address indexed user, uint256 amount, bytes data, uint256 indexed roundId);
     event ProtocolFeeRateUpdated(uint256 newFee);
     event BurnFeeRateUpdated(uint256 newFee);
     event JackpotFeeRateUpdated(uint256 newFee);
     event ProtocolFeeRecipientUpdated(address newRecipient);
-    event WithdrawalRequested(address user, uint256 amount);
-    event WithdrawalProcessed(address user, uint256 amount);
+    event WithdrawalRequested(address indexed user, uint256 amount);
+    event WithdrawalProcessed(address indexed user, uint256 amount);
+    event WithdrawalCancelled(address indexed user, uint256 amount);
     event WithdrawalSettingsUpdated(uint256 batchSize);
     event AntiSpamSettingsUpdated(uint256 maxQueueLength);
     event LiquidityOpsPerUpkeepUpdated(uint32 ops);
@@ -182,7 +183,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     );
     event LiquidityEscrowSet(address escrow);
     event QueuedLiquidityRejected(address payer, uint256 assets, uint8 reason);
-    event WithdrawalEjected(address user, uint8 reason);
+    event WithdrawalEjected(address indexed user, uint8 reason);
     /// @dev Emitted when Roulette signals the betting window has closed (pre-VRF); `roundId` is {StakedBRB} `currentRound` at that moment.
     event BettingWindowClosed(uint256 roundId);
     
@@ -1130,7 +1131,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         delete $.pendingWithdrawal[msg.sender];
 
         uint256 emitAmount = q.kind == 1 ? q.assets : previewRedeem(q.shares);
-        emit WithdrawalProcessed(msg.sender, emitAmount);
+        emit WithdrawalCancelled(msg.sender, emitAmount);
     }
 
     function lastRoundBoundaryTimestamp() external view returns (uint256) {
