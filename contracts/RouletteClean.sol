@@ -146,12 +146,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 batchStart;
         uint256 batchEnd;
     }
-    
-    struct TestDebug {
-        uint256 rouletteNumber;
-        uint256 jackpotNumber;
-        bool isSet;
-    }
+
     
     // ========== EIP-7201 STORAGE ==========
     struct RouletteStorage {
@@ -194,7 +189,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => JackpotResult) jackpotResult; // roundId => jackpot result
         mapping(uint256 => RandomResult) randomResults; // roundId => VRF result
         mapping(uint256 => uint256) requestIdToRound; // VRF request => round
-        mapping(uint256 => TestDebug) forcedNumbers;
         
         // OPTIMIZED MAXPAYOUT TRACKING
         mapping(uint256 => uint256) roundMaxStraightBet;  // roundId => max total straight bet amount across all numbers (single SLOAD)
@@ -783,12 +777,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         uint256 winningNumber = randomWords[0] % 37; // 0-36
         uint256 jackpotNumber = randomWords[1] % 37; // 0-36
-        
-        // TODO TEST DEBUG TO REMOVE
-        if ($.forcedNumbers[roundToResolve].isSet) {
-            winningNumber = $.forcedNumbers[roundToResolve].rouletteNumber;
-            jackpotNumber = $.forcedNumbers[roundToResolve].jackpotNumber;
-        }
 
         // Store the VRF result for batch processing
         $.randomResults[roundToResolve] = RandomResult({
