@@ -936,7 +936,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         // Skip entire array if it's completely before our batch
         if (currentIndex + v.betsLength <= startIndex) {
-            return (currentIndex + v.betsLength, payoutCount, 0);
+            return (currentIndex + v.betsLength, payoutCount, totalPayouts);
         }
         
         // Calculate exact range - no memory waste
