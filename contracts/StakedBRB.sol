@@ -175,6 +175,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event LiquidityEscrowSet(address escrow);
     event QueuedLiquidityRejected(address indexed payer, uint256 assets, uint8 reason);
     event WithdrawalEjected(address indexed user, uint8 reason);
+    /// @dev Emitted when Roulette signals the betting window has closed (pre-VRF); `roundId` is {StakedBRB} `currentRound` at that moment.
+    event BettingWindowClosed(uint256 roundId);
     
     // Errors
     error OnlyBRB();
@@ -576,8 +578,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function onBettingWindowClosed() external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.roundResolutionLocked) return;
         $.roundResolutionLocked = true;
+        emit BettingWindowClosed($.currentRound);
     }
 
     /**
