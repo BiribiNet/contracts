@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import { ERC4626Upgradeable } from "./external/ERC4626Upgradeable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -21,7 +22,7 @@ import { StakedBRBLiquidityEscrow } from "./StakedBRBLiquidityEscrow.sol";
  * @dev Uses OpenZeppelin's ERC4626Fees pattern for clean fee handling
  * @dev Handles staking, betting, protocol fees, and roulette integration
  */
-contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradeable, AutomationCompatibleInterface {
+contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, AutomationCompatibleInterface {
     using Math for uint256;
         
     // Immutable addresses for gas optimization
@@ -33,7 +34,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     address private immutable UPKEEP_MANAGER;
     // Security constants
     uint256 public constant MINIMUM_FIRST_DEPOSIT = 1e18; // 1 BRB — mitigates ERC-4626 inflation attack
-    uint256 public constant MAX_PROTOCOL_FEE = 10000; // 100% max
+    /// @dev Hard cap: sum of all fees cannot exceed 10% — stakers always receive ≥ 90% of net losses
+    uint256 public constant MAX_TOTAL_FEE_BPS = 1000;
+    /// @dev Per-fee caps prevent any single fee from dominating
+    uint256 public constant MAX_PROTOCOL_FEE_BPS = 500;   // 5% max
+    uint256 public constant MAX_JACKPOT_FEE_BPS = 500;    // 5% max
+    uint256 public constant MAX_BURN_FEE_BPS = 200;       // 2% max
+    /// @dev Minimum withdrawal/redeem to prevent queue griefing (same as first deposit minimum)
+    uint256 public constant MINIMUM_WITHDRAWAL = 1e18;   // 1 BRB min
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
     
     // Withdrawal queue constants
@@ -184,6 +192,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     error ZeroAmount();
     error InvalidFeeRate();
     error DepositTooSmall();
+    error WithdrawalTooSmall();
     error DepositBlockedDuringResolution();
     error WithdrawalBlockedDuringResolution();
     error CancelWithdrawalBlockedDuringResolution();
@@ -260,10 +269,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         __ERC20_init('Staked BRB', 'sBRB');
         __AccessControl_init();
         __UUPSUpgradeable_init();
+        __ReentrancyGuard_init();
         
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         
-        if (protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
+        if (protocolFeeBasisPoints > MAX_PROTOCOL_FEE_BPS) revert InvalidFeeRate();
+        if (jackpotBasisPoints > MAX_JACKPOT_FEE_BPS) revert InvalidFeeRate();
+        if (burnBasisPoints > MAX_BURN_FEE_BPS) revert InvalidFeeRate();
+        if (protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints > MAX_TOTAL_FEE_BPS) revert InvalidFeeRate();
         
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         $.protocolFeeBasisPoints = protocolFeeBasisPoints;
@@ -318,7 +331,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param amount Amount of tokens sent
      * @param data Additional data for the bet
      */
-    function onTokenTransfer(address from, uint256 amount, bytes calldata data, address referral) external onlyBRB {
+    function onTokenTransfer(address from, uint256 amount, bytes calldata data, address referral) external onlyBRB nonReentrant {
         if (!IRoulette(ROULETTE_CONTRACT).isBettingOpen()) revert BettingClosed();
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 currentRound = $.currentRound;
@@ -425,7 +438,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     /**
      * @dev Chainlink Automation `performUpkeep`; only the registry forwarder for the cleaning upkeep may call.
      */
-    function performUpkeep(bytes calldata performData) external override onlyCleaningForwarders {
+    function performUpkeep(bytes calldata performData) external override onlyCleaningForwarders nonReentrant {
         _processCleaning(abi.decode(performData, (CleaningUpkeepData)));
     }
 
@@ -556,7 +569,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @dev Implements final-batch profit recognition to prevent double reduction and timing attacks
      * @param payouts Array of payout info for multiple winners/losers
      */
-    function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external onlyRoulette {
+    function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external onlyRoulette nonReentrant {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
 
         // Sanity check: cumulative payouts cannot exceed the worst-case maxPayout reserved at bet time
@@ -723,28 +736,31 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function setProtocolFeeRate(uint256 newFeeBasisPoints) external onlyRole(DEFAULT_ADMIN_ROLE) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if (newFeeBasisPoints + $.burnBasisPoints + $.jackpotBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
-        
+        if (newFeeBasisPoints > MAX_PROTOCOL_FEE_BPS) revert InvalidFeeRate();
+        if (newFeeBasisPoints + $.burnBasisPoints + $.jackpotBasisPoints > MAX_TOTAL_FEE_BPS) revert InvalidFeeRate();
+
         $.protocolFeeBasisPoints = newFeeBasisPoints;
-        
+
         emit ProtocolFeeRateUpdated(newFeeBasisPoints);
     }
 
     function setJackpotFeeRate(uint256 newJackpotBasisPoints) external onlyRole(DEFAULT_ADMIN_ROLE) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if (newJackpotBasisPoints + $.protocolFeeBasisPoints + $.burnBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
-        
+        if (newJackpotBasisPoints > MAX_JACKPOT_FEE_BPS) revert InvalidFeeRate();
+        if (newJackpotBasisPoints + $.protocolFeeBasisPoints + $.burnBasisPoints > MAX_TOTAL_FEE_BPS) revert InvalidFeeRate();
+
         $.jackpotBasisPoints = newJackpotBasisPoints;
-        
+
         emit JackpotFeeRateUpdated(newJackpotBasisPoints);
     }
-    
+
     function setBurnFeeRate(uint256 newBurnBasisPoints) external onlyRole(DEFAULT_ADMIN_ROLE) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if (newBurnBasisPoints + $.protocolFeeBasisPoints + $.jackpotBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
-        
+        if (newBurnBasisPoints > MAX_BURN_FEE_BPS) revert InvalidFeeRate();
+        if (newBurnBasisPoints + $.protocolFeeBasisPoints + $.jackpotBasisPoints > MAX_TOTAL_FEE_BPS) revert InvalidFeeRate();
+
         $.burnBasisPoints = newBurnBasisPoints;
-        
+
         emit BurnFeeRateUpdated(newBurnBasisPoints);
     }
     /**
@@ -825,6 +841,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function withdraw(uint256 assets, address receiver, address owner, uint256 maxSharesOut) public override noPendingWithdrawal(owner) returns (uint256 shares) {
         if (assets == 0) revert ZeroAmount();
+        if (assets < MINIMUM_WITHDRAWAL) revert WithdrawalTooSmall();
         if (receiver == address(0)) revert InvalidReceiver();
         _checkWithdrawalAllowed(owner);
         if (owner != msg.sender) {
@@ -863,6 +880,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             revert UnauthorizedCaller();
         }
         uint256 requestedAssets = super.previewRedeem(shares);
+        if (requestedAssets < MINIMUM_WITHDRAWAL) revert WithdrawalTooSmall();
         {
             StakedBRBStorage storage $v = _getStakedBRBStorage();
             if ($v.queueSize >= $v.maxQueueLength) {

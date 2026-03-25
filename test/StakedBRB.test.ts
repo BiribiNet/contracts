@@ -1271,8 +1271,8 @@ describe("StakedBRB", function () {
       });
 
       it("Should emit BurnFeeRateUpdated event", async function () {
-        const newBurnFeeRate = 250n;
-        
+        const newBurnFeeRate = 100n; // within MAX_BURN_FEE_BPS (200)
+
         const tx = await stakedBrbProxy.write.setBurnFeeRate([newBurnFeeRate], { account: admin.account });
         const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
         
@@ -1349,61 +1349,52 @@ describe("StakedBRB", function () {
     });
 
     describe("Combined Fee Validation", function () {
-      it("Should allow setting fees that sum to exactly MAX_PROTOCOL_FEE", async function () {
-        await stakedBrbProxy.write.setProtocolFeeRate([4000n], { account: admin.account });
-        await stakedBrbProxy.write.setBurnFeeRate([3000n], { account: admin.account });
-        await stakedBrbProxy.write.setJackpotFeeRate([3000n], { account: admin.account });
-        
+      it("Should allow setting fees that sum to exactly MAX_TOTAL_FEE_BPS", async function () {
+        await stakedBrbProxy.write.setProtocolFeeRate([500n], { account: admin.account });
+        await stakedBrbProxy.write.setBurnFeeRate([200n], { account: admin.account });
+        await stakedBrbProxy.write.setJackpotFeeRate([300n], { account: admin.account });
+
         const [, , protocolFeeBasisPoints, burnBasisPoints, jackpotBasisPoints, , ] = await stakedBrbProxy.read.getVaultConfig();
-        
-        expect(protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints).to.equal(10000n);
+
+        expect(protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints).to.equal(1000n);
       });
 
-      it("Should revert when protocol fee update would exceed max combined with other fees", async function () {
-        await stakedBrbProxy.write.setBurnFeeRate([3000n], { account: admin.account });
-        await stakedBrbProxy.write.setJackpotFeeRate([3000n], { account: admin.account });
-        
-        const invalidProtocolFee = 4001n; // Would exceed MAX_PROTOCOL_FEE (3000 + 3000 + 4001 = 10001)
-        
+      it("Should revert when protocol fee update would exceed per-fee max", async function () {
+        const invalidProtocolFee = 501n; // Exceeds MAX_PROTOCOL_FEE_BPS (500)
+
         await expect(
           stakedBrbProxy.write.setProtocolFeeRate([invalidProtocolFee], { account: admin.account })
         ).to.be.rejectedWith("InvalidFeeRate");
       });
 
-      it("Should revert when burn fee update would exceed max combined with other fees", async function () {
-        await stakedBrbProxy.write.setProtocolFeeRate([3000n], { account: admin.account });
-        await stakedBrbProxy.write.setJackpotFeeRate([3000n], { account: admin.account });
-        
-        const invalidBurnFee = 4001n; // Would exceed MAX_PROTOCOL_FEE
-        
+      it("Should revert when burn fee update would exceed per-fee max", async function () {
+        const invalidBurnFee = 201n; // Exceeds MAX_BURN_FEE_BPS (200)
+
         await expect(
           stakedBrbProxy.write.setBurnFeeRate([invalidBurnFee], { account: admin.account })
         ).to.be.rejectedWith("InvalidFeeRate");
       });
 
-      it("Should revert when jackpot fee update would exceed max combined with other fees", async function () {
-        await stakedBrbProxy.write.setProtocolFeeRate([3000n], { account: admin.account });
-        await stakedBrbProxy.write.setBurnFeeRate([3000n], { account: admin.account });
-        
-        const invalidJackpotFee = 4001n; // Would exceed MAX_PROTOCOL_FEE
-        
+      it("Should revert when jackpot fee update would exceed per-fee max", async function () {
+        const invalidJackpotFee = 501n; // Exceeds MAX_JACKPOT_FEE_BPS (500)
+
         await expect(
           stakedBrbProxy.write.setJackpotFeeRate([invalidJackpotFee], { account: admin.account })
         ).to.be.rejectedWith("InvalidFeeRate");
       });
 
       it("Should allow updating fees in any order as long as sum is valid", async function () {
-        // Set fees in different order
-        await stakedBrbProxy.write.setJackpotFeeRate([2000n], { account: admin.account });
-        await stakedBrbProxy.write.setProtocolFeeRate([3000n], { account: admin.account });
-        await stakedBrbProxy.write.setBurnFeeRate([2000n], { account: admin.account });
-        
+        // Set fees in different order — all within individual and total caps
+        await stakedBrbProxy.write.setJackpotFeeRate([200n], { account: admin.account });
+        await stakedBrbProxy.write.setProtocolFeeRate([400n], { account: admin.account });
+        await stakedBrbProxy.write.setBurnFeeRate([100n], { account: admin.account });
+
         const [, , protocolFeeBasisPoints, burnBasisPoints, jackpotBasisPoints, , ] = await stakedBrbProxy.read.getVaultConfig();
-        
-        expect(protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints).to.equal(7000n);
-        expect(protocolFeeBasisPoints).to.equal(3000n);
-        expect(burnBasisPoints).to.equal(2000n);
-        expect(jackpotBasisPoints).to.equal(2000n);
+
+        expect(protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints).to.equal(700n);
+        expect(protocolFeeBasisPoints).to.equal(400n);
+        expect(burnBasisPoints).to.equal(100n);
+        expect(jackpotBasisPoints).to.equal(200n);
       });
     });
 
@@ -1453,7 +1444,7 @@ describe("StakedBRB", function () {
 
       it("Should handle fractional fee calculations correctly", async function () {
         await stakedBrbProxy.write.setProtocolFeeRate([333n], { account: admin.account }); // 3.33%
-        await stakedBrbProxy.write.setBurnFeeRate([222n], { account: admin.account }); // 2.22%
+        await stakedBrbProxy.write.setBurnFeeRate([156n], { account: admin.account }); // 1.56% (within 200 max)
         await stakedBrbProxy.write.setJackpotFeeRate([111n], { account: admin.account }); // 1.11%
         
         const lossAmount = parseEther("1000");
@@ -1461,7 +1452,7 @@ describe("StakedBRB", function () {
         
         // With floor rounding, fees should be calculated correctly
         const expectedProtocolFee = (lossAmount * 333n) / 10000n;
-        const expectedBurnAmount = (lossAmount * 222n) / 10000n;
+        const expectedBurnAmount = (lossAmount * 156n) / 10000n;
         const expectedJackpotAmount = (lossAmount * 111n) / 10000n;
         const expectedStakerProfit = lossAmount - expectedProtocolFee - expectedBurnAmount - expectedJackpotAmount;
         
@@ -1485,16 +1476,16 @@ describe("StakedBRB", function () {
 
       it("Should return correct staker profit after all fees", async function () {
         await stakedBrbProxy.write.setProtocolFeeRate([500n], { account: admin.account }); // 5%
-        await stakedBrbProxy.write.setBurnFeeRate([300n], { account: admin.account }); // 3%
-        await stakedBrbProxy.write.setJackpotFeeRate([200n], { account: admin.account }); // 2%
-        
+        await stakedBrbProxy.write.setBurnFeeRate([200n], { account: admin.account }); // 2%
+        await stakedBrbProxy.write.setJackpotFeeRate([300n], { account: admin.account }); // 3%
+
         const lossAmount = parseEther("1000");
         const [, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
-        
-        // Total fees = 5% + 3% + 2% = 10% = 100 ETH
+
+        // Total fees = 5% + 2% + 3% = 10% = 100 ETH
         // Staker profit = 1000 - 100 = 900 ETH
         const expectedStakerProfit = parseEther("900");
-        
+
         expect(stakerProfit).to.equal(expectedStakerProfit);
       });
     });
@@ -1502,20 +1493,20 @@ describe("StakedBRB", function () {
     describe("Fee Configuration Retrieval", function () {
       it("Should return all fee parameters in getVaultConfig", async function () {
         await stakedBrbProxy.write.setProtocolFeeRate([400n], { account: admin.account });
-        await stakedBrbProxy.write.setBurnFeeRate([300n], { account: admin.account });
+        await stakedBrbProxy.write.setBurnFeeRate([100n], { account: admin.account });
         await stakedBrbProxy.write.setJackpotFeeRate([200n], { account: admin.account });
-        
+
         const [, , protocolFeeBasisPoints, burnBasisPoints, jackpotBasisPoints, feeRecipient, ] = await stakedBrbProxy.read.getVaultConfig();
-        
+
         expect(protocolFeeBasisPoints).to.equal(400n);
-        expect(burnBasisPoints).to.equal(300n);
+        expect(burnBasisPoints).to.equal(100n);
         expect(jackpotBasisPoints).to.equal(200n);
         expect(feeRecipient.toLowerCase()).to.equal(admin.account.address.toLowerCase());
       });
 
       it("Should persist fee configuration across transactions", async function () {
         await stakedBrbProxy.write.setProtocolFeeRate([350n], { account: admin.account });
-        await stakedBrbProxy.write.setBurnFeeRate([250n], { account: admin.account });
+        await stakedBrbProxy.write.setBurnFeeRate([150n], { account: admin.account });
         await stakedBrbProxy.write.setJackpotFeeRate([150n], { account: admin.account });
         
         // Read config multiple times
@@ -2061,14 +2052,14 @@ describe("StakedBRB", function () {
     });
 
     it("Should handle maximum values correctly", async function () {
-      const maxFeeRate = 10000n; // MAX_PROTOCOL_FEE
-      
+      const maxProtocolFee = 500n; // MAX_PROTOCOL_FEE_BPS
+
       await stakedBrbProxy.write.setBurnFeeRate([0n], { account: admin.account });
       await stakedBrbProxy.write.setJackpotFeeRate([0n], { account: admin.account });
-      await stakedBrbProxy.write.setProtocolFeeRate([maxFeeRate], { account: admin.account });
+      await stakedBrbProxy.write.setProtocolFeeRate([maxProtocolFee], { account: admin.account });
 
       const [, , protocolFeeBasisPoints, , , , ] = await stakedBrbProxy.read.getVaultConfig();
-      expect(protocolFeeBasisPoints).to.equal(maxFeeRate);
+      expect(protocolFeeBasisPoints).to.equal(maxProtocolFee);
     });
 
     it("Should handle empty arrays in roulette result processing", async function () {
@@ -2566,15 +2557,19 @@ describe("StakedBRB", function () {
     });
 
     it("Should handle maximum fee rate", async function () {
-      await stakedBrbProxy.write.setBurnFeeRate([0n], { account: admin.account });
-      await stakedBrbProxy.write.setJackpotFeeRate([0n], { account: admin.account });
-      await stakedBrbProxy.write.setProtocolFeeRate([10000n], { account: admin.account });
+      // Set all fees to their individual maxima, respecting MAX_TOTAL_FEE_BPS (1000)
+      await stakedBrbProxy.write.setBurnFeeRate([200n], { account: admin.account });
+      await stakedBrbProxy.write.setJackpotFeeRate([300n], { account: admin.account });
+      await stakedBrbProxy.write.setProtocolFeeRate([500n], { account: admin.account });
 
       const lossAmount = parseEther("1000");
-      const [{ protocolFees }, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
-      
-      expect(protocolFees).to.equal(lossAmount);
-      expect(stakerProfit).to.equal(0n);
+      const [{ protocolFees, burnAmount, jackpotAmount }, stakerProfit] = await stakedBrbProxy.read.previewProtocolFee([lossAmount]);
+
+      // Total fees = 10% of 1000 = 100 ETH
+      expect(protocolFees).to.equal(parseEther("50"));    // 5%
+      expect(burnAmount).to.equal(parseEther("20"));       // 2%
+      expect(jackpotAmount).to.equal(parseEther("30"));    // 3%
+      expect(stakerProfit).to.equal(parseEther("900"));    // 90%
     });
 
     it("Should round up protocol fees correctly", async function () {
