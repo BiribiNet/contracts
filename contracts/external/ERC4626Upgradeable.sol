@@ -6,7 +6,6 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -291,7 +290,7 @@ abstract contract ERC4626Upgradeable is Initializable, ERC20Upgradeable {
         // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
         // assets are transferred and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
-        SafeERC20.safeTransferFrom(IERC20(asset()), caller, address(this), assets);
+        IERC20(asset()).transferFrom(caller, address(this), assets);
         _mint(receiver, shares);
         emit Deposit(caller, receiver, assets, shares);
     }
@@ -318,7 +317,7 @@ abstract contract ERC4626Upgradeable is Initializable, ERC20Upgradeable {
         // shares are burned and after the assets are transferred, which is a valid state.
         _burn(owner, shares);
         emit Withdraw(caller, receiver, owner, assets, shares);
-        SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
+        IERC20(asset()).transfer(receiver, assets);
 
     }
 

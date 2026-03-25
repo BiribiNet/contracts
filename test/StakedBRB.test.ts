@@ -6,8 +6,101 @@ import { checksumAddress, encodeAbiParameters, parseEther, parseEventLogs, parse
 
 import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
+const MAX_UINT256 = 2n ** 256n - 1n;
+
+/** Advance to pre-VRF lock, perform it, then advance until VRF upkeep (checkData 0x01) is ready. */
+async function advanceThroughLockToVrfWindow(rouletteProxy: any) {
+  let s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  while (s > 0n && s < MAX_UINT256) {
+    await time.increase(s);
+    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  }
+  const [lockNeeded, lockData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+  if (!lockNeeded) throw new Error("expected pre-VRF lock upkeep");
+  await rouletteProxy.write.performUpkeep([lockData]);
+  s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  while (s > 0n && s < MAX_UINT256) {
+    await time.increase(s);
+    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  }
+}
+
+/**
+ * Resolves one roulette round through payouts, then runs StakedBRB cleaning upkeep (processes queued liquidity).
+ * Replaces the removed admin-only liquidity flush; uses the same on-chain path as production.
+ */
+async function runMinimalRoundAndStakedCleaning(
+  stakedBrbProxy: any,
+  upkeepManager: any,
+  rouletteProxy: any,
+  vrfCoordinator: any,
+  publicClient: any,
+  admin: { account: { address: `0x${string}` } },
+  brb: any,
+) {
+  await brb.write.approve([stakedBrbProxy.address, parseEther("1000000")], { account: admin.account });
+
+  const betAmount = parseEther("1");
+  const SAFETY_BUFFER_BPS = 11000n;
+  const existingMaxPayout = await stakedBrbProxy.read.getMaxPayout();
+  const newBetMaxPayout = (betAmount * 36n * SAFETY_BUFFER_BPS) / 10000n;
+  const nextMaxPayout = existingMaxPayout + newBetMaxPayout;
+  const requiredBalance = nextMaxPayout > betAmount ? nextMaxPayout - betAmount : 0n;
+  const vaultBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
+  if (vaultBalance < requiredBalance) {
+    await brb.write.transfer([stakedBrbProxy.address, requiredBalance - vaultBalance + parseEther("100")], { account: admin.account });
+  }
+  // Straight on 8; VRF resolves winning number 7 so the bet loses (no huge vault payout that skews totalAssets).
+  const betData = encodeAbiParameters(
+    [{ type: "tuple", components: [
+      { type: "uint256[]", name: "amounts" },
+      { type: "uint256[]", name: "betTypes" },
+      { type: "uint256[]", name: "numbers" },
+    ] }],
+    [{ amounts: [betAmount], betTypes: [1n], numbers: [8n] }],
+  );
+  await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
+
+  await advanceThroughLockToVrfWindow(rouletteProxy);
+
+  const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
+  if (!needsExecutionVRF) throw new Error("runMinimalRoundAndStakedCleaning: VRF upkeep not ready");
+  const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
+  const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
+  const logsVRF = parseEventLogs({
+    abi: rouletteProxy.abi,
+    eventName: "VrfRequested",
+    logs: receiptVRF.logs,
+  });
+  if (!logsVRF.length) throw new Error("VrfRequested not found");
+  const requestId = logsVRF[0].args.requestId;
+  await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [7n, 10n]]);
+
+  const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
+  if (countWinnersNeeded) {
+    await rouletteProxy.write.performUpkeep([countWinnersData]);
+  }
+
+  let processedPayoutBatches = 0;
+  while (true) {
+    const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 3);
+    const hexCheckData = toHex(checkDataForPayout);
+    const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
+    if (!payoutsNeeded) break;
+    await rouletteProxy.write.performUpkeep([payoutData]);
+    processedPayoutBatches++;
+    await time.increase(10n);
+  }
+
+  const [upkeepNeeded, performData] = await upkeepManager.read.checkUpkeep(["0x"]);
+  if (upkeepNeeded) {
+    await upkeepManager.write.performUpkeep([performData], { account: admin.account });
+  }
+}
+
 describe("StakedBRB", function () {
   let stakedBrbProxy: Awaited<ReturnType<typeof useDeployWithCreateFixture>>["stakedBrbProxy"];
+  let upkeepManager: Awaited<ReturnType<typeof useDeployWithCreateFixture>>["upkeepManager"];
   let brb: Awaited<ReturnType<typeof useDeployWithCreateFixture>>["brb"];
   let rouletteProxy: Awaited<ReturnType<typeof useDeployWithCreateFixture>>["rouletteProxy"];
   let vrfCoordinator: Awaited<ReturnType<typeof useDeployWithCreateFixture>>["vrfCoordinator"];
@@ -17,31 +110,21 @@ describe("StakedBRB", function () {
   let player3: Awaited<ReturnType<typeof viem.getWalletClients>>[3];
   let publicClient: Awaited<ReturnType<typeof viem.getPublicClient>>;
 
-  // Helper function to completely clear all assets from the StakedBRB contract
+  // Cancel queued withdrawals for test accounts. Full share redemption requires cleaning upkeep.
   async function clearAllAssets() {
-    // First, check if there are any pending bets and clear them
-    const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] = 
+    const [_brbToken, _rouletteContract, _protocolFeeBasisPoints, _feeRecipient, pendingBets] =
       await stakedBrbProxy.read.getVaultConfig();
-    
+
     if (pendingBets > 0) {
-      // If there are pending bets, we need to complete the round to clear them
-      // This is a complex process that involves VRF and round completion
-      // For now, we'll skip this and just clear the staked amounts
+      // Pending bets require completing the round (VRF, etc.); tests that need a clean vault avoid pending bets.
     }
 
-    // Get all users who might have shares
     const users = [admin, player1, player2, player3];
-    
     for (const user of users) {
       try {
-        const userShares = await stakedBrbProxy.read.balanceOf([user.account.address]);
-        if (userShares > 0) {
-          // Redeem all shares for this user
-          await stakedBrbProxy.write.redeem([userShares, user.account.address, user.account.address, parseEther("1000")], { account: user.account });
-        }
+        await stakedBrbProxy.write.cancelWithdrawal({ account: user.account });
       } catch {
-        // User might not have any shares, continue
-        console.log(`No shares for user ${user.account.address}`);
+        // NoWithdrawalPending
       }
     }
 
@@ -60,8 +143,8 @@ describe("StakedBRB", function () {
     console.log("All assets cleared. Total assets:", totalAssets, "Total supply:", totalSupply);
   }
 
-  // Helper function to setup a scenario where withdrawals become "large"
-  async function setupLargeWithdrawalScenario(stakeAmount: bigint = parseEther("2000"), shouldPlaceBet: boolean = false) {
+  /** Deposit (and optionally bet) so the vault has maxPayout / constrained safe capacity; all withdrawals are queued. */
+  async function setupWithdrawalScenario(stakeAmount: bigint = parseEther("2000"), shouldPlaceBet: boolean = false) {
     // Clear the vault first by unstaking everything
     await clearAllAssets();
     
@@ -151,7 +234,7 @@ describe("StakedBRB", function () {
     safeWithdrawalCapacity = totalAssets > maxPayout ? totalAssets - maxPayout : 0n;
     
     console.log(`Total Assets: ${totalAssets}, Max Payout: ${maxPayout}, Safe Capacity: ${safeWithdrawalCapacity}`);
-    console.log(`Any withdrawal > ${safeWithdrawalCapacity} ETH will trigger large withdrawal`);
+    console.log(`Safe capacity ${safeWithdrawalCapacity} ETH (preview only; all exits are queued)`);
     
     return { totalAssets, maxPayout, safeWithdrawalCapacity };
   }
@@ -159,6 +242,7 @@ describe("StakedBRB", function () {
   beforeEach(async function () {
     const fixture = await useDeployWithCreateFixture();
     stakedBrbProxy = fixture.stakedBrbProxy;
+    upkeepManager = fixture.upkeepManager;
     brb = fixture.brb;
     rouletteProxy = fixture.rouletteProxy;
     vrfCoordinator = fixture.vrfCoordinator;
@@ -198,10 +282,10 @@ describe("StakedBRB", function () {
     });
 
     it("Should initialize with default withdrawal settings", async function () {
-      const [largeWithdrawalBatchSize, totalPendingLargeWithdrawals, queueLength, maxQueueLength] = 
+      const [withdrawalBatchSize, totalPendingWithdrawals, queueLength, maxQueueLength] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
-      expect(largeWithdrawalBatchSize).to.equal(5n); // DEFAULT_LARGE_WITHDRAWAL_BATCH_SIZE
-      expect(totalPendingLargeWithdrawals).to.equal(0n);
+      expect(withdrawalBatchSize).to.equal(5n); // DEFAULT_LARGE_WITHDRAWAL_BATCH_SIZE
+      expect(totalPendingWithdrawals).to.equal(0n);
       expect(queueLength).to.equal(0n);
       expect(maxQueueLength).to.equal(100n); // DEFAULT_MAX_QUEUE_LENGTH
     });
@@ -262,7 +346,8 @@ describe("StakedBRB", function () {
       
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
       await stakedBrbProxy.write.mint([mintAmount, player2.account.address, parseEther("1000")], { account: player2.account });
-      
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
+
       expect(await stakedBrbProxy.read.balanceOf([player2.account.address])).to.equal(mintAmount);
     });
 
@@ -630,6 +715,7 @@ describe("StakedBRB", function () {
         sig2.r,
         sig2.s
       ], { account: player2.account });
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
 
       // Both should have shares
       expect(await stakedBrbProxy.read.balanceOf([player1.account.address])).to.be.greaterThan(0);
@@ -637,7 +723,7 @@ describe("StakedBRB", function () {
     });
   });
 
-  describe("Small Withdrawals", function () {
+  describe("Withdrawals (queued for all sizes)", function () {
     beforeEach(async function () {
       // Setup: deposit some BRB
       const depositAmount = parseEther("1000");
@@ -645,29 +731,32 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
     });
 
-    it("Should process small withdrawals immediately", async function () {
+    it("Should queue asset withdrawals without transferring BRB until upkeep", async function () {
       const withdrawAmount = parseEther("100");
       const initialBalance = await brb.read.balanceOf([player1.account.address]);
-      
+
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
-      
+
       const finalBalance = await brb.read.balanceOf([player1.account.address]);
-      expect(finalBalance).to.equal(initialBalance + withdrawAmount);
+      expect(finalBalance).to.equal(initialBalance);
+      const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
+      expect(pendingAmount).to.equal(withdrawAmount);
     });
 
-    it("Should process small redemptions immediately", async function () {
+    it("Should queue redemptions without transferring BRB until upkeep", async function () {
       const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
       const redeemShares = shares / 2n;
       const initialBalance = await brb.read.balanceOf([player1.account.address]);
-      
-      // Calculate the actual amount out for this redemption
+
       const amountOut = await stakedBrbProxy.read.previewRedeem([redeemShares]);
-      const minAmountOut = amountOut / 2n; // Use half the expected amount to avoid MinAmountError
-      
+      const minAmountOut = amountOut / 2n;
+
       await stakedBrbProxy.write.redeem([redeemShares, player1.account.address, player1.account.address, minAmountOut], { account: player1.account });
-      
+
       const finalBalance = await brb.read.balanceOf([player1.account.address]);
-      expect(finalBalance).to.be.greaterThan(initialBalance);
+      expect(finalBalance).to.equal(initialBalance);
+      const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
+      expect(pendingAmount).to.equal(amountOut);
     });
 
     it("Should revert when withdrawals are locked", async function () {
@@ -695,10 +784,10 @@ describe("StakedBRB", function () {
     });
   });
 
-  describe("Large Withdrawal System", function () {
-    it("Should identify large withdrawals correctly", async function () {
+  describe("Withdrawal queue", function () {
+    it("Should queue withdrawals when safe capacity is exceeded", async function () {
       // Isolated: set up scenario for this test only (deposit + bet)
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       // totalAssets = 2000, maxPayout set, safe capacity ~92. Withdrawals > 92 should be large
       // Withdrawals > 92 should be considered large and queued
       
@@ -717,7 +806,7 @@ describe("StakedBRB", function () {
       console.log(`✅ Large withdrawal detected! Pending: ${pendingAmount}, Queue Position: ${queuePosition}`);
     });
 
-    it("Should queue large withdrawals in FIFO order", async function () {
+    it("Should queue withdrawals in FIFO order", async function () {
       // Isolated: start from clean fixture state (maxPayout = 0). No shared beforeEach bet.
       // Setup: both players deposit, then place one bet to create maxPayout scenario.
       
@@ -732,6 +821,7 @@ describe("StakedBRB", function () {
       // Player 2 deposits
       await brb.write.approve([stakedBrbProxy.address, parseEther("2000")], { account: player2.account });
       await stakedBrbProxy.write.deposit([parseEther("2000"), player2.account.address, 0n], { account: player2.account });
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       // Now place a bet to create maxPayout scenario
       const totalAssetsAfterDeposits = await stakedBrbProxy.read.totalAssets();
@@ -813,9 +903,9 @@ describe("StakedBRB", function () {
       expect(pos1).to.be.lessThan(pos2);
     });
 
-    it("Should prevent duplicate large withdrawal requests", async function () {
+    it("Should prevent duplicate withdrawal requests", async function () {
       // Isolated: set up scenario for this test only
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       // Any withdrawal > safe capacity will be large
       
       const withdrawAmount = parseEther("100"); // Larger than safe capacity
@@ -826,14 +916,14 @@ describe("StakedBRB", function () {
       // Second request should fail
       await expect(
         stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account })
-      ).to.be.rejectedWith("LargeWithdrawalPending");
+      ).to.be.rejectedWith("WithdrawalPending");
     });
 
     it("Should enforce queue size limits", async function () {
       // Isolated: start from clean state, set up deposits and one bet ourselves
       await stakedBrbProxy.write.setMaxQueueLength([2n], { account: admin.account });
       
-      await setupLargeWithdrawalScenario(parseEther("2000"), false); // Deposit only
+      await setupWithdrawalScenario(parseEther("2000"), false); // Deposit only
       
       // Ensure player2 has enough BRB and deposit
       const player2Balance = await brb.read.balanceOf([player2.account.address]);
@@ -851,6 +941,8 @@ describe("StakedBRB", function () {
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player3.account });
       await stakedBrbProxy.write.deposit([depositAmount, player3.account.address, 0n], { account: player3.account });
+
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       // Get the safe capacity to determine how much we can bet
       const safeCapacity = await stakedBrbProxy.read.getSafeCapacity();
@@ -905,9 +997,9 @@ describe("StakedBRB", function () {
       ).to.be.rejectedWith("QueueFull");
     });
 
-    it("Should allow users to cancel large withdrawal requests", async function () {
+    it("Should allow users to cancel queued withdrawal requests", async function () {
       // Isolated: start from clean state, deposit then place bet
-      await setupLargeWithdrawalScenario(parseEther("2000"), false);
+      await setupWithdrawalScenario(parseEther("2000"), false);
       
       // Get the safe capacity to determine how much we can bet
       const safeCapacity = await stakedBrbProxy.read.getSafeCapacity();
@@ -957,7 +1049,7 @@ describe("StakedBRB", function () {
       expect(pendingAmountBefore).to.equal(withdrawAmount);
       
       // Cancel withdrawal
-      await stakedBrbProxy.write.cancelLargeWithdrawal({ account: player1.account });
+      await stakedBrbProxy.write.cancelWithdrawal({ account: player1.account });
       
       // Check final state
       const [pendingAmountAfter] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
@@ -967,8 +1059,8 @@ describe("StakedBRB", function () {
     it("Should revert when trying to cancel non-existent withdrawal", async function () {
       // Isolated: no setup; player1 has no pending withdrawal. Cancel should revert.
       await expect(
-        stakedBrbProxy.write.cancelLargeWithdrawal({ account: player1.account })
-      ).to.be.rejectedWith("LargeWithdrawalPending");
+        stakedBrbProxy.write.cancelWithdrawal({ account: player1.account })
+      ).to.be.rejectedWith("NoWithdrawalPending");
     });
 
     it("Should revert when withdrawal amount exceeds balance", async function () {
@@ -1004,10 +1096,10 @@ describe("StakedBRB", function () {
     });
   });
 
-  describe("Large Withdrawal Processing", function () {
-    it("Should process large withdrawals through upkeep", async function () {
+  describe("Withdrawal processing (upkeep)", function () {
+    it("Should process queued withdrawals through upkeep", async function () {
       // Isolated: set up scenario for this test only (deposit + bet)
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       // Queue a large withdrawal
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       
@@ -1025,23 +1117,22 @@ describe("StakedBRB", function () {
       
       // COMPLETE THE FULL GAME LOOP BEFORE PROCESSING LARGE WITHDRAWALS
       
-      // 1. Time Advancement and VRF Trigger
-      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
+      // 1. Pre-VRF lock then VRF
+      await advanceThroughLockToVrfWindow(rouletteProxy);
 
-      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecutionVRF).to.be.true;
       
       const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
       const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
       const logsVRF = parseEventLogs({
         abi: rouletteProxy.abi,
-        eventName: 'RoundStarted',
+        eventName: 'VrfRequested',
         logs: receiptVRF.logs,
       });
 
       if (!logsVRF.length) {
-        throw new Error("RoundStarted event not found");
+        throw new Error("VrfRequested event not found");
       }
       const requestId = logsVRF[0].args.requestId;
 
@@ -1049,14 +1140,14 @@ describe("StakedBRB", function () {
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [7n, 10n]]); // Use 7 as winning number
       
       // 3. COMPUTE TOTAL WINNING BETS
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array([0x01]))]); // checkData.length == 1
+      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]); // checkData.length == 2
       expect(computeNeeded).to.be.true;
       await rouletteProxy.write.performUpkeep([computeData]);
 
       // 4. Payout Trigger & Processing (iterative)
       let processedPayoutBatches = 0;
       while (true) {
-        const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 2); // checkData.length 2 for batch 0, 3 for batch 1, etc.
+        const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 3); // checkData.length 2 for batch 0, 3 for batch 1, etc.
         const hexCheckData = toHex(checkDataForPayout);
         const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
         if (!payoutsNeeded) break;
@@ -1067,10 +1158,10 @@ describe("StakedBRB", function () {
       }
       
       // 5. NOW PROCESS LARGE WITHDRAWALS
-      const [upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
+      const [upkeepNeeded, _performData] = await upkeepManager.read.checkUpkeep(["0x"]);
       expect(upkeepNeeded).to.be.true;
 
-      await expect(stakedBrbProxy.write.performUpkeep([_performData], { account: admin.account })).to.not.be.rejected;
+      await expect(upkeepManager.write.performUpkeep([_performData], { account: admin.account })).to.not.be.rejected;
       
       console.log(`✅ Full game loop completed! Large withdrawal upkeep needed: ${upkeepNeeded}`);
       console.log(`✅ This test verifies that the complete game loop works correctly with large withdrawals`);
@@ -1078,7 +1169,7 @@ describe("StakedBRB", function () {
 
     it("Should calculate safe withdrawal capacity correctly", async function () {
       // Isolated: set up scenario so we have non-zero balance and maxPayout
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       
       const currentBalance = await brb.read.balanceOf([stakedBrbProxy.address]);
       const maxPayout = await stakedBrbProxy.read.getMaxPayout();
@@ -1586,28 +1677,47 @@ describe("StakedBRB", function () {
     it("Should update large withdrawal batch size", async function () {
       const newBatchSize = 10n;
       
-      await stakedBrbProxy.write.setLargeWithdrawalBatchSize([newBatchSize], { account: admin.account });
+      await stakedBrbProxy.write.setWithdrawalBatchSize([newBatchSize], { account: admin.account });
       
-      const [largeWithdrawalBatchSize, _totalPendingLargeWithdrawals, _queueLength, _maxQueueLength] = 
+      const [withdrawalBatchSize, _totalPendingWithdrawals, _queueLength, _maxQueueLength] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
       
-      expect(largeWithdrawalBatchSize).to.equal(newBatchSize);
+      expect(withdrawalBatchSize).to.equal(newBatchSize);
     });
 
     it("Should revert with invalid batch size", async function () {
       const invalidBatchSize = 0n;
       
       await expect(
-        stakedBrbProxy.write.setLargeWithdrawalBatchSize([invalidBatchSize], { account: admin.account })
+        stakedBrbProxy.write.setWithdrawalBatchSize([invalidBatchSize], { account: admin.account })
       ).to.be.rejectedWith("InvalidWithdrawalBatchSize");
     });
 
     it("Should revert with excessive batch size", async function () {
-      const excessiveBatchSize = 21n; // > MAX_LARGE_WITHDRAWAL_BATCH_SIZE
-      
+      const excessiveBatchSize = 13n; // > MAX_WITHDRAWAL_BATCH_SIZE
+
       await expect(
-        stakedBrbProxy.write.setLargeWithdrawalBatchSize([excessiveBatchSize], { account: admin.account })
+        stakedBrbProxy.write.setWithdrawalBatchSize([excessiveBatchSize], { account: admin.account })
       ).to.be.rejectedWith("InvalidWithdrawalBatchSize");
+    });
+
+    it("Should update liquidity ops per cleaning upkeep within cap", async function () {
+      await stakedBrbProxy.write.setLiquidityOpsPerCleaningUpkeep([60], { account: admin.account });
+      expect(await stakedBrbProxy.read.getLiquidityOpsPerCleaningUpkeep()).to.equal(60n);
+    });
+
+    it("Should revert excessive liquidity ops per cleaning upkeep", async function () {
+      await expect(
+        stakedBrbProxy.write.setLiquidityOpsPerCleaningUpkeep([81], { account: admin.account })
+      ).to.be.rejectedWith("InvalidLiquidityOpsPerUpkeep");
+    });
+
+    it("Should expose operational limits (hard caps)", async function () {
+      const [maxBatch, maxQueue, maxLiqOps, gasLimit] = await stakedBrbProxy.read.getOperationalLimits();
+      expect(maxBatch).to.equal(12n);
+      expect(maxQueue).to.equal(1000n);
+      expect(maxLiqOps).to.equal(80n);
+      expect(gasLimit).to.equal(2_000_000n);
     });
 
     it("Should update max queue length", async function () {
@@ -1615,7 +1725,7 @@ describe("StakedBRB", function () {
       
       await stakedBrbProxy.write.setMaxQueueLength([newMaxQueueLength], { account: admin.account });
       
-      const [_largeWithdrawalBatchSize, _totalPendingLargeWithdrawals, _queueLength, maxQueueLength] = 
+      const [_withdrawalBatchSize, _totalPendingWithdrawals, _queueLength, maxQueueLength] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
       
       expect(maxQueueLength).to.equal(newMaxQueueLength);
@@ -1686,10 +1796,10 @@ describe("StakedBRB", function () {
     });
 
     it("Should return correct withdrawal settings", async function () {
-      const [largeWithdrawalBatchSize, totalPendingLargeWithdrawals, queueLength, maxQueueLength] = 
+      const [withdrawalBatchSize, totalPendingWithdrawals, queueLength, maxQueueLength] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
-      expect(largeWithdrawalBatchSize).to.equal(5n);
-      expect(totalPendingLargeWithdrawals).to.equal(0n);
+      expect(withdrawalBatchSize).to.equal(5n);
+      expect(totalPendingWithdrawals).to.equal(0n);
       expect(queueLength).to.equal(0n);
       expect(maxQueueLength).to.equal(100n);
     });
@@ -1728,11 +1838,11 @@ describe("StakedBRB", function () {
       ).to.be.rejectedWith("OnlyRoulette");
     });
 
-    it("Should only allow forwarders to call performUpkeep", async function () {
+    it("Should only allow cleaning forwarders to call upkeep performUpkeep on manager", async function () {
       const performData = "0x";
       await expect(
-        stakedBrbProxy.write.performUpkeep([performData], { account: player1.account })
-      ).to.be.rejectedWith("OnlyForwarders");
+        upkeepManager.write.performUpkeep([performData], { account: player1.account })
+      ).to.be.rejectedWith("UnauthorizedStakedBrbCleaningForwarder");
     });
   });
 
@@ -1866,9 +1976,9 @@ describe("StakedBRB", function () {
       expect((logs[0] as { args: { user: string; amount: bigint; data: string } }).args.data).to.equal(betData);
     });
 
-    it("Should emit LargeWithdrawalRequested event", async function () {
+    it("Should emit WithdrawalRequested event", async function () {
       // Setup large withdrawal scenario
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       
@@ -1881,7 +1991,7 @@ describe("StakedBRB", function () {
       
       const logs = parseEventLogs({
         abi: stakedBrbProxy.abi,
-        eventName: 'LargeWithdrawalRequested',
+        eventName: 'WithdrawalRequested',
         logs: receipt.logs,
       });
       
@@ -1909,7 +2019,7 @@ describe("StakedBRB", function () {
     it("Should emit WithdrawalSettingsUpdated event", async function () {
       const newBatchSize = 10n;
       
-      const tx = await stakedBrbProxy.write.setLargeWithdrawalBatchSize([newBatchSize], { account: admin.account });
+      const tx = await stakedBrbProxy.write.setWithdrawalBatchSize([newBatchSize], { account: admin.account });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
       
       const logs = parseEventLogs({
@@ -2004,7 +2114,7 @@ describe("StakedBRB", function () {
       const excessiveAmount = parseEther("2000");
       await expect(
         stakedBrbProxy.write.withdraw([excessiveAmount, player1.account.address, player1.account.address, 0n], { account: player1.account })
-      ).to.be.rejectedWith("MaxSharesError");
+      ).to.be.rejectedWith("WithdrawalTooLarge");
     });
 
     it("Should handle redemption exceeding shares", async function () {
@@ -2040,7 +2150,7 @@ describe("StakedBRB", function () {
 
     it("Should handle withdrawal when user has pending large withdrawal", async function () {
       // Setup large withdrawal scenario
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       
       // Request large withdrawal
       const largeWithdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
@@ -2054,7 +2164,7 @@ describe("StakedBRB", function () {
       // Try to withdraw again (should fail due to pending large withdrawal)
       await expect(
         stakedBrbProxy.write.withdraw([parseEther("100"), player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account })
-      ).to.be.rejectedWith("LargeWithdrawalPending");
+      ).to.be.rejectedWith("WithdrawalPending");
     });
 
     it("Should handle queue position calculation with cancelled users", async function () {
@@ -2062,7 +2172,7 @@ describe("StakedBRB", function () {
       await clearAllAssets();
       
       // Setup large withdrawal scenario for all users - deposit all users first
-      await setupLargeWithdrawalScenario(parseEther("2000"), false); // Don't place bet yet
+      await setupWithdrawalScenario(parseEther("2000"), false); // Don't place bet yet
       
       // Setup additional users with proper BRB balance
       const depositAmount = parseEther("1000");
@@ -2082,6 +2192,8 @@ describe("StakedBRB", function () {
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player3.account });
       await stakedBrbProxy.write.deposit([depositAmount, player3.account.address, 0n], { account: player3.account });
+
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       // Now place the bet to create maxPayout scenario (without clearing assets)
       const totalAssetsAfterDeposits = await stakedBrbProxy.read.totalAssets();
@@ -2135,7 +2247,7 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address, maxSharesOut], { account: player3.account });
       
       // Cancel middle user (player2)
-      await stakedBrbProxy.write.cancelLargeWithdrawal({ account: player2.account });
+      await stakedBrbProxy.write.cancelWithdrawal({ account: player2.account });
       
       // Check positions
       const [, pos1] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
@@ -2150,12 +2262,12 @@ describe("StakedBRB", function () {
     it("Should handle invalid queue index in removal", async function () {
       // This tests the internal _removeUserFromQueueEfficient function
       // We can't directly test this, but we can test the error conditions
-      // by testing the cancelLargeWithdrawal function with invalid state
+      // by testing the cancelWithdrawal function with invalid state
       
       // Try to cancel when not in queue
       await expect(
-        stakedBrbProxy.write.cancelLargeWithdrawal({ account: player1.account })
-      ).to.be.rejectedWith("LargeWithdrawalPending");
+        stakedBrbProxy.write.cancelWithdrawal({ account: player1.account })
+      ).to.be.rejectedWith("NoWithdrawalPending");
     });
 
     it("Should handle queue bounds in processing", async function () {
@@ -2166,11 +2278,13 @@ describe("StakedBRB", function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: admin.account });
       await stakedBrbProxy.write.deposit([depositAmount, admin.account.address, 0n], { account: admin.account });
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
-      // Fill the queue with admin's deposit amount
-      const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([depositAmount]);
+      // Fill the queue with admin's max withdrawable (deposit + staker share of the helper round; fixed asset amount can round past balance)
+      const withdrawAssets = await stakedBrbProxy.read.maxWithdraw([admin.account.address]);
+      const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAssets]);
       const maxSharesOut = sharesNeeded * 2n;
-      await stakedBrbProxy.write.withdraw([depositAmount, admin.account.address, admin.account.address, maxSharesOut], { account: admin.account });
+      await stakedBrbProxy.write.withdraw([withdrawAssets, admin.account.address, admin.account.address, maxSharesOut], { account: admin.account });
       
       // Create a scenario with a full queue
       await stakedBrbProxy.write.setMaxQueueLength([1n], { account: admin.account });
@@ -2199,23 +2313,23 @@ describe("StakedBRB", function () {
 
       await expect(
         stakedBrbProxy.write.withdraw([depositAmount, player2.account.address, player2.account.address, parseEther("1000")], { account: player2.account })
-      ).to.be.rejectedWith("WithdrawalTooLarge");
+      ).to.be.rejectedWith("QueueFull");
     });
   });
 
-  describe("Large Withdrawal Processing - Advanced", function () {
+  describe("Withdrawal queue — advanced", function () {
     // No shared beforeEach: each test is isolated (clean fixture or own setup).
 
     it("Should process large withdrawals in batches", async function () {
-      // Cancel any pending so clearAllAssets can redeem (noPendingLargeWithdrawal)
+      // Cancel any pending so setup can run (one pending per user)
       for (const account of [player1, player2, player3]) {
         const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([account.account.address]);
         if (pendingAmount > 0n) {
-          await stakedBrbProxy.write.cancelLargeWithdrawal({ account: account.account });
+          await stakedBrbProxy.write.cancelWithdrawal({ account: account.account });
         }
       }
       // Isolated: one setup - deposit all three users, then one bet (no second setup that wipes state)
-      await setupLargeWithdrawalScenario(parseEther("2000"), false);
+      await setupWithdrawalScenario(parseEther("2000"), false);
       const depositAmount = parseEther("500");
       for (const [player, name] of [[player2, "player2"], [player3, "player3"]] as const) {
         const bal = await brb.read.balanceOf([player.account.address]);
@@ -2225,6 +2339,7 @@ describe("StakedBRB", function () {
         await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player.account });
         await stakedBrbProxy.write.deposit([depositAmount, player.account.address, 0n], { account: player.account });
       }
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       // Place one bet to create maxPayout (use getMaxPayout for balance check)
       const totalAssets = await stakedBrbProxy.read.totalAssets();
       const betAmount = totalAssets / 36n;
@@ -2246,7 +2361,7 @@ describe("StakedBRB", function () {
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
       
-      await stakedBrbProxy.write.setLargeWithdrawalBatchSize([2n], { account: admin.account });
+      await stakedBrbProxy.write.setWithdrawalBatchSize([2n], { account: admin.account });
       
       // Queue multiple withdrawals - use amount large enough to trigger large withdrawal
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
@@ -2255,23 +2370,23 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
-      // First withdrawal (player1 already has shares from setupLargeWithdrawalScenario)
+      // First withdrawal (player1 already has shares from setupWithdrawalScenario)
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
       
       await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, maxSharesOut], { account: player2.account });
       await stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address, maxSharesOut], { account: player3.account });
       
       // Check queue state
-      const [_largeWithdrawalBatchSize, totalPendingLargeWithdrawals, queueLength, _maxQueueLength] = 
+      const [_withdrawalBatchSize, totalPendingWithdrawals, queueLength, _maxQueueLength] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
       
       expect(queueLength).to.equal(3n);
-      expect(totalPendingLargeWithdrawals).to.equal(withdrawAmount * 3n);
+      expect(totalPendingWithdrawals).to.equal(withdrawAmount * 3n);
     });
 
     it("Should handle queue removal efficiently", async function () {
       // Isolated: deposit player1 and player2, place one bet, then queue withdrawals and cancel
-      await setupLargeWithdrawalScenario(parseEther("2000"), false);
+      await setupWithdrawalScenario(parseEther("2000"), false);
       const depositAmount = parseEther("500");
       const player2Balance = await brb.read.balanceOf([player2.account.address]);
       if (player2Balance < depositAmount) {
@@ -2279,6 +2394,7 @@ describe("StakedBRB", function () {
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
       await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       const totalAssets = await stakedBrbProxy.read.totalAssets();
       const betAmount = totalAssets / 36n;
@@ -2315,7 +2431,7 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, maxSharesOut], { account: player2.account });
       
       // Cancel first withdrawal
-      await stakedBrbProxy.write.cancelLargeWithdrawal({ account: player1.account });
+      await stakedBrbProxy.write.cancelWithdrawal({ account: player1.account });
       
       // Check that second user is now first in queue
       const [, pos2] = await stakedBrbProxy.read.getUserPendingWithdrawal([player2.account.address]);
@@ -2323,8 +2439,8 @@ describe("StakedBRB", function () {
     });
 
     it("Should handle empty queue gracefully", async function () {
-      // Check upkeep when no withdrawals are queued
-      const [_upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
+      // Check upkeep when no withdrawals are queued (via manager → StakedBRB view)
+      await upkeepManager.read.checkUpkeep(["0x"]);
       // This should return false since there are no queued withdrawals
     });
 
@@ -2345,17 +2461,13 @@ describe("StakedBRB", function () {
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
-      // Test scenario where maxPayout is small but withdrawal is large
-      // With 1 BRB bet, maxPayout = 36 BRB, so safe capacity = 1000 - 36 = 964 BRB
-      // A withdrawal of 100 BRB should be processed immediately (not large)
+      // With 1 BRB bet, maxPayout = 36 BRB (buffered), so safe capacity is high; exits are still queued.
       const withdrawAmount = parseEther("100");
-      
-      // This should be processed immediately since it's less than safe capacity
+
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
-      
-      // Check that withdrawal was processed immediately (no pending withdrawal)
+
       const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
-      expect(pendingAmount).to.equal(0n); // No pending withdrawal
+      expect(pendingAmount).to.equal(withdrawAmount);
     });
 
     it("Should handle queue bounds correctly", async function () {
@@ -2567,43 +2679,41 @@ describe("StakedBRB", function () {
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
-      // 3. TIME ADVANCEMENT AND VRF TRIGGER
-      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
-      
+      // 3. Withdraw while still in the betting window, then pre-VRF lock + VRF
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
 
-      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      await advanceThroughLockToVrfWindow(rouletteProxy);
+
+      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecutionVRF).to.be.true;
       
       const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
       const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
       const logsVRF = parseEventLogs({
         abi: rouletteProxy.abi,
-        eventName: 'RoundStarted',
+        eventName: 'VrfRequested',
         logs: receiptVRF.logs,
       });
       
       if (!logsVRF.length) {
-        throw new Error("RoundStarted event not found");
+        throw new Error("VrfRequested event not found");
       }
       const requestId = logsVRF[0].args.requestId;
       
       // 4. VRF FULFILLMENT
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
       
-      // 5. COUNT WINNERS (0x00) - ALWAYS DONE
-      const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep(["0x00"]);
+      // 5. COMPUTE TOTAL WINNING BETS (checkData length 2; same as other integration tests)
+      const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
       expect(countWinnersNeeded).to.be.true;
       await rouletteProxy.write.performUpkeep([countWinnersData]);
       
-      // 6. PROCESS PAYOUTS (0x0000 + n bytes format)
-      // Only process if countWinners > 0
-      const [payoutsNeeded, _payoutData] = await rouletteProxy.read.checkUpkeep(["0x0000"]);
+      // 6. PROCESS PAYOUTS (length 3 = batch 0, then 4, ...)
+      const [payoutsNeeded, _payoutData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(3))]);
       if (payoutsNeeded) {
         let processedPayoutBatches = 0;
         while (true) {
-          const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 2);
+          const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 3);
           const hexCheckData = toHex(checkDataForPayout);
           const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
           if (!payoutsNeeded) break;
@@ -2614,10 +2724,12 @@ describe("StakedBRB", function () {
         }
       }
       
-      const [_upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]); // clean up
+      const [_upkeepNeeded, _performData] = await upkeepManager.read.checkUpkeep(["0x"]); // clean up
 
       expect(_upkeepNeeded).to.be.true;
-      await stakedBrbProxy.write.performUpkeep([_performData], { account: admin.account });
+      // Cleaning runs on BRBUpkeepManager; ERC4626 withdraw(owner=player1) needs share allowance to the manager
+      await stakedBrbProxy.write.approve([upkeepManager.address, MAX_UINT256], { account: player1.account });
+      await upkeepManager.write.performUpkeep([_performData], { account: admin.account });
       
       // 7. WITHDRAW
       
@@ -2655,7 +2767,7 @@ describe("StakedBRB", function () {
 
     it("Should handle large withdrawal in complete game loop", async function () {
       // Setup large withdrawal scenario
-      await setupLargeWithdrawalScenario(parseEther("2000"), true);
+      await setupWithdrawalScenario(parseEther("2000"), true);
       
       const withdrawAmount = parseEther("150"); // Always larger than 100 ETH to trigger large withdrawal
       const winningNumber = 7n;
@@ -2675,36 +2787,32 @@ describe("StakedBRB", function () {
       expect(pendingAmount).to.equal(withdrawAmount);
       expect(queuePosition).to.be.greaterThan(0);
       
-      // 5. COMPLETE GAME LOOP
-      const timeUntilNextRound = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
-      if (timeUntilNextRound > 0n) await time.increase(timeUntilNextRound);
-      
-      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      // 5. COMPLETE GAME LOOP (pre-VRF lock then VRF)
+      await advanceThroughLockToVrfWindow(rouletteProxy);
+
+      const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecutionVRF).to.be.true;
       
       const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
       const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
       const logsVRF = parseEventLogs({
         abi: rouletteProxy.abi,
-        eventName: 'RoundStarted',
+        eventName: 'VrfRequested',
         logs: receiptVRF.logs,
       });
       
       const requestId = logsVRF[0].args.requestId;
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
       
-      // Count winners (0x00) - ALWAYS DONE
-      const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep(["0x00"]);
+      const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
       expect(countWinnersNeeded).to.be.true;
       await rouletteProxy.write.performUpkeep([countWinnersData]);
       
-      // Process payouts (0x0000 + n bytes format)
-      // Only process if countWinners > 0
-      const [payoutsNeeded, _payoutData] = await rouletteProxy.read.checkUpkeep(["0x0000"]);
+      const [payoutsNeeded, _payoutData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(3))]);
       if (payoutsNeeded) {
         let processedPayoutBatches = 0;
         while (true) {
-          const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 2);
+          const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 3);
           const hexCheckData = toHex(checkDataForPayout);
           const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
           if (!payoutsNeeded) break;
@@ -2716,10 +2824,10 @@ describe("StakedBRB", function () {
       }
       
       // 6. PROCESS LARGE WITHDRAWAL (perform upkeep)
-      const [upkeepNeeded, performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
+      const [upkeepNeeded, performData] = await upkeepManager.read.checkUpkeep(["0x"]);
       if (upkeepNeeded) {
-        // Actually perform the upkeep to process large withdrawals
-        await stakedBrbProxy.write.performUpkeep([performData], { account: admin.account });
+        await stakedBrbProxy.write.approve([upkeepManager.address, MAX_UINT256], { account: player1.account });
+        await upkeepManager.write.performUpkeep([performData], { account: admin.account });
         
         // Verify the large withdrawal was processed
         const [pendingAmountAfter] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
@@ -2761,11 +2869,12 @@ describe("StakedBRB", function () {
       );
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
-      // 3. Withdraw (small amount)
+      // 3. Withdraw (queued; BRB not transferred until cleaning upkeep)
       const withdrawAmount = parseEther("50");
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
-      
-      // Verify final state
+
+      const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
+      expect(pendingAmount).to.equal(withdrawAmount);
       const finalBalance = await brb.read.balanceOf([player1.account.address]);
       expect(finalBalance).to.be.greaterThan(0);
     });
@@ -2788,14 +2897,13 @@ describe("StakedBRB", function () {
       // User 2
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
       await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
-      // Verify assets are now available after deposits
+      // Verify assets are now available after deposits (helper round: losing admin bet increases staker totalAssets slightly)
       const totalAssetsAfterDeposits = await stakedBrbProxy.read.totalAssets();
-      expect(totalAssetsAfterDeposits).to.equal(parseEther("2000"));
+      expect(totalAssetsAfterDeposits).to.be.gte(parseEther("2000"));
       
-      // Create maxPayout scenario by placing a large bet to force large withdrawals to be queued
-      // For a straight bet (36x payout), a 50 ETH bet would create 1980 ETH maxPayout (with 110% buffer)
-      // This should make 800 ETH withdrawals be considered "large"
+      // Large bet creates maxPayout; all withdrawals are queued regardless of size vs safe capacity.
       const betAmount = parseEther("50");
       // Ensure vault has enough balance for max payout (with safety buffer)
       const SAFETY_BUFFER_BPS = 11000n;
@@ -2820,15 +2928,14 @@ describe("StakedBRB", function () {
         await stakedBrbProxy.read.getVaultConfig();
       expect(pendingBets).to.equal(betAmount);
       
-      // User 1: small withdrawal (should succeed immediately)
       await stakedBrbProxy.write.withdraw([parseEther("100"), player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
-      
-      // User 2: large withdrawal (should be queued due to maxPayout)
+
       await stakedBrbProxy.write.withdraw([parseEther("800"), player2.account.address, player2.account.address, parseEther("1000")], { account: player2.account });
-      
-      // Verify withdrawal was queued
-      const [pendingAmount] = await stakedBrbProxy.read.getUserPendingWithdrawal([player2.account.address]);
-      expect(pendingAmount).to.equal(parseEther("800"));
+
+      const [pending1] = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
+      const [pending2] = await stakedBrbProxy.read.getUserPendingWithdrawal([player2.account.address]);
+      expect(pending1).to.equal(parseEther("100"));
+      expect(pending2).to.equal(parseEther("800"));
     });
 
     it("Should handle complex multi-user queue management", async function () {
@@ -2847,14 +2954,13 @@ describe("StakedBRB", function () {
         await brb.write.approve([stakedBrbProxy.address, amounts[i]], { account: users[i].account });
         await stakedBrbProxy.write.deposit([amounts[i], users[i].account.address, 0n], { account: users[i].account });
       }
+      await runMinimalRoundAndStakedCleaning(stakedBrbProxy, upkeepManager, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
-      // Verify assets are now available after deposits
+      // Verify assets are now available after deposits (helper round adds small staker profit vs raw deposit sum)
       const totalAssetsAfterDeposits = await stakedBrbProxy.read.totalAssets();
-      expect(totalAssetsAfterDeposits).to.equal(parseEther("6000"));
+      expect(totalAssetsAfterDeposits).to.be.gte(parseEther("6000"));
       
-      // Create maxPayout scenario with a large bet to trigger large withdrawal logic
-      // For a straight bet (36x payout), a 150 ETH bet would create 5940 ETH maxPayout (with 110% buffer)
-      // This should make 1500 ETH withdrawals be considered "large" (since 6000 - 5940 = 60 < 1500)
+      // Large bet creates maxPayout; queued withdrawals are still FIFO by request order.
       const betAmount = parseEther("150");
       // Ensure vault has enough balance for max payout (with safety buffer)
       const SAFETY_BUFFER_BPS = 11000n;
@@ -2883,21 +2989,21 @@ describe("StakedBRB", function () {
       }
       
       // Verify queue state
-      const [_largeWithdrawalBatchSize, totalPendingLargeWithdrawals, queueLength, _maxQueueLength] = 
+      const [_withdrawalBatchSize, totalPendingWithdrawals, queueLength, _maxQueueLength] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
       
       expect(queueLength).to.equal(3);
-      expect(totalPendingLargeWithdrawals).to.equal(parseEther("4500"));
+      expect(totalPendingWithdrawals).to.equal(parseEther("4500"));
       
       // Test cancellation of middle user
-      await stakedBrbProxy.write.cancelLargeWithdrawal({ account: player2.account });
+      await stakedBrbProxy.write.cancelWithdrawal({ account: player2.account });
       
       // Verify updated queue state
-      const [_largeWithdrawalBatchSize2, totalPendingLargeWithdrawals2, queueLength2, _maxQueueLength2] = 
+      const [_withdrawalBatchSize2, totalPendingWithdrawals2, queueLength2, _maxQueueLength2] = 
         await stakedBrbProxy.read.getWithdrawalSettings();
       
       expect(queueLength2).to.equal(2n);
-      expect(totalPendingLargeWithdrawals2).to.equal(parseEther("3000"));
+      expect(totalPendingWithdrawals2).to.equal(parseEther("3000"));
     });
   });
 });

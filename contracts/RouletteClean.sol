@@ -11,19 +11,18 @@ import { IRoulette } from "./interfaces/IRoulette.sol";
 import { IStakedBRB } from "./interfaces/IStakedBRB.sol";
 import { IJackpotContract } from "./interfaces/IJackpotContract.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Strings } from "./external/Strings.sol";
-import { IAutomationRegistrar2_1 } from "./interfaces/IAutomationRegistrar2_1.sol";
-import { IAutomationRegistry2_1 } from "./interfaces/IAutomationRegistry2_1.sol";
+import { IBRBUpkeepManager } from "./interfaces/IBRBUpkeepManager.sol";
 import { RouletteLib } from "./RouletteLib.sol";
 /**
  * @title RouletteClean
  * @dev SIMPLE roulette contract - easy to understand
  */
-contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface {
-    error MaxUpkeepLimitReached();
+contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface, IRoulette {
     
     // ========== SIMPLE CONSTANTS ==========
-    uint256 private constant TIME_MARGIN = 25; // 25 seconds
+    /// @dev No-bet lock after GAME_PERIOD lasts 6–10s: 6 + (lastRoundStartTime % 5)
+    uint256 private constant NO_BET_LOCK_MIN = 6;
+    uint256 private constant NO_BET_LOCK_MOD = 5;
     uint32 private constant BATCH_SIZE = 35; // Users per batch for payout processing
     
     // GAS LIMIT CALCULATION FOR WORST-CASE SCENARIO (all bets win)
@@ -53,6 +52,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     address private immutable LINK_TOKEN;
     address private immutable JACKPOT_CONTRACT;
     address private immutable BRB_TOKEN;
+    /// @dev Authorizes Chainlink forwarders; forwarders are only added via BRBUpkeepManager after registrar success
+    address private immutable UPKEEP_MANAGER;
 
     struct ConstructorParams {
         uint256 gamePeriod;
@@ -68,6 +69,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         address linkToken;
         address jackpotContract;
         address brbToken;
+        address upkeepManager;
     }
     
     // ========== BET STRUCTS ==========
@@ -106,15 +108,23 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 jackpotWinnerCount;
         uint256 jackpotAmount; // Jackpot pool at time of win (numerator for proportional calc)
     }
+
+    /// @dev Matches performData `kind` and aligns with checkData routing: empty checkData => PreVrfLock (0); hex"01" => Vrf (1); length 2 => Compute…; length>=3 => payout batches.
+    enum UpkeepKind {
+        PreVrfLock,
+        Vrf,
+        ComputeTotalWinningBets,
+        PayoutBatch,
+        JackpotPayoutBatch
+    }
     
     struct PerformDataPayload {
         uint256 roundId;
-        uint256 upkeepType; // 0 = VRF trigger, 1 = compute total winning bets, 2 = payout users
+        UpkeepKind kind;
         bytes payload;
     }
     
     struct TriggerVRF {
-        uint256 newLastRoundStartTimestamp;
         uint256 newRoundId;
     }
     
@@ -160,15 +170,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => uint256) totalWinningBets; // roundId => total winning bets
         mapping(uint256 => bool) totalWinningBetsSet; // roundId => total winning bets set
         mapping(uint256 => uint256) winningBetsProcessed; // roundId => bet processed
-        // CHAINLINK AUTOMATION SETUP
-        mapping(address => uint256) forwarders; // forwarder => upkeepId
-        address keeperRegistrar;
-        address keeperRegistry;
         
         uint256 minJackpotCondition;
-        // UPKEEP MANAGEMENT
-        uint256 maxSupportedBets; // Maximum number of bets supported across all registered upkeeps
-        uint256 registeredUpkeepCount; // Number of payout upkeeps registered (excluding VRF upkeep)
         
         // EFFICIENT BET STORAGE BY TYPE (like casino dealer sections)
         mapping(uint256 => mapping(uint256 => uint256)) roundBigStraightBetsSum;   // roundId => number => straight bets > minJackpotCondition
@@ -235,13 +238,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     // ========== EVENTS ==========
     event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
-    event RoundStarted(uint256 roundId, uint256 timestamp, uint256 requestId);
+    event VrfRequested(uint256 indexed newRoundId, uint256 requestId, uint256 timestamp);
     event RoundResolved(uint256 roundId);
     event VRFResult(uint256 roundId, uint256 winningNumber, uint256 jackpotNumber);
     event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
-    event ChainlinkSetupCompleted(uint256 subscriptionId, address keeperRegistrar, address keeperRegistry);
-    event UpkeepRegistered(uint256 upkeepId, address forwarder, uint32 gasLimit, uint96 linkAmount, uint256 checkDataLength, string upkeepType);
-    event MaxSupportedBetsUpdated(uint256 maxSupportedBets, uint256 totalUpkeeps);
     event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
     event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
     
@@ -258,8 +258,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     error StakedBRBCallFailed();
     error UnauthorizedCaller();
     error OnlyForwarders();
-    error UpkeepRegistrationFailed();
     error BetLimitExceeded();
+    error BettingClosed();
+    /// @dev Initialize RouletteClean only after StakedBRB.initialize so boundary timestamp is set.
+    error StakedBRBNotInitialized();
     
     constructor(ConstructorParams memory params) VRFConsumerBaseV2(params.vrfCoordinator) {
         GAME_PERIOD = params.gamePeriod;
@@ -274,199 +276,42 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         LINK_TOKEN = params.linkToken;
         JACKPOT_CONTRACT = params.jackpotContract;
         BRB_TOKEN = params.brbToken;
+        if (params.upkeepManager == address(0)) revert ZeroAddress();
+        UPKEEP_MANAGER = params.upkeepManager;
         _disableInitializers();
     }
     
     function initialize(
         uint256 minJackpotCondition,
-        address admin,
-        address keeperRegistrar,
-        address keeperRegistry,
-        address linkToken
+        address admin
     ) external initializer {
         __AccessControl_init();
         __UUPSUpgradeable_init();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         
-        if (keeperRegistrar == address(0) || keeperRegistry == address(0) || linkToken == address(0)) {
-            revert ZeroAddress();
-        }
-        
         RouletteStorage storage $ = _getRouletteStorage();
         $.currentRound = 1;
-        $.lastRoundStartTime = block.timestamp;
+        uint256 boundaryTs = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
+        if (boundaryTs == 0) revert StakedBRBNotInitialized();
+        $.lastRoundStartTime = boundaryTs;
         $.minJackpotCondition = minJackpotCondition;
-        
-        // Store Keeper addresses
-        $.keeperRegistrar = keeperRegistrar;
-        $.keeperRegistry = keeperRegistry;
-        
-        // Approve LINK for upkeep registration
-        IERC20(LINK_TOKEN).approve(keeperRegistrar, type(uint256).max);
-        
-        emit ChainlinkSetupCompleted(SUBSCRIPTION_ID, keeperRegistrar, keeperRegistry);
     }
     
     // ========== MODIFIERS ==========
     
     /**
-     * @dev Only allows calls from registered Chainlink forwarders
+     * @dev Only Chainlink forwarders recorded by BRBUpkeepManager (no direct forwarder edits on this contract)
      */
     modifier onlyForwarders() {
-        RouletteStorage storage $ = _getRouletteStorage();
-        if ($.forwarders[msg.sender] == 0) revert OnlyForwarders();
+        if (!IBRBUpkeepManager(UPKEEP_MANAGER).isAuthorizedForwarder(msg.sender)) revert OnlyForwarders();
+        _;
+    }
+
+    modifier onlyStakedBRBContract() {
+        if (msg.sender != STAKED_BRB_CONTRACT) revert UnauthorizedCaller();
         _;
     }
     
-    // ========== CHAINLINK SETUP FUNCTIONS ==========
-    
-    /**
-     * @dev Register VRF trigger upkeep (admin only)
-     * @param linkAmount Amount of LINK to fund the upkeep (18 decimals)
-     */
-    function registerVRFUpkeep(
-        uint96 linkAmount
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
-        RouletteStorage storage $ = _getRouletteStorage();
-        if ($.keeperRegistrar == address(0)) revert ZeroAddress();
-        
-        // Transfer LINK from caller to this contract for upkeep funding
-        IERC20(LINK_TOKEN).transferFrom(msg.sender, address(this), linkAmount);
-        
-        string memory upkeepName = string.concat(
-            "RouletteClean-VRF-",
-            Strings.toHexString(address(this))
-        );
-        
-        uint256 upkeepId = IAutomationRegistrar2_1($.keeperRegistrar).registerUpkeep(
-            IAutomationRegistrar2_1.RegistrationParams({
-                name: upkeepName,
-                encryptedEmail: new bytes(0),
-                upkeepContract: address(this),
-                gasLimit: UPKEEP_GAS_LIMIT, // Use calculated gas limit
-                adminAddress: msg.sender,
-                triggerType: 0, // Conditional trigger
-                checkData: new bytes(0), // Empty = VRF trigger
-                triggerConfig: new bytes(0),
-                offchainConfig: new bytes(0),
-                amount: linkAmount
-            })
-        );
-        
-        if (upkeepId == 0) revert UpkeepRegistrationFailed();
-        
-        // Get forwarder address and register it
-        address forwarder = IAutomationRegistry2_1($.keeperRegistry).getForwarder(upkeepId);
-        $.forwarders[forwarder] = upkeepId;
-        
-        emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmount, 0, "VRF");
-        return upkeepId;
-    }
-    
-    function registerComputeTotalWinningBetsUpkeep(
-        uint96 linkAmount
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
-        RouletteStorage storage $ = _getRouletteStorage();
-        if ($.keeperRegistrar == address(0)) revert ZeroAddress();
-        
-        string memory upkeepName = string.concat(
-            "RouletteClean-ComputeTotalWinningBets-",
-            Strings.toHexString(address(this))
-        );
-
-        IERC20(LINK_TOKEN).transferFrom(msg.sender, address(this), linkAmount);
-        
-        uint256 upkeepId = IAutomationRegistrar2_1($.keeperRegistrar).registerUpkeep(
-            IAutomationRegistrar2_1.RegistrationParams({
-                name: upkeepName,
-                encryptedEmail: new bytes(0),
-                upkeepContract: address(this),
-                gasLimit: UPKEEP_GAS_LIMIT, // Use calculated gas limit
-                adminAddress: msg.sender,
-                triggerType: 0, // Conditional trigger
-                checkData: new bytes(1),
-                triggerConfig: new bytes(0),
-                offchainConfig: new bytes(0),
-                amount: linkAmount
-            })
-        );
-
-        if (upkeepId == 0) revert UpkeepRegistrationFailed();
-        
-        // Get forwarder address and register it
-        address forwarder = IAutomationRegistry2_1($.keeperRegistry).getForwarder(upkeepId);
-        $.forwarders[forwarder] = upkeepId;
-        
-        emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmount, 1, "COMPUTE_TOTAL_WINNING_BETS");
-        return upkeepId;
-    }
-    /**
-     * @dev Register multiple payout upkeeps to support higher bet volumes (admin only)
-     * @param upkeepCount Number of payout upkeeps to register
-     * @param linkAmountPerUpkeep Amount of LINK to fund each upkeep (18 decimals)
-     */
-    function registerPayoutUpkeeps(
-        uint256 upkeepCount,
-        uint96 linkAmountPerUpkeep
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        RouletteStorage storage $ = _getRouletteStorage();
-        if ($.keeperRegistrar == address(0)) revert ZeroAddress();
-        if (upkeepCount == 0) revert ZeroAmount();
-        
-        // Transfer total LINK amount needed from caller to this contract
-        IERC20(LINK_TOKEN).transferFrom(msg.sender, address(this), upkeepCount * linkAmountPerUpkeep);        
-        bytes memory checkData;
-        uint256 checkDataLength;
-        string memory upkeepName;
-        uint256 upkeepId;
-        address forwarder;
-        uint256 oldRegisteredUpkeepCount = $.registeredUpkeepCount;
-        uint256 newRegisteredUpkeepCount = oldRegisteredUpkeepCount + upkeepCount;
-        if (newRegisteredUpkeepCount > 256) revert MaxUpkeepLimitReached();
-        for (uint256 i = oldRegisteredUpkeepCount; i < newRegisteredUpkeepCount;) {
-            // checkData.length determines batch range: length 1 = batch 0, length 2 = batch 1, etc.
-            checkData = new bytes(i + 2);
-            checkDataLength = checkData.length;
-            
-            upkeepName = string.concat(
-                "RouletteClean-Payout-",
-                Strings.toString(checkDataLength),
-                "-",
-                Strings.toHexString(address(this))
-            );
-            
-            upkeepId = IAutomationRegistrar2_1($.keeperRegistrar).registerUpkeep(
-                IAutomationRegistrar2_1.RegistrationParams({
-                    name: upkeepName,
-                    encryptedEmail: new bytes(0),
-                    upkeepContract: address(this),
-                    gasLimit: UPKEEP_GAS_LIMIT, // Use calculated gas limit
-                    adminAddress: msg.sender,
-                    triggerType: 0, // Conditional trigger
-                    checkData: checkData, // Length determines batch index
-                    triggerConfig: new bytes(0),
-                    offchainConfig: new bytes(0),
-                    amount: linkAmountPerUpkeep
-                })
-            );
-            
-            if (upkeepId == 0) revert UpkeepRegistrationFailed();
-            
-            // Get forwarder address and register it
-            forwarder = IAutomationRegistry2_1($.keeperRegistry).getForwarder(upkeepId);
-            $.forwarders[forwarder] = upkeepId;            
-            emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmountPerUpkeep, checkDataLength, "PAYOUT");
-            
-            unchecked { ++i; }
-        }
-        
-        // Update tracking variables
-        $.registeredUpkeepCount = newRegisteredUpkeepCount;
-        $.maxSupportedBets = newRegisteredUpkeepCount * BATCH_SIZE;
-        
-        emit MaxSupportedBetsUpdated($.maxSupportedBets, newRegisteredUpkeepCount);
-    }
-
     function setMinJackpotCondition(uint256 newMinCondition) external onlyRole(DEFAULT_ADMIN_ROLE) {
         RouletteStorage storage $ = _getRouletteStorage();
         $.minJackpotCondition = newMinCondition;
@@ -479,7 +324,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
      * @param data Bet data: abi.encode(MultipleBets) OR abi.encode(betType, number) for single bet
      */
     function bet(address sender, uint256 totalValue, bytes calldata data) 
-        external returns (uint256)
+        external override returns (uint256)
     {
         // Only allow calls from the immutable StakedBRB contract
         if (msg.sender != STAKED_BRB_CONTRACT) revert UnauthorizedCaller();
@@ -497,6 +342,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     /**
      * @dev Process multiple bets
      */
+    function _requireBetCapacity(RouletteStorage storage $, uint256 currentRound, uint256 betsLength) private view {
+        if ($.totalBetsInRound[currentRound] + betsLength > IBRBUpkeepManager(UPKEEP_MANAGER).maxSupportedBets()) {
+            revert BetLimitExceeded();
+        }
+    }
+
     function _processMultipleBets(address sender, uint256 totalValue, MultipleBets memory bets, RouletteStorage storage $) private returns (uint256 maxPayout) {
         unchecked {
             uint256 betsLength = bets.amounts.length; // Cache array length
@@ -508,13 +359,12 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
 
             if (betsLength == 0) revert EmptyBetsArray();
 
+            if (!_isBettingOpen()) revert BettingClosed();
+
             // Cache storage reads
             uint256 currentRound = $.currentRound;
 
-            uint256 newTotalBets = $.totalBetsInRound[currentRound] + betsLength;
-            if (newTotalBets > $.maxSupportedBets) {
-                revert BetLimitExceeded();
-            }
+            _requireBetCapacity($, currentRound, betsLength);
 
             // SINGLE LOOP: Validate total AND process bets in one pass
             uint256 calculatedTotal;
@@ -541,7 +391,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             // Validate total amount matches
             if (calculatedTotal != totalValue) revert InvalidBet();
 
-            $.totalBetsInRound[currentRound] = newTotalBets;
+            $.totalBetsInRound[currentRound] = $.totalBetsInRound[currentRound] + betsLength;
             
             // Calculate optimized maxPayout from tracked components
             maxPayout = _calculateMaxPayoutFromStorage(currentRound, $);
@@ -687,38 +537,46 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     /**
      * @dev Chainlink Automation: Check if upkeep needed
-     * @param checkData Empty for VRF trigger, length determines user batch range for payouts
-     * 
-     * SEQUENTIAL SAFETY: This function ensures batches are processed in order to prevent
-     * parallel execution issues. Batch N can only be processed if batch N-1 is completed.
-     * This prevents race conditions where multiple upkeeps could process overlapping batches.
+     * @param checkData length 0 => UpkeepKind.PreVrfLock; length 1 (e.g. hex"01") => Vrf; length 2 => ComputeTotalWinningBets;
+     *                  length >= 3 => payout batches (batch index = length - 3) => PayoutBatch or JackpotPayoutBatch.
+     * SEQUENTIAL SAFETY: Batches are processed in order; batch N only after N-1 completes.
      */
     function checkUpkeep(bytes calldata checkData) external view override returns (bool upkeepNeeded, bytes memory performData) {
         RouletteStorage storage $ = _getRouletteStorage();
-        
-        if (checkData.length == 0) {
-            // VRF TRIGGER: Check if we need to start new round and request VRF
-            uint256 srt = $.lastRoundStartTime;
-            uint256 elapsed = block.timestamp - srt;
-            uint256 remainder = elapsed % GAME_PERIOD;
-            uint256 currentRound = $.currentRound;
 
-            // Only allow upkeep if we have bets and we are within the TIME_MARGIN window
-            upkeepNeeded = $.totalBetsInRound[currentRound] > 0 && (elapsed >= GAME_PERIOD && remainder <= TIME_MARGIN);
+        if (checkData.length == 0) {
+            uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
+            uint256 elapsed = block.timestamp - srt;
+            // Pre-VRF lock: after betting window ends; must run before VRF (idempotent if already locked)
+            upkeepNeeded = elapsed >= GAME_PERIOD
+                && !IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()
+                && !IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress();
+            if (upkeepNeeded) {
+                performData = abi.encode(PerformDataPayload({
+                    roundId: 0,
+                    kind: UpkeepKind.PreVrfLock,
+                    payload: ""
+                }));
+            }
+        } else if (checkData.length == 1) {
+            uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
+            uint256 elapsed = block.timestamp - srt;
+            uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
+            uint256 currentRound = $.currentRound;
+            // VRF: after GAME_PERIOD + no-bet lock, only if pre-lock upkeep ran
+            upkeepNeeded = elapsed >= GAME_PERIOD + lockDuration
+                && IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()
+                && !IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress();
 
             if (upkeepNeeded) {
-                // Calculate the next scheduled start timestamp
                 performData = abi.encode(PerformDataPayload({
                     roundId: currentRound,
-                    upkeepType: 0,
-                    payload: abi.encode(TriggerVRF({
-                        newLastRoundStartTimestamp: srt + (elapsed / GAME_PERIOD) * GAME_PERIOD,
-                        newRoundId: currentRound + 1
-                    }))
+                    kind: UpkeepKind.Vrf,
+                    payload: abi.encode(TriggerVRF({ newRoundId: currentRound + 1 }))
                 }));
             }
 
-        } else if (checkData.length == 1) {
+        } else if (checkData.length == 2) {
             // COMPUTE TOTAL WINNING BETS: Check if we need to compute total winning bets
              uint256 roundToBePaid = $.lastRoundPaid + 1;
              RandomResult memory result = $.randomResults[roundToBePaid];
@@ -728,7 +586,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 upkeepNeeded = true;
                 performData = abi.encode(PerformDataPayload({
                     roundId: roundToBePaid,
-                    upkeepType: 1,
+                    kind: UpkeepKind.ComputeTotalWinningBets,
                     payload: abi.encode(ComputeTotalWinningBetsData({
                         totalWinningBets: totalWinningBets,
                         jackpotWinnerCount: jackpotWinnerCount,
@@ -742,12 +600,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             
             // Only process if round exists and has VRF result (check lastRoundPaid instead of roundResolved)
             if (roundToBePaid < $.currentRound && $.randomResults[roundToBePaid].set && roundToBePaid > $.lastRoundPaid && $.totalWinningBetsSet[roundToBePaid]) {
-                // Calculate batch range based on checkData.length
-                // checkData.length == 1: batch 0 (users 0-9)
-                // checkData.length == 2: batch 1 (users 10-19)
-                // checkData.length == n: batch n-1
-                
-                uint256 batchIndex = checkData.length - 2; // 0 is for VRF and 1 is for COMPUTE TOTAL WINNING BETS
+                // checkData.length 3 => batch 0, 4 => batch 1, ...
+                uint256 batchIndex = checkData.length - 3;
                 uint256 startIndex = batchIndex * BATCH_SIZE;
                 
                 // ATOMIC CHECK: Only process if this specific batch hasn't been processed yet
@@ -767,7 +621,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                    upkeepNeeded = true;
                    performData = abi.encode(PerformDataPayload({
                         roundId: roundToBePaid,
-                        upkeepType: 3,
+                        kind: UpkeepKind.JackpotPayoutBatch,
                         payload: abi.encode(JackpotPayoutPayload({
                             payouts: payouts,
                             batchIndex: batchIndex
@@ -787,7 +641,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                     upkeepNeeded = true;
                     performData = abi.encode(PerformDataPayload({
                         roundId: roundToBePaid,
-                        upkeepType: 2,
+                        kind: UpkeepKind.PayoutBatch,
                         payload: abi.encode(PayoutBatch({
                             totalPayouts: totalPayouts,
                             payouts: payouts,
@@ -805,25 +659,23 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     function performUpkeep(bytes calldata performData) external override onlyForwarders {
         PerformDataPayload memory payload = abi.decode(performData, (PerformDataPayload));
         
-        if (payload.upkeepType == 0) {
-            // VRF TRIGGER: Start new round and request VRF
+        if (payload.kind == UpkeepKind.PreVrfLock) {
+            IStakedBRB(STAKED_BRB_CONTRACT).onBettingWindowClosed();
+        } else if (payload.kind == UpkeepKind.Vrf) {
             _triggerVRF(payload.roundId, abi.decode(payload.payload, (TriggerVRF)));
-        } else if (payload.upkeepType == 1) {
-            // COMPUTE TOTAL WINNING BETS: Process batch of users for a round
+        } else if (payload.kind == UpkeepKind.ComputeTotalWinningBets) {
             _processComputeTotalWinningBets(payload.roundId, abi.decode(payload.payload, (ComputeTotalWinningBetsData)));
-        } else if (payload.upkeepType == 2) {
-            // PAYOUT USERS: Process batch of users for a round
+        } else if (payload.kind == UpkeepKind.PayoutBatch) {
             _processBatch(payload.roundId, abi.decode(payload.payload, (PayoutBatch)));
-        } else if (payload.upkeepType == 3) {
+        } else if (payload.kind == UpkeepKind.JackpotPayoutBatch) {
             _processJackpotPayout(payload.roundId, abi.decode(payload.payload, (JackpotPayoutPayload)));
         }
     }
     
     function _triggerVRF(uint256 roundId, TriggerVRF memory triggerData) private {
         RouletteStorage storage $ = _getRouletteStorage();        
-        // Update to next round
+        // Update to next round (lastRoundStartTime is updated only after StakedBRB cleaning upkeep)
         $.currentRound = triggerData.newRoundId;
-        $.lastRoundStartTime = triggerData.newLastRoundStartTimestamp;
         
         // Request VRF for the round we just finished
         uint256 requestId = vrfCoordinator().requestRandomWords(
@@ -839,7 +691,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         $.requestIdToRound[requestId] = roundId;
         
-        emit RoundStarted(triggerData.newRoundId, triggerData.newLastRoundStartTimestamp, requestId);
+        emit VrfRequested(triggerData.newRoundId, requestId, block.timestamp);
 
         IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition(triggerData.newRoundId);
     }
@@ -1195,23 +1047,42 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         }
     }
 
+    function _isBettingOpen() private view returns (bool) {
+        if (IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()) return false;
+        // Keep betting-open gating aligned with the same boundary timestamp
+        // used for GAME_PERIOD / no-bet lock calculations.
+        uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
+        uint256 elapsed = block.timestamp - srt;
+        return elapsed < GAME_PERIOD;
+    }
+
+    /// @inheritdoc IRoulette
+    function isBettingOpen() external view override returns (bool) {
+        return _isBettingOpen();
+    }
+
+    /// @inheritdoc IRoulette
+    function gamePeriod() external view override returns (uint256) {
+        return GAME_PERIOD;
+    }
+
+    /// @inheritdoc IRoulette
+    function onRoundBoundary(uint256 boundaryTimestamp) external override onlyStakedBRBContract {
+        _getRouletteStorage().lastRoundStartTime = boundaryTimestamp;
+    }
+
     // ========== VIEW FUNCTIONS ==========
     
     /**
      * @dev Get upkeep configuration and bet limits
      */
-    function getUpkeepConfig() external view returns (
-        uint256 maxSupportedBets,
-        uint256 registeredUpkeepCount,
-        uint256 batchSize,
-        uint32 upkeepGasLimit
-    ) {
-        RouletteStorage storage $ = _getRouletteStorage();
+    function getUpkeepConfig() external view returns (uint256, uint256, uint256, uint32) {
+        IBRBUpkeepManager m = IBRBUpkeepManager(UPKEEP_MANAGER);
         return (
-            $.maxSupportedBets,
-            $.registeredUpkeepCount,
-            BATCH_SIZE,
-            UPKEEP_GAS_LIMIT
+            m.maxSupportedBets(),
+            m.registeredPayoutUpkeepCount(),
+            m.batchSize(),
+            m.upkeepGasLimit()
         );
     }
     
@@ -1221,7 +1092,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     function canPlaceBets(uint256 additionalBets) external view returns (bool) {
         RouletteStorage storage $ = _getRouletteStorage();
         uint256 currentBets = $.totalBetsInRound[$.currentRound];
-        return (currentBets + additionalBets) <= $.maxSupportedBets;
+        return (currentBets + additionalBets) <= IBRBUpkeepManager(UPKEEP_MANAGER).maxSupportedBets();
     }
     
     /**
@@ -1237,10 +1108,11 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
 
     /**
-     * @dev Get contract constants
+     * @dev Get contract constants (min no-bet lock seconds, batch size, game period, payout upkeep gas limit).
+     *      Max lock is NO_BET_LOCK_MIN + NO_BET_LOCK_MOD - 1 (10); duration uses lastRoundStartTime % NO_BET_LOCK_MOD.
      */
     function getConstants() external view returns (uint256, uint256, uint256, uint32) {
-        return (TIME_MARGIN, BATCH_SIZE, GAME_PERIOD, UPKEEP_GAS_LIMIT);
+        return (NO_BET_LOCK_MIN, BATCH_SIZE, GAME_PERIOD, UPKEEP_GAS_LIMIT);
     }
 
     /**
@@ -1261,13 +1133,29 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         return (SUBSCRIPTION_ID, KEY_HASH_2GWEI, KEY_HASH_30GWEI, KEY_HASH_150GWEI, CALLBACK_GAS_LIMIT, NUMWORDS, SAFE_BLOCK_CONFIRMATION);
     }
     
+    /**
+     * @dev Seconds until VRF can fire (after GAME_PERIOD + no-bet lock). Returns 0 in the trigger window,
+     *      type(uint256).max while StakedBRB round transition is in progress.
+     */
     function getSecondsFromNextUpkeepWindow() external view returns (uint256) {
-        RouletteStorage storage $ = _getRouletteStorage();
-        uint256 srt = $.lastRoundStartTime;
-        uint256 gamePeriod = GAME_PERIOD;
+        if (IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()) {
+            return type(uint256).max;
+        }
+        uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
         uint256 elapsed = block.timestamp - srt;
-        uint256 remainder = elapsed % gamePeriod;
-        return (elapsed >= gamePeriod && remainder <= TIME_MARGIN) ? 0 : gamePeriod - remainder; // 0 if in upkeep window, otherwise time until next window
+        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
+        uint256 vrfDeadline = GAME_PERIOD + lockDuration;
+
+        if (elapsed < GAME_PERIOD) {
+            return GAME_PERIOD - elapsed;
+        }
+        if (!IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()) {
+            return 0;
+        }
+        if (elapsed < vrfDeadline) {
+            return vrfDeadline - elapsed;
+        }
+        return 0;
     }
     
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}

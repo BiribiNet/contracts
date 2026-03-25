@@ -1,5 +1,5 @@
 # Biribi Roulette Events Pipeline
-# Tracks: RoundStarted, VRFResult, ComputedPayouts, JackpotResultEvent, BatchProcessed, RoundResolved
+# Tracks: VrfRequested, VRFResult, ComputedPayouts, JackpotResultEvent, BatchProcessed, RoundResolved
 #
 # SETUP:
 # 1. Upload roulette-events-abi.json to a GitHub Gist and get the raw URL

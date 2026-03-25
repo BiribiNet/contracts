@@ -1,6 +1,7 @@
 import hre, { viem } from "hardhat";
 
 import { encodeAbiParameters, encodeFunctionData, getContractAddress, parseEther } from "viem";
+// Note: roulette impl verification constructor must include upkeepManager address — update hardcoded verify args when re-deploying
 
 import { abi as rouletteCleanAbi } from "../artifacts/contracts/RouletteClean.sol/abi";
 import { abi as stakedBrbAbi } from "../artifacts/contracts/StakedBRB.sol/abi";
@@ -62,7 +63,7 @@ async function deployTestnet() {
   const initializeRouletteData = encodeFunctionData({
     abi: rouletteCleanAbi,
     functionName: 'initialize',
-    args: [deployer.account.address, AUTOMATION_REGISTRAR_ADDRESS, AUTOMATION_REGISTRY_ADDRESS, LINK_TOKEN_ADDRESS]
+    args: [parseEther('1'), deployer.account.address]
   });
 
   const initializeStakedBrbData = encodeFunctionData({
