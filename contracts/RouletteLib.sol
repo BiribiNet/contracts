@@ -89,7 +89,7 @@ library RouletteLib {
      * @dev Get all splits that include this number
      */
     function getWinningSplits(uint256 num) private pure returns (uint256[] memory) {
-        uint256[] memory splits = new uint256[](10); // Max 4 splits per number
+        uint256[] memory splits = new uint256[](4); // Max 4 splits per number (2 horizontal + 2 vertical)
         uint256 count;
         
         if (num == 0) return new uint256[](0); // Zero has no splits
@@ -244,16 +244,17 @@ library RouletteLib {
     }
     
     /**
-     * @dev Check if number is red
+     * @dev Check if number is red (bitmap lookup — single bitwise op instead of 18 comparisons)
+     * Red numbers: 1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36
      */
+    uint256 private constant RED_BITMAP =
+        (1 << 1) | (1 << 3) | (1 << 5) | (1 << 7) | (1 << 9) |
+        (1 << 12) | (1 << 14) | (1 << 16) | (1 << 18) | (1 << 19) |
+        (1 << 21) | (1 << 23) | (1 << 25) | (1 << 27) | (1 << 30) |
+        (1 << 32) | (1 << 34) | (1 << 36);
+
     function isRedNumber(uint256 num) private pure returns (bool) {
-        unchecked {
-            // Red numbers in European roulette: 1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36
-            return (num == 1 || num == 3 || num == 5 || num == 7 || num == 9 ||
-                    num == 12 || num == 14 || num == 16 || num == 18 || num == 19 ||
-                    num == 21 || num == 23 || num == 25 || num == 27 || num == 30 ||
-                    num == 32 || num == 34 || num == 36);
-        }
+        return num <= 36 && (RED_BITMAP & (1 << num)) != 0;
     }
     
     /**

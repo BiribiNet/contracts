@@ -47,7 +47,7 @@ async function deployWithCreate() {
   }))
 
   const jackpotContract = await viem.deployContract("JackpotContract", [brbAddress, rouletteProxyAddress])
-  const brbReferal = await viem.deployContract("BRBReferal", [stakedBrbProxyAddress]) // #1
+  const brbReferal = await viem.deployContract("BRBReferral", [stakedBrbProxyAddress]) // #1
   const brb = await viem.deployContract("BRB", []) // #2
 
   const keyHash2Gwei = "0x9fe0eebf5e446e3c998ec9bb19951541aee00bb90ea201ae456421a2ded86805"

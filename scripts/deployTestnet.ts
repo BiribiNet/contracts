@@ -106,7 +106,7 @@ async function deployTestnet() {
   // Deploy contracts in correct order
   const jackpotContract = await viem.deployContract("JackpotContract", [brbAddress, rouletteProxyAddress])
   await setTimeoutIsDeployed(jackpotContract.address);
-  const brbReferal = await viem.deployContract("BRBReferal", [stakedBrbProxyAddress])
+  const brbReferal = await viem.deployContract("BRBReferral", [stakedBrbProxyAddress])
   await setTimeoutIsDeployed(brbReferal.address);
   const brb = await viem.deployContract("BRB")
   await setTimeoutIsDeployed(brb.address);
