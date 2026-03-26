@@ -186,6 +186,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event WithdrawalEjected(address indexed user, uint8 reason);
     /// @dev Emitted when Roulette signals the betting window has closed (pre-VRF); `roundId` is {StakedBRB} `currentRound` at that moment.
     event BettingWindowClosed(uint256 roundId);
+    event ForceUnlockedPreVrf(uint256 indexed round);
     
     // Errors
     error OnlyBRB();
@@ -615,7 +616,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.roundTransitionInProgress = true;
         $.currentRound = newRoundId;
     }
-    
+
+    /// @notice Called by Roulette.forceUnlockPreVrf() to clear the pre-VRF lock when VRF upkeep never fired.
+    function onForceUnlockPreVrf() external onlyRoulette {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
+        $.roundResolutionLocked = false;
+        emit ForceUnlockedPreVrf($.currentRound);
+    }
+
     /// @dev Calculate the safe withdrawal capacity that won't risk payout solvency
     /// @return safeCapacity Maximum amount that can be safely withdrawn immediately
     function _calculateSafeWithdrawalCapacity() private view returns (uint256 safeCapacity) {

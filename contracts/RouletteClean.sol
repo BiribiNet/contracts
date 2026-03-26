@@ -204,6 +204,11 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => mapping(uint256 => uint256)) roundDozenBetsSum;   // roundId => dozen => total dozen bets
         mapping(uint256 => mapping(uint256 => uint256)) roundColumnBetsSum;  // roundId => column => total column bets
         mapping(uint256 => uint256) roundOtherBetsPayout; // roundId => sum of splits/corners/lines/trios payouts (streets excluded)
+
+        // VRF Recovery (appended for proxy-safe upgrade)
+        uint256 lastVrfRequestId;          // Pending VRF requestId for cleanup on force-resolve
+        uint256 lastVrfRequestTimestamp;   // block.timestamp when VRF was last requested
+        uint256 vrfRecoveryTimeout;        // Seconds before admin can force-resolve a stuck VRF
     }
     
     
@@ -256,6 +261,13 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     error BettingClosed();
     /// @dev Initialize RouletteClean only after StakedBRB.initialize so boundary timestamp is set.
     error StakedBRBNotInitialized();
+    error NotStuck();
+    error TimeoutNotElapsed();
+    error VrfRecoveryTimeoutNotSet();
+
+    event ForceResolvedVrf(uint256 indexed roundId, address indexed admin);
+    event ForceUnlockedPreVrf(uint256 indexed round, address indexed admin);
+    event VrfRecoveryTimeoutUpdated(uint256 newTimeout);
     
     constructor(ConstructorParams memory params) VRFConsumerBaseV2(params.vrfCoordinator) {
         GAME_PERIOD = params.gamePeriod;
@@ -684,7 +696,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         );
         
         $.requestIdToRound[requestId] = roundId;
-        
+        $.lastVrfRequestId = requestId;
+        $.lastVrfRequestTimestamp = block.timestamp;
+
         emit VrfRequested(triggerData.newRoundId, requestId, block.timestamp);
 
         IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition(triggerData.newRoundId);
@@ -787,7 +801,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         // Cleanup: Remove used request ID (gas refund)
         delete $.requestIdToRound[requestId];
-        
+        $.lastVrfRequestTimestamp = 0;
+        $.lastVrfRequestId = 0;
+
         emit VRFResult(roundToResolve, winningNumber, jackpotNumber);
     }
     
@@ -1147,5 +1163,99 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         return 0;
     }
     
+    // ========== VRF RECOVERY ==========
+
+    /// @notice Initialize V2: sets VRF recovery timeout (proxy-safe reinitializer)
+    /// @param recoveryTimeout Seconds before admin can force-resolve a stuck VRF (minimum 60)
+    function initializeV2(uint256 recoveryTimeout) external reinitializer(2) {
+        require(recoveryTimeout >= 60, "timeout too short");
+        _getRouletteStorage().vrfRecoveryTimeout = recoveryTimeout;
+    }
+
+    /// @notice Admin setter for VRF recovery timeout
+    /// @param newTimeout Seconds before admin can force-resolve (minimum 60)
+    function setVrfRecoveryTimeout(uint256 newTimeout) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newTimeout >= 60, "timeout too short");
+        _getRouletteStorage().vrfRecoveryTimeout = newTimeout;
+        emit VrfRecoveryTimeoutUpdated(newTimeout);
+    }
+
+    /// @notice Force-resolve a round stuck waiting for VRF fulfillment (State A recovery).
+    ///         All bets for the stuck round are treated as losses (zero winners).
+    ///         After this call the cleaning upkeep will fire automatically and reopen betting.
+    /// @param roundId The round that is stuck (must be < currentRound with no VRF result)
+    function forceResolveVrf(uint256 roundId) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        RouletteStorage storage $ = _getRouletteStorage();
+
+        uint256 timeout = $.vrfRecoveryTimeout;
+        if (timeout == 0) revert VrfRecoveryTimeoutNotSet();
+
+        // Must be a pending round with no VRF result
+        if (roundId >= $.currentRound || $.randomResults[roundId].set) revert NotStuck();
+
+        // Timeout must have elapsed since VRF was requested
+        uint256 reqTs = $.lastVrfRequestTimestamp;
+        if (reqTs == 0 || block.timestamp < reqTs + timeout) revert TimeoutNotElapsed();
+
+        // 1. Set void result (winningNumber/jackpotNumber values irrelevant — we bypass compute)
+        $.randomResults[roundId] = RandomResult({ winningNumber: 37, jackpotNumber: 37, set: true });
+
+        // 2. Bypass compute/payout pipeline: mark round as having 0 winners
+        $.totalWinningBetsSet[roundId] = true;
+        $.totalWinningBets[roundId] = 0;
+        $.lastRoundPaid = roundId;
+
+        // 3. Notify StakedBRB that the round is resolved (triggers cleaning upkeep eligibility)
+        IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, new IRoulette.PayoutInfo[](0), 0, true);
+
+        // 4. Clean up VRF request tracking
+        uint256 pendingReqId = $.lastVrfRequestId;
+        if (pendingReqId != 0) delete $.requestIdToRound[pendingReqId];
+        $.lastVrfRequestId = 0;
+        $.lastVrfRequestTimestamp = 0;
+
+        emit RoundResolved(roundId);
+        emit ForceResolvedVrf(roundId, msg.sender);
+    }
+
+    /// @notice Unlock pre-VRF lock when VRF upkeep never fired (State B recovery).
+    ///         Clears roundResolutionLocked so the round cycle can restart.
+    function forceUnlockPreVrf() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        RouletteStorage storage $ = _getRouletteStorage();
+
+        uint256 timeout = $.vrfRecoveryTimeout;
+        if (timeout == 0) revert VrfRecoveryTimeoutNotSet();
+
+        // Must be in pre-VRF locked state (not already in VRF transition)
+        if (!IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()) revert NotStuck();
+        if (IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()) revert NotStuck();
+
+        // Timeout: VRF should have fired at srt + GAME_PERIOD + lockDuration
+        uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
+        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
+        if (block.timestamp < srt + GAME_PERIOD + lockDuration + timeout) revert TimeoutNotElapsed();
+
+        // Reset the lock so the round cycle can restart
+        IStakedBRB(STAKED_BRB_CONTRACT).onForceUnlockPreVrf();
+
+        emit ForceUnlockedPreVrf($.currentRound, msg.sender);
+    }
+
+    /// @notice Diagnostic view for VRF recovery state
+    function getVrfRecoveryState() external view returns (
+        uint256 lastRequestId,
+        uint256 lastRequestTimestamp,
+        uint256 recoveryTimeout,
+        bool isVrfPending,
+        uint256 timeSinceRequest
+    ) {
+        RouletteStorage storage $ = _getRouletteStorage();
+        lastRequestId = $.lastVrfRequestId;
+        lastRequestTimestamp = $.lastVrfRequestTimestamp;
+        recoveryTimeout = $.vrfRecoveryTimeout;
+        isVrfPending = lastRequestTimestamp != 0;
+        timeSinceRequest = isVrfPending ? block.timestamp - lastRequestTimestamp : 0;
+    }
+
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }
