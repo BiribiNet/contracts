@@ -34,12 +34,12 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     address private immutable UPKEEP_MANAGER;
     // Security constants
     uint256 public constant MINIMUM_FIRST_DEPOSIT = 1e18; // 1 BRB — mitigates ERC-4626 inflation attack
-    /// @dev Hard cap: sum of all fees cannot exceed 10% — stakers always receive ≥ 90% of net losses
-    uint256 public constant MAX_TOTAL_FEE_BPS = 1000;
-    /// @dev Per-fee caps prevent any single fee from dominating
-    uint256 public constant MAX_PROTOCOL_FEE_BPS = 500;   // 5% max
-    uint256 public constant MAX_JACKPOT_FEE_BPS = 500;    // 5% max
-    uint256 public constant MAX_BURN_FEE_BPS = 200;       // 2% max
+    /// @dev Hard cap: sum of all fees cannot exceed 5% — stakers always receive ≥ 95% of net losses
+    uint256 public constant MAX_TOTAL_FEE_BPS = 500;
+    /// @dev Per-fee caps aligned with whitepaper: 2% protocol, 2.5% jackpot, 0.5% burn
+    uint256 public constant MAX_PROTOCOL_FEE_BPS = 200;   // 2% max
+    uint256 public constant MAX_JACKPOT_FEE_BPS = 250;    // 2.5% max
+    uint256 public constant MAX_BURN_FEE_BPS = 50;        // 0.5% max
     /// @dev Minimum withdrawal/redeem to prevent queue griefing (same as first deposit minimum)
     uint256 public constant MINIMUM_WITHDRAWAL = 1e18;   // 1 BRB min
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
@@ -70,7 +70,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     error QueueIsEmpty();
     error UserNotInQueue();
     struct StakedBRBStorage {
-        uint256 jackpotAmount;           // Amount of jackpot
+        uint256 __deprecated_jackpotAmount; // DEPRECATED: dead storage, never read/written — preserves slot layout for proxy compatibility
         uint256 jackpotBasisPoints;      // Jackpot fee taken from betting losses (e.g. 250 = 2.5%)
         uint256 burnBasisPoints;         // Burn fee taken from betting losses (e.g. 250 = 2.5%)
         uint256 protocolFeeBasisPoints;  // Protocol fee taken from betting losses (e.g. 250 = 2.5%)

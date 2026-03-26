@@ -49,9 +49,9 @@ describe("RouletteClean", function () {
 
       const [brbToken, _rouletteContract, protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate, _feeRecipient, _pendingBets] = await stakedBrbProxy.read.getVaultConfig();
       expect(brbToken.toLowerCase()).to.equal(brb.address.toLowerCase());
-      expect(protocolFeeBasisPoints).to.equal(300n); // 300 (3%)
+      expect(protocolFeeBasisPoints).to.equal(200n); // 200 (2%)
       expect(burnFeeRate).to.equal(50n); // 50 (0.5%)
-      expect(jackpotFeeRate).to.equal(150n); // 150 (1.5%)
+      expect(jackpotFeeRate).to.equal(250n); // 250 (2.5%)
     });
 
 

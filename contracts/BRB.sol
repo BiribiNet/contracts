@@ -8,6 +8,7 @@ import { IRoulette } from "./interfaces/IRoulette.sol";
 
 contract BRB is ERC20, ERC20Permit {
     error BRBLengthMismatch();
+    error ZeroAddressPayout();
     constructor() ERC20("BiRiBi", "BRB") ERC20Permit("BiRiBi") {
         _mint(msg.sender, 30_000_000 * 10 ** decimals());
     }
@@ -22,6 +23,7 @@ contract BRB is ERC20, ERC20Permit {
         IRoulette.PayoutInfo memory payoutInfo;
         for (uint256 i; i < payoutsLength;) {
             payoutInfo = payouts[i];
+            if (payoutInfo.player == address(0)) revert ZeroAddressPayout();
             _transfer(msg.sender, payoutInfo.player, payoutInfo.payout);
             unchecked { ++i; }
         }
