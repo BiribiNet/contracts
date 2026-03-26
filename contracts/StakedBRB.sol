@@ -418,9 +418,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                                 amountsToProcess[v.actualProcessCount] = amount;
                                 v.actualProcessCount++;
                             }
+                            i++; // only count non-null entries toward the batch limit
                         }
                         currentIndex++;
-                        i++;
                         maxIterations--;
                     }
                 }
@@ -698,15 +698,24 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         
         // Mark slot as empty (we'll reuse it)
         $.withdrawalQueue[index] = address(0);
-        
+
         // Decrease queue size
         $.queueSize--;
-        
+
         // If queue is now empty, reset pointers
         if ($.queueSize == 0) {
             $.queueHead = 0;
             $.queueTail = 0;
             delete $.withdrawalQueue;
+        } else if (index == $.queueHead) {
+            // Advance head past consecutive null entries so checkUpkeep never wastes
+            // iterations scanning already-processed slots.
+            uint256 newHead = index + 1;
+            uint256 len = $.withdrawalQueue.length;
+            while (newHead < len && $.withdrawalQueue[newHead] == address(0)) {
+                unchecked { ++newHead; }
+            }
+            $.queueHead = newHead;
         }
     }
     
@@ -952,15 +961,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     /// @dev Private function to check if withdrawals are allowed
-    function _checkWithdrawalAllowed(address owner) private view {
+    /// @dev Reverts if round resolution is in progress. The pending-withdrawal check is
+    ///      already enforced by the `noPendingWithdrawal` modifier on `withdraw` / `redeem`.
+    function _checkWithdrawalAllowed(address) private view {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         // Block during pre-VRF lock or post-VRF transition until cleaning completes
         if ($.roundTransitionInProgress || $.roundResolutionLocked) {
             revert WithdrawalBlockedDuringResolution();
-        }
-
-        if ($.pendingWithdrawal[owner].kind != 0) {
-            revert WithdrawalPending();
         }
     }
 

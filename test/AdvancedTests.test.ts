@@ -878,4 +878,239 @@ describe("Advanced Tests", function () {
       ).to.equal(0n);
     });
   });
+
+  // -------------------------------------------------------------------
+  // Withdrawal Queue Head Advancement (regression test for stagnant queueHead bug)
+  // -------------------------------------------------------------------
+  describe("Withdrawal Queue Head Advancement", function () {
+    it("Should process withdrawals past null gaps after earlier entries were processed", async function () {
+      const {
+        stakedBrbProxy,
+        rouletteProxy,
+        brb,
+        vrfCoordinator,
+      } = await useDeployWithCreateFixture();
+      const publicClient = await viem.getPublicClient();
+      const wallets = await viem.getWalletClients();
+      const admin = wallets[0];
+
+      // Setup: create 8 stakers with deposits
+      const stakers = wallets.slice(1, 9); // 8 stakers
+      const depositAmount = parseEther("100");
+
+      // Transfer BRB to stakers and approve vault + admin (forwarder) for shares
+      for (const s of stakers) {
+        await brb.write.transfer([s.account.address, depositAmount], {
+          account: admin.account,
+        });
+        await brb.write.approve([stakedBrbProxy.address, depositAmount], {
+          account: s.account,
+        });
+        // Approve admin (mock forwarder) for sBRB share spending during withdrawal processing
+        await stakedBrbProxy.write.approve([admin.account.address, MAX_UINT256], {
+          account: s.account,
+        });
+      }
+
+      // First deposit bootstraps vault
+      await stakedBrbProxy.write.deposit(
+        [depositAmount, stakers[0].account.address, 0n],
+        { account: stakers[0].account }
+      );
+
+      // Remaining stakers queue deposits during game period
+      for (let i = 1; i < stakers.length; i++) {
+        await stakedBrbProxy.write.deposit(
+          [depositAmount, stakers[i].account.address, 0n],
+          { account: stakers[i].account }
+        );
+      }
+
+      // Run a round so queued deposits are processed in cleaning
+      // Need a small bet so there's a round to resolve
+      const betAmt = parseEther("1");
+      const betData = encodeBets([betAmt], [1n], [5n]); // straight on 5
+      await brb.write.bet(
+        [stakedBrbProxy.address, betAmt, betData, zeroAddress],
+        { account: admin.account }
+      );
+      await resolveFullRound(
+        stakedBrbProxy,
+        rouletteProxy,
+        vrfCoordinator,
+        publicClient,
+        7n
+      );
+
+      // Now queue withdrawals for all 8 stakers
+      for (const s of stakers) {
+        const shares = await stakedBrbProxy.read.balanceOf([
+          s.account.address,
+        ]);
+        if (shares > 0n) {
+          const assets = await stakedBrbProxy.read.convertToAssets([shares]);
+          if (assets >= parseEther("1")) {
+            await stakedBrbProxy.write.withdraw(
+              [assets, s.account.address, s.account.address, 0n],
+              { account: s.account }
+            );
+          }
+        }
+      }
+
+      // Verify queue has entries
+      const [batchSize, queueLenBefore] =
+        await stakedBrbProxy.read.getWithdrawalSettings();
+      expect(queueLenBefore).to.be.gte(2n);
+
+      // Place bet and resolve a round to trigger cleaning (processes first batch of withdrawals)
+      await brb.write.bet(
+        [stakedBrbProxy.address, betAmt, betData, zeroAddress],
+        { account: admin.account }
+      );
+      await resolveFullRound(
+        stakedBrbProxy,
+        rouletteProxy,
+        vrfCoordinator,
+        publicClient,
+        7n
+      );
+
+      const [, queueLenAfterRound1] =
+        await stakedBrbProxy.read.getWithdrawalSettings();
+
+      // Some withdrawals should have been processed (batch of 5)
+      expect(queueLenAfterRound1).to.be.lt(queueLenBefore);
+
+      // Key test: if there are remaining withdrawals, the next round must still process them
+      // This was the bug — queueHead never advanced, so checkUpkeep would scan null entries forever
+      if (queueLenAfterRound1 > 0n) {
+        await brb.write.bet(
+          [stakedBrbProxy.address, betAmt, betData, zeroAddress],
+          { account: admin.account }
+        );
+        await resolveFullRound(
+          stakedBrbProxy,
+          rouletteProxy,
+          vrfCoordinator,
+          publicClient,
+          7n
+        );
+
+        const [, queueLenAfterRound2] =
+          await stakedBrbProxy.read.getWithdrawalSettings();
+
+        // The second round must have processed more withdrawals (not stuck on nulls)
+        expect(queueLenAfterRound2).to.be.lt(queueLenAfterRound1);
+      }
+    });
+
+    it("checkUpkeep should scan past null entries to find valid withdrawal users", async function () {
+      const {
+        stakedBrbProxy,
+        rouletteProxy,
+        brb,
+        vrfCoordinator,
+      } = await useDeployWithCreateFixture();
+      const publicClient = await viem.getPublicClient();
+      const wallets = await viem.getWalletClients();
+      const admin = wallets[0];
+
+      // Setup 3 stakers
+      const stakers = wallets.slice(1, 4);
+      const depositAmount = parseEther("100");
+
+      for (const s of stakers) {
+        await brb.write.transfer([s.account.address, depositAmount], {
+          account: admin.account,
+        });
+        await brb.write.approve([stakedBrbProxy.address, depositAmount], {
+          account: s.account,
+        });
+        // Approve admin (mock forwarder) for sBRB share spending during withdrawal processing
+        await stakedBrbProxy.write.approve([admin.account.address, MAX_UINT256], {
+          account: s.account,
+        });
+      }
+
+      // First deposit bootstraps vault
+      await stakedBrbProxy.write.deposit(
+        [depositAmount, stakers[0].account.address, 0n],
+        { account: stakers[0].account }
+      );
+
+      // Queue remaining deposits
+      for (let i = 1; i < stakers.length; i++) {
+        await stakedBrbProxy.write.deposit(
+          [depositAmount, stakers[i].account.address, 0n],
+          { account: stakers[i].account }
+        );
+      }
+
+      // Resolve round to process deposits
+      const betAmt = parseEther("1");
+      const betData = encodeBets([betAmt], [1n], [5n]);
+      await brb.write.bet(
+        [stakedBrbProxy.address, betAmt, betData, zeroAddress],
+        { account: admin.account }
+      );
+      await resolveFullRound(
+        stakedBrbProxy,
+        rouletteProxy,
+        vrfCoordinator,
+        publicClient,
+        7n
+      );
+
+      // Staker[0] queues withdrawal then cancels it (creates a null entry at queueHead)
+      const s0Shares = await stakedBrbProxy.read.balanceOf([
+        stakers[0].account.address,
+      ]);
+      const s0Assets = await stakedBrbProxy.read.convertToAssets([s0Shares]);
+      if (s0Assets >= parseEther("1")) {
+        await stakedBrbProxy.write.withdraw(
+          [s0Assets, stakers[0].account.address, stakers[0].account.address, 0n],
+          { account: stakers[0].account }
+        );
+        // Cancel to create a null gap
+        await stakedBrbProxy.write.cancelWithdrawal({
+          account: stakers[0].account,
+        });
+      }
+
+      // Staker[1] queues withdrawal (should be after the null gap)
+      const s1Shares = await stakedBrbProxy.read.balanceOf([
+        stakers[1].account.address,
+      ]);
+      const s1Assets = await stakedBrbProxy.read.convertToAssets([s1Shares]);
+      if (s1Assets >= parseEther("1")) {
+        await stakedBrbProxy.write.withdraw(
+          [s1Assets, stakers[1].account.address, stakers[1].account.address, 0n],
+          { account: stakers[1].account }
+        );
+      }
+
+      const [, queueLen] =
+        await stakedBrbProxy.read.getWithdrawalSettings();
+      expect(queueLen).to.equal(1n); // only staker[1]
+
+      // Resolve round — the cleaning should find staker[1] past the null gap
+      await brb.write.bet(
+        [stakedBrbProxy.address, betAmt, betData, zeroAddress],
+        { account: admin.account }
+      );
+      await resolveFullRound(
+        stakedBrbProxy,
+        rouletteProxy,
+        vrfCoordinator,
+        publicClient,
+        7n
+      );
+
+      const [, queueLenAfter] =
+        await stakedBrbProxy.read.getWithdrawalSettings();
+      // Staker[1]'s withdrawal should have been processed (not stuck behind null gap)
+      expect(queueLenAfter).to.equal(0n);
+    });
+  });
 });
