@@ -74,9 +74,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     // ========== BET STRUCTS ==========
     struct Bet {
-        address player;
-        uint256 amount;
-        uint256 number; // Primary number/identifier for the bet
+        address player;  // 20 bytes ─┐
+        uint96 amount;   // 12 bytes  ─┘ slot 1 (32 bytes, packed)
+        uint16 number;   // 2 bytes   ── slot 2 (was uint256, max splitId=3636 fits in uint16)
     }
     
     struct MultipleBets {
@@ -421,8 +421,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             // Store the bet in appropriate mapping for efficient lookup
             Bet memory newBet = Bet({
                 player: sender,
-                amount: amount,
-                number: number
+                amount: uint96(amount),
+                number: uint16(number)
             });
             
             
@@ -906,9 +906,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio023Bets[roundId], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
         
-        // Resize array to actual payout count
+        // Resize array to actual payout count (explicit field access, safe across struct reordering)
+        uint256 count = v.payoutCount;
         assembly {
-            mstore(tempPayouts, mload(v)) // v.payoutCount is first field of CollectWinningsValues
+            mstore(tempPayouts, count)
         }
 
         return (tempPayouts, v.totalPayouts);

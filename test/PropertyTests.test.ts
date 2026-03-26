@@ -159,10 +159,10 @@ describe("Property & Fuzz Tests", function () {
       const rand = mulberry32(777);
 
       for (let i = 0; i < 15; i++) {
-        const protocol = BigInt(Math.floor(rand() * 501)); // 0-500
-        const burn = BigInt(Math.floor(rand() * 201));      // 0-200
-        const jackpot = BigInt(Math.floor(rand() * 501));   // 0-500
-        if (protocol + burn + jackpot > 1000n) continue;
+        const protocol = BigInt(Math.floor(rand() * 201)); // 0-200
+        const burn = BigInt(Math.floor(rand() * 51));       // 0-50
+        const jackpot = BigInt(Math.floor(rand() * 251));   // 0-250
+        if (protocol + burn + jackpot > 500n) continue;
 
         await stakedBrbProxy.write.setProtocolFeeRate([protocol], { account: admin.account });
         await stakedBrbProxy.write.setBurnFeeRate([burn], { account: admin.account });
@@ -182,30 +182,30 @@ describe("Property & Fuzz Tests", function () {
   });
 
   describe("Invariant: Fee rate caps enforced", function () {
-    it("Should reject protocol fee > 500 BPS", async function () {
+    it("Should reject protocol fee > 200 BPS", async function () {
       const { stakedBrbProxy } = await useDeployWithCreateFixture();
       const [admin] = await viem.getWalletClients();
-      await expect(stakedBrbProxy.write.setProtocolFeeRate([501n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
+      await expect(stakedBrbProxy.write.setProtocolFeeRate([201n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
     });
 
-    it("Should reject burn fee > 200 BPS", async function () {
+    it("Should reject burn fee > 50 BPS", async function () {
       const { stakedBrbProxy } = await useDeployWithCreateFixture();
       const [admin] = await viem.getWalletClients();
-      await expect(stakedBrbProxy.write.setBurnFeeRate([201n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
+      await expect(stakedBrbProxy.write.setBurnFeeRate([51n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
     });
 
-    it("Should reject jackpot fee > 500 BPS", async function () {
+    it("Should reject jackpot fee > 250 BPS", async function () {
       const { stakedBrbProxy } = await useDeployWithCreateFixture();
       const [admin] = await viem.getWalletClients();
-      await expect(stakedBrbProxy.write.setJackpotFeeRate([501n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
+      await expect(stakedBrbProxy.write.setJackpotFeeRate([251n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
     });
 
-    it("Should reject total fees > 1000 BPS", async function () {
+    it("Should reject total fees > 500 BPS", async function () {
       const { stakedBrbProxy } = await useDeployWithCreateFixture();
       const [admin] = await viem.getWalletClients();
-      await stakedBrbProxy.write.setProtocolFeeRate([500n], { account: admin.account });
-      await stakedBrbProxy.write.setBurnFeeRate([200n], { account: admin.account });
-      await expect(stakedBrbProxy.write.setJackpotFeeRate([301n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
+      await stakedBrbProxy.write.setProtocolFeeRate([200n], { account: admin.account });
+      await stakedBrbProxy.write.setBurnFeeRate([50n], { account: admin.account });
+      await expect(stakedBrbProxy.write.setJackpotFeeRate([251n], { account: admin.account })).to.be.rejectedWith("InvalidFeeRate");
     });
   });
 

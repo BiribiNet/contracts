@@ -59,9 +59,9 @@ async function deployWithCreate() {
   // Large enough that multi-tx fixture deploy does not advance block time past one period
   // (StakedBRB rejects deposits when elapsed >= gamePeriod since lastRoundBoundaryTimestamp)
   const gamePeriod = 100_000n;
-  const teamFeeBasisPoints = 300n;
-  const burnFeeBasisPoints = 50n;
-  const jackpotFeeBasisPoints = 150n;
+  const teamFeeBasisPoints = 200n;  // 2% — aligned with whitepaper & tightened MAX_PROTOCOL_FEE_BPS
+  const burnFeeBasisPoints = 50n;   // 0.5%
+  const jackpotFeeBasisPoints = 250n; // 2.5% — aligned with whitepaper
 
   const rouletteLib = await viem.deployContract("RouletteLib");
 
