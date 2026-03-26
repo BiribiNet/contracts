@@ -177,7 +177,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event LiquidityOpsPerUpkeepUpdated(uint32 ops);
     /// @dev Single log when cleaning upkeep completes: settled round (fees) + new betting boundary (mirrors prior RoundCleaned + RoundStarted).
     event RoundCleaningCompleted(
-        uint256 cleanedRoundId,
+        uint256 indexed cleanedRoundId,
         uint256 newRoundId,
         uint256 boundaryTimestamp,
         Fees fees
@@ -313,7 +313,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 totalBalance = IERC20(asset()).balanceOf(address(this));
 
         // Queued deposit BRB lives in liquidityEscrow, not in the vault balance.
-        return totalBalance - $.pendingBets;
+        // Defensive floor at 0 to prevent underflow bricking the vault (2C)
+        return totalBalance > $.pendingBets ? totalBalance - $.pendingBets : 0;
     }
 
     /**
@@ -350,7 +351,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         emit BetPlaced(from, amount, data, currentRound);
 
         require(IERC20(BRB_TOKEN).balanceOf(address(this)) >= nextMaxPayout, InsufficientBalanceForMaxPayout());
-        if (referral != address(0)) {
+        if (referral != address(0) && referral != from) {
             BRB_REFERRAL.mint(referral, amount);
         }
     }
@@ -575,7 +576,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function processRouletteResult(uint256 roundId, IRoulette.PayoutInfo[] memory payouts, uint256 totalPayouts, bool isLastBatch) external onlyRoulette nonReentrant {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
 
-        // Sanity check: cumulative payouts cannot exceed the worst-case maxPayout reserved at bet time
+        // Sanity check: cumulative payouts cannot exceed the worst-case maxPayout reserved at bet time (C-01 defense-in-depth)
         require($.totalPayouts + totalPayouts <= $.maxPayout, "payouts exceed maxPayout");
 
         // If this is the last batch, track pending bets for this round

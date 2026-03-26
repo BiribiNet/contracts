@@ -222,6 +222,7 @@ async function deployWithCreate() {
     mockLinkToken,
     subId,
     brb,
+    brbReferral: brbReferal, // BRBReferral contract instance
     cleaningUpkeepId, // Return the cleaning upkeepId from the fixture
     payoutUpkeepIds: upkeepIds, // Return payout upkeep IDs
     computeTotalWinningBetsUpkeepId: upkeepIdsComputeTotalWinningBets // Return compute total winning bets upkeep ID

@@ -238,11 +238,11 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     // ========== EVENTS ==========
     event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
     event VrfRequested(uint256 indexed newRoundId, uint256 requestId, uint256 timestamp);
-    event RoundResolved(uint256 roundId);
-    event VRFResult(uint256 roundId, uint256 winningNumber, uint256 jackpotNumber);
-    event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
-    event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
-    event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
+    event RoundResolved(uint256 indexed roundId);
+    event VRFResult(uint256 indexed roundId, uint256 winningNumber, uint256 jackpotNumber);
+    event BatchProcessed(uint256 indexed roundId, uint256 batchIndex, uint256 payoutsCount);
+    event JackpotResultEvent(uint256 indexed roundId, uint256 jackpotWinnerCount);
+    event ComputedPayouts(uint256 indexed roundId, uint256 totalWinningBets);
     
     // ========== ERRORS ==========
     error InvalidBet();
@@ -426,10 +426,11 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         unchecked {
             // Validate bet amount
             if (amount < 10000 gwei) revert ZeroAmount(); // Minimum 10000 gwei per bet
-            
+            if (amount > type(uint96).max) revert InvalidBet(); // Prevent silent uint96 truncation (2A)
+
             // Validate bet type
             if (betType == 0 || betType > BET_TRIO_023) revert InvalidBetType();
-            
+
             // Store the bet in appropriate mapping for efficient lookup
             Bet memory newBet = Bet({
                 player: sender,
