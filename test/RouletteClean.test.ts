@@ -1669,27 +1669,33 @@ describe("RouletteClean", function () {
       
       console.log(`Total jackpot bet amount: ${formatEther(totalJackpotBetAmount)} BRB`);
 
+      // M-05: last winner receives remainder — no dust left in jackpot contract
+      let sumFloorPayouts = 0n;
       for (let i = 0; i < jackpotPlayers.length; i++) {
         const player = jackpotPlayers[i];
         const playerBetAmount = bigBetAmount * BigInt(i + 1);
-        
-        // Expected jackpot share = (playerBetAmount * jackpotFund) / totalJackpotBetAmount (floor rounding)
-        const expectedJackpotShare = playerBetAmount * jackpotFund / totalJackpotBetAmount;
+        const isLast = i === jackpotPlayers.length - 1;
+
+        // Floor share for all players
+        const floorShare = playerBetAmount * jackpotFund / totalJackpotBetAmount;
+        // Last winner gets the remainder to avoid dust
+        const expectedJackpotShare = isLast ? (jackpotFund - sumFloorPayouts) : floorShare;
+        sumFloorPayouts += floorShare;
+
         const expectedRegularPayout = playerBetAmount * 36n;
 
         const finalBalance = await brb.read.balanceOf([player.account.address]);
         const initialBalance = playerBalancesBeforeBets.get(player.account.address)!;
         const expectedTotal = initialBalance - playerBetAmount + expectedRegularPayout + expectedJackpotShare;
-        
+
         expect(finalBalance).to.equal(expectedTotal);
         console.log(`Player ${i+1} (bet ${formatEther(playerBetAmount)}) won ${formatEther(expectedJackpotShare)} BRB from jackpot`);
       }
       console.log(`Total jackpot distributed: ${formatEther(jackpotFund)} BRB`);
 
-      // Verify jackpot contract is empty
+      // Verify jackpot contract is now empty (M-05: remainder goes to last winner)
       const finalJackpotBalance = await brb.read.balanceOf([jackpotContract.address]);
-      // can accumulate dust that's why we use lt
-      expect(Number(finalJackpotBalance)).to.be.lt(5);
+      expect(finalJackpotBalance).to.equal(0n);
     });
 
     it("Should handle case where no jackpot winners exist", async function () {

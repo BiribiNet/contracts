@@ -108,11 +108,12 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         mapping(address => bool) queuedDepositIntentByPayer;
         address liquidityEscrow;
 
-        // Deprecated: legacy forwarder/registrar slots; cleaning uses `UPKEEP_MANAGER` + registrar on StakedBRB.
-        mapping(address => uint256) forwarders;
-        address keeperRegistrar;
-        address keeperRegistry;
-        address linkToken;
+        // DEPRECATED: legacy forwarder/registrar slots — DO NOT REMOVE (preserves storage layout for proxy).
+        // Cleaning now uses UPKEEP_MANAGER + registrar on BRBUpkeepManager.
+        mapping(address => uint256) __deprecated_forwarders;
+        address __deprecated_keeperRegistrar;
+        address __deprecated_keeperRegistry;
+        address __deprecated_linkToken;
         /// @dev Max deposit/mint queue entries processed per cleaning upkeep `performUpkeep`.
         uint32 liquidityOpsPerCleaningUpkeep;
     }
@@ -831,9 +832,29 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
 
     /// @dev BRB moves to {liquidityEscrow}; conversion runs in {_processLiquidityQueue}.
+    ///      If a deposit is already queued for this payer, the assets are accumulated into the existing entry (M-02).
     function _enqueueLiquidityDeposit(uint256 assets, address receiver, uint256 minSharesOut) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.queuedDepositIntentByPayer[msg.sender]) revert DepositIntentAlreadyQueued();
+        if ($.queuedDepositIntentByPayer[msg.sender]) {
+            // Accumulate into existing queued deposit (scan from head; queue is bounded by liquidityOpsPerCleaningUpkeep)
+            uint256 len = $.depositMintQueue.length;
+            for (uint256 i = $.depositMintQueueHead; i < len;) {
+                if ($.depositMintQueue[i].payer == msg.sender && $.depositMintQueue[i].kind == 0) {
+                    $.depositMintQueue[i].assets += assets;
+                    // Use the stricter (higher) minSharesOut proportionally — or 0 if either is 0
+                    if (minSharesOut > 0 && $.depositMintQueue[i].minSharesOut > 0) {
+                        $.depositMintQueue[i].minSharesOut += minSharesOut;
+                    } else {
+                        $.depositMintQueue[i].minSharesOut = 0;
+                    }
+                    IERC20(asset()).transferFrom(msg.sender, $.liquidityEscrow, assets);
+                    return;
+                }
+                unchecked { ++i; }
+            }
+            // Fallthrough: flag was stale (entry already processed), reset and enqueue fresh
+            // This can happen if cleaning upkeep processed the entry but the flag wasn't cleared yet
+        }
         $.queuedDepositIntentByPayer[msg.sender] = true;
         $.depositMintQueue.push(
             QueuedLiquidity({ kind: 0, payer: msg.sender, receiver: receiver, assets: assets, shares: 0, minSharesOut: minSharesOut })

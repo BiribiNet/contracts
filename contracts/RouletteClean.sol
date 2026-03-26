@@ -816,20 +816,34 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 totalJackpotBetAmount
     ) private view returns (IRoulette.PayoutInfo[] memory) {
         IRoulette.PayoutInfo[] memory payouts = new IRoulette.PayoutInfo[](BATCH_SIZE);
-        uint256 totalLength = $.roundBigStraightBets[roundId][winningNumber].length;
+        Bet[] storage allBets = $.roundBigStraightBets[roundId][winningNumber];
+        uint256 totalLength = allBets.length;
         uint256 j = startIndex;
         uint256 i;
         Bet storage currentBet;
+
+        // Pre-compute total distributed to all winners BEFORE this batch (for remainder calc across batches)
+        uint256 distributedBefore;
+        for (uint256 k; k < startIndex;) {
+            distributedBefore += allBets[k].amount * jackpotAmount / totalJackpotBetAmount;
+            unchecked { ++k; }
+        }
+        uint256 distributedSoFar = distributedBefore;
+
         for (; i < BATCH_SIZE && j < totalLength;) {
-            currentBet = $.roundBigStraightBets[roundId][winningNumber][j];
+            currentBet = allBets[j];
+            uint256 share = currentBet.amount * jackpotAmount / totalJackpotBetAmount;
+            distributedSoFar += share;
+            unchecked { ++j; }
+            // Last winner in the entire set receives remainder to prevent dust loss (M-05)
+            if (j == totalLength) {
+                share = jackpotAmount - (distributedSoFar - share);
+            }
             payouts[i] = IRoulette.PayoutInfo({
                 player: currentBet.player,
-                payout: currentBet.amount * jackpotAmount / totalJackpotBetAmount
+                payout: share
             });
-            // Proportional share calculation (Floor Rounding for security)
-            // share = (betAmount * jackpotAmount) / totalJackpotBetAmount
-            // This ensures we never distribute more than jackpotAmount (floor rounding favors protocol)            
-            unchecked { ++i; ++j; }
+            unchecked { ++i; }
         }
         assembly {
             mstore(payouts, i)
