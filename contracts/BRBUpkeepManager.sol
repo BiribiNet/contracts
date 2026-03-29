@@ -131,7 +131,7 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
         _stakedBrbForwarderToUpkeepId[forwarder] = upkeepId;
 
         emit CleaningUpkeepRegistered(upkeepId, forwarder, STAKED_BRB_CLEANING_GAS_LIMIT, linkAmount, "Cleaning");
-        emit UpkeepRegistered(upkeepId, forwarder, STAKED_BRB_CLEANING_GAS_LIMIT, linkAmount, 1, "STAKED_BR_CLEANING");
+        emit UpkeepRegistered(upkeepId, forwarder, STAKED_BRB_CLEANING_GAS_LIMIT, linkAmount, 1, "STAKED_BRB_CLEANING");
     }
 
     /// @inheritdoc IBRBUpkeepManager

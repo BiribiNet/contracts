@@ -8,6 +8,7 @@ import { IRoulette } from "./interfaces/IRoulette.sol";
 
 contract JackpotContract is AccessControlUpgradeable, UUPSUpgradeable {
     error OnlyRoulette();
+    event JackpotPaid(uint256 winnersCount);
     IBRB private immutable BRB_TOKEN;
     address private immutable ROULETTE_CONTRACT;
 
@@ -26,6 +27,7 @@ contract JackpotContract is AccessControlUpgradeable, UUPSUpgradeable {
     function jackpotWin(IRoulette.PayoutInfo[] calldata payouts) external {
         if (msg.sender != ROULETTE_CONTRACT) revert OnlyRoulette();
         BRB_TOKEN.transferBatch(payouts);
+        emit JackpotPaid(payouts.length);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
