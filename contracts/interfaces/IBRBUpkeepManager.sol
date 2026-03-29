@@ -9,8 +9,8 @@ interface IBRBUpkeepManager {
     /// @dev True if `forwarder` may call {RouletteClean.performUpkeep} (roulette upkeeps).
     function isAuthorizedForwarder(address forwarder) external view returns (bool);
 
-    /// @dev True if `forwarder` may call {StakedBRB.performUpkeep} for cleaning (registered via registrar).
-    function isStakedBrbCleaningForwarder(address forwarder) external view returns (bool);
+    /// @dev True if `forwarder` was returned by the registrar for any {StakedBRB} upkeep (cleaning, pre-VRF, or VRF). Routing uses `performData`, not separate forwarder roles.
+    function isStakedBrbForwarder(address forwarder) external view returns (bool);
 
     function maxSupportedBets() external view returns (uint256);
 

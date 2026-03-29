@@ -20,7 +20,7 @@ import { RouletteLib } from "./RouletteLib.sol";
 contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface, IRoulette {
     
     // ========== SIMPLE CONSTANTS ==========
-    /// @dev No-bet lock after GAME_PERIOD lasts 6–10s: 6 + (lastRoundStartTime % 5)
+    /// @dev No-bet lock after the betting window lasts 6–10s: 6 + (lastRoundBoundaryTimestamp % 5) from StakedBRB
     uint256 private constant NO_BET_LOCK_MIN = 6;
     uint256 private constant NO_BET_LOCK_MOD = 5;
     uint32 private constant BATCH_SIZE = 35; // Users per batch for payout processing
@@ -32,7 +32,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     // CALCULATED GAS LIMIT: Covers BATCH_SIZE winning bets + overhead
     uint32 private constant UPKEEP_GAS_LIMIT = BASE_GAS_OVERHEAD + (BATCH_SIZE * GAS_PER_WINNING_BET);
-    uint256 private immutable GAME_PERIOD; // e.g., 60 seconds per round
     
     // EIP-7201 storage location
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.roulette")) - 1)) & ~bytes32(uint256(0xff));
@@ -56,7 +55,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     address private immutable UPKEEP_MANAGER;
 
     struct ConstructorParams {
-        uint256 gamePeriod;
         address vrfCoordinator;
         bytes32 keyHash2Gwei;
         bytes32 keyHash30Gwei;
@@ -109,9 +107,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 jackpotAmount; // Jackpot pool at time of win (numerator for proportional calc)
     }
 
-    /// @dev Matches performData `kind` and aligns with checkData routing: empty checkData => PreVrfLock (0); hex"01" => Vrf (1); length 2 => Compute…; length>=3 => payout batches.
+    /// @dev performData `kind`; checkData: hex"01" => Vrf; length 2 => Compute…; length>=3 => payout batches. Pre-VRF lock runs only on {StakedBRB}.
     enum UpkeepKind {
-        PreVrfLock,
         Vrf,
         ComputeTotalWinningBets,
         PayoutBatch,
@@ -122,10 +119,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 roundId;
         UpkeepKind kind;
         bytes payload;
-    }
-    
-    struct TriggerVRF {
-        uint256 newRoundId;
     }
     
     struct PayoutBatch {
@@ -147,16 +140,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 batchEnd;
     }
     
-    struct TestDebug {
-        uint256 rouletteNumber;
-        uint256 jackpotNumber;
-        bool isSet;
-    }
-    
     // ========== EIP-7201 STORAGE ==========
     struct RouletteStorage {
         uint256 currentRound;
-        uint256 lastRoundStartTime;
         uint256 lastRoundPaid; // Last round where all users were paid
         
         // EFFICIENT BET COUNTER (instead of gas-intensive loops)
@@ -194,7 +180,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => JackpotResult) jackpotResult; // roundId => jackpot result
         mapping(uint256 => RandomResult) randomResults; // roundId => VRF result
         mapping(uint256 => uint256) requestIdToRound; // VRF request => round
-        mapping(uint256 => TestDebug) forcedNumbers;
         
         // OPTIMIZED MAXPAYOUT TRACKING
         mapping(uint256 => uint256) roundMaxStraightBet;  // roundId => max total straight bet amount across all numbers (single SLOAD)
@@ -238,7 +223,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     // ========== EVENTS ==========
     event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
-    event VrfRequested(uint256 indexed newRoundId, uint256 requestId, uint256 timestamp);
+    event VrfRequested(uint256 newRoundId, uint256 requestId, uint256 timestamp);
     event RoundResolved(uint256 roundId);
     event VRFResult(uint256 roundId, uint256 winningNumber, uint256 jackpotNumber);
     event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
@@ -264,7 +249,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     error StakedBRBNotInitialized();
     
     constructor(ConstructorParams memory params) VRFConsumerBaseV2(params.vrfCoordinator) {
-        GAME_PERIOD = params.gamePeriod;
         KEY_HASH_2GWEI = params.keyHash2Gwei;
         KEY_HASH_30GWEI = params.keyHash30Gwei;
         KEY_HASH_150GWEI = params.keyHash150Gwei;
@@ -291,19 +275,17 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         RouletteStorage storage $ = _getRouletteStorage();
         $.currentRound = 1;
-        uint256 boundaryTs = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
-        if (boundaryTs == 0) revert StakedBRBNotInitialized();
-        $.lastRoundStartTime = boundaryTs;
+        if (IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp() == 0) revert StakedBRBNotInitialized();
         $.minJackpotCondition = minJackpotCondition;
     }
     
     // ========== MODIFIERS ==========
     
-    /**
-     * @dev Only Chainlink forwarders recorded by BRBUpkeepManager (no direct forwarder edits on this contract)
-     */
+    /// @dev Registered Chainlink forwarders only (VRF, compute, payout batches — all on this contract).
     modifier onlyForwarders() {
-        if (!IBRBUpkeepManager(UPKEEP_MANAGER).isAuthorizedForwarder(msg.sender)) revert OnlyForwarders();
+        if (!IBRBUpkeepManager(UPKEEP_MANAGER).isAuthorizedForwarder(msg.sender)) {
+            revert OnlyForwarders();
+        }
         _;
     }
 
@@ -359,7 +341,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
 
             if (betsLength == 0) revert EmptyBetsArray();
 
-            if (!_isBettingOpen()) revert BettingClosed();
+            if (!IStakedBRB(STAKED_BRB_CONTRACT).isBettingOpen()) revert BettingClosed();
 
             // Cache storage reads
             uint256 currentRound = $.currentRound;
@@ -536,43 +518,26 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
     
     /**
-     * @dev Chainlink Automation: Check if upkeep needed
-     * @param checkData length 0 => UpkeepKind.PreVrfLock; length 1 (e.g. hex"01") => Vrf; length 2 => ComputeTotalWinningBets;
+     * @dev Chainlink Automation: Check if upkeep needed (VRF, compute, payouts). Pre-VRF lock uses {StakedBRB.checkUpkeep} with empty checkData.
+     * @param checkData length 1 (e.g. hex"01") => Vrf; length 2 => ComputeTotalWinningBets;
      *                  length >= 3 => payout batches (batch index = length - 3) => PayoutBatch or JackpotPayoutBatch.
      * SEQUENTIAL SAFETY: Batches are processed in order; batch N only after N-1 completes.
      */
-    function checkUpkeep(bytes calldata checkData) external view override returns (bool upkeepNeeded, bytes memory performData) {
+    function checkUpkeep(bytes calldata checkData)
+        external
+        view
+        override(AutomationCompatibleInterface, IRoulette)
+        returns (bool upkeepNeeded, bytes memory performData)
+    {
         RouletteStorage storage $ = _getRouletteStorage();
 
-        if (checkData.length == 0) {
-            uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
-            uint256 elapsed = block.timestamp - srt;
-            // Pre-VRF lock: after betting window ends; must run before VRF (idempotent if already locked)
-            upkeepNeeded = elapsed >= GAME_PERIOD
-                && !IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()
-                && !IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress();
+        if (checkData.length == 1) {
+            upkeepNeeded = IStakedBRB(STAKED_BRB_CONTRACT).isVrfUpkeepNeeded();
             if (upkeepNeeded) {
                 performData = abi.encode(PerformDataPayload({
-                    roundId: 0,
-                    kind: UpkeepKind.PreVrfLock,
-                    payload: ""
-                }));
-            }
-        } else if (checkData.length == 1) {
-            uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
-            uint256 elapsed = block.timestamp - srt;
-            uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
-            uint256 currentRound = $.currentRound;
-            // VRF: after GAME_PERIOD + no-bet lock, only if pre-lock upkeep ran
-            upkeepNeeded = elapsed >= GAME_PERIOD + lockDuration
-                && IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()
-                && !IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress();
-
-            if (upkeepNeeded) {
-                performData = abi.encode(PerformDataPayload({
-                    roundId: currentRound,
+                    roundId: $.currentRound,
                     kind: UpkeepKind.Vrf,
-                    payload: abi.encode(TriggerVRF({ newRoundId: currentRound + 1 }))
+                    payload: bytes("")
                 }));
             }
 
@@ -580,7 +545,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             // COMPUTE TOTAL WINNING BETS: Check if we need to compute total winning bets
              uint256 roundToBePaid = $.lastRoundPaid + 1;
              RandomResult memory result = $.randomResults[roundToBePaid];
-             if (roundToBePaid < $.currentRound && result.set && roundToBePaid > $.lastRoundPaid && !$.totalWinningBetsSet[roundToBePaid]) {
+             if (result.set && !$.totalWinningBetsSet[roundToBePaid]) {
                 uint256 random = result.winningNumber;
                 (uint256 totalWinningBets, uint256 jackpotWinnerCount, uint256 totalJackpotBetAmount) = _countTotalWinningBets($, roundToBePaid, random, result.jackpotNumber, RouletteLib.getWinningBetTypes(random));
                 upkeepNeeded = true;
@@ -599,7 +564,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             uint256 roundToBePaid = $.lastRoundPaid + 1;
             
             // Only process if round exists and has VRF result (check lastRoundPaid instead of roundResolved)
-            if (roundToBePaid < $.currentRound && $.randomResults[roundToBePaid].set && roundToBePaid > $.lastRoundPaid && $.totalWinningBetsSet[roundToBePaid]) {
+            if ($.randomResults[roundToBePaid].set && $.totalWinningBetsSet[roundToBePaid]) {
                 // checkData.length 3 => batch 0, 4 => batch 1, ...
                 uint256 batchIndex = checkData.length - 3;
                 uint256 startIndex = batchIndex * BATCH_SIZE;
@@ -656,13 +621,15 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     /**
      * @dev Chainlink Automation: Perform upkeep based on trigger type
      */
-    function performUpkeep(bytes calldata performData) external override onlyForwarders {
+    function performUpkeep(bytes calldata performData)
+        external
+        override(AutomationCompatibleInterface, IRoulette)
+        onlyForwarders
+    {
         PerformDataPayload memory payload = abi.decode(performData, (PerformDataPayload));
         
-        if (payload.kind == UpkeepKind.PreVrfLock) {
-            IStakedBRB(STAKED_BRB_CONTRACT).onBettingWindowClosed();
-        } else if (payload.kind == UpkeepKind.Vrf) {
-            _triggerVRF(payload.roundId, abi.decode(payload.payload, (TriggerVRF)));
+        if (payload.kind == UpkeepKind.Vrf) {
+            _triggerVRF(payload.roundId);
         } else if (payload.kind == UpkeepKind.ComputeTotalWinningBets) {
             _processComputeTotalWinningBets(payload.roundId, abi.decode(payload.payload, (ComputeTotalWinningBetsData)));
         } else if (payload.kind == UpkeepKind.PayoutBatch) {
@@ -672,12 +639,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         }
     }
     
-    function _triggerVRF(uint256 roundId, TriggerVRF memory triggerData) private {
-        RouletteStorage storage $ = _getRouletteStorage();        
-        // Update to next round (lastRoundStartTime is updated only after StakedBRB cleaning upkeep)
-        $.currentRound = triggerData.newRoundId;
-        
-        // Request VRF for the round we just finished
+    function _triggerVRF(uint256 roundId) private {
+        RouletteStorage storage $ = _getRouletteStorage();
+        // Request VRF for the round being resolved; `currentRound` advances on StakedBRB cleaning / `onRoundBoundary`.
         uint256 requestId = vrfCoordinator().requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: tx.gasprice < 2 gwei ? KEY_HASH_2GWEI : tx.gasprice < 30 gwei ? KEY_HASH_30GWEI : KEY_HASH_150GWEI,
@@ -691,9 +655,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         $.requestIdToRound[requestId] = roundId;
         
-        emit VrfRequested(triggerData.newRoundId, requestId, block.timestamp);
+        emit VrfRequested(roundId, requestId, block.timestamp);
 
-        IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition(triggerData.newRoundId);
+        IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition();
     }
 
     function _processJackpotPayout(uint256 roundId, JackpotPayoutPayload memory batchJackpotPayout) private {
@@ -783,12 +747,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         uint256 winningNumber = randomWords[0] % 37; // 0-36
         uint256 jackpotNumber = randomWords[1] % 37; // 0-36
-        
-        // TODO TEST DEBUG TO REMOVE
-        if ($.forcedNumbers[roundToResolve].isSet) {
-            winningNumber = $.forcedNumbers[roundToResolve].rouletteNumber;
-            jackpotNumber = $.forcedNumbers[roundToResolve].jackpotNumber;
-        }
 
         // Store the VRF result for batch processing
         $.randomResults[roundToResolve] = RandomResult({
@@ -1047,28 +1005,20 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         }
     }
 
-    function _isBettingOpen() private view returns (bool) {
-        if (IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()) return false;
-        // Keep betting-open gating aligned with the same boundary timestamp
-        // used for GAME_PERIOD / no-bet lock calculations.
-        uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
-        uint256 elapsed = block.timestamp - srt;
-        return elapsed < GAME_PERIOD;
-    }
-
     /// @inheritdoc IRoulette
     function isBettingOpen() external view override returns (bool) {
-        return _isBettingOpen();
+        return IStakedBRB(STAKED_BRB_CONTRACT).isBettingOpen();
     }
 
     /// @inheritdoc IRoulette
     function gamePeriod() external view override returns (uint256) {
-        return GAME_PERIOD;
+        return IStakedBRB(STAKED_BRB_CONTRACT).gamePeriod();
     }
 
     /// @inheritdoc IRoulette
-    function onRoundBoundary(uint256 boundaryTimestamp) external override onlyStakedBRBContract {
-        _getRouletteStorage().lastRoundStartTime = boundaryTimestamp;
+    function onRoundBoundary() external override onlyStakedBRBContract {
+        RouletteStorage storage $ = _getRouletteStorage();
+        $.currentRound = $.lastRoundPaid + 1;
     }
 
     // ========== VIEW FUNCTIONS ==========
@@ -1100,19 +1050,18 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
      */
     function getCurrentRoundInfo() external view returns (
         uint256 currentRound,
-        uint256 lastRoundStartTime,
         uint256 lastRoundPaid
     ) {
         RouletteStorage storage $ = _getRouletteStorage();
-        return ($.currentRound, $.lastRoundStartTime, $.lastRoundPaid);
+        return ($.currentRound, $.lastRoundPaid);
     }
 
     /**
      * @dev Get contract constants (min no-bet lock seconds, batch size, game period, payout upkeep gas limit).
-     *      Max lock is NO_BET_LOCK_MIN + NO_BET_LOCK_MOD - 1 (10); duration uses lastRoundStartTime % NO_BET_LOCK_MOD.
+     *      Max lock uses StakedBRB `lastRoundBoundaryTimestamp() % NO_BET_LOCK_MOD`.
      */
     function getConstants() external view returns (uint256, uint256, uint256, uint32) {
-        return (NO_BET_LOCK_MIN, BATCH_SIZE, GAME_PERIOD, UPKEEP_GAS_LIMIT);
+        return (NO_BET_LOCK_MIN, BATCH_SIZE, IStakedBRB(STAKED_BRB_CONTRACT).gamePeriod(), UPKEEP_GAS_LIMIT);
     }
 
     /**
@@ -1131,31 +1080,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
 
     function getChainlinkConfig() external view returns (uint256, bytes32, bytes32, bytes32, uint32, uint32, uint16) {
         return (SUBSCRIPTION_ID, KEY_HASH_2GWEI, KEY_HASH_30GWEI, KEY_HASH_150GWEI, CALLBACK_GAS_LIMIT, NUMWORDS, SAFE_BLOCK_CONFIRMATION);
-    }
-    
-    /**
-     * @dev Seconds until VRF can fire (after GAME_PERIOD + no-bet lock). Returns 0 in the trigger window,
-     *      type(uint256).max while StakedBRB round transition is in progress.
-     */
-    function getSecondsFromNextUpkeepWindow() external view returns (uint256) {
-        if (IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()) {
-            return type(uint256).max;
-        }
-        uint256 srt = IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp();
-        uint256 elapsed = block.timestamp - srt;
-        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
-        uint256 vrfDeadline = GAME_PERIOD + lockDuration;
-
-        if (elapsed < GAME_PERIOD) {
-            return GAME_PERIOD - elapsed;
-        }
-        if (!IStakedBRB(STAKED_BRB_CONTRACT).roundResolutionLocked()) {
-            return 0;
-        }
-        if (elapsed < vrfDeadline) {
-            return vrfDeadline - elapsed;
-        }
-        return 0;
     }
     
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}

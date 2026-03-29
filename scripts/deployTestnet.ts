@@ -132,7 +132,6 @@ async function deployTestnet() {
 
   // Create RouletteClean parameters object
   const params = {
-    gamePeriod,
     vrfCoordinator: VRF_COORDINATOR_ADDRESS,
     keyHash2Gwei,
     keyHash30Gwei,
@@ -161,6 +160,7 @@ async function deployTestnet() {
     brbReferalAddress,
     jackpotContractProxyAddress,
     upkeepManagerFactory.address,
+    gamePeriod,
   ]);
   await setTimeoutIsDeployed(stakedBrbFactory.address);
   
@@ -211,7 +211,10 @@ async function deployTestnet() {
   // Register upkeeps for RouletteClean
   const upkeepCount = 20n; // Register 20 payout upkeeps
   const linkAmount = parseEther('0.2'); // 1 LINK per upkeep
-  tx = await linkToken.write.approve([upkeepManagerFactory.address, linkAmount * upkeepCount + linkAmount * 3n], { account: deployer.account });
+  tx = await linkToken.write.approve([upkeepManagerFactory.address, linkAmount * upkeepCount + linkAmount * 3n + linkAmount], { account: deployer.account });
+  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
+  
+  tx = await upkeepManagerFactory.write.registerPreVrfLockUpkeep([linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
   tx = await upkeepManagerFactory.write.registerVRFUpkeep([linkAmount], { account: deployer.account });

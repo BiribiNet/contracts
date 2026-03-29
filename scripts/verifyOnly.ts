@@ -49,6 +49,11 @@ async function deployTestnet() {
 
   const brb = "0xd668bdced1118370d4da405daa00f3be0342704b"
 
+  // Must match the deployment used for these impl addresses (replace if your deploy differs).
+  const brbReferalAddress = "0x0000000000000000000000000000000000000000" as `0x${string}`
+  const jackpotContractProxyAddress = "0x0000000000000000000000000000000000000000" as `0x${string}`
+  const upkeepManagerAddress = "0x0000000000000000000000000000000000000000" as `0x${string}`
+
   const subId = 26531196765974151358709140329787225196823068344908665663262807689266309667077n;
 
   const keyHash2Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
@@ -69,7 +74,7 @@ async function deployTestnet() {
   const initializeStakedBrbData = encodeFunctionData({
     abi: stakedBrbAbi,
     functionName: 'initialize',
-    args: [deployer.account.address, 250n, deployer.account.address] // Changed from 10000 to 250 (2.5%)
+    args: [deployer.account.address, 200n, 50n, 250n, deployer.account.address]
   });
 
 
@@ -80,7 +85,21 @@ async function deployTestnet() {
   try {
   await hre.run("verify:verify", {
     address: rouletteImplAddress,
-    constructorArguments: [gamePeriod, VRF_COORDINATOR_ADDRESS, keyHash2Gwei, keyHash30Gwei, keyHash150Gwei, subId, callbackGasLimit, numWords, safeBlockConfirmation, stakedBrbProxyAddress]
+    constructorArguments: [
+      VRF_COORDINATOR_ADDRESS,
+      keyHash2Gwei,
+      keyHash30Gwei,
+      keyHash150Gwei,
+      subId,
+      callbackGasLimit,
+      numWords,
+      safeBlockConfirmation,
+      stakedBrbProxyAddress,
+      LINK_TOKEN_ADDRESS,
+      jackpotContractProxyAddress,
+      brb,
+      upkeepManagerAddress,
+    ],
   });
   } catch (error) {
     console.log('Error verifying rouletteImplAddress', error);
@@ -89,7 +108,14 @@ async function deployTestnet() {
   try {
     await hre.run("verify:verify", {
       address: stakedBrbImplAddress,
-      constructorArguments: [brb, rouletteProxyAddress]
+      constructorArguments: [
+        brb,
+        rouletteProxyAddress,
+        brbReferalAddress,
+        jackpotContractProxyAddress,
+        upkeepManagerAddress,
+        gamePeriod,
+      ],
     });
   } catch (error) {
     console.log('Error verifying stakedBrbImplAddress', error);

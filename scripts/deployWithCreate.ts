@@ -80,7 +80,6 @@ async function deployWithCreate() {
   }
 
   const params = {
-    gamePeriod,
     vrfCoordinator: vrfCoordinator.address,
     keyHash2Gwei,
     keyHash30Gwei,
@@ -106,6 +105,7 @@ async function deployWithCreate() {
     brbReferalAddress,
     jackpotContractProxyAddress,
     upkeepManager.address,
+    gamePeriod,
   ]) // #6
 
   const initializeJackpotContractData = encodeFunctionData({
@@ -151,7 +151,8 @@ async function deployWithCreate() {
   // Register upkeeps via BRBUpkeepManager (REGISTRANT_ROLE)
   const upkeepCount = 20n; // Register 20 payout upkeeps
   const linkAmount = parseEther('10'); // 10 LINK per upkeep
-  await mockLinkToken.write.approve([upkeepManager.address, linkAmount * upkeepCount + linkAmount * 3n], { account: deployer.account }); // Payout + VRF + compute + cleaning
+  await mockLinkToken.write.approve([upkeepManager.address, linkAmount * upkeepCount + linkAmount * 3n + parseEther('1')], { account: deployer.account }); // Payout + VRF + compute + pre-VRF (+ buffer)
+  await upkeepManager.write.registerPreVrfLockUpkeep([parseEther('1')], { account: deployer.account })
   await upkeepManager.write.registerVRFUpkeep([parseEther('1')], { account: deployer.account })
   const upkeepIds = await upkeepManager.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
   const upkeepIdsComputeTotalWinningBets = await upkeepManager.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });

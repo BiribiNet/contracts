@@ -36,8 +36,8 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
 
     /// @dev forwarder => Chainlink upkeep id for **RouletteClean** upkeeps only
     mapping(address => uint256) private _rouletteForwarderToUpkeepId;
-    /// @dev forwarder => Chainlink upkeep id for **StakedBRB cleaning** (vault is upkeep contract)
-    mapping(address => uint256) private _stakedBrbCleaningForwarderToUpkeepId;
+    /// @dev forwarder => Chainlink upkeep id for **StakedBRB** upkeeps only (pre-VRF lock, cleaning).
+    mapping(address => uint256) private _stakedBrbForwarderToUpkeepId;
 
     uint256 private _registeredPayoutUpkeepCount;
 
@@ -101,8 +101,8 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
     }
 
     /// @inheritdoc IBRBUpkeepManager
-    function isStakedBrbCleaningForwarder(address forwarder) external view returns (bool) {
-        return _stakedBrbCleaningForwarderToUpkeepId[forwarder] != 0;
+    function isStakedBrbForwarder(address forwarder) external view returns (bool) {
+        return _stakedBrbForwarderToUpkeepId[forwarder] != 0;
     }
 
     /// @dev Register StakedBRB cleaning upkeep; `upkeepContract` is {StakedBRB} (same pattern as roulette upkeeps). Requires REGISTRANT_ROLE.
@@ -118,7 +118,7 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
                 gasLimit: STAKED_BRB_CLEANING_GAS_LIMIT,
                 adminAddress: msg.sender,
                 triggerType: 0,
-                checkData: new bytes(0),
+                checkData: hex"02",
                 triggerConfig: new bytes(0),
                 offchainConfig: new bytes(0),
                 amount: linkAmount
@@ -128,10 +128,10 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
         if (upkeepId == 0) revert UpkeepRegistrationFailed();
 
         address forwarder = IAutomationRegistry2_1(KEEPER_REGISTRY).getForwarder(upkeepId);
-        _stakedBrbCleaningForwarderToUpkeepId[forwarder] = upkeepId;
+        _stakedBrbForwarderToUpkeepId[forwarder] = upkeepId;
 
         emit CleaningUpkeepRegistered(upkeepId, forwarder, STAKED_BRB_CLEANING_GAS_LIMIT, linkAmount, "Cleaning");
-        emit UpkeepRegistered(upkeepId, forwarder, STAKED_BRB_CLEANING_GAS_LIMIT, linkAmount, 0, "STAKED_BR_CLEANING");
+        emit UpkeepRegistered(upkeepId, forwarder, STAKED_BRB_CLEANING_GAS_LIMIT, linkAmount, 1, "STAKED_BR_CLEANING");
     }
 
     /// @inheritdoc IBRBUpkeepManager
@@ -193,13 +193,13 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
         if (linkAmount == 0) revert ZeroAmount();
         IERC20(LINK_TOKEN).transferFrom(msg.sender, address(this), linkAmount);
 
-        string memory upkeepName = string.concat("RouletteClean-PreVrfLock-", Strings.toHexString(ROULETTE));
+        string memory upkeepName = string.concat("StakedBRB-PreVrfLock-", Strings.toHexString(STAKED_BRB));
 
         upkeepId = IAutomationRegistrar2_1(KEEPER_REGISTRAR).registerUpkeep(
             IAutomationRegistrar2_1.RegistrationParams({
                 name: upkeepName,
                 encryptedEmail: new bytes(0),
-                upkeepContract: ROULETTE,
+                upkeepContract: STAKED_BRB,
                 gasLimit: BOUNDARY_SYNC_GAS_LIMIT,
                 adminAddress: msg.sender,
                 triggerType: 0,
@@ -213,7 +213,7 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
         if (upkeepId == 0) revert UpkeepRegistrationFailed();
 
         address forwarder = IAutomationRegistry2_1(KEEPER_REGISTRY).getForwarder(upkeepId);
-        _rouletteForwarderToUpkeepId[forwarder] = upkeepId;
+        _stakedBrbForwarderToUpkeepId[forwarder] = upkeepId;
 
         emit UpkeepRegistered(upkeepId, forwarder, BOUNDARY_SYNC_GAS_LIMIT, linkAmount, 0, "PRE_VRF_LOCK");
     }

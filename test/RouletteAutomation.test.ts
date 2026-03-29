@@ -8,19 +8,20 @@ import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
 
-async function advanceThroughLockToVrfWindow(rouletteProxy: any) {
-  let s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+async function advanceThroughLockToVrfWindow(stakedBrbProxy: any) {
+  const [forwarder] = await viem.getWalletClients();
+  let s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   while (s > 0n && s < MAX_UINT256) {
     await time.increase(s);
-    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+    s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   }
-  const [lockNeeded, lockData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+  const [lockNeeded, lockData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
   if (!lockNeeded) throw new Error("expected pre-VRF lock upkeep");
-  await rouletteProxy.write.performUpkeep([lockData]);
-  s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  await stakedBrbProxy.write.performUpkeep([lockData], { account: forwarder.account });
+  s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   while (s > 0n && s < MAX_UINT256) {
     await time.increase(s);
-    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+    s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   }
 }
 
@@ -181,7 +182,7 @@ describe("RouletteClean - Automation", function () {
 
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
-      await advanceThroughLockToVrfWindow(rouletteProxy);
+      await advanceThroughLockToVrfWindow(stakedBrbProxy);
 
       // checkData length 1 = VRF (after pre-VRF lock: empty checkData)
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x01"]);
@@ -210,22 +211,24 @@ describe("RouletteClean - Automation", function () {
 
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress]);
 
-      await advanceThroughLockToVrfWindow(rouletteProxy);
+      await advanceThroughLockToVrfWindow(stakedBrbProxy);
       const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecution).to.be.true;
 
-      // Perform upkeep
-      await expect(rouletteProxy.write.performUpkeep([performData])).to.not.be.rejected;
+      // Perform upkeep (VRF registered on RouletteClean)
+      const [forwarder] = await viem.getWalletClients();
+      await expect(rouletteProxy.write.performUpkeep([performData], { account: forwarder.account })).to.not.be.rejected;
     });
 
     it("Should use empty checkData for pre-VRF lock upkeep", async function () {
-      const { rouletteProxy } = await useDeployWithCreateFixture();
+      const { rouletteProxy, stakedBrbProxy } = await useDeployWithCreateFixture();
 
       const [, , gamePeriod] = await rouletteProxy.read.getConstants();
       await time.increase(gamePeriod);
 
-      const [needsExecution, performData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+      const [needsExecution, performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
       expect(needsExecution).to.be.true;
+      // Pre-VRF lock uses encoded `VaultPerformPayload` (kind + payload), not empty bytes.
       expect(performData).to.not.equal("0x");
     });
 

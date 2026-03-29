@@ -29,8 +29,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     address private immutable ROULETTE_CONTRACT;
     address private immutable JACKPOT_CONTRACT;
     IERC20Mintable private immutable BRB_REFERRAL;
-    /// @dev Authorizes Chainlink cleaning forwarders registered via {BRBUpkeepManager.registerStakedBrbCleaningUpkeep}.
+    /// @dev Authorizes Chainlink forwarders registered via {BRBUpkeepManager} (pre-VRF lock, cleaning on this vault).
     address private immutable UPKEEP_MANAGER;
+    /// @dev Betting window length in seconds; {RouletteClean.gamePeriod} reads this from the vault.
+    uint256 private immutable GAME_PERIOD;
+    /// @dev No-bet lock after GAME_PERIOD (seconds).
+    uint256 private constant NO_BET_LOCK_MIN = 6;
+    uint256 private constant NO_BET_LOCK_MOD = 5;
     // Security constants
     uint256 public constant MINIMUM_FIRST_DEPOSIT = 1000;
     uint256 public constant MAX_PROTOCOL_FEE = 10000; // 100% max
@@ -73,7 +78,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 currentRound;            // Current active round for betting
         uint256 lastRoundPaid;           // Last round that was fully processed (for tracking active rounds)
         uint256 lastRoundResolved;       // Last round that was resolved (for tracking active rounds)
-        /// @dev Start of the betting/deposit window; updated when cleaning upkeep completes (aligns with Roulette lastRoundStartTime).
+        /// @dev Start of the betting/deposit window; updated when cleaning upkeep completes.
         uint256 lastRoundBoundaryTimestamp;
         /// @dev True after pre-VRF lock upkeep; cleared when VRF requests (onRoundTransition).
         bool roundResolutionLocked;
@@ -132,6 +137,17 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 actualProcessCount; // Actual number of users to process
     }
 
+    /// @dev Vault automation: `kind` + `payload` (cleaning inner data), same idea as {RouletteClean} `PerformDataPayload` without a round id slot.
+    enum VaultUpkeepKind {
+        PreVrfLock,
+        Cleaning
+    }
+
+    struct VaultPerformPayload {
+        VaultUpkeepKind kind;
+        bytes payload;
+    }
+
     /// @dev Queued ERC4626 deposit/mint executed when cleaning upkeep completes (GAME_PERIOD enqueue only).
     struct QueuedLiquidity {
         uint8 kind; // 0 = deposit(assets), 1 = mint(shares)
@@ -165,7 +181,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event WithdrawalSettingsUpdated(uint256 batchSize);
     event AntiSpamSettingsUpdated(uint256 maxQueueLength);
     event LiquidityOpsPerUpkeepUpdated(uint32 ops);
-    /// @dev Single log when cleaning upkeep completes: settled round (fees) + new betting boundary (mirrors prior RoundCleaned + RoundStarted).
+    /// @dev Cleaning upkeep completed, or genesis in `initialize` (`cleanedRoundId == 0`, zero fees). Carries the betting-boundary timestamp (lastRoundStartTime equivalent off-chain).
     event RoundCleaningCompleted(
         uint256 cleanedRoundId,
         uint256 newRoundId,
@@ -195,7 +211,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     error QueueFull();
     error InvalidMaxQueueLength();
     error InvalidLiquidityOpsPerUpkeep();
-    error OnlyCleaningForwarders();
+    error OnlyStakedBrbForwarders();
     error DepositOutsideGamePeriod();
     error BettingClosed();
     error LiquidityEscrowAlreadySet();
@@ -221,11 +237,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         _;
     }
     
-    modifier onlyCleaningForwarders() {
-        if (!IBRBUpkeepManager(UPKEEP_MANAGER).isStakedBrbCleaningForwarder(msg.sender)) revert OnlyCleaningForwarders();
-        _;
-    }
-
     function _getStakedBRBStorage() private pure returns (StakedBRBStorage storage storageStruct) {
         bytes32 slot = STORAGE_LOCATION;
         assembly {
@@ -238,14 +249,17 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         address rouletteContract,
         IERC20Mintable brbReferal,
         address jackpotContract,
-        address upkeepManager
+        address upkeepManager,
+        uint256 secondsPerRound
     ) {
         if (upkeepManager == address(0)) revert ZeroAmount();
+        if (secondsPerRound == 0) revert ZeroAmount();
         BRB_TOKEN = brbToken;
         ROULETTE_CONTRACT = rouletteContract;
         BRB_REFERRAL = brbReferal;
         JACKPOT_CONTRACT = jackpotContract;
         UPKEEP_MANAGER = upkeepManager;
+        GAME_PERIOD = secondsPerRound;
         _disableInitializers();
     }
     
@@ -286,6 +300,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.roundTransitionInProgress = false; // Initialize to false, no transition in progress initially
         emit ProtocolFeeRecipientUpdated(feeRecipient);
         emit ProtocolFeeRateUpdated(protocolFeeBasisPoints);
+        // Genesis `RoundCleaningCompleted`: `cleanedRoundId == 0` (no round settled yet); `boundaryTimestamp` is initial lastRoundStartTime equivalent.
+        emit RoundCleaningCompleted(
+            0,
+            $.currentRound,
+            $.lastRoundBoundaryTimestamp,
+            Fees({ protocolFees: 0, burnAmount: 0, jackpotAmount: 0 })
+        );
     }
     
     /**
@@ -312,6 +333,34 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         emit LiquidityEscrowSet(escrow);
     }
 
+    /// @notice True when betting is allowed: not in VRF transition and elapsed time since last boundary is less than {gamePeriod}.
+    function isBettingOpen() external view returns (bool) {
+        return _isBettingOpen();
+    }
+
+    function _isBettingOpen() private view returns (bool) {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
+        if ($.roundTransitionInProgress) return false;
+        uint256 elapsed = block.timestamp - $.lastRoundBoundaryTimestamp;
+        return elapsed < GAME_PERIOD;
+    }
+
+    /// @notice See {IStakedBRB.isVrfUpkeepNeeded}.
+    function isVrfUpkeepNeeded() external view returns (bool) {
+        return _isVrfUpkeepNeeded();
+    }
+
+    /// @dev Same conditions as {RouletteClean.checkUpkeep} for VRF (checkData length 1).
+    function _isVrfUpkeepNeeded() private view returns (bool) {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
+        if ($.roundTransitionInProgress) return false;
+        if (!$.roundResolutionLocked) return false;
+        uint256 srt = $.lastRoundBoundaryTimestamp;
+        uint256 elapsed = block.timestamp - srt;
+        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
+        return elapsed >= GAME_PERIOD + lockDuration;
+    }
+
     /**
      * @dev Handle BRB token transfers for betting (ERC677 callback)
      * @param from Address that sent the tokens
@@ -319,7 +368,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param data Additional data for the bet
      */
     function onTokenTransfer(address from, uint256 amount, bytes calldata data, address referral) external onlyBRB {
-        if (!IRoulette(ROULETTE_CONTRACT).isBettingOpen()) revert BettingClosed();
+        if (!_isBettingOpen()) revert BettingClosed();
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 currentRound = $.currentRound;
         // Track as pending bet (excluded from totalAssets until resolved)
@@ -340,10 +389,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     /**
-     * @dev Chainlink Automation `checkUpkeep` (registered upkeep contract is this vault, like {RouletteClean}).
-     * @param checkData Empty for full cleaning (fees + withdrawals)
+     * @dev Chainlink Automation `checkUpkeep` for this vault only (not roulette).
      *
-     * SEQUENTIAL SAFETY: This function ensures proper order of operations:
+     * `checkData`: empty => pre-VRF lock; any non-empty => cleaning upkeep (registrar typically uses `hex"02"`). VRF / compute / payouts are on {RouletteClean}.
+     *
+     * SEQUENTIAL SAFETY: Cleaning path ensures proper order of operations:
      * 1. First process protocol fees when rounds have profit
      * 2. Then process queued withdrawals in batches
      *
@@ -354,79 +404,138 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * finished on the next round cleaning.
      */
     function checkUpkeep(bytes calldata checkData) external view override returns (bool upkeepNeeded, bytes memory performData) {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
         if (checkData.length == 0) {
-            StakedBRBStorage storage $ = _getStakedBRBStorage();
-            if ($.lastRoundPaid > $.lastRoundResolved) {
-                uint256 queueSize = $.queueSize;
-                 // Check if we need to process protocol fees AND queued withdrawals
-                CheckUpkeepVars memory v = CheckUpkeepVars({
-                    roundToProcess: $.lastRoundResolved + 1,
-                    actualProcessCount: 0,
-                    batchSize: $.withdrawalBatchSize,
-                    hasWithdrawals: queueSize > 0,
-                    queueLength: 0
-                });
-
-                // Calculate protocol fees for this round: pendingBets - totalPayouts
-                uint256 roundPendingBets = $.pendingBets;
-                uint256 roundTotalPayouts = $.totalPayouts;
-                uint256 roundNetLoss = roundPendingBets > roundTotalPayouts ? roundPendingBets - roundTotalPayouts : 0;
-
-                // Pre-compute all withdrawal data for performUpkeep
-                uint256 withdrawalsToProcess = queueSize > v.batchSize ? v.batchSize : queueSize;
-
-                // Pre-compute which users and amounts to process
-                address[] memory usersToProcess = new address[](withdrawalsToProcess);
-                uint256[] memory amountsToProcess = new uint256[](withdrawalsToProcess);
-
-
-                if (v.hasWithdrawals) {
-                    v.queueLength = $.withdrawalQueue.length;
-                    uint256 currentIndex = $.queueHead;
-                    uint256 maxIterations = queueSize;
-                    uint256 safeCapacity = _calculateSafeWithdrawalCapacity();
-
-                    address user;
-                    uint256 amount;
-                    for (uint256 i; i < withdrawalsToProcess && maxIterations > 0;) {
-                        if (currentIndex >= v.queueLength) break;
-
-                        user = $.withdrawalQueue[currentIndex];
-                        if (user != address(0)) {
-                            QueuedWithdrawal storage pw = $.pendingWithdrawal[user];
-                            amount = pw.kind == 1 ? pw.assets : (pw.kind == 2 ? previewRedeem(pw.shares) : 0);
-
-                            // Only include users that can be safely processed
-                            if (amount > 0 && safeCapacity >= amount) {
-                                usersToProcess[v.actualProcessCount] = user;
-                                amountsToProcess[v.actualProcessCount] = amount;
-                                v.actualProcessCount++;
-                            }
-                        }
-                        currentIndex++;
-                        i++;
-                        maxIterations--;
-                    }
-                }
-
-                upkeepNeeded = true;
-                performData = abi.encode(CleaningUpkeepData({
-                    roundId: v.roundToProcess,
-                    fees: _calculateProtocolFee(roundNetLoss),
-                    hasWithdrawals: v.hasWithdrawals,
-                    usersToProcess: usersToProcess,
-                    amountsToProcess: amountsToProcess,
-                    actualProcessCount: v.actualProcessCount
-                }));
+            uint256 srt = $.lastRoundBoundaryTimestamp;
+            uint256 elapsed = block.timestamp - srt;
+            upkeepNeeded = elapsed >= GAME_PERIOD
+                && !$.roundResolutionLocked
+                && !$.roundTransitionInProgress;
+            if (upkeepNeeded) {
+                performData = abi.encode(
+                    VaultPerformPayload({ kind: VaultUpkeepKind.PreVrfLock, payload: bytes("") })
+                );
             }
+            return (upkeepNeeded, performData);
         }
+        // Non-empty checkData: cleaning-only Chainlink upkeep (vs empty = pre-VRF lock only).
+        if ($.lastRoundPaid > $.lastRoundResolved) {
+            uint256 queueSize = $.queueSize;
+            // Check if we need to process protocol fees AND queued withdrawals
+            CheckUpkeepVars memory v = CheckUpkeepVars({
+                roundToProcess: $.lastRoundResolved + 1,
+                actualProcessCount: 0,
+                batchSize: $.withdrawalBatchSize,
+                hasWithdrawals: queueSize > 0,
+                queueLength: 0
+            });
+
+            // Calculate protocol fees for this round: pendingBets - totalPayouts
+            uint256 roundPendingBets = $.pendingBets;
+            uint256 roundTotalPayouts = $.totalPayouts;
+            uint256 roundNetLoss = roundPendingBets > roundTotalPayouts ? roundPendingBets - roundTotalPayouts : 0;
+
+            // Pre-compute all withdrawal data for performUpkeep
+            uint256 withdrawalsToProcess = queueSize > v.batchSize ? v.batchSize : queueSize;
+
+            // Pre-compute which users and amounts to process
+            address[] memory usersToProcess = new address[](withdrawalsToProcess);
+            uint256[] memory amountsToProcess = new uint256[](withdrawalsToProcess);
+
+            if (v.hasWithdrawals) {
+                v.queueLength = $.withdrawalQueue.length;
+                uint256 currentIndex = $.queueHead;
+                uint256 maxIterations = queueSize;
+                uint256 safeCapacity = _calculateSafeWithdrawalCapacity();
+
+                address user;
+                uint256 amount;
+                for (uint256 i; i < withdrawalsToProcess && maxIterations > 0;) {
+                    if (currentIndex >= v.queueLength) break;
+
+                    user = $.withdrawalQueue[currentIndex];
+                    if (user != address(0)) {
+                        QueuedWithdrawal storage pw = $.pendingWithdrawal[user];
+                        amount = pw.kind == 1 ? pw.assets : (pw.kind == 2 ? previewRedeem(pw.shares) : 0);
+
+                        // Only include users that can be safely processed
+                        if (amount > 0 && safeCapacity >= amount) {
+                            usersToProcess[v.actualProcessCount] = user;
+                            amountsToProcess[v.actualProcessCount] = amount;
+                            v.actualProcessCount++;
+                        }
+                    }
+                    currentIndex++;
+                    i++;
+                    maxIterations--;
+                }
+            }
+
+            performData = abi.encode(
+                VaultPerformPayload({
+                    kind: VaultUpkeepKind.Cleaning,
+                    payload: abi.encode(
+                        CleaningUpkeepData({
+                            roundId: v.roundToProcess,
+                            fees: _calculateProtocolFee(roundNetLoss),
+                            hasWithdrawals: v.hasWithdrawals,
+                            usersToProcess: usersToProcess,
+                            amountsToProcess: amountsToProcess,
+                            actualProcessCount: v.actualProcessCount
+                        })
+                    )
+                })
+            );
+            return (true, performData);
+        }
+        return (false, bytes(""));
     }
 
     /**
-     * @dev Chainlink Automation `performUpkeep`; only the registry forwarder for the cleaning upkeep may call.
+     * @dev Seconds until pre-VRF lock or VRF can run (after GAME_PERIOD [+ lock]). `type(uint256).max` while round transition is in progress.
      */
-    function performUpkeep(bytes calldata performData) external override onlyCleaningForwarders {
-        _processCleaning(abi.decode(performData, (CleaningUpkeepData)));
+    function getSecondsFromNextUpkeepWindow() external view returns (uint256) {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
+        if ($.roundTransitionInProgress) {
+            return type(uint256).max;
+        }
+        uint256 srt = $.lastRoundBoundaryTimestamp;
+        uint256 elapsed = block.timestamp - srt;
+        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
+        uint256 vrfDeadline = GAME_PERIOD + lockDuration;
+
+        if (elapsed < GAME_PERIOD) {
+            return GAME_PERIOD - elapsed;
+        }
+        if (!$.roundResolutionLocked) {
+            return 0;
+        }
+        if (_isVrfUpkeepNeeded()) {
+            return 0;
+        }
+        return vrfDeadline - elapsed;
+    }
+
+    /**
+     * @dev Chainlink Automation on this vault only: `VaultPerformPayload` (`kind` + `payload`).
+     */
+    function performUpkeep(bytes calldata performData) external override {
+        if (!IBRBUpkeepManager(UPKEEP_MANAGER).isStakedBrbForwarder(msg.sender)) revert OnlyStakedBrbForwarders();
+
+        VaultPerformPayload memory p = abi.decode(performData, (VaultPerformPayload));
+        if (p.kind == VaultUpkeepKind.PreVrfLock) {
+            _lockBettingWindow();
+        } else if (p.kind == VaultUpkeepKind.Cleaning) {
+            _processCleaning(abi.decode(p.payload, (CleaningUpkeepData)));
+        }
+    }
+
+    /// @dev Pre-VRF automation: lock vault-side resolution flows (same effect as former Roulette-triggered path).
+    function _lockBettingWindow() private {
+        StakedBRBStorage storage $ = _getStakedBRBStorage();
+        if ($.roundResolutionLocked) return;
+        $.roundResolutionLocked = true;
+        emit BettingWindowClosed($.currentRound);
     }
 
     /// @dev Queued liquidity: assets moved in via escrow; `_mint` alone only emits `Transfer` — IERC4626 expects `Deposit`.
@@ -532,9 +641,10 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         }
 
         $.lastRoundBoundaryTimestamp = block.timestamp;
-        IRoulette(ROULETTE_CONTRACT).onRoundBoundary($.lastRoundBoundaryTimestamp);
-
         $.roundTransitionInProgress = false;
+        $.currentRound = cleaningData.roundId + 1;
+
+        IRoulette(ROULETTE_CONTRACT).onRoundBoundary();
 
         emit RoundCleaningCompleted(
             cleaningData.roundId,
@@ -574,23 +684,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
 
     /**
-     * @dev Called by Roulette after the betting window ends (pre-VRF upkeep) to lock resolution-side flows.
+     * @dev Called by Roulette when VRF is requested; enters post-VRF transition.
      */
-    function onBettingWindowClosed() external onlyRoulette {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        $.roundResolutionLocked = true;
-        emit BettingWindowClosed($.currentRound);
-    }
-
-    /**
-     * @dev Called by Roulette when VRF is requested; advances round id and enters post-VRF transition.
-     */
-    function onRoundTransition(uint256 newRoundId) external onlyRoulette {
+    function onRoundTransition() external onlyRoulette {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
 
         $.roundResolutionLocked = false;
         $.roundTransitionInProgress = true;
-        $.currentRound = newRoundId;
     }
     
     /// @dev Calculate the safe withdrawal capacity that won't risk payout solvency
@@ -890,8 +990,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function _inGamePeriod() private view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.roundTransitionInProgress || $.roundResolutionLocked) return false;
-        uint256 gp = IRoulette(ROULETTE_CONTRACT).gamePeriod();
-        return block.timestamp - $.lastRoundBoundaryTimestamp < gp;
+        return block.timestamp - $.lastRoundBoundaryTimestamp < GAME_PERIOD;
     }
     
     /// @dev Private function to check if withdrawals are allowed
@@ -1104,6 +1203,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
         uint256 emitAmount = q.kind == 1 ? q.assets : previewRedeem(q.shares);
         emit WithdrawalProcessed(msg.sender, emitAmount);
+    }
+
+    /// @notice Betting window length in seconds (set at deployment).
+    function gamePeriod() external view returns (uint256) {
+        return GAME_PERIOD;
     }
 
     function lastRoundBoundaryTimestamp() external view returns (uint256) {

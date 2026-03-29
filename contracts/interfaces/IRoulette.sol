@@ -9,11 +9,17 @@ interface IRoulette {
 
     function bet(address player, uint256 amount, bytes calldata data) external returns (uint256);
 
-    /// @notice Called by StakedBRB when cleaning upkeep completes; aligns round boundary for timing views.
-    function onRoundBoundary(uint256 boundaryTimestamp) external;
+    /// @notice Called by StakedBRB after cleaning upkeep advances the betting round; syncs roulette `currentRound`.
+    function onRoundBoundary() external;
 
+    /// @notice Betting window length in seconds; {RouletteClean} returns {IStakedBRB.gamePeriod}.
     function gamePeriod() external view returns (uint256);
 
-    /// @notice True when betting is allowed (open window, not in lock, not during round transition on StakedBRB).
+    /// @notice True when betting is allowed; implemented on {IStakedBRB} and this contract delegates to it.
     function isBettingOpen() external view returns (bool);
+
+    /// @dev VRF / compute / payout checks. Pre-VRF lock is implemented only on {StakedBRB.checkUpkeep} (empty checkData).
+    function checkUpkeep(bytes calldata checkData) external view returns (bool upkeepNeeded, bytes memory performData);
+
+    function performUpkeep(bytes calldata performData) external;
 }

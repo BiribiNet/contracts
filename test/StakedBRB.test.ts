@@ -9,19 +9,20 @@ import { useDeployWithCreateFixture } from "./fixtures/deployWithCreateFixture";
 const MAX_UINT256 = 2n ** 256n - 1n;
 
 /** Advance to pre-VRF lock, perform it, then advance until VRF upkeep (checkData 0x01) is ready. */
-async function advanceThroughLockToVrfWindow(rouletteProxy: any) {
-  let s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+async function advanceThroughLockToVrfWindow(stakedBrbProxy: any) {
+  const [forwarder] = await viem.getWalletClients();
+  let s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   while (s > 0n && s < MAX_UINT256) {
     await time.increase(s);
-    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+    s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   }
-  const [lockNeeded, lockData] = await rouletteProxy.read.checkUpkeep(["0x"]);
+  const [lockNeeded, lockData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
   if (!lockNeeded) throw new Error("expected pre-VRF lock upkeep");
-  await rouletteProxy.write.performUpkeep([lockData]);
-  s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+  await stakedBrbProxy.write.performUpkeep([lockData], { account: forwarder.account });
+  s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   while (s > 0n && s < MAX_UINT256) {
     await time.increase(s);
-    s = await rouletteProxy.read.getSecondsFromNextUpkeepWindow();
+    s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
   }
 }
 
@@ -60,11 +61,11 @@ async function runMinimalRoundAndStakedCleaning(
   );
   await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
 
-  await advanceThroughLockToVrfWindow(rouletteProxy);
+  await advanceThroughLockToVrfWindow(stakedBrbProxy);
 
   const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
   if (!needsExecutionVRF) throw new Error("runMinimalRoundAndStakedCleaning: VRF upkeep not ready");
-  const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
+  const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF], { account: admin.account });
   const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
   const logsVRF = parseEventLogs({
     abi: rouletteProxy.abi,
@@ -77,7 +78,7 @@ async function runMinimalRoundAndStakedCleaning(
 
   const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
   if (countWinnersNeeded) {
-    await rouletteProxy.write.performUpkeep([countWinnersData]);
+    await rouletteProxy.write.performUpkeep([countWinnersData], { account: admin.account });
   }
 
   let processedPayoutBatches = 0;
@@ -86,12 +87,12 @@ async function runMinimalRoundAndStakedCleaning(
     const hexCheckData = toHex(checkDataForPayout);
     const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
     if (!payoutsNeeded) break;
-    await rouletteProxy.write.performUpkeep([payoutData]);
+    await rouletteProxy.write.performUpkeep([payoutData], { account: admin.account });
     processedPayoutBatches++;
     await time.increase(10n);
   }
 
-  const [upkeepNeeded, performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
+  const [upkeepNeeded, performData] = await stakedBrbProxy.read.checkUpkeep(["0x02"]);
   if (upkeepNeeded) {
     await stakedBrbProxy.write.performUpkeep([performData], { account: admin.account });
   }
@@ -1116,12 +1117,12 @@ describe("StakedBRB", function () {
       // COMPLETE THE FULL GAME LOOP BEFORE PROCESSING LARGE WITHDRAWALS
       
       // 1. Pre-VRF lock then VRF
-      await advanceThroughLockToVrfWindow(rouletteProxy);
+      await advanceThroughLockToVrfWindow(stakedBrbProxy);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecutionVRF).to.be.true;
       
-      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
+      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF], { account: admin.account });
       const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
       const logsVRF = parseEventLogs({
         abi: rouletteProxy.abi,
@@ -1140,7 +1141,7 @@ describe("StakedBRB", function () {
       // 3. COMPUTE TOTAL WINNING BETS
       const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]); // checkData.length == 2
       expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData]);
+      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
 
       // 4. Payout Trigger & Processing (iterative)
       let processedPayoutBatches = 0;
@@ -1150,13 +1151,13 @@ describe("StakedBRB", function () {
         const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
         if (!payoutsNeeded) break;
 
-        await rouletteProxy.write.performUpkeep([payoutData]);
+        await rouletteProxy.write.performUpkeep([payoutData], { account: admin.account });
         processedPayoutBatches++;
         await time.increase(10n); // Advance time slightly for subsequent upkeeps
       }
       
       // 5. NOW PROCESS LARGE WITHDRAWALS
-      const [upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
+      const [upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x02"]);
       expect(upkeepNeeded).to.be.true;
 
       await expect(stakedBrbProxy.write.performUpkeep([_performData], { account: admin.account })).to.not.be.rejected;
@@ -1655,10 +1656,8 @@ describe("StakedBRB", function () {
 
   describe("Round Transition", function () {
     it("Should handle round transitions correctly", async function () {
-      const _newRoundId = 2n;
-      
       await expect(
-        stakedBrbProxy.write.onRoundTransition([_newRoundId], { account: player1.account })
+        stakedBrbProxy.write.onRoundTransition([], { account: player1.account })
       ).to.be.rejectedWith("OnlyRoulette");
     });
 
@@ -1831,7 +1830,7 @@ describe("StakedBRB", function () {
 
     it("Should only allow roulette contract to call onRoundTransition", async function () {
       await expect(
-        stakedBrbProxy.write.onRoundTransition([2n], { account: player1.account })
+        stakedBrbProxy.write.onRoundTransition([], { account: player1.account })
       ).to.be.rejectedWith("OnlyRoulette");
     });
 
@@ -1839,7 +1838,7 @@ describe("StakedBRB", function () {
       const performData = "0x";
       await expect(
         stakedBrbProxy.write.performUpkeep([performData], { account: player1.account })
-      ).to.be.rejectedWith("OnlyCleaningForwarders");
+      ).to.be.rejectedWith("OnlyStakedBrbForwarders");
     });
   });
 
@@ -2438,9 +2437,8 @@ describe("StakedBRB", function () {
     });
 
     it("Should handle empty queue gracefully", async function () {
-      // Check upkeep when no withdrawals are queued
-      await stakedBrbProxy.read.checkUpkeep(["0x"]);
-      // This should return false since there are no queued withdrawals
+      // Check cleaning upkeep when no round is waiting to be cleaned
+      await stakedBrbProxy.read.checkUpkeep(["0x02"]);
     });
 
     it("Should calculate safe withdrawal capacity with zero maxPayout", async function () {
@@ -2681,12 +2679,12 @@ describe("StakedBRB", function () {
       // 3. Withdraw while still in the betting window, then pre-VRF lock + VRF
       await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
 
-      await advanceThroughLockToVrfWindow(rouletteProxy);
+      await advanceThroughLockToVrfWindow(stakedBrbProxy);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecutionVRF).to.be.true;
       
-      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
+      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF], { account: admin.account });
       const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
       const logsVRF = parseEventLogs({
         abi: rouletteProxy.abi,
@@ -2705,7 +2703,7 @@ describe("StakedBRB", function () {
       // 5. COMPUTE TOTAL WINNING BETS (checkData length 2; same as other integration tests)
       const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
       expect(countWinnersNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([countWinnersData]);
+      await rouletteProxy.write.performUpkeep([countWinnersData], { account: admin.account });
       
       // 6. PROCESS PAYOUTS (length 3 = batch 0, then 4, ...)
       const [payoutsNeeded, _payoutData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(3))]);
@@ -2717,13 +2715,13 @@ describe("StakedBRB", function () {
           const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
           if (!payoutsNeeded) break;
           
-          await rouletteProxy.write.performUpkeep([payoutData]);
+          await rouletteProxy.write.performUpkeep([payoutData], { account: admin.account });
           processedPayoutBatches++;
           await time.increase(10n);
         }
       }
       
-      const [_upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]); // clean up
+      const [_upkeepNeeded, _performData] = await stakedBrbProxy.read.checkUpkeep(["0x02"]); // clean up
 
       expect(_upkeepNeeded).to.be.true;
       // Cleaning runs on StakedBRB; `withdraw`/`redeem` see `msg.sender` = upkeep caller (admin), so owner must approve admin for shares
@@ -2787,12 +2785,12 @@ describe("StakedBRB", function () {
       expect(queuePosition).to.be.greaterThan(0);
       
       // 5. COMPLETE GAME LOOP (pre-VRF lock then VRF)
-      await advanceThroughLockToVrfWindow(rouletteProxy);
+      await advanceThroughLockToVrfWindow(stakedBrbProxy);
 
       const [needsExecutionVRF, performDataVRF] = await rouletteProxy.read.checkUpkeep(["0x01"]);
       expect(needsExecutionVRF).to.be.true;
       
-      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF]);
+      const txVRF = await rouletteProxy.write.performUpkeep([performDataVRF], { account: admin.account });
       const receiptVRF = await publicClient.waitForTransactionReceipt({ hash: txVRF });
       const logsVRF = parseEventLogs({
         abi: rouletteProxy.abi,
@@ -2805,7 +2803,7 @@ describe("StakedBRB", function () {
       
       const [countWinnersNeeded, countWinnersData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
       expect(countWinnersNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([countWinnersData]);
+      await rouletteProxy.write.performUpkeep([countWinnersData], { account: admin.account });
       
       const [payoutsNeeded, _payoutData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(3))]);
       if (payoutsNeeded) {
@@ -2816,14 +2814,14 @@ describe("StakedBRB", function () {
           const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
           if (!payoutsNeeded) break;
           
-          await rouletteProxy.write.performUpkeep([payoutData]);
+          await rouletteProxy.write.performUpkeep([payoutData], { account: admin.account });
           processedPayoutBatches++;
           await time.increase(10n);
         }
       }
       
       // 6. PROCESS LARGE WITHDRAWAL (perform upkeep)
-      const [upkeepNeeded, performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
+      const [upkeepNeeded, performData] = await stakedBrbProxy.read.checkUpkeep(["0x02"]);
       if (upkeepNeeded) {
         await stakedBrbProxy.write.approve([admin.account.address, MAX_UINT256], { account: player1.account });
         await stakedBrbProxy.write.performUpkeep([performData], { account: admin.account });
