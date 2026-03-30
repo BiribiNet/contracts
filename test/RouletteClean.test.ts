@@ -48,8 +48,9 @@ describe("RouletteClean", function () {
     it("Should have correct StakedBRB configuration", async function () {
       const { stakedBrbProxy, brb } = await useDeployWithCreateFixture();
 
-      const [brbToken, _rouletteContract, protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate, _feeRecipient, _pendingBets] = await stakedBrbProxy.read.getVaultConfig();
-      expect(brbToken.toLowerCase()).to.equal(brb.address.toLowerCase());
+      const assetAddr = await stakedBrbProxy.read.asset();
+      expect(assetAddr.toLowerCase()).to.equal(brb.address.toLowerCase());
+      const [protocolFeeBasisPoints, burnFeeRate, jackpotFeeRate] = await stakedBrbProxy.read.getVaultConfig();
       expect(protocolFeeBasisPoints).to.equal(300n); // 300 (3%)
       expect(burnFeeRate).to.equal(50n); // 50 (0.5%)
       expect(jackpotFeeRate).to.equal(150n); // 150 (1.5%)
@@ -2028,23 +2029,16 @@ describe("RouletteClean", function () {
       const playerBalancesBeforeBets = new Map<string, bigint>();
       let totalJackpotBets = 0;
 
-      // First, do all deposits
+      // No deposits required for betting: BRB bets transfer into the vault directly via ERC677 callback.
+      // With `gamePeriod = 60s`, large multi-tx loops can otherwise cross the boundary and revert deposits.
       for (let i = 0; i < totalJackpotPlayers; i++) {
-        // Cycle through available players if we need more than available
         const player = jackpotPlayers[i % jackpotPlayers.length];
-        
+
         // Ensure player has enough balance (transfer more from admin if needed)
         const currentBalance = await brb.read.balanceOf([player.account.address]);
-        const requiredBalance = parseEther("300"); // Need enough for staking + betting
+        const requiredBalance = parseEther("300"); // Need enough for betting
         if (currentBalance < requiredBalance) {
           await brb.write.transfer([player.account.address, parseEther("200")], { account: admin.account });
-        }
-
-        // Only stake once per actual player
-        if (i < jackpotPlayers.length) {
-          const stakeAmount = parseEther("100");
-          await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player.account });
-          await stakedBrbProxy.write.deposit([stakeAmount, player.account.address, 0n], { account: player.account });
         }
       }
 

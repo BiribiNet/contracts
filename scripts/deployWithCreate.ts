@@ -57,9 +57,7 @@ async function deployWithCreate() {
   const callbackGasLimit = 2_500_000n
   const numWords = 2n;
   const safeBlockConfirmation = 3;
-  // Large enough that multi-tx fixture deploy does not advance block time past one period
-  // (StakedBRB rejects deposits when elapsed >= gamePeriod since lastRoundBoundaryTimestamp)
-  const gamePeriod = 100_000n;
+  const gamePeriod = 60n;
   const teamFeeBasisPoints = 300n;
   const burnFeeBasisPoints = 50n;
   const jackpotFeeBasisPoints = 150n;

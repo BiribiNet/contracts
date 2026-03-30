@@ -221,10 +221,28 @@ describe("RouletteClean - Automation", function () {
     });
 
     it("Should use empty checkData for pre-VRF lock upkeep", async function () {
-      const { rouletteProxy, stakedBrbProxy } = await useDeployWithCreateFixture();
+      const { brb, stakedBrbProxy } = await useDeployWithCreateFixture();
+      const [, player1] = await viem.getWalletClients();
 
-      const [, , gamePeriod] = await rouletteProxy.read.getConstants();
-      await time.increase(gamePeriod);
+      // Must be large enough to satisfy `InsufficientBalanceForMaxPayout` (max straight payout ~= bet * 36 * 1.1).
+      const stakeAmount = parseEther("10");
+      await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
+      await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+
+      const betAmount = parseEther("0.1");
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" }
+        ]}],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [7n] }]
+      );
+      await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: player1.account });
+
+      // Advance precisely to the next pre-VRF window (align with elapsed % GAME_PERIOD).
+      const s = await stakedBrbProxy.read.getSecondsFromNextUpkeepWindow();
+      await time.increase(s);
 
       const [needsExecution, performData] = await stakedBrbProxy.read.checkUpkeep(["0x"]);
       expect(needsExecution).to.be.true;

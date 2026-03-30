@@ -96,7 +96,7 @@ async function deployTestnet() {
   const callbackGasLimit = 2_500_000n
   const numWords = 2n
   const safeBlockConfirmation = 1
-  const gamePeriod = 60n
+  const gamePeriod = 65n
   
   // Fee structure (basis points)
   const teamFeeBasisPoints = 200n    // 2%

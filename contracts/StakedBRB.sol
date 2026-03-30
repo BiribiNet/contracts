@@ -31,8 +31,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     /// @dev Authorizes Chainlink forwarders registered via {BRBUpkeepManager} (pre-VRF lock, cleaning on this vault).
     address private immutable UPKEEP_MANAGER;
     /// @dev Betting window length in seconds; {RouletteClean.gamePeriod} reads this from the vault.
-    uint256 private immutable GAME_PERIOD;
-    /// @dev No-bet lock after GAME_PERIOD (seconds).
+    uint256 public immutable GAME_PERIOD;
+    /// @dev Pre-VRF/VRF execution window at the end of each period.
+    /// A keeper should trigger the pre-VRF lock / VRF within `TIME_MARGIN` seconds after a period boundary.
+    uint256 private constant TIME_MARGIN = 5;
+    /// @dev Legacy jitter constants (kept for backwards compatibility in storage/layout assumptions, but no longer used).
     uint256 private constant NO_BET_LOCK_MIN = 6;
     uint256 private constant NO_BET_LOCK_MOD = 5;
     // Security constants
@@ -251,8 +254,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         address upkeepManager,
         uint256 secondsPerRound
     ) {
-        if (upkeepManager == address(0)) revert InvalidReceiver();
-        if (secondsPerRound == 0) revert ZeroAmount();
         BRB_TOKEN = brbToken;
         ROULETTE_CONTRACT = rouletteContract;
         BRB_REFERRAL = brbReferal;
@@ -292,11 +293,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         $.maxQueueLength = DEFAULT_MAX_QUEUE_LENGTH;
         
         $.currentRound = 1;
-        $.lastRoundResolved = 0; // Initialize to 0, will be updated when rounds are processed
-        $.lastRoundPaid = 0; // Initialize to 0, will be updated when rounds are completed
         $.lastRoundBoundaryTimestamp = block.timestamp;
-        $.roundResolutionLocked = false;
-        $.roundTransitionInProgress = false; // Initialize to false, no transition in progress initially
+
         emit ProtocolFeeRecipientUpdated(feeRecipient);
         emit ProtocolFeeRateUpdated(protocolFeeBasisPoints);
         // Genesis `RoundCleaningCompleted`: `cleanedRoundId == 0` (no round settled yet); `boundaryTimestamp` is initial lastRoundStartTime equivalent.
@@ -314,10 +312,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function totalAssets() public view override returns (uint256) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        uint256 totalBalance = IERC20(asset()).balanceOf(address(this));
-
         // Queued deposit BRB lives in liquidityEscrow, not in the vault balance.
-        return totalBalance - $.pendingBets;
+        return IERC20(asset()).balanceOf(address(this)) - $.pendingBets;
     }
 
     /**
@@ -340,6 +336,11 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         return elapsed < GAME_PERIOD;
     }
 
+    /// @notice Seconds per betting round; {RouletteClean.gamePeriod} delegates here.
+    function gamePeriod() external view returns (uint256) {
+        return GAME_PERIOD;
+    }
+
     /// @notice See {IStakedBRB.isVrfUpkeepNeeded}. Same conditions as {RouletteClean.checkUpkeep} for VRF (checkData length 1).
     function isVrfUpkeepNeeded() public view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
@@ -347,8 +348,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (!$.roundResolutionLocked) return false;
         uint256 srt = $.lastRoundBoundaryTimestamp;
         uint256 elapsed = block.timestamp - srt;
-        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
-        return elapsed >= GAME_PERIOD + lockDuration;
+        uint256 remainder = elapsed % GAME_PERIOD;
+        return elapsed >= GAME_PERIOD && remainder <= TIME_MARGIN;
     }
 
     /**
@@ -398,7 +399,10 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (checkData.length == 0) {
             uint256 srt = $.lastRoundBoundaryTimestamp;
             uint256 elapsed = block.timestamp - srt;
-            upkeepNeeded = elapsed >= GAME_PERIOD
+            uint256 remainder = elapsed % GAME_PERIOD;
+            upkeepNeeded = $.pendingBets > 0
+                && elapsed >= GAME_PERIOD
+                && remainder <= TIME_MARGIN
                 && !$.roundResolutionLocked
                 && !$.roundTransitionInProgress;
             if (upkeepNeeded) {
@@ -493,19 +497,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         }
         uint256 srt = $.lastRoundBoundaryTimestamp;
         uint256 elapsed = block.timestamp - srt;
-        uint256 lockDuration = NO_BET_LOCK_MIN + (srt % NO_BET_LOCK_MOD);
-        uint256 vrfDeadline = GAME_PERIOD + lockDuration;
+        uint256 remainder = elapsed % GAME_PERIOD;
 
-        if (elapsed < GAME_PERIOD) {
-            return GAME_PERIOD - elapsed;
-        }
-        if (!$.roundResolutionLocked) {
-            return 0;
-        }
-        if (isVrfUpkeepNeeded()) {
-            return 0;
-        }
-        return vrfDeadline - elapsed;
+        return remainder <= TIME_MARGIN ? 0 : (GAME_PERIOD - remainder);
     }
 
     /**
@@ -516,18 +510,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
         VaultPerformPayload memory p = abi.decode(performData, (VaultPerformPayload));
         if (p.kind == VaultUpkeepKind.PreVrfLock) {
-            _lockBettingWindow();
+            StakedBRBStorage storage $ = _getStakedBRBStorage();
+            if ($.roundResolutionLocked) return;
+            $.roundResolutionLocked = true;
+            emit BettingWindowClosed($.currentRound);
         } else if (p.kind == VaultUpkeepKind.Cleaning) {
             _processCleaning(abi.decode(p.payload, (CleaningUpkeepData)));
         }
-    }
-
-    /// @dev Pre-VRF automation: lock vault-side resolution flows (same effect as former Roulette-triggered path).
-    function _lockBettingWindow() private {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.roundResolutionLocked) return;
-        $.roundResolutionLocked = true;
-        emit BettingWindowClosed($.currentRound);
     }
 
     /// @dev Queued liquidity: assets moved in via escrow; `_mint` alone only emits `Transfer` — IERC4626 expects `Deposit`.
@@ -1042,8 +1031,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @dev Get vault configuration
      */
     function getVaultConfig() external view returns (
-        address brbToken,
-        address rouletteContract,
         uint256 protocolFeeBasisPoints,
         uint256 burnBasisPoints,
         uint256 jackpotBasisPoints,
@@ -1052,8 +1039,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     ) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         return (
-            BRB_TOKEN,
-            ROULETTE_CONTRACT,
             $.protocolFeeBasisPoints,
             $.burnBasisPoints,
             $.jackpotBasisPoints,
@@ -1120,11 +1105,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
         uint256 emitAmount = q.kind == 1 ? q.assets : previewRedeem(q.shares);
         emit WithdrawalProcessed(msg.sender, emitAmount);
-    }
-
-    /// @notice Betting window length in seconds (set at deployment).
-    function gamePeriod() external view returns (uint256) {
-        return GAME_PERIOD;
     }
 
     function lastRoundBoundaryTimestamp() external view returns (uint256) {

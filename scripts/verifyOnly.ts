@@ -62,7 +62,7 @@ async function deployTestnet() {
   const callbackGasLimit = 2_500_000n
   const numWords = 2n
   const safeBlockConfirmation = 1
-  const gamePeriod = 120n
+  const gamePeriod = 60n
 
 
   const initializeRouletteData = encodeFunctionData({
