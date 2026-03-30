@@ -1247,7 +1247,7 @@ describe("StakedBRB", function () {
     it("Should revert with zero fee recipient", async function () {
       await expect(
         stakedBrbProxy.write.setFeeRecipient(["0x0000000000000000000000000000000000000000"], { account: admin.account })
-      ).to.be.rejectedWith("InvalidFeeRate");
+      ).to.be.rejectedWith("InvalidReceiver");
     });
   });
 

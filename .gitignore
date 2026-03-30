@@ -37,5 +37,8 @@ logs
 # VSCode
 .vscode*
 
+# Gas Reporter
+gasReporterOutput.json
+
 # MacOS
 .DS_Store

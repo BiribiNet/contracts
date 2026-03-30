@@ -251,7 +251,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         address upkeepManager,
         uint256 secondsPerRound
     ) {
-        if (upkeepManager == address(0)) revert ZeroAmount();
+        if (upkeepManager == address(0)) revert InvalidReceiver();
         if (secondsPerRound == 0) revert ZeroAmount();
         BRB_TOKEN = brbToken;
         ROULETTE_CONTRACT = rouletteContract;
@@ -325,7 +325,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function setLiquidityEscrow(address escrow) external onlyRole(DEFAULT_ADMIN_ROLE) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if (escrow == address(0)) revert ZeroAmount();
+        if (escrow == address(0)) revert InvalidLiquidityEscrow();
         if (escrow.code.length == 0) revert InvalidLiquidityEscrow();
         if ($.liquidityEscrow != address(0)) revert LiquidityEscrowAlreadySet();
         $.liquidityEscrow = escrow;
@@ -823,7 +823,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param newRecipient Address that will receive withdrawn fees
      */
     function setFeeRecipient(address newRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (newRecipient == address(0)) revert InvalidFeeRate();
+        if (newRecipient == address(0)) revert InvalidReceiver();
         
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         $.feeRecipient = newRecipient;
