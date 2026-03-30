@@ -20,7 +20,9 @@ import '@openzeppelin/hardhat-upgrades';
 import networks from './hardhat.network';
 
 const defaultSettings: SolcUserConfig['settings'] = {
-  optimizer: { enabled: true }
+  // Low runs minimizes deployed bytecode (EIP-170); StakedBRB is near the limit.
+  optimizer: { enabled: true, runs: 1 },
+  metadata: { bytecodeHash: 'none' },
 };
 
 type ContractMap = Record<string, { abi: object }>;

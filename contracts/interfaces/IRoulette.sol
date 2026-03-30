@@ -18,7 +18,7 @@ interface IRoulette {
     /// @notice True when betting is allowed; implemented on {IStakedBRB} and this contract delegates to it.
     function isBettingOpen() external view returns (bool);
 
-    /// @dev VRF / compute / payout checks. Pre-VRF lock is implemented only on {StakedBRB.checkUpkeep} (empty checkData).
+    /// @dev VRF and payout batch checks (totals computed in the VRF callback on {RouletteClean}). Pre-VRF lock is only on {StakedBRB.checkUpkeep} (empty checkData).
     function checkUpkeep(bytes calldata checkData) external view returns (bool upkeepNeeded, bytes memory performData);
 
     function performUpkeep(bytes calldata performData) external;

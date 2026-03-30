@@ -59,7 +59,7 @@ async function deployTestnet() {
   const keyHash2Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
   const keyHash30Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
   const keyHash150Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
-  const callbackGasLimit = 250000n
+  const callbackGasLimit = 2_500_000n
   const numWords = 2n
   const safeBlockConfirmation = 1
   const gamePeriod = 120n

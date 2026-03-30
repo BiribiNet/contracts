@@ -218,35 +218,6 @@ contract BRBUpkeepManager is AccessControl, IBRBUpkeepManager {
         emit UpkeepRegistered(upkeepId, forwarder, BOUNDARY_SYNC_GAS_LIMIT, linkAmount, 0, "PRE_VRF_LOCK");
     }
 
-    function registerComputeTotalWinningBetsUpkeep(uint96 linkAmount) external onlyRole(REGISTRANT_ROLE) returns (uint256 upkeepId) {
-        if (linkAmount == 0) revert ZeroAmount();
-        IERC20(LINK_TOKEN).transferFrom(msg.sender, address(this), linkAmount);
-
-        string memory upkeepName = string.concat("RouletteClean-ComputeTotalWinningBets-", Strings.toHexString(ROULETTE));
-
-        upkeepId = IAutomationRegistrar2_1(KEEPER_REGISTRAR).registerUpkeep(
-            IAutomationRegistrar2_1.RegistrationParams({
-                name: upkeepName,
-                encryptedEmail: new bytes(0),
-                upkeepContract: ROULETTE,
-                gasLimit: UPKEEP_GAS_LIMIT,
-                adminAddress: msg.sender,
-                triggerType: 0,
-                checkData: new bytes(2),
-                triggerConfig: new bytes(0),
-                offchainConfig: new bytes(0),
-                amount: linkAmount
-            })
-        );
-
-        if (upkeepId == 0) revert UpkeepRegistrationFailed();
-
-        address forwarder = IAutomationRegistry2_1(KEEPER_REGISTRY).getForwarder(upkeepId);
-        _rouletteForwarderToUpkeepId[forwarder] = upkeepId;
-
-        emit UpkeepRegistered(upkeepId, forwarder, UPKEEP_GAS_LIMIT, linkAmount, 2, "COMPUTE_TOTAL_WINNING_BETS");
-    }
-
     function registerPayoutUpkeeps(uint256 upkeepCount, uint96 linkAmountPerUpkeep) external onlyRole(REGISTRANT_ROLE) {
         if (upkeepCount == 0) revert ZeroAmount();
 

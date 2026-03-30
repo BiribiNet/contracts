@@ -53,7 +53,8 @@ async function deployWithCreate() {
   const keyHash2Gwei = "0x9fe0eebf5e446e3c998ec9bb19951541aee00bb90ea201ae456421a2ded86805"
   const keyHash30Gwei = "0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15"
   const keyHash150Gwei = "0xff8dedfbfa60af186cf3c830acbc32c05aae823045ae5ea7da1e45fbfaba4f92"
-  const callbackGasLimit = 100000n
+  // Must cover fulfillRandomWords + _countTotalWinningBets (winning totals set in the VRF callback).
+  const callbackGasLimit = 2_500_000n
   const numWords = 2n;
   const safeBlockConfirmation = 3;
   // Large enough that multi-tx fixture deploy does not advance block time past one period
@@ -151,11 +152,10 @@ async function deployWithCreate() {
   // Register upkeeps via BRBUpkeepManager (REGISTRANT_ROLE)
   const upkeepCount = 20n; // Register 20 payout upkeeps
   const linkAmount = parseEther('10'); // 10 LINK per upkeep
-  await mockLinkToken.write.approve([upkeepManager.address, linkAmount * upkeepCount + linkAmount * 3n + parseEther('1')], { account: deployer.account }); // Payout + VRF + compute + pre-VRF (+ buffer)
+  await mockLinkToken.write.approve([upkeepManager.address, linkAmount * upkeepCount + linkAmount * 2n + parseEther('1')], { account: deployer.account }); // Payout + VRF + pre-VRF (+ buffer)
   await upkeepManager.write.registerPreVrfLockUpkeep([parseEther('1')], { account: deployer.account })
   await upkeepManager.write.registerVRFUpkeep([parseEther('1')], { account: deployer.account })
   const upkeepIds = await upkeepManager.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
-  const upkeepIdsComputeTotalWinningBets = await upkeepManager.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
 
 
   console.log('rouletteProxyAddress', rouletteProxyAddress)
@@ -225,7 +225,6 @@ async function deployWithCreate() {
     brb,
     cleaningUpkeepId, // Return the cleaning upkeepId from the fixture
     payoutUpkeepIds: upkeepIds, // Return payout upkeep IDs
-    computeTotalWinningBetsUpkeepId: upkeepIdsComputeTotalWinningBets // Return compute total winning bets upkeep ID
   }
 
 

@@ -75,7 +75,7 @@ describe("RouletteClean - Automation", function () {
       });
 
       expect(logs1.length).to.equal(2);
-      // checkDataLength = i + 3 (0/1=lock+VRF use 1-byte tags; 2=compute; 3+= payout batches)
+      // checkDataLength = i + 3 (0/1=lock+VRF use 1-byte tags; 3+= payout batches)
       expect(logs1[0].args.checkDataLength).to.equal(initialCount + 3n);
       expect(logs1[1].args.checkDataLength).to.equal(initialCount + 4n);
 

@@ -93,7 +93,7 @@ async function deployTestnet() {
   const keyHash2Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
   const keyHash30Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
   const keyHash150Gwei = "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
-  const callbackGasLimit = 250000n
+  const callbackGasLimit = 2_500_000n
   const numWords = 2n
   const safeBlockConfirmation = 1
   const gamePeriod = 80n
@@ -211,7 +211,7 @@ async function deployTestnet() {
   // Register upkeeps for RouletteClean
   const upkeepCount = 20n; // Register 20 payout upkeeps
   const linkAmount = parseEther('0.2'); // 1 LINK per upkeep
-  tx = await linkToken.write.approve([upkeepManagerFactory.address, linkAmount * upkeepCount + linkAmount * 3n + linkAmount], { account: deployer.account });
+  tx = await linkToken.write.approve([upkeepManagerFactory.address, linkAmount * upkeepCount + linkAmount * 2n + linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
   
   tx = await upkeepManagerFactory.write.registerPreVrfLockUpkeep([linkAmount], { account: deployer.account });
@@ -222,9 +222,6 @@ async function deployTestnet() {
   
   tx = await upkeepManagerFactory.write.registerPayoutUpkeeps([upkeepCount, linkAmount], { account: deployer.account });
   await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
-  tx = await upkeepManagerFactory.write.registerComputeTotalWinningBetsUpkeep([linkAmount], { account: deployer.account });
-  await publicClient.waitForTransactionReceipt({ hash: tx, confirmations: 2 });
-
 
   await sleep(30 * 1000);
 
@@ -257,6 +254,8 @@ async function deployTestnet() {
     throw new Error('BRBUpkeepManager address mismatch');
   }
 
+  // Etherscan: RouletteLib is deployed and linked on RouletteClean. StakedBRBFeeMath is internal-only (inlined into
+  // StakedBRB bytecode) — no separate library address; source is still included when StakedBRB verifies.
   const verificationTimeout = 10000;
   try {
     await hre.run("verify:verify", {
@@ -289,7 +288,10 @@ async function deployTestnet() {
   try {
     await hre.run("verify:verify", {
       address: rouletteImpl,
-      constructorArguments: [params]
+      constructorArguments: [params],
+      libraries: {
+        RouletteLib: rouletteLib.address,
+      },
     });
   } catch (error) {
     console.log('Error verifying rouletteImpl', error);
@@ -305,7 +307,8 @@ async function deployTestnet() {
         brbReferalAddress,
         jackpotContractProxyAddress,
         upkeepManagerAddress,
-      ]
+        gamePeriod,
+      ],
     });
   } catch (error) {
     console.log('Error verifying stakedBrbImpl', error);
@@ -373,7 +376,16 @@ async function deployTestnet() {
     console.log('Error verifying rouletteLib', error);
   }
 
-  
+  await sleep(verificationTimeout);
+
+  try {
+    await hre.run("verify:verify", {
+      address: liquidityEscrow.address,
+      constructorArguments: [brb.address, stakedBrbProxy.address],
+    });
+  } catch (error) {
+    console.log('Error verifying liquidityEscrow', error);
+  }
 
   console.log('=== DEPLOYMENT COMPLETE ===');
   console.log('jackpotContractProxy', jackpotContractProxy.address);
@@ -388,6 +400,7 @@ async function deployTestnet() {
   console.log('automationRegistry', AUTOMATION_REGISTRY_ADDRESS);
   console.log('linkToken', LINK_TOKEN_ADDRESS);
   console.log('stakedBrbCleaningUpkeepTx', cleaningTxHash);
+  console.log('liquidityEscrow', liquidityEscrow.address);
 
   const getUpkeepConfig = await rouletteProxy.read.getUpkeepConfig();
   console.log('getUpkeepConfig', getUpkeepConfig);

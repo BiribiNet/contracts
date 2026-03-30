@@ -84,12 +84,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
     
     // ========== UPKEEP STRUCTS ==========
-    struct ComputeTotalWinningBetsData {
-        uint256 totalWinningBets;
-        uint256 jackpotWinnerCount;
-        uint256 totalJackpotBetAmount; // Sum of all bets eligible for jackpot (for proportional share)
-    }
-    
     struct RandomResult {
         uint256 winningNumber;
         uint256 jackpotNumber;
@@ -107,10 +101,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 jackpotAmount; // Jackpot pool at time of win (numerator for proportional calc)
     }
 
-    /// @dev performData `kind`; checkData: hex"01" => Vrf; length 2 => Compute…; length>=3 => payout batches. Pre-VRF lock runs only on {StakedBRB}.
+    /// @dev performData `kind`; checkData: hex"01" => Vrf; length>=3 => payout batches (batch index = length - 3). Totals are set inside {fulfillRandomWords}. Pre-VRF lock runs only on {StakedBRB}.
     enum UpkeepKind {
         Vrf,
-        ComputeTotalWinningBets,
         PayoutBatch,
         JackpotPayoutBatch
     }
@@ -281,7 +274,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     
     // ========== MODIFIERS ==========
     
-    /// @dev Registered Chainlink forwarders only (VRF, compute, payout batches — all on this contract).
+    /// @dev Registered Chainlink forwarders only (VRF and payout batches on this contract).
     modifier onlyForwarders() {
         if (!IBRBUpkeepManager(UPKEEP_MANAGER).isAuthorizedForwarder(msg.sender)) {
             revert OnlyForwarders();
@@ -518,9 +511,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
     
     /**
-     * @dev Chainlink Automation: Check if upkeep needed (VRF, compute, payouts). Pre-VRF lock uses {StakedBRB.checkUpkeep} with empty checkData.
-     * @param checkData length 1 (e.g. hex"01") => Vrf; length 2 => ComputeTotalWinningBets;
-     *                  length >= 3 => payout batches (batch index = length - 3) => PayoutBatch or JackpotPayoutBatch.
+     * @dev Chainlink Automation: Check if upkeep needed (VRF, payout batches). Pre-VRF lock uses {StakedBRB.checkUpkeep} with empty checkData.
+     * @param checkData length 1 (e.g. hex"01") => Vrf; length >= 3 => payout batches (batch index = length - 3).
      * SEQUENTIAL SAFETY: Batches are processed in order; batch N only after N-1 completes.
      */
     function checkUpkeep(bytes calldata checkData)
@@ -541,25 +533,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 }));
             }
 
-        } else if (checkData.length == 2) {
-            // COMPUTE TOTAL WINNING BETS: Check if we need to compute total winning bets
-             uint256 roundToBePaid = $.lastRoundPaid + 1;
-             RandomResult memory result = $.randomResults[roundToBePaid];
-             if (result.set && !$.totalWinningBetsSet[roundToBePaid]) {
-                uint256 random = result.winningNumber;
-                (uint256 totalWinningBets, uint256 jackpotWinnerCount, uint256 totalJackpotBetAmount) = _countTotalWinningBets($, roundToBePaid, random, result.jackpotNumber, RouletteLib.getWinningBetTypes(random));
-                upkeepNeeded = true;
-                performData = abi.encode(PerformDataPayload({
-                    roundId: roundToBePaid,
-                    kind: UpkeepKind.ComputeTotalWinningBets,
-                    payload: abi.encode(ComputeTotalWinningBetsData({
-                        totalWinningBets: totalWinningBets,
-                        jackpotWinnerCount: jackpotWinnerCount,
-                        totalJackpotBetAmount: totalJackpotBetAmount
-                    }))
-                }));
-             }
-        } else {
+        } else if (checkData.length >= 3) {
             // PAYOUT USERS: Check if we need to pay users from completed rounds
             uint256 roundToBePaid = $.lastRoundPaid + 1;
             
@@ -630,8 +604,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         if (payload.kind == UpkeepKind.Vrf) {
             _triggerVRF(payload.roundId);
-        } else if (payload.kind == UpkeepKind.ComputeTotalWinningBets) {
-            _processComputeTotalWinningBets(payload.roundId, abi.decode(payload.payload, (ComputeTotalWinningBetsData)));
         } else if (payload.kind == UpkeepKind.PayoutBatch) {
             _processBatch(payload.roundId, abi.decode(payload.payload, (PayoutBatch)));
         } else if (payload.kind == UpkeepKind.JackpotPayoutBatch) {
@@ -690,29 +662,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             $.jackpotResult[roundId].jackpotAmount = 0; // reset this so it now goes to the other regular wins upkeep loop
         }
     }
-
-    function _processComputeTotalWinningBets(uint256 roundId, ComputeTotalWinningBetsData memory batchData) private {
-        RouletteStorage storage $ = _getRouletteStorage();
-        $.totalWinningBets[roundId] = batchData.totalWinningBets;
-        if (batchData.jackpotWinnerCount > 0) {            
-            $.jackpotResult[roundId] = JackpotResult({
-                totalJackpotBetAmount: batchData.totalJackpotBetAmount, // Used as denominator
-                jackpotWinnerCount: batchData.jackpotWinnerCount,
-                jackpotAmount: IERC20(BRB_TOKEN).balanceOf(JACKPOT_CONTRACT) // Used as numerator
-            });
-            emit JackpotResultEvent(roundId, batchData.jackpotWinnerCount);
-        }
-        $.totalWinningBetsSet[roundId] = true;
-
-        // special edge case where no winning bets are set
-        if (batchData.totalWinningBets == 0) {
-            $.lastRoundPaid = roundId;
-            IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, new IRoulette.PayoutInfo[](0), 0, true);
-            emit RoundResolved(roundId);
-        } else {
-            emit ComputedPayouts(roundId, batchData.totalWinningBets);
-        }
-    }
     
     /**
      * @dev Process a batch of users for payout - ULTRA MINIMAL: ONLY WRITES, CALLS, EMITS
@@ -759,6 +708,35 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         delete $.requestIdToRound[requestId];
         
         emit VRFResult(roundToResolve, winningNumber, jackpotNumber);
+
+        RouletteLib.WinningBetTypes memory winningTypes = RouletteLib.getWinningBetTypes(winningNumber);
+        (uint256 totalWinningBets, uint256 jackpotWinnerCount, uint256 totalJackpotBetAmount) = _countTotalWinningBets(
+            $,
+            roundToResolve,
+            winningNumber,
+            jackpotNumber,
+            winningTypes
+        );
+
+        $.totalWinningBets[roundToResolve] = totalWinningBets;
+        if (jackpotWinnerCount > 0) {            
+            $.jackpotResult[roundToResolve] = JackpotResult({
+                totalJackpotBetAmount: totalJackpotBetAmount, // Used as denominator
+                jackpotWinnerCount: jackpotWinnerCount,
+                jackpotAmount: IERC20(BRB_TOKEN).balanceOf(JACKPOT_CONTRACT) // Used as numerator
+            });
+            emit JackpotResultEvent(roundToResolve, jackpotWinnerCount);
+        }
+        $.totalWinningBetsSet[roundToResolve] = true;
+
+        // special edge case where no winning bets are set
+        if (totalWinningBets == 0) {
+            $.lastRoundPaid = roundToResolve;
+            IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundToResolve, new IRoulette.PayoutInfo[](0), 0, true);
+            emit RoundResolved(roundToResolve);
+        } else {
+            emit ComputedPayouts(roundToResolve, totalWinningBets);
+        }
     }
     
     function _collectJackpotPayoutsBatch(

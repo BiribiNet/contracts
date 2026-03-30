@@ -240,16 +240,9 @@ describe("RouletteClean", function () {
       // 4. VRF Fulfilment
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
       
-      // 5. Payout Trigger & Processing (assuming single batch for simplicity for now)
+      // 5. Payout Trigger & Processing (total winning bets computed inside fulfillRandomWords)
       // This might need a loop if the payout for a single bet is split into multiple batches
       // For now, let's assume it's processed in one.
-
-      const [payoutsNeeded3] = await rouletteProxy.read.checkUpkeep(["0x000000"]);
-      expect(payoutsNeeded3).to.be.false;
-      
-      const [shouldComputeTotalWinningBets, computeTotalWinningBets] = await rouletteProxy.read.checkUpkeep(["0x0000"]);
-      expect(shouldComputeTotalWinningBets).to.be.true;
-      await expect(rouletteProxy.write.performUpkeep([computeTotalWinningBets], { account: admin.account })).to.be.fulfilled;
 
       const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep(["0x000000"]);
       expect(payoutsNeeded).to.be.true;
@@ -967,8 +960,8 @@ describe("RouletteClean", function () {
   });
 
   describe("Full Game Loop Integration", function () {
-    it("Should complete full game loop: stake -> bet -> VRF -> compute total winning bets -> payout -> cleanup", async function () {
-      const { rouletteProxy, stakedBrbProxy, brb, mockLinkToken, vrfCoordinator, payoutUpkeepIds, computeTotalWinningBetsUpkeepId } = await useDeployWithCreateFixture();
+    it("Should complete full game loop: stake -> bet -> VRF -> payout totals -> payout -> cleanup", async function () {
+      const { rouletteProxy, stakedBrbProxy, brb, mockLinkToken, vrfCoordinator, payoutUpkeepIds } = await useDeployWithCreateFixture();
       const [admin, player1, player2] = await viem.getWalletClients();
       const publicClient = await viem.getPublicClient();
 
@@ -1071,14 +1064,7 @@ describe("RouletteClean", function () {
       // Check if VRF result is set (function doesn't exist, skip for now)
       console.log("VRF result should be set for round:", currentRound.toString());
 
-      // 5. PERFORM UPKEEP TO COMPUTE TOTAL WINNING BETS
-      console.log("Checking for compute total winning bets upkeep...");
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]); // checkData.length == 2
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
-      console.log("Compute total winning bets upkeep performed.");
-
-      // 6. CHECK UPKEEP FOR PAYOUTS
+      // 5. CHECK UPKEEP FOR PAYOUTS (totals set in VRF callback)
       console.log("Checking for payouts...");
       
       // Debug: Check contract addresses
@@ -1089,7 +1075,7 @@ describe("RouletteClean", function () {
       let processedBatches = 0;
       const currentRoundForPayout = currentRound; // Use the round that just finished VRF
       while (true) {
-        // checkData.length == 2 for batch 0, 3 for batch 1, etc.
+        // checkData.length == 3 for batch 0, 4 for batch 1, etc.
         const checkDataForPayout = new Uint8Array(Number(processedBatches) + 3); 
         const hexCheckData = toHex(checkDataForPayout);
         const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
@@ -1141,7 +1127,7 @@ describe("RouletteClean", function () {
   describe("Specific Bet Payouts", function () {
     // Helper function to run a single bet test
     async function runBetTest(betType: bigint, betNumber: bigint, winningNumber: bigint, jackpotNumber: bigint, expectedPayoutMultiplier: bigint, isWinningTest: boolean) {
-      const { rouletteProxy, stakedBrbProxy, brb, vrfCoordinator, computeTotalWinningBetsUpkeepId, payoutUpkeepIds } = await useDeployWithCreateFixture();
+      const { rouletteProxy, stakedBrbProxy, brb, vrfCoordinator, payoutUpkeepIds } = await useDeployWithCreateFixture();
       const [admin, player1] = await viem.getWalletClients();
       const publicClient = await viem.getPublicClient();
 
@@ -1193,15 +1179,10 @@ describe("RouletteClean", function () {
       // 4. VRF Fulfilment
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
       
-      // 5. COMPUTE TOTAL WINNING BETS
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]); // checkData.length == 2
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
-
-      // 6. Payout Trigger & Processing (iterative)
+      // 5. Payout Trigger & Processing (iterative); compute runs in fulfillRandomWords
       let processedPayoutBatches = 0;
       while (true) {
-        const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 3); // checkData.length 2 for batch 0, 3 for batch 1, etc.
+        const checkDataForPayout = new Uint8Array(Number(processedPayoutBatches) + 3); // length 3 => batch 0, 4 => batch 1, ...
         const hexCheckData = toHex(checkDataForPayout);
         const [payoutsNeeded, payoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);
         if (!payoutsNeeded) break;
@@ -1483,11 +1464,6 @@ describe("RouletteClean", function () {
       // So we set both to the same value for the test to work
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [targetNumber, targetNumber]]);
 
-      // Compute total winning bets
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
-
       // Add some debugging
       const roundInfo = await rouletteProxy.read.getCurrentRoundInfo();
       console.log(`Current round: ${roundInfo[0]}, Last round paid: ${roundInfo[1]}`);
@@ -1630,11 +1606,6 @@ describe("RouletteClean", function () {
       // VRF fulfillment - players win both regular bet and jackpot
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [targetNumber, targetNumber]]);
 
-      // Compute total winning bets
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
-
       // Process jackpot payouts in batches
       let processedJackpotBatches = 0;
       while (true) {
@@ -1744,11 +1715,6 @@ describe("RouletteClean", function () {
 
       // VRF fulfillment
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
-
-      // Compute total winning bets
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
 
       // Process jackpot payouts (may have empty batch to process even with no winners)
       const [jackpotPayoutsNeeded, jackpotPayoutData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(3))]);
@@ -1872,11 +1838,6 @@ describe("RouletteClean", function () {
       const winningNumber = jackpotNumber; // Players win the regular straight bet
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
 
-      // Compute total winning bets
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
-
       // Process jackpot payouts in batches
       let processedJackpotBatches = 0;
       while (true) {
@@ -1994,11 +1955,6 @@ describe("RouletteClean", function () {
 
       // VRF fulfillment
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [winningNumber, jackpotNumber]]);
-
-      // Compute total winning bets
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
 
       // Process jackpot payouts
       let processedJackpotBatches = 0;
@@ -2166,17 +2122,12 @@ describe("RouletteClean", function () {
       // VRF fulfillment - players win both regular bet and jackpot
       await vrfCoordinator.write.fulfillRandomWordsWithOverride([requestId, rouletteProxy.address, [targetNumber, targetNumber]]);
 
-      // Compute total winning bets
-      const [computeNeeded, computeData] = await rouletteProxy.read.checkUpkeep([toHex(new Uint8Array(2))]);
-      expect(computeNeeded).to.be.true;
-      await rouletteProxy.write.performUpkeep([computeData], { account: admin.account });
-
       console.log("Starting jackpot payout processing...");
 
       // Process jackpot payouts in batches (should be at least 2 batches: 0-9, 10-14)
       let processedJackpotBatches = 0;
       while (true) {
-        // For jackpot payouts, checkData length determines batch: length 2 = batch 0, length 3 = batch 1, etc.
+        // For jackpot payouts, checkData length determines batch: length 3 = batch 0, length 4 = batch 1, etc.
         const checkDataForJackpot = new Uint8Array(Number(processedJackpotBatches) + 3);
         const hexCheckData = toHex(checkDataForJackpot);
         const [jackpotPayoutsNeeded, jackpotPayoutData] = await rouletteProxy.read.checkUpkeep([hexCheckData]);

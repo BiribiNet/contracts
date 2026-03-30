@@ -6,7 +6,6 @@ import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/ac
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IRoulette } from "./interfaces/IRoulette.sol";
 import { IERC20Mintable } from "./interfaces/IERC20Mintable.sol";
 import { IERC20Burnable } from "./interfaces/IERC20Burnable.sol";
@@ -14,6 +13,7 @@ import { IBRB } from "./interfaces/IBRB.sol";
 import { IBRBUpkeepManager } from "./interfaces/IBRBUpkeepManager.sol";
 import { AutomationCompatibleInterface } from "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 import { StakedBRBLiquidityEscrow } from "./StakedBRBLiquidityEscrow.sol";
+import { StakedBRBFeeMath } from "./StakedBRBFeeMath.sol";
 
 /**
  * @title StakedBRB Unified
@@ -22,7 +22,6 @@ import { StakedBRBLiquidityEscrow } from "./StakedBRBLiquidityEscrow.sol";
  * @dev Handles staking, betting, protocol fees, and roulette integration
  */
 contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradeable, AutomationCompatibleInterface {
-    using Math for uint256;
         
     // Immutable addresses for gas optimization
     address private immutable BRB_TOKEN;
@@ -120,6 +119,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         uint256 batchSize;
         bool hasWithdrawals;
         uint256 queueLength;
+        uint256 roundPendingBets;
     }
 
     struct Fees {
@@ -180,7 +180,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     event WithdrawalProcessed(address user, uint256 amount);
     event WithdrawalSettingsUpdated(uint256 batchSize);
     event AntiSpamSettingsUpdated(uint256 maxQueueLength);
-    event LiquidityOpsPerUpkeepUpdated(uint32 ops);
     /// @dev Cleaning upkeep completed, or genesis in `initialize` (`cleanedRoundId == 0`, zero fees). Carries the betting-boundary timestamp (lastRoundStartTime equivalent off-chain).
     event RoundCleaningCompleted(
         uint256 cleanedRoundId,
@@ -303,8 +302,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         // Genesis `RoundCleaningCompleted`: `cleanedRoundId == 0` (no round settled yet); `boundaryTimestamp` is initial lastRoundStartTime equivalent.
         emit RoundCleaningCompleted(
             0,
-            $.currentRound,
-            $.lastRoundBoundaryTimestamp,
+            1,
+            block.timestamp,
             Fees({ protocolFees: 0, burnAmount: 0, jackpotAmount: 0 })
         );
     }
@@ -334,24 +333,15 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
 
     /// @notice True when betting is allowed: not in VRF transition and elapsed time since last boundary is less than {gamePeriod}.
-    function isBettingOpen() external view returns (bool) {
-        return _isBettingOpen();
-    }
-
-    function _isBettingOpen() private view returns (bool) {
+    function isBettingOpen() public view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.roundTransitionInProgress) return false;
         uint256 elapsed = block.timestamp - $.lastRoundBoundaryTimestamp;
         return elapsed < GAME_PERIOD;
     }
 
-    /// @notice See {IStakedBRB.isVrfUpkeepNeeded}.
-    function isVrfUpkeepNeeded() external view returns (bool) {
-        return _isVrfUpkeepNeeded();
-    }
-
-    /// @dev Same conditions as {RouletteClean.checkUpkeep} for VRF (checkData length 1).
-    function _isVrfUpkeepNeeded() private view returns (bool) {
+    /// @notice See {IStakedBRB.isVrfUpkeepNeeded}. Same conditions as {RouletteClean.checkUpkeep} for VRF (checkData length 1).
+    function isVrfUpkeepNeeded() public view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.roundTransitionInProgress) return false;
         if (!$.roundResolutionLocked) return false;
@@ -368,7 +358,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param data Additional data for the bet
      */
     function onTokenTransfer(address from, uint256 amount, bytes calldata data, address referral) external onlyBRB {
-        if (!_isBettingOpen()) revert BettingClosed();
+        if (!isBettingOpen()) revert BettingClosed();
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 currentRound = $.currentRound;
         // Track as pending bet (excluded from totalAssets until resolved)
@@ -391,7 +381,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     /**
      * @dev Chainlink Automation `checkUpkeep` for this vault only (not roulette).
      *
-     * `checkData`: empty => pre-VRF lock; any non-empty => cleaning upkeep (registrar typically uses `hex"02"`). VRF / compute / payouts are on {RouletteClean}.
+     * `checkData`: empty => pre-VRF lock; any non-empty => cleaning upkeep (registrar typically uses `hex"02"`). VRF and payouts are on {RouletteClean}.
      *
      * SEQUENTIAL SAFETY: Cleaning path ensures proper order of operations:
      * 1. First process protocol fees when rounds have profit
@@ -427,13 +417,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                 actualProcessCount: 0,
                 batchSize: $.withdrawalBatchSize,
                 hasWithdrawals: queueSize > 0,
-                queueLength: 0
+                queueLength: 0,
+                roundPendingBets: $.pendingBets
             });
 
             // Calculate protocol fees for this round: pendingBets - totalPayouts
-            uint256 roundPendingBets = $.pendingBets;
             uint256 roundTotalPayouts = $.totalPayouts;
-            uint256 roundNetLoss = roundPendingBets > roundTotalPayouts ? roundPendingBets - roundTotalPayouts : 0;
+            uint256 roundNetLoss = v.roundPendingBets > roundTotalPayouts ? v.roundPendingBets - roundTotalPayouts : 0;
 
             // Pre-compute all withdrawal data for performUpkeep
             uint256 withdrawalsToProcess = queueSize > v.batchSize ? v.batchSize : queueSize;
@@ -450,13 +440,15 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
                 address user;
                 uint256 amount;
+                uint8 kind;
                 for (uint256 i; i < withdrawalsToProcess && maxIterations > 0;) {
                     if (currentIndex >= v.queueLength) break;
 
                     user = $.withdrawalQueue[currentIndex];
                     if (user != address(0)) {
                         QueuedWithdrawal storage pw = $.pendingWithdrawal[user];
-                        amount = pw.kind == 1 ? pw.assets : (pw.kind == 2 ? previewRedeem(pw.shares) : 0);
+                        kind = pw.kind;
+                        amount = kind == 1 ? pw.assets : (kind == 2 ? previewRedeem(pw.shares) : 0);
 
                         // Only include users that can be safely processed
                         if (amount > 0 && safeCapacity >= amount) {
@@ -510,7 +502,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         if (!$.roundResolutionLocked) {
             return 0;
         }
-        if (_isVrfUpkeepNeeded()) {
+        if (isVrfUpkeepNeeded()) {
             return 0;
         }
         return vrfDeadline - elapsed;
@@ -785,25 +777,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      */
     function _calculateProtocolFee(uint256 lossAmount) private view returns (Fees memory fee) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if (lossAmount == 0) return (fee);
-
-        fee.jackpotAmount = lossAmount.mulDiv(
-            $.jackpotBasisPoints, 
-            _BASIS_POINT_SCALE, 
-            Math.Rounding.Floor  // Round down
+        (fee.protocolFees, fee.burnAmount, fee.jackpotAmount) = StakedBRBFeeMath.feesFromLoss(
+            lossAmount,
+            $.jackpotBasisPoints,
+            $.protocolFeeBasisPoints,
+            $.burnBasisPoints,
+            _BASIS_POINT_SCALE
         );
-        // Use OpenZeppelin's mulDiv for precise fee calculation
-        fee.protocolFees = lossAmount.mulDiv(
-            $.protocolFeeBasisPoints, 
-            _BASIS_POINT_SCALE, 
-            Math.Rounding.Floor  // Round down
-        );
-        fee.burnAmount = lossAmount.mulDiv(
-            $.burnBasisPoints, 
-            _BASIS_POINT_SCALE, 
-            Math.Rounding.Floor  // Round down
-        );
-
     }
     
     // === Protocol Fees Management ===
@@ -1042,28 +1022,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         $.liquidityOpsPerCleaningUpkeep = newOps;
-
-        emit LiquidityOpsPerUpkeepUpdated(newOps);
-    }
-
-    /// @notice Current cap on deposit/mint queue entries processed per cleaning `performUpkeep`.
-    function getLiquidityOpsPerCleaningUpkeep() external view returns (uint32) {
-        return _getStakedBRBStorage().liquidityOpsPerCleaningUpkeep;
-    }
-
-    /// @notice Hard caps on admin-tunable operational parameters (stay within `CLEANING_UPKEEP_GAS_LIMIT` budget).
-    function getOperationalLimits() external pure returns (
-        uint256 maxWithdrawalBatchSize,
-        uint256 maxQueueLength,
-        uint32 maxLiquidityOpsPerCleaningUpkeep,
-        uint32 cleaningUpkeepGasLimit
-    ) {
-        return (
-            MAX_WITHDRAWAL_BATCH_SIZE,
-            MAX_MAX_QUEUE_LENGTH,
-            MAX_LIQUIDITY_OPS_PER_UPKEEP,
-            CLEANING_UPKEEP_GAS_LIMIT
-        );
     }
 
     
@@ -1104,29 +1062,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         );
     }
     
-    function getSafeCapacity() external view returns (uint256) {
-        return _calculateSafeWithdrawalCapacity();
-    }
-    
-    /**
-     * @dev Preview protocol fee for a given loss amount
-     * @param lossAmount Amount that would be lost in betting
-     * @return fee Amount that would go to protocol
-     * @return stakerProfit Amount that would go to stakers
-     */
-    function previewProtocolFee(uint256 lossAmount) external view returns (Fees memory fee, uint256 stakerProfit) {
-        fee = _calculateProtocolFee(lossAmount);
-        stakerProfit = lossAmount - (fee.protocolFees + fee.burnAmount + fee.jackpotAmount);
-    }
-    
-    /**
-     * @dev Get current pending bets amount (excluded from totalAssets)
-     */
-    function getPendingBets() external view returns (uint256) {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        return $.pendingBets;
-    }
-
     /**
      * @dev Get current maxPayout (cumulative max payout for active round)
      */
@@ -1140,49 +1075,31 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @return withdrawalBatchSize Current batch size for processing
      * @return queueLength Current length of withdrawal queue
      * @return maxQueueLength Maximum allowed queue length
+     * @return liquidityOpsPerCleaningUpkeep Max deposit/mint queue entries processed per cleaning upkeep
      */
     function getWithdrawalSettings() external view returns (
         uint256 withdrawalBatchSize,
         uint256 queueLength,
-        uint256 maxQueueLength
+        uint256 maxQueueLength,
+        uint32 liquidityOpsPerCleaningUpkeep
     ) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         withdrawalBatchSize = $.withdrawalBatchSize;
         queueLength = $.queueSize;
         maxQueueLength = $.maxQueueLength;
+        liquidityOpsPerCleaningUpkeep = $.liquidityOpsPerCleaningUpkeep;
     }
     
     /**
-     * @dev Get user's pending queued withdrawal information
-     * @param user Address to check
-     * @return pendingAmount Amount pending for withdrawal
-     * @return queuePosition Position in withdrawal queue (0 = not in queue)
+     * @dev Pending BRB amount for a queued withdrawal (0 if none). FIFO rank is off-chain via `WithdrawalRequested` / subgraph.
      */
-    function getUserPendingWithdrawal(address user) external view returns (
-        uint256 pendingAmount,
-        uint256 queuePosition
-    ) {
+    function getUserPendingWithdrawal(address user) external view returns (uint256 pendingAmount) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         QueuedWithdrawal storage q = $.pendingWithdrawal[user];
         if (q.kind == 0) {
-            return (0, 0);
+            return 0;
         }
         pendingAmount = q.kind == 1 ? q.assets : previewRedeem(q.shares);
-        uint256 queueIndex = $.userQueuePosition[user];
-        uint256 position;
-        uint256 currentIndex = $.queueHead;
-        uint256 maxIterations = $.queueSize;
-        while (currentIndex != queueIndex && maxIterations > 0) {
-            if (currentIndex >= $.withdrawalQueue.length) {
-                break;
-            }
-            if ($.withdrawalQueue[currentIndex] != address(0)) {
-                position++;
-            }
-            currentIndex = currentIndex + 1;
-            maxIterations--;
-        }
-        queuePosition = currentIndex == queueIndex ? position + 1 : 0;
     }
     
     /// @dev Cancel the caller's single pending queued withdrawal (if any).

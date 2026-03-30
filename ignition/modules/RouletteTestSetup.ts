@@ -20,7 +20,7 @@ const RouletteTestSetupModule = buildModule("RouletteTestSetup", (m) => {
   const keyHash30Gwei = "0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15";
   const keyHash150Gwei = "0xff8dedfbfa60af186cf3c830acbc32c05aae823045ae5ea7da1e45fbfaba4f92";
   const subscriptionId = 1n;
-  const callbackGasLimit = 100000;
+  const callbackGasLimit = 2_500_000;
   const numWords = 1;
   const safeBlockConfirmation = 3;
 
