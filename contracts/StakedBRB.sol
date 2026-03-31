@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import { ERC4626Upgradeable } from "./external/ERC4626Upgradeable.sol";
+import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -151,15 +151,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         bytes payload;
     }
 
-    /// @dev Queued ERC4626 deposit/mint executed when cleaning upkeep completes (GAME_PERIOD enqueue only).
+    /// @dev Legacy struct for queued liquidity (no longer used now that deposits/mints are immediate).
     struct QueuedLiquidity {
         uint8 kind; // 0 = deposit(assets), 1 = mint(shares)
         address payer;
         address receiver;
         uint256 assets;
         uint256 shares;
-        /// @dev kind 0: min shares at settlement (eject/refund if lower). kind 1: unused.
-        uint256 minSharesOut;
     }
 
     /// @dev kind: 0 = none, 1 = by assets (ERC4626 withdraw), 2 = by shares (ERC4626 redeem)
@@ -168,8 +166,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         address receiver;
         uint256 assets;
         uint256 shares;
-        uint256 maxShares;
-        uint256 minAssets;
         uint256 accountingAssets;
     }
     
@@ -273,7 +269,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         __ERC4626_init(IERC20(BRB_TOKEN));
         __ERC20_init('Staked BRB', 'sBRB');
         __AccessControl_init();
-        __UUPSUpgradeable_init();
         
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         
@@ -332,13 +327,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function isBettingOpen() public view returns (bool) {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.roundTransitionInProgress) return false;
+        if ($.roundResolutionLocked) return false;
         uint256 elapsed = block.timestamp - $.lastRoundBoundaryTimestamp;
-        return elapsed < GAME_PERIOD;
+        return elapsed < (GAME_PERIOD - TIME_MARGIN);
     }
 
     /// @notice Seconds per betting round; {RouletteClean.gamePeriod} delegates here.
     function gamePeriod() external view returns (uint256) {
-        return GAME_PERIOD;
+        return GAME_PERIOD - TIME_MARGIN;
     }
 
     /// @notice See {IStakedBRB.isVrfUpkeepNeeded}. Same conditions as {RouletteClean.checkUpkeep} for VRF (checkData length 1).
@@ -574,43 +570,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             if (head < len) {
                 uint256 maxOps = uint256($.liquidityOpsPerCleaningUpkeep);
                 if (maxOps != 0) {
-                    StakedBRBLiquidityEscrow escrow = StakedBRBLiquidityEscrow($.liquidityEscrow);
                     uint256 processed;
-                    uint256 idx;
-                    QueuedLiquidity storage ql;
-                    uint256 sharesOut;
-                    uint256 need;
                     while (head < len && processed < maxOps) {
-                        idx = head;
-                        ql = $.depositMintQueue[idx];
-                        $.queuedDepositIntentByPayer[ql.payer] = false;
-                        if (ql.kind == 0) {
-                            sharesOut = previewDeposit(ql.assets);
-                            if (sharesOut < ql.minSharesOut) {
-                                escrow.refund(ql.payer, ql.assets);
-                                emit QueuedLiquidityRejected(ql.payer, ql.assets, 0);
-                            } else {
-                                escrow.pushToVault(ql.assets);
-                                _mintAndEmitDeposit(ql.payer, ql.receiver, ql.assets, sharesOut);
-                            }
-                        } else {
-                            need = previewMint(ql.shares);
-                            if (need > ql.assets) {
-                                escrow.refund(ql.payer, ql.assets);
-                                emit QueuedLiquidityRejected(ql.payer, ql.assets, 1);
-                            } else {
-                                escrow.pushToVault(need);
-                                if (ql.assets > need) {
-                                    escrow.refund(ql.payer, ql.assets - need);
-                                }
-                                _mintAndEmitDeposit(ql.payer, ql.receiver, need, ql.shares);
-                            }
-                        }
+                        // Deposit/mint queue is deprecated; just advance indices and clear entries if any exist.
                         unchecked {
+                            delete $.depositMintQueue[head];
                             ++head;
                             ++processed;
                         }
-                        delete $.depositMintQueue[idx];
                     }
                     $.depositMintQueueHead = head;
                     if (head == $.depositMintQueue.length && head > 0) {
@@ -702,27 +669,19 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
 
         if (q.kind == 1) {
             uint256 sh = super.previewWithdraw(q.assets);
-            if (sh > q.maxShares) {
-                _ejectWithdrawal(user, queueIndex, 1);
-                return;
-            }
             if (sh > balanceOf(user)) {
                 _ejectWithdrawal(user, queueIndex, 3);
                 return;
             }
-            super.withdraw(q.assets, q.receiver, user, q.maxShares);
+            super.withdraw(q.assets, q.receiver, user);
             emit WithdrawalProcessed(user, q.assets);
         } else if (q.kind == 2) {
             uint256 aOut = super.previewRedeem(q.shares);
-            if (aOut < q.minAssets) {
-                _ejectWithdrawal(user, queueIndex, 2);
-                return;
-            }
             if (q.shares > balanceOf(user)) {
                 _ejectWithdrawal(user, queueIndex, 3);
                 return;
             }
-            super.redeem(q.shares, q.receiver, user, q.minAssets);
+            super.redeem(q.shares, q.receiver, user);
             emit WithdrawalProcessed(user, aOut);
         } else {
             return;
@@ -819,61 +778,30 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         emit ProtocolFeeRecipientUpdated(newRecipient);
     }
 
-    function depositWithPermit(uint256 assets, address receiver, uint256 minSharesOut, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external returns (uint256 shares) {
+    function depositWithPermit(uint256 assets, address receiver, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external returns (uint256 shares) {
         try IERC20Permit(BRB_TOKEN).permit(msg.sender, address(this), assets, deadline, v, r, s) {} catch {}
         _checkDepositAllowed(assets);
-        if (!_inGamePeriod()) revert DepositOutsideGamePeriod();
-        if (totalSupply() == 0) {
-            return super.deposit(assets, receiver, minSharesOut);
-        }
-        _enqueueLiquidityDeposit(assets, receiver, minSharesOut);
-        shares = previewDeposit(assets);
+        shares = super.deposit(assets, receiver);
         return shares;
     }
     /**
-    * @dev Override deposit to enforce minimum deposit; queues mint during GAME_PERIOD (applied on cleaning upkeep).
-    *      First deposit ever mints immediately to bootstrap the vault.
+    * @dev Deposit helpers: deposits are applied immediately; minimum first deposit enforced via {_checkDepositAllowed}.
     */
-    function deposit(uint256 assets, address receiver, uint256 minSharesOut) public override returns (uint256 shares) {
+    function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
         _checkDepositAllowed(assets);
-        if (!_inGamePeriod()) revert DepositOutsideGamePeriod();
-        if (totalSupply() == 0) {
-            return super.deposit(assets, receiver, minSharesOut);
-        }
-        _enqueueLiquidityDeposit(assets, receiver, minSharesOut);
-        shares = previewDeposit(assets);
+        // Immediate ERC4626 deposit
+        shares = super.deposit(assets, receiver);
         return shares;
     }
 
-    function mint(uint256 shares, address receiver, uint256 maxAmountIn) public override returns (uint256 assets) {
+    function mint(uint256 shares, address receiver) public override returns (uint256 assets) {
         if (shares == 0) revert ZeroAmount();
         uint256 assetsForMin = previewMint(shares);
         if (totalSupply() == 0 && assetsForMin < MINIMUM_FIRST_DEPOSIT) revert DepositTooSmall();
-        StakedBRBStorage storage $m = _getStakedBRBStorage();
-        if ($m.roundTransitionInProgress || $m.roundResolutionLocked) revert DepositBlockedDuringResolution();
-        if (!_inGamePeriod()) revert DepositOutsideGamePeriod();
-        if (totalSupply() == 0) {
-            return super.mint(shares, receiver, maxAmountIn);
-        }
-        if (maxAmountIn == 0) revert ZeroAmount();
-        if ($m.queuedDepositIntentByPayer[msg.sender]) revert DepositIntentAlreadyQueued();
-        $m.queuedDepositIntentByPayer[msg.sender] = true;
-        $m.depositMintQueue.push(
-            QueuedLiquidity({ kind: 1, payer: msg.sender, receiver: receiver, assets: maxAmountIn, shares: shares, minSharesOut: 0 })
-        );
-        IERC20(asset()).transferFrom(msg.sender, $m.liquidityEscrow, maxAmountIn);
-        return maxAmountIn;
-    }
-
-    /// @dev BRB moves to {liquidityEscrow}; conversion runs in {_processLiquidityQueue}.
-    function _enqueueLiquidityDeposit(uint256 assets, address receiver, uint256 minSharesOut) private {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.queuedDepositIntentByPayer[msg.sender]) revert DepositIntentAlreadyQueued();
-        $.queuedDepositIntentByPayer[msg.sender] = true;
-        $.depositMintQueue.push(
-            QueuedLiquidity({ kind: 0, payer: msg.sender, receiver: receiver, assets: assets, shares: 0, minSharesOut: minSharesOut })
-        );
-        IERC20(asset()).transferFrom(msg.sender, $.liquidityEscrow, assets);
+        _checkDepositAllowed(assetsForMin);
+        // Immediate ERC4626 mint
+        assets = super.mint(shares, receiver);
+        return assets;
     }
 
     // === Note: No ERC4626 Fees Overrides ===
@@ -882,8 +810,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     
     /**
      * @dev All withdrawals are queued and settled on cleaning upkeep (one pending request per user).
+     * @notice Standard ERC4626 withdraw signature; BRB is only transferred on cleaning upkeep.
      */
-    function withdraw(uint256 assets, address receiver, address owner, uint256 maxSharesOut) public override noPendingWithdrawal(owner) returns (uint256 shares) {
+    function withdraw(uint256 assets, address receiver, address owner) public override noPendingWithdrawal(owner) returns (uint256 shares) {
         if (assets == 0) revert ZeroAmount();
         if (receiver == address(0)) revert InvalidReceiver();
         _checkWithdrawalAllowed(owner);
@@ -906,8 +835,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                 receiver: receiver,
                 assets: assets,
                 shares: 0,
-                maxShares: maxSharesOut == 0 ? type(uint256).max : maxSharesOut,
-                minAssets: 0,
                 accountingAssets: assets
             })
         );
@@ -915,7 +842,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
 
     /// @dev All redemptions are queued and settled on cleaning upkeep (one pending request per user).
-    function redeem(uint256 shares, address receiver, address owner, uint256 minAmountOut) public override noPendingWithdrawal(owner) returns (uint256 assets) {
+    function redeem(uint256 shares, address receiver, address owner) public override noPendingWithdrawal(owner) returns (uint256 assets) {
         if (shares == 0) revert ZeroAmount();
         if (receiver == address(0)) revert InvalidReceiver();
         _checkWithdrawalAllowed(owner);
@@ -938,8 +865,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                 receiver: receiver,
                 assets: 0,
                 shares: shares,
-                maxShares: 0,
-                minAssets: minAmountOut,
                 accountingAssets: requestedAssets
             })
         );
@@ -954,12 +879,6 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         // Block deposits during round transitions (from onRoundTransition to cleaning upkeep completion)
         StakedBRBStorage storage $s = _getStakedBRBStorage();
         if ($s.roundTransitionInProgress || $s.roundResolutionLocked) revert DepositBlockedDuringResolution();
-    }
-
-    function _inGamePeriod() private view returns (bool) {
-        StakedBRBStorage storage $ = _getStakedBRBStorage();
-        if ($.roundTransitionInProgress || $.roundResolutionLocked) return false;
-        return block.timestamp - $.lastRoundBoundaryTimestamp < GAME_PERIOD;
     }
     
     /// @dev Private function to check if withdrawals are allowed

@@ -2366,12 +2366,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-upgradeable@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "@openzeppelin/contracts-upgradeable@npm:5.3.0"
+"@openzeppelin/contracts-upgradeable@npm:^5.6.1":
+  version: 5.6.1
+  resolution: "@openzeppelin/contracts-upgradeable@npm:5.6.1"
   peerDependencies:
-    "@openzeppelin/contracts": 5.3.0
-  checksum: 10c0/aba3a1903d689a603dda5e021f698e8d7b035b8d469712e8755393e2013297076a88fbc79f20ab1354e69d142f29939ab5d9e310204f79d42ec99eef08f61135
+    "@openzeppelin/contracts": 5.6.1
+  checksum: 10c0/049633532c1b39bbd15dd5be0fd43f7cd1052b6fef4a9925e5caa22886b23dc937daa7410560486699cd90eca928cb8c5c26ec7c623f2b964acb3abeb4254003
   languageName: node
   linkType: hard
 
@@ -2389,10 +2389,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "@openzeppelin/contracts@npm:5.3.0"
-  checksum: 10c0/b8a2d97413c24635c92de4b2a1188fa58ab252515aff38eabce4fa66bd3d8ae1649010d17fccaeb4e266bf8314c8bd92757fedca97bf643b6b98e11dea3fa83d
+"@openzeppelin/contracts@npm:^5.6.1":
+  version: 5.6.1
+  resolution: "@openzeppelin/contracts@npm:5.6.1"
+  checksum: 10c0/f00ecd2b63ca99361e772a9355a587345a2b2af8ead3e88996e0bd1eef89221c3f762cfb77632c1a6ea866a5d3bc030eea1790bd9d326d8ad71f8edee20a5b37
   languageName: node
   linkType: hard
 
@@ -4238,8 +4238,8 @@ __metadata:
     "@nomicfoundation/hardhat-verify": "npm:^2.0.14"
     "@nomicfoundation/hardhat-viem": "npm:^2.0.6"
     "@nomicfoundation/ignition-core": "npm:^0.15.11"
-    "@openzeppelin/contracts": "npm:^5.3.0"
-    "@openzeppelin/contracts-upgradeable": "npm:^5.3.0"
+    "@openzeppelin/contracts": "npm:^5.6.1"
+    "@openzeppelin/contracts-upgradeable": "npm:^5.6.1"
     "@openzeppelin/hardhat-upgrades": "npm:^3.9.0"
     "@tenderly/api-client": "npm:^1.1.0"
     "@tenderly/hardhat-tenderly": "npm:^2.5.2"

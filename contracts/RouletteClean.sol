@@ -253,7 +253,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         LINK_TOKEN = params.linkToken;
         JACKPOT_CONTRACT = params.jackpotContract;
         BRB_TOKEN = params.brbToken;
-        if (params.upkeepManager == address(0)) revert ZeroAddress();
         UPKEEP_MANAGER = params.upkeepManager;
         _disableInitializers();
     }
@@ -263,7 +262,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         address admin
     ) external initializer {
         __AccessControl_init();
-        __UUPSUpgradeable_init();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         
         RouletteStorage storage $ = _getRouletteStorage();

@@ -23,6 +23,8 @@ const defaultSettings: SolcUserConfig['settings'] = {
   // Low runs minimizes deployed bytecode (EIP-170); StakedBRB is near the limit.
   optimizer: { enabled: true, runs: 1 },
   metadata: { bytecodeHash: 'none' },
+  // Use Cancun EVM for newer OZ (mcopy, Memory, etc.)
+  evmVersion: 'cancun',
 };
 
 type ContractMap = Record<string, { abi: object }>;

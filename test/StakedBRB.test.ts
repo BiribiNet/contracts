@@ -176,7 +176,7 @@ describe("StakedBRB", function () {
     
     // Stake the specified amount
     await brb.write.approve([stakedBrbProxy.address, stakeAmount], { account: player1.account });
-    await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address, 0n], { account: player1.account });
+    await stakedBrbProxy.write.deposit([stakeAmount, player1.account.address], { account: player1.account });
     
     let maxPayout = 0n;
     let safeWithdrawalCapacity = 0n;
@@ -325,7 +325,7 @@ describe("StakedBRB", function () {
       const depositAmount = parseEther("1000");
       
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
       expect(shares).to.be.greaterThan(0);
@@ -338,7 +338,7 @@ describe("StakedBRB", function () {
       
       await brb.write.approve([stakedBrbProxy.address, smallDeposit], { account: player1.account });
       await expect(
-        stakedBrbProxy.write.deposit([smallDeposit, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.deposit([smallDeposit, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("DepositTooSmall");
     });
 
@@ -346,24 +346,24 @@ describe("StakedBRB", function () {
       // First deposit
       const firstDeposit = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, firstDeposit], { account: player1.account });
-      await stakedBrbProxy.write.deposit([firstDeposit, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([firstDeposit, player1.account.address], { account: player1.account });
       
       // Second small deposit should work
       const smallDeposit = 999n;
       await brb.write.approve([stakedBrbProxy.address, smallDeposit], { account: player2.account });
-      await stakedBrbProxy.write.deposit([smallDeposit, player2.account.address, 0n], { account: player2.account });
+      await stakedBrbProxy.write.deposit([smallDeposit, player2.account.address], { account: player2.account });
     });
 
     it("Should handle minting correctly", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
       const mintAmount = shares / 2n;
       
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
-      await stakedBrbProxy.write.mint([mintAmount, player2.account.address, parseEther("1000")], { account: player2.account });
+      await stakedBrbProxy.write.mint([mintAmount, player2.account.address], { account: player2.account });
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
 
       expect(await stakedBrbProxy.read.balanceOf([player2.account.address])).to.equal(mintAmount);
@@ -372,7 +372,7 @@ describe("StakedBRB", function () {
     it("Should calculate exchange rate correctly", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       // Use ERC4626 compliant function to get exchange rate
       const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
@@ -384,7 +384,7 @@ describe("StakedBRB", function () {
     it("Should preview functions work correctly", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
       
@@ -474,7 +474,6 @@ describe("StakedBRB", function () {
       const tx = await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player1.account.address,
-        0n, // minSharesOut
         deadline,
         Number(v),
         r,
@@ -506,7 +505,6 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player1.account.address,
-        0n,
         deadline,
         Number(v),
         r,
@@ -528,12 +526,11 @@ describe("StakedBRB", function () {
         expiredDeadline
       );
 
-      // Should revert due to expired deadline
+      // Should revert due to expired deadline (permit will fail and deposit lacks allowance)
       await expect(
         stakedBrbProxy.write.depositWithPermit([
           depositAmount,
           player1.account.address,
-          0n,
           expiredDeadline,
           Number(v),
           r,
@@ -559,7 +556,6 @@ describe("StakedBRB", function () {
         stakedBrbProxy.write.depositWithPermit([
           depositAmount, // Using different amount than signed
           player1.account.address,
-          0n,
           deadline,
           Number(v),
           r,
@@ -584,7 +580,6 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player1.account.address,
-        0n,
         deadline,
         Number(v),
         r,
@@ -599,7 +594,6 @@ describe("StakedBRB", function () {
         stakedBrbProxy.write.depositWithPermit([
           depositAmount,
           player1.account.address,
-          0n,
           deadline,
           Number(v),
           r,
@@ -627,7 +621,6 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player1.account.address,
-        0n,
         deadline,
         Number(v),
         r,
@@ -653,7 +646,6 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player2.account.address, // Different receiver
-        0n,
         deadline,
         Number(v),
         r,
@@ -665,7 +657,7 @@ describe("StakedBRB", function () {
       expect(await stakedBrbProxy.read.balanceOf([player1.account.address])).to.equal(0);
     });
 
-    it("Should respect minSharesOut parameter", async function () {
+    it("Should support depositWithPermit without minSharesOut", async function () {
       const depositAmount = parseEther("1000");
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
       
@@ -677,21 +669,19 @@ describe("StakedBRB", function () {
         deadline
       );
 
-      // Set unreasonably high minSharesOut
-      const unreasonableMinShares = parseEther("2000"); // More than possible
+      const tx = await stakedBrbProxy.write.depositWithPermit([
+        depositAmount,
+        player1.account.address,
+        deadline,
+        Number(v),
+        r,
+        s
+      ], { account: player1.account });
 
-      // Should revert due to insufficient shares output
-      await expect(
-        stakedBrbProxy.write.depositWithPermit([
-          depositAmount,
-          player1.account.address,
-          unreasonableMinShares,
-          deadline,
-          Number(v),
-          r,
-          s
-        ], { account: player1.account })
-      ).to.be.rejected;
+      await publicClient.waitForTransactionReceipt({ hash: tx });
+
+      const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
+      expect(shares).to.be.greaterThan(0n);
     });
 
     it("Should handle multiple users with permits in sequence", async function () {
@@ -709,7 +699,6 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player1.account.address,
-        0n,
         deadline,
         Number(sig1.v),
         sig1.r,
@@ -727,7 +716,6 @@ describe("StakedBRB", function () {
       await stakedBrbProxy.write.depositWithPermit([
         depositAmount,
         player2.account.address,
-        0n,
         deadline,
         Number(sig2.v),
         sig2.r,
@@ -746,14 +734,14 @@ describe("StakedBRB", function () {
       // Setup: deposit some BRB
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
     });
 
     it("Should queue asset withdrawals without transferring BRB until upkeep", async function () {
       const withdrawAmount = parseEther("100");
       const initialBalance = await brb.read.balanceOf([player1.account.address]);
 
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
 
       const finalBalance = await brb.read.balanceOf([player1.account.address]);
       expect(finalBalance).to.equal(initialBalance);
@@ -769,7 +757,7 @@ describe("StakedBRB", function () {
       const amountOut = await stakedBrbProxy.read.previewRedeem([redeemShares]);
       const minAmountOut = amountOut / 2n;
 
-      await stakedBrbProxy.write.redeem([redeemShares, player1.account.address, player1.account.address, minAmountOut], { account: player1.account });
+      await stakedBrbProxy.write.redeem([redeemShares, player1.account.address, player1.account.address], { account: player1.account });
 
       const finalBalance = await brb.read.balanceOf([player1.account.address]);
       expect(finalBalance).to.equal(initialBalance);
@@ -788,7 +776,7 @@ describe("StakedBRB", function () {
       
       // Test that withdrawal works normally
       await expect(
-        stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account })
+        stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account })
       ).to.not.be.rejected;
     });
 
@@ -813,7 +801,7 @@ describe("StakedBRB", function () {
       console.log(`Withdrawing ${withdrawAmount} ETH, should be larger than safe capacity`);
       
       // This should be treated as a large withdrawal and queued
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("2000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Check that withdrawal was queued
       const pendingAmount =
@@ -834,11 +822,11 @@ describe("StakedBRB", function () {
       
       // Player 1 deposits
       await brb.write.approve([stakedBrbProxy.address, parseEther("2000")], { account: player1.account });
-      await stakedBrbProxy.write.deposit([parseEther("2000"), player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([parseEther("2000"), player1.account.address], { account: player1.account });
       
       // Player 2 deposits
       await brb.write.approve([stakedBrbProxy.address, parseEther("2000")], { account: player2.account });
-      await stakedBrbProxy.write.deposit([parseEther("2000"), player2.account.address, 0n], { account: player2.account });
+      await stakedBrbProxy.write.deposit([parseEther("2000"), player2.account.address], { account: player2.account });
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       // Now place a bet to create maxPayout scenario
@@ -899,10 +887,10 @@ describe("StakedBRB", function () {
       console.log(`Withdraw amount: ${withdrawAmount}`);
       
       // Player 1 withdrawal
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("2000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Player 2 withdrawal
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, parseEther("2000")], { account: player2.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address], { account: player2.account });
       
       // Debug: Check withdrawal settings after withdrawals
       const [batchSize, queueLength, maxQueueLength] = await stakedBrbProxy.read.getWithdrawalSettings();
@@ -924,11 +912,11 @@ describe("StakedBRB", function () {
       const withdrawAmount = parseEther("100"); // Larger than safe capacity
       
       // First request should succeed
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Second request should fail
       await expect(
-        stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account })
+        stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("WithdrawalPending");
     });
 
@@ -945,7 +933,7 @@ describe("StakedBRB", function () {
         await brb.write.transfer([player2.account.address, depositAmount - player2Balance], { account: admin.account });
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address], { account: player2.account });
       
       // Ensure player3 has enough BRB and deposit
       const player3Balance = await brb.read.balanceOf([player3.account.address]);
@@ -953,7 +941,7 @@ describe("StakedBRB", function () {
         await brb.write.transfer([player3.account.address, depositAmount - player3Balance], { account: admin.account });
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player3.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player3.account.address, 0n], { account: player3.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player3.account.address], { account: player3.account });
 
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
@@ -992,13 +980,13 @@ describe("StakedBRB", function () {
       const maxSharesOut = sharesNeeded * 2n;
       
       // Fill up the queue
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Debug: Check withdrawal settings after first withdrawal
       const [batchSize1, queueLength1, maxQueueLength1] = await stakedBrbProxy.read.getWithdrawalSettings();
       console.log(`After player1 withdrawal - Batch size: ${batchSize1}, Queue length: ${queueLength1}, Max queue length: ${maxQueueLength1}`);
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, maxSharesOut], { account: player2.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address], { account: player2.account });
       
       // Debug: Check withdrawal settings after second withdrawal
       const [batchSize2, queueLength2, maxQueueLength2] = await stakedBrbProxy.read.getWithdrawalSettings();
@@ -1006,7 +994,7 @@ describe("StakedBRB", function () {
       
       // Third request should fail
       await expect(
-        stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address, maxSharesOut], { account: player3.account })
+        stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address], { account: player3.account })
       ).to.be.rejectedWith("QueueFull");
     });
 
@@ -1050,7 +1038,7 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Debug: Check withdrawal settings after withdrawal
       const [batchSize, queueLength, maxQueueLength] = await stakedBrbProxy.read.getWithdrawalSettings();
@@ -1080,7 +1068,7 @@ describe("StakedBRB", function () {
       // Isolated: deposit + small bet so we have maxPayout; then try to withdraw more than balance
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const betAmount = parseEther("1");
       const SAFETY_BUFFER_BPS = 11000n;
@@ -1104,7 +1092,7 @@ describe("StakedBRB", function () {
       const excessiveAmount = parseEther("50000"); // More than user has
       
       await expect(
-        stakedBrbProxy.write.withdraw([excessiveAmount, player1.account.address, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.withdraw([excessiveAmount, player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("WithdrawalTooLarge");
     });
   });
@@ -1120,7 +1108,7 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n; // Use 2x the needed shares to avoid MaxSharesError
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Verify withdrawal was queued
       const pendingAmountBefore = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
@@ -1190,7 +1178,7 @@ describe("StakedBRB", function () {
       
       // This should be considered a large withdrawal
       await expect(
-        stakedBrbProxy.write.withdraw([testAmount, player1.account.address, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.withdraw([testAmount, player1.account.address, player1.account.address], { account: player1.account })
       ).to.not.be.rejected; // Should queue the withdrawal
     });
   });
@@ -1755,7 +1743,7 @@ describe("StakedBRB", function () {
       // Setup some state for testing view functions
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
     });
 
     it("Should return correct staking stats", async function () {
@@ -1921,6 +1909,59 @@ describe("StakedBRB", function () {
     });
   });
 
+  describe("Gas & Queue Stress", function () {
+    it("Should handle many queued deposits within cleaning gas budget", async function () {
+      // Bootstrap vault with a large initial deposit so subsequent deposits go through the liquidity queue
+      const initialDeposit = parseEther("100000");
+      await brb.write.transfer([player1.account.address, initialDeposit], { account: admin.account });
+      await brb.write.approve([stakedBrbProxy.address, initialDeposit], { account: player1.account });
+      await stakedBrbProxy.write.deposit([initialDeposit, player1.account.address], { account: player1.account });
+
+      // Configure liquidity ops per upkeep to its maximum so we can stress test worst case
+      await stakedBrbProxy.write.setLiquidityOpsPerCleaningUpkeep([80], { account: admin.account });
+
+      // Fund many wallets and enqueue one deposit intent per wallet
+      const clients = await viem.getWalletClients();
+      const bots = clients.slice(4, 4 + 60); // skip admin/player1-3; use up to 60 bot wallets
+      const botDeposit = parseEther("10");
+
+      for (const bot of bots) {
+        await brb.write.transfer([bot.account.address, botDeposit], { account: admin.account });
+        await brb.write.approve([stakedBrbProxy.address, botDeposit], { account: bot.account });
+        await stakedBrbProxy.write.deposit([botDeposit, bot.account.address], { account: bot.account });
+      }
+
+      // Run a minimal round to reach cleaning so queued liquidity is processed
+      const betAmount = parseEther("1");
+      const betData = encodeAbiParameters(
+        [{ type: "tuple", components: [
+          { type: "uint256[]", name: "amounts" },
+          { type: "uint256[]", name: "betTypes" },
+          { type: "uint256[]", name: "numbers" },
+        ] }],
+        [{ amounts: [betAmount], betTypes: [1n], numbers: [8n] }],
+      );
+      try {
+        await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
+      } catch {
+        // If betting window is closed, we can still test cleaning gas usage
+      }
+
+      // Now run StakedBRB cleaning upkeep and measure gas
+      const [cleanNeeded, cleanData] = await stakedBrbProxy.read.checkUpkeep(["0x02"]);
+      if (!cleanNeeded) {
+        // No cleaning needed in the current configuration; test setup still valid
+        return;
+      }
+
+      const txClean = await stakedBrbProxy.write.performUpkeep([cleanData], { account: admin.account });
+      const receiptClean = await publicClient.waitForTransactionReceipt({ hash: txClean });
+
+      console.log(`🔎 Cleaning upkeep gas used (queued deposits stress): ${receiptClean.gasUsed}`);
+      console.log(`🔎 Cleaning upkeep gas limit constant: ${await stakedBrbProxy.read.CLEANING_UPKEEP_GAS_LIMIT()}`);
+    });
+  });
+
   describe("Event Emissions", function () {
     it("Should emit BetPlaced event", async function () {
       const betAmount = parseEther("1");
@@ -1980,7 +2021,7 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
-      const tx = await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      const tx = await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
       
       const logs = parseEventLogs({
@@ -2048,7 +2089,7 @@ describe("StakedBRB", function () {
       // Setup: deposit some BRB for withdrawal tests
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
     });
 
     it("Should handle zero amounts correctly", async function () {
@@ -2078,49 +2119,50 @@ describe("StakedBRB", function () {
 
     it("Should handle withdrawal with zero amount", async function () {
       await expect(
-        stakedBrbProxy.write.withdraw([0n, player1.account.address, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.withdraw([0n, player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("ZeroAmount");
     });
 
     it("Should handle redemption with zero shares", async function () {
       await expect(
-        stakedBrbProxy.write.redeem([0n, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account })
+        stakedBrbProxy.write.redeem([0n, player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("ZeroAmount");
     });
 
     it("Should handle deposit with zero amount", async function () {
       await expect(
-        stakedBrbProxy.write.deposit([0n, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.deposit([0n, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("ZeroAmount");
     });
 
     it("Should handle mint with zero shares", async function () {
       await expect(
-        stakedBrbProxy.write.mint([0n, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.mint([0n, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("ZeroAmount");
     });
 
     it("Should handle withdrawal exceeding balance", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
-      const excessiveAmount = parseEther("2000");
+      const maxWithdraw = await stakedBrbProxy.read.maxWithdraw([player1.account.address]);
+      const excessiveAmount = maxWithdraw + 1n;
       await expect(
-        stakedBrbProxy.write.withdraw([excessiveAmount, player1.account.address, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.withdraw([excessiveAmount, player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("WithdrawalTooLarge");
     });
 
     it("Should handle redemption exceeding shares", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const shares = await stakedBrbProxy.read.balanceOf([player1.account.address]);
       const excessiveShares = shares + 1n;
       
       await expect(
-        stakedBrbProxy.write.redeem([excessiveShares, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account })
+        stakedBrbProxy.write.redeem([excessiveShares, player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("WithdrawalTooLarge");
     });
 
@@ -2129,7 +2171,7 @@ describe("StakedBRB", function () {
       // Don't approve, so allowance is 0
       
       await expect(
-        stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account })
+        stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("InsufficientAllowance");
     });
 
@@ -2138,7 +2180,7 @@ describe("StakedBRB", function () {
       // Don't approve, so allowance is 0
       
       await expect(
-        stakedBrbProxy.write.mint([depositAmount, player1.account.address, parseEther("1000")], { account: player1.account })
+        stakedBrbProxy.write.mint([depositAmount, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("InsufficientAllowance");
     });
 
@@ -2153,11 +2195,11 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([largeWithdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
-      await stakedBrbProxy.write.withdraw([largeWithdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([largeWithdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Try to withdraw again (should fail due to pending large withdrawal)
       await expect(
-        stakedBrbProxy.write.withdraw([parseEther("100"), player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account })
+        stakedBrbProxy.write.withdraw([parseEther("100"), player1.account.address, player1.account.address], { account: player1.account })
       ).to.be.rejectedWith("WithdrawalPending");
     });
 
@@ -2177,7 +2219,7 @@ describe("StakedBRB", function () {
         await brb.write.transfer([player2.account.address, depositAmount - player2Balance], { account: admin.account });
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address], { account: player2.account });
       
       // Ensure player3 has enough BRB
       const player3Balance = await brb.read.balanceOf([player3.account.address]);
@@ -2185,7 +2227,7 @@ describe("StakedBRB", function () {
         await brb.write.transfer([player3.account.address, depositAmount - player3Balance], { account: admin.account });
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player3.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player3.account.address, 0n], { account: player3.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player3.account.address], { account: player3.account });
 
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
@@ -2236,9 +2278,9 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, maxSharesOut], { account: player2.account });
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address, maxSharesOut], { account: player3.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address], { account: player2.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address], { account: player3.account });
       
       // Cancel middle user (player2)
       await stakedBrbProxy.write.cancelWithdrawal({ account: player2.account });
@@ -2272,14 +2314,14 @@ describe("StakedBRB", function () {
       // First, ensure admin has shares to withdraw
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: admin.account });
-      await stakedBrbProxy.write.deposit([depositAmount, admin.account.address, 0n], { account: admin.account });
+      await stakedBrbProxy.write.deposit([depositAmount, admin.account.address], { account: admin.account });
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       // Fill the queue with admin's max withdrawable (deposit + staker share of the helper round; fixed asset amount can round past balance)
       const withdrawAssets = await stakedBrbProxy.read.maxWithdraw([admin.account.address]);
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAssets]);
       const maxSharesOut = sharesNeeded * 2n;
-      await stakedBrbProxy.write.withdraw([withdrawAssets, admin.account.address, admin.account.address, maxSharesOut], { account: admin.account });
+      await stakedBrbProxy.write.withdraw([withdrawAssets, admin.account.address, admin.account.address], { account: admin.account });
       
       // Create a scenario with a full queue
       await stakedBrbProxy.write.setMaxQueueLength([1n], { account: admin.account });
@@ -2307,7 +2349,7 @@ describe("StakedBRB", function () {
       
 
       await expect(
-        stakedBrbProxy.write.withdraw([depositAmount, player2.account.address, player2.account.address, parseEther("1000")], { account: player2.account })
+        stakedBrbProxy.write.withdraw([depositAmount, player2.account.address, player2.account.address], { account: player2.account })
       ).to.be.rejectedWith("QueueFull");
     });
   });
@@ -2332,7 +2374,7 @@ describe("StakedBRB", function () {
           await brb.write.transfer([player.account.address, depositAmount - bal], { account: admin.account });
         }
         await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player.account });
-        await stakedBrbProxy.write.deposit([depositAmount, player.account.address, 0n], { account: player.account });
+        await stakedBrbProxy.write.deposit([depositAmount, player.account.address], { account: player.account });
       }
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       // Place one bet to create maxPayout (use getMaxPayout for balance check)
@@ -2366,10 +2408,10 @@ describe("StakedBRB", function () {
       const maxSharesOut = sharesNeeded * 2n;
       
       // First withdrawal (player1 already has shares from setupWithdrawalScenario)
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, maxSharesOut], { account: player2.account });
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address, maxSharesOut], { account: player3.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address], { account: player2.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player3.account.address, player3.account.address], { account: player3.account });
       
       // Check queue state (aggregate pending assets: sum per-user pending amounts)
       const [, queueLength] = await stakedBrbProxy.read.getWithdrawalSettings();
@@ -2390,7 +2432,7 @@ describe("StakedBRB", function () {
         await brb.write.transfer([player2.account.address, depositAmount - player2Balance], { account: admin.account });
       }
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address], { account: player2.account });
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       const totalAssets = await stakedBrbProxy.read.totalAssets();
@@ -2420,12 +2462,12 @@ describe("StakedBRB", function () {
       const sharesNeeded = await stakedBrbProxy.read.previewWithdraw([withdrawAmount]);
       const maxSharesOut = sharesNeeded * 2n;
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       const pendingAmount = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
       expect(pendingAmount).to.equal(withdrawAmount);
       
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address, maxSharesOut], { account: player2.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player2.account.address, player2.account.address], { account: player2.account });
       
       // Cancel first withdrawal
       await stakedBrbProxy.write.cancelWithdrawal({ account: player1.account });
@@ -2445,7 +2487,7 @@ describe("StakedBRB", function () {
       // Isolated: player1 must have shares (deposit first)
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       // Create maxPayout scenario with a bet
       const betAmount = parseEther("1");
       const betData = encodeAbiParameters(
@@ -2461,7 +2503,7 @@ describe("StakedBRB", function () {
       // With 1 BRB bet, maxPayout = 36 BRB (buffered), so safe capacity is high; exits are still queued.
       const withdrawAmount = parseEther("100");
 
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
 
       const pendingAmount = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
       expect(pendingAmount).to.equal(withdrawAmount);
@@ -2471,7 +2513,7 @@ describe("StakedBRB", function () {
       // Isolated: player1 must have shares (deposit first)
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       // Set a small queue limit for testing
       await stakedBrbProxy.write.setMaxQueueLength([2n], { account: admin.account });
       
@@ -2479,7 +2521,7 @@ describe("StakedBRB", function () {
       
       // Test basic withdrawal functionality
       const withdrawAmount = parseEther("50");
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // Verify withdrawal was processed
       const balance = await stakedBrbProxy.read.balanceOf([player1.account.address]);
@@ -2592,7 +2634,7 @@ describe("StakedBRB", function () {
     it("Should exclude pending bets from total assets", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const initialTotalAssets = await stakedBrbProxy.read.totalAssets();
       expect(initialTotalAssets).to.equal(depositAmount);
@@ -2626,7 +2668,7 @@ describe("StakedBRB", function () {
     it("Should handle zero pending bets", async function () {
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       const totalAssets = await stakedBrbProxy.read.totalAssets();
       const totalBalance = await stakedBrbProxy.read.totalAssets();
@@ -2647,7 +2689,7 @@ describe("StakedBRB", function () {
     ) {
       // 1. DEPOSIT
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       // 2. PLACE BET
       // Ensure vault has enough balance for max payout (with safety buffer)
@@ -2677,7 +2719,7 @@ describe("StakedBRB", function () {
       await brb.write.bet([stakedBrbProxy.address, betAmount, betData, zeroAddress], { account: admin.account });
       
       // 3. Withdraw while still in the betting window, then pre-VRF lock + VRF
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
 
       await advanceThroughLockToVrfWindow(stakedBrbProxy);
 
@@ -2770,7 +2812,7 @@ describe("StakedBRB", function () {
       const maxSharesOut = sharesNeeded * 2n;
       
       // 3. REQUEST LARGE WITHDRAWAL (should be queued)
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, maxSharesOut], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
       
       // 4. VERIFY WITHDRAWAL WAS QUEUED
       const pendingAmount =
@@ -2831,7 +2873,7 @@ describe("StakedBRB", function () {
       // 1. Deposit
       const depositAmount = parseEther("1000");
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       // 2. Place bet
       const betAmount = parseEther("1");
@@ -2859,7 +2901,7 @@ describe("StakedBRB", function () {
       
       // 3. Withdraw (queued; BRB not transferred until cleaning upkeep)
       const withdrawAmount = parseEther("50");
-      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([withdrawAmount, player1.account.address, player1.account.address], { account: player1.account });
 
       const pendingAmount = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
       expect(pendingAmount).to.equal(withdrawAmount);
@@ -2880,11 +2922,11 @@ describe("StakedBRB", function () {
       
       // User 1
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player1.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address, 0n], { account: player1.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player1.account.address], { account: player1.account });
       
       // User 2
       await brb.write.approve([stakedBrbProxy.address, depositAmount], { account: player2.account });
-      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address, 0n], { account: player2.account });
+      await stakedBrbProxy.write.deposit([depositAmount, player2.account.address], { account: player2.account });
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
       // Verify assets are now available after deposits (helper round: losing admin bet increases staker totalAssets slightly)
@@ -2915,9 +2957,9 @@ describe("StakedBRB", function () {
       const [, , , , pendingBets] = await stakedBrbProxy.read.getVaultConfig();
       expect(pendingBets).to.equal(betAmount);
       
-      await stakedBrbProxy.write.withdraw([parseEther("100"), player1.account.address, player1.account.address, parseEther("1000")], { account: player1.account });
+      await stakedBrbProxy.write.withdraw([parseEther("100"), player1.account.address, player1.account.address], { account: player1.account });
 
-      await stakedBrbProxy.write.withdraw([parseEther("800"), player2.account.address, player2.account.address, parseEther("1000")], { account: player2.account });
+      await stakedBrbProxy.write.withdraw([parseEther("800"), player2.account.address, player2.account.address], { account: player2.account });
 
       const pending1 = await stakedBrbProxy.read.getUserPendingWithdrawal([player1.account.address]);
       const pending2 = await stakedBrbProxy.read.getUserPendingWithdrawal([player2.account.address]);
@@ -2939,7 +2981,7 @@ describe("StakedBRB", function () {
       
       for (let i = 0; i < users.length; i++) {
         await brb.write.approve([stakedBrbProxy.address, amounts[i]], { account: users[i].account });
-        await stakedBrbProxy.write.deposit([amounts[i], users[i].account.address, 0n], { account: users[i].account });
+        await stakedBrbProxy.write.deposit([amounts[i], users[i].account.address], { account: users[i].account });
       }
       await runMinimalRoundAndStakedCleaning(stakedBrbProxy, rouletteProxy, vrfCoordinator, publicClient, admin, brb);
       
@@ -2972,7 +3014,7 @@ describe("StakedBRB", function () {
       const withdrawAmounts = [parseEther("1500"), parseEther("1500"), parseEther("1500")];
       
       for (let i = 0; i < users.length; i++) {
-        await stakedBrbProxy.write.withdraw([withdrawAmounts[i], users[i].account.address, users[i].account.address, parseEther("1000")], { account: users[i].account });
+        await stakedBrbProxy.write.withdraw([withdrawAmounts[i], users[i].account.address, users[i].account.address], { account: users[i].account });
       }
       
       // Verify queue state

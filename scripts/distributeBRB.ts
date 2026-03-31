@@ -8,8 +8,8 @@ interface RecipientsConfig {
 }
 
 const main = async () => {
-    const brb = await viem.getContractAt("BRB", "0x8ef29cae1d54ee178b09537744ec6dc5c8e9c205");
-    const stakedBrbProxy = await viem.getContractAt("StakedBRB", "0x3dD6d443502Fa4D5427Cf00ba548ab63EF5a431C");
+    const brb = await viem.getContractAt("BRB", "0x2be80f46b87100566b38e35ef3a5df5724101bf1");
+    const stakedBrbProxy = await viem.getContractAt("StakedBRB", "0x76A3786FbfF518a2aC81F1e735218096AbC1498D");
     const [deployer] = await viem.getWalletClients();
     const publicClient = await viem.getPublicClient();
 
@@ -94,7 +94,7 @@ const main = async () => {
     console.log("\n=== Staking BRB ===");
     console.log(`Staking ${stakeAmount.toString()} BRB...`);
     
-    const stakeTxHash = await stakedBrbProxy.write.deposit([stakeAmount, deployer.account.address, 0n], { account: deployer.account });
+    const stakeTxHash = await stakedBrbProxy.write.deposit([stakeAmount, deployer.account.address], { account: deployer.account });
     const stakeReceipt = await publicClient.waitForTransactionReceipt({ hash: stakeTxHash });
     console.log(`✓ Staked successfully. Tx: ${stakeTxHash}`);
 
