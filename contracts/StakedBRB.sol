@@ -328,8 +328,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         if ($.roundTransitionInProgress) return false;
         if ($.roundResolutionLocked) return false;
-        uint256 elapsed = block.timestamp - $.lastRoundBoundaryTimestamp;
-        return elapsed < (GAME_PERIOD - TIME_MARGIN);
+        return true;
     }
 
     /// @notice Seconds per betting round; {RouletteClean.gamePeriod} delegates here.
