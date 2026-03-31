@@ -266,7 +266,6 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         RouletteStorage storage $ = _getRouletteStorage();
         $.currentRound = 1;
-        if (IStakedBRB(STAKED_BRB_CONTRACT).lastRoundBoundaryTimestamp() == 0) revert StakedBRBNotInitialized();
         $.minJackpotCondition = minJackpotCondition;
     }
     
