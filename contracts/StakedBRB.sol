@@ -368,7 +368,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             $.firstBetTimestamp = block.timestamp;
             emit FirstBetPlaced(currentRound, block.timestamp);
         }
-        require(IERC20(BRB_TOKEN).balanceOf(address(this)) >= nextMaxPayout, InsufficientBalanceForMaxPayout());
+        if (IERC20(BRB_TOKEN).balanceOf(address(this)) < nextMaxPayout) revert InsufficientBalanceForMaxPayout();
         if (referral != address(0)) {
             BRB_REFERRAL.mint(referral, amount);
         }
