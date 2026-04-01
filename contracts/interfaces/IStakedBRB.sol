@@ -10,7 +10,7 @@ interface IStakedBRB {
     /// @notice Seconds per betting round. {IRoulette.gamePeriod} on the roulette contract returns this value.
     function gamePeriod() external view returns (uint256);
 
-    function lastRoundBoundaryTimestamp() external view returns (uint256);
+    function firstBetTimestamp() external view returns (uint256);
     function roundTransitionInProgress() external view returns (bool);
     function roundResolutionLocked() external view returns (bool);
 

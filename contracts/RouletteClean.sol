@@ -20,7 +20,7 @@ import { RouletteLib } from "./RouletteLib.sol";
 contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface, IRoulette {
     
     // ========== SIMPLE CONSTANTS ==========
-    /// @dev No-bet lock after the betting window lasts 6–10s: 6 + (lastRoundBoundaryTimestamp % 5) from StakedBRB
+    /// @dev No-bet lock after the betting window lasts 6–10s: 6 + (firstBetTimestamp % 5) from StakedBRB
     uint256 private constant NO_BET_LOCK_MIN = 6;
     uint256 private constant NO_BET_LOCK_MOD = 5;
     uint32 private constant BATCH_SIZE = 35; // Users per batch for payout processing
@@ -1034,7 +1034,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
 
     /**
      * @dev Get contract constants (min no-bet lock seconds, batch size, game period, payout upkeep gas limit).
-     *      Max lock uses StakedBRB `lastRoundBoundaryTimestamp() % NO_BET_LOCK_MOD`.
+     *      Max lock uses StakedBRB `firstBetTimestamp() % NO_BET_LOCK_MOD`.
      */
     function getConstants() external view returns (uint256, uint256, uint256, uint32) {
         return (NO_BET_LOCK_MIN, BATCH_SIZE, IStakedBRB(STAKED_BRB_CONTRACT).gamePeriod(), UPKEEP_GAS_LIMIT);
