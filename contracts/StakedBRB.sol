@@ -706,8 +706,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function _removeUserFromQueueEfficient(uint256 index) private {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         
-        require(index < $.withdrawalQueue.length, IndexOutOfBounds());
-        require($.queueSize > 0, QueueIsEmpty());
+        if (index >= $.withdrawalQueue.length) revert IndexOutOfBounds();
+        if ($.queueSize == 0) revert QueueIsEmpty();
         
         // Get the user being removed
         address userToRemove = $.withdrawalQueue[index];
