@@ -246,6 +246,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     error BetLimitExceeded();
     error BettingClosed();
     error VrfTimeoutNotElapsed();
+    error InvalidBatchIndex();
     error RoundNotAwaitingVrf();
     error RoundAlreadyResolved();
     /// @dev Initialize RouletteClean only after StakedBRB.initialize so boundary timestamp is set.
@@ -642,6 +643,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     }
 
     function _processJackpotPayout(uint256 roundId, JackpotPayoutPayload memory batchJackpotPayout) private {
+        if (batchJackpotPayout.batchIndex >= 256) revert InvalidBatchIndex();
         RouletteStorage storage $ = _getRouletteStorage();
             // ATOMIC WRITE: Mark this specific batch as processed using bitmap
         $.roundBatchBitmap[roundId] |= (1 << batchJackpotPayout.batchIndex);
@@ -671,6 +673,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
      * @dev All computations moved to checkUpkeep for maximum gas efficiency
      */
     function _processBatch(uint256 roundId, PayoutBatch memory batchData) private {
+        if (batchData.batchIndex >= 256) revert InvalidBatchIndex();
         RouletteStorage storage $ = _getRouletteStorage();
         uint256 payoutLength = batchData.payouts.length;
             // ATOMIC WRITE: Mark this specific batch as processed using bitmap
