@@ -7,13 +7,13 @@ networks.hardhat = {
   allowUnlimitedContractSize: true,
 };
 
-networks.localhost = {
-  url: 'http://localhost:8545',
-  chainId: 31337,
-  accounts: [vars.get('BRB_KEY')],
-};
-
 if (vars.has('BRB_KEY')) {
+  networks.localhost = {
+    url: 'http://localhost:8545',
+    chainId: 31337,
+    accounts: [vars.get('BRB_KEY')],
+  };
+
   if (vars.has('MAINNET_RPC_URL')) {
     networks.mainnet = {
       url: vars.get('MAINNET_RPC_URL'),

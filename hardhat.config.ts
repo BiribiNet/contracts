@@ -54,19 +54,19 @@ const config: HardhatUserConfig = {
   // comment this below to verify on Tenderly
   gasReporter: {
     L2: "arbitrum",
-    etherscan: vars.get('ETHERSCAN_API_KEY'),
+    etherscan: vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : '',
     enabled: vars.has('REPORT_GAS') || vars.has('ETHERSCAN_API_KEY'),
-    coinmarketcap: vars.get('REPORT_GAS'),
+    coinmarketcap: vars.has('REPORT_GAS') ? vars.get('REPORT_GAS') : '',
     currency: 'EUR',
   },
   etherscan: {
-    apiKey: vars.get('ETHERSCAN_API_KEY'),
+    apiKey: vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : '',
     customChains: [
       {
         network: "arbitrumsepolia",
         chainId: 421614,
         urls: {
-          apiURL: "https://api.etherscan.io/v2/api?chainid=421614&apikey=" + vars.get('ETHERSCAN_API_KEY'),
+          apiURL: "https://api.etherscan.io/v2/api?chainid=421614&apikey=" + (vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : ''),
           browserURL: "https://sepolia.arbiscan.io"
         }
       },
