@@ -126,7 +126,7 @@ async function deployWithCreate() {
   })
 
   const _jackpotContractProxy = await viem.deployContract("ERC1967Proxy", [jackpotContractImpl, initializeJackpotContractData]) // #7
-  const stakedBrbProxyContract = await viem.deployContract("ERC1967Proxy", [stakedBrbImpl, initializeStakedBrbData]) // #8 — before Roulette so lastRoundBoundaryTimestamp is set
+  const stakedBrbProxyContract = await viem.deployContract("ERC1967Proxy", [stakedBrbImpl, initializeStakedBrbData]) // #8 — before Roulette so firstBetTimestamp is set
   const rouletteProxyContract = await viem.deployContract("ERC1967Proxy", [rouletteImpl, initializeRouletteData]) // #9
 
   const jackpotContractProxy = await viem.getContractAt("JackpotContract", _jackpotContractProxy.address)
