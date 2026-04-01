@@ -222,6 +222,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
     event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
     event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
+    event JackpotPayoutFailed(uint256 indexed roundId, uint256 batchIndex);
+    event PayoutBatchFailed(uint256 indexed roundId, uint256 batchIndex);
     
     // ========== ERRORS ==========
     error InvalidBet();
@@ -636,22 +638,16 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         $.roundBatchBitmap[roundId] |= (1 << batchJackpotPayout.batchIndex);
         $.winningBetsProcessed[roundId] += batchJackpotPayout.payouts.length;
         
-        // Single call to StakedBRB with entire batch
-        (bool success, bytes memory returnData) = JACKPOT_CONTRACT.call(
+        // Single call to Jackpot contract with entire batch — non-reverting to prevent round blocking
+        (bool success, ) = JACKPOT_CONTRACT.call(
             abi.encodeWithSelector(
                 IJackpotContract.jackpotWin.selector,
                 batchJackpotPayout.payouts
             )
         );
-        
+
         if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 0x20), mload(returnData))
-                }
-            } else {
-                revert StakedBRBCallFailed();
-            }
+            emit JackpotPayoutFailed(roundId, batchJackpotPayout.batchIndex);
         }
 
         if ($.winningBetsProcessed[roundId] == $.jackpotResult[roundId].jackpotWinnerCount) { // isLastBatch
@@ -674,11 +670,15 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         bool isLastBatch = $.winningBetsProcessed[roundId] == $.totalWinningBets[roundId];
         emit BatchProcessed(roundId, batchData.batchIndex + 1, payoutLength);
-        // Single call to StakedBRB with entire batch
-        IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch);
+        // Single call to StakedBRB with entire batch — non-reverting to prevent round blocking
+        try IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch) {
+            // success
+        } catch {
+            emit PayoutBatchFailed(roundId, batchData.batchIndex);
+        }
         if (isLastBatch) {
             $.lastRoundPaid = roundId;
-            emit RoundResolved(roundId);  
+            emit RoundResolved(roundId);
         }
     }
     
