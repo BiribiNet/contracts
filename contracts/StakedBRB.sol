@@ -674,12 +674,22 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                 _ejectWithdrawal(user, queueIndex, 3);
                 return;
             }
+            // Eject if vault has insufficient liquid BRB to avoid reverting the entire cleaning
+            if (IERC20(BRB_TOKEN).balanceOf(address(this)) < q.assets) {
+                _ejectWithdrawal(user, queueIndex, 4);
+                return;
+            }
             super.withdraw(q.assets, q.receiver, user);
             emit WithdrawalProcessed(user, q.assets);
         } else if (q.kind == 2) {
             uint256 aOut = super.previewRedeem(q.shares);
             if (q.shares > balanceOf(user)) {
                 _ejectWithdrawal(user, queueIndex, 3);
+                return;
+            }
+            // Eject if vault has insufficient liquid BRB to avoid reverting the entire cleaning
+            if (IERC20(BRB_TOKEN).balanceOf(address(this)) < aOut) {
+                _ejectWithdrawal(user, queueIndex, 4);
                 return;
             }
             super.redeem(q.shares, q.receiver, user);
