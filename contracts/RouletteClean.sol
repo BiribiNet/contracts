@@ -188,6 +188,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         mapping(uint256 => mapping(uint256 => uint256)) roundDozenBetsSum;   // roundId => dozen => total dozen bets
         mapping(uint256 => mapping(uint256 => uint256)) roundColumnBetsSum;  // roundId => column => total column bets
         mapping(uint256 => uint256) roundOtherBetsPayout; // roundId => sum of splits/corners/lines/trios payouts (streets excluded)
+        mapping(uint256 => uint256) vrfRequestTimestamp; // roundId => timestamp when VRF was requested
     }
     
     
@@ -214,6 +215,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     uint256 constant BET_TRIO_012 = 14;   // Trio 0-1-2
     uint256 constant BET_TRIO_023 = 15;   // Trio 0-2-3
     
+    // ========== VRF TIMEOUT ==========
+    uint256 private constant VRF_TIMEOUT = 1 hours;
+
     // ========== EVENTS ==========
     event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
     event VrfRequested(uint256 newRoundId, uint256 requestId, uint256 timestamp);
@@ -222,6 +226,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
     event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
     event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
+    event RoundForceResolved(uint256 indexed roundId, uint256 timestamp);
+    event JackpotPayoutFailed(uint256 indexed roundId, uint256 batchIndex);
+    event PayoutBatchFailed(uint256 indexed roundId, uint256 batchIndex);
     
     // ========== ERRORS ==========
     error InvalidBet();
@@ -238,6 +245,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     error OnlyForwarders();
     error BetLimitExceeded();
     error BettingClosed();
+    error VrfTimeoutNotElapsed();
+    error RoundNotAwaitingVrf();
+    error RoundAlreadyResolved();
     /// @dev Initialize RouletteClean only after StakedBRB.initialize so boundary timestamp is set.
     error StakedBRBNotInitialized();
     
@@ -624,7 +634,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         );
         
         $.requestIdToRound[requestId] = roundId;
-        
+        $.vrfRequestTimestamp[roundId] = block.timestamp;
+
         emit VrfRequested(roundId, requestId, block.timestamp);
 
         IStakedBRB(STAKED_BRB_CONTRACT).onRoundTransition();
@@ -636,22 +647,16 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         $.roundBatchBitmap[roundId] |= (1 << batchJackpotPayout.batchIndex);
         $.winningBetsProcessed[roundId] += batchJackpotPayout.payouts.length;
         
-        // Single call to StakedBRB with entire batch
-        (bool success, bytes memory returnData) = JACKPOT_CONTRACT.call(
+        // Single call to Jackpot contract with entire batch — non-reverting to prevent round blocking
+        (bool success, ) = JACKPOT_CONTRACT.call(
             abi.encodeWithSelector(
                 IJackpotContract.jackpotWin.selector,
                 batchJackpotPayout.payouts
             )
         );
-        
+
         if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 0x20), mload(returnData))
-                }
-            } else {
-                revert StakedBRBCallFailed();
-            }
+            emit JackpotPayoutFailed(roundId, batchJackpotPayout.batchIndex);
         }
 
         if ($.winningBetsProcessed[roundId] == $.jackpotResult[roundId].jackpotWinnerCount) { // isLastBatch
@@ -674,11 +679,15 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         
         bool isLastBatch = $.winningBetsProcessed[roundId] == $.totalWinningBets[roundId];
         emit BatchProcessed(roundId, batchData.batchIndex + 1, payoutLength);
-        // Single call to StakedBRB with entire batch
-        IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch);
+        // Single call to StakedBRB with entire batch — non-reverting to prevent round blocking
+        try IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch) {
+            // success
+        } catch {
+            emit PayoutBatchFailed(roundId, batchData.batchIndex);
+        }
         if (isLastBatch) {
             $.lastRoundPaid = roundId;
-            emit RoundResolved(roundId);  
+            emit RoundResolved(roundId);
         }
     }
     
@@ -1058,5 +1067,36 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         return (SUBSCRIPTION_ID, KEY_HASH_2GWEI, KEY_HASH_30GWEI, KEY_HASH_150GWEI, CALLBACK_GAS_LIMIT, NUMWORDS, SAFE_BLOCK_CONFIRMATION);
     }
     
+    /**
+     * @dev Admin recovery: force-resolve a round stuck waiting for VRF callback.
+     * Sets winning number to 37 (impossible), so no bets match and all funds stay in the vault.
+     * Can only be called after VRF_TIMEOUT (1 hour) has elapsed since the VRF request.
+     */
+    function forceResolveRound(uint256 roundId) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        RouletteStorage storage $ = _getRouletteStorage();
+
+        // Must be waiting for VRF (transition in progress, no result yet)
+        if (!IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()) revert RoundNotAwaitingVrf();
+        if ($.randomResults[roundId].set) revert RoundAlreadyResolved();
+        if ($.vrfRequestTimestamp[roundId] == 0) revert RoundNotAwaitingVrf();
+        if (block.timestamp < $.vrfRequestTimestamp[roundId] + VRF_TIMEOUT) revert VrfTimeoutNotElapsed();
+
+        // Set void result: winning number 37 means no bet can match (valid range is 0-36)
+        $.randomResults[roundId] = RandomResult({
+            winningNumber: 37,
+            jackpotNumber: 37,
+            set: true
+        });
+        $.totalWinningBets[roundId] = 0;
+        $.totalWinningBetsSet[roundId] = true;
+        $.lastRoundPaid = roundId;
+
+        // Trigger cleaning path with empty payouts
+        IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, new IRoulette.PayoutInfo[](0), 0, true);
+
+        emit RoundForceResolved(roundId, block.timestamp);
+        emit RoundResolved(roundId);
+    }
+
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

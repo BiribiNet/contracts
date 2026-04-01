@@ -22,4 +22,7 @@ interface IRoulette {
     function checkUpkeep(bytes calldata checkData) external view returns (bool upkeepNeeded, bytes memory performData);
 
     function performUpkeep(bytes calldata performData) external;
+
+    /// @notice Admin recovery: force-resolve a round stuck waiting for VRF callback after timeout.
+    function forceResolveRound(uint256 roundId) external;
 }
