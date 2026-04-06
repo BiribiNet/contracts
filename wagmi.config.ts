@@ -1,0 +1,42 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { defineConfig } from '@wagmi/cli/config';
+import { hardhat } from '@wagmi/cli/plugins';
+import type { Abi } from 'viem';
+
+const automationRegistryAbi = JSON.parse(
+  readFileSync(
+    join(process.cwd(), 'node_modules/@chainlink/contracts/abi/v0.8/AutomationRegistryBaseInterface.json'),
+    'utf8',
+  ),
+) as Abi;
+
+/** Typed ABIs for the frontend (viem / wagmi). Run after `hardhat compile`. */
+export default defineConfig({
+  out: '../frontend/lib/abi/generated.ts',
+  contracts: [
+    {
+      name: 'AutomationRegistry',
+      abi: automationRegistryAbi,
+    },
+  ],
+  plugins: [
+    hardhat({
+      project: '.',
+      commands: {
+        // `compile` already ran `hardhat compile`; avoid compiling twice.
+        build: false,
+        clean: false,
+      },
+      include: [
+        'BRB.sol/BRB.json',
+        'StakedBRB.sol/StakedBRB.json',
+        'RouletteClean.sol/RouletteClean.json',
+        'JackpotContract.sol/JackpotContract.json',
+        'BRBReferal.sol/BRBReferal.json',
+        '@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol/VRFCoordinatorV2_5Mock.json',
+      ],
+    }),
+  ],
+});

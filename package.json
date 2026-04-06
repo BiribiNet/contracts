@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "compile": "hardhat compile",
-    "postcompile": "wagmi generate",
+    "compile": "hardhat compile && wagmi generate",
     "node": "hardhat node",
     "deploy:local": "hardhat ignition deploy ignition/modules/deployArchitectureLocal.ts --network localhost",
     "deploy:gnosis": "hardhat run scripts/deployFactory.ts --network gnosis",
