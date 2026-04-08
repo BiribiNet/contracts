@@ -3,6 +3,7 @@ pragma solidity ^0.8.27;
 
 import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
@@ -21,7 +22,7 @@ import { StakedBRBFeeMath } from "./StakedBRBFeeMath.sol";
  * @dev Uses OpenZeppelin's ERC4626Fees pattern for clean fee handling
  * @dev Handles staking, betting, protocol fees, and roulette integration
  */
-contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradeable, AutomationCompatibleInterface {
+contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, PausableUpgradeable, UUPSUpgradeable, AutomationCompatibleInterface {
         
     // Immutable addresses for gas optimization
     address private immutable BRB_TOKEN;
@@ -36,13 +37,16 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     uint256 private constant NO_BET_LOCK_MIN = 6;
     uint256 private constant NO_BET_LOCK_MOD = 5;
     // Security constants
+    /// @dev Minimum first deposit (in wei) prevents dust attacks on share price (ERC4626 inflation attack vector).
     uint256 public constant MINIMUM_FIRST_DEPOSIT = 1000;
-    uint256 public constant MAX_PROTOCOL_FEE = 10000; // 100% max
+    /// @dev 10 000 basis points = 100%. Sum of protocol + burn + jackpot fees must not exceed this.
+    uint256 public constant MAX_PROTOCOL_FEE = 10000;
     uint256 private constant _BASIS_POINT_SCALE = 1e4;
-    
+
     // Withdrawal queue constants
-    uint256 public constant DEFAULT_WITHDRAWAL_BATCH_SIZE = 5; // Process 5 withdrawals per cleaning round
-    /// @dev Admin cannot exceed this; sized to keep `_finalizeWithdrawal` batch work within `CLEANING_UPKEEP_GAS_LIMIT`.
+    /// @dev Default withdrawals per cleaning round; trades throughput vs gas cost per upkeep.
+    uint256 public constant DEFAULT_WITHDRAWAL_BATCH_SIZE = 5;
+    /// @dev Admin cannot exceed this; sized so batch fits within CLEANING_UPKEEP_GAS_LIMIT (2M) alongside fee transfers and round cleanup.
     uint256 public constant MAX_WITHDRAWAL_BATCH_SIZE = 12;
 
     // Anti-spam constants
@@ -268,7 +272,8 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
         __ERC4626_init(IERC20(BRB_TOKEN));
         __ERC20_init('Staked BRB', 'sBRB');
         __AccessControl_init();
-        
+        __Pausable_init();
+
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         
         if (protocolFeeBasisPoints + burnBasisPoints + jackpotBasisPoints > MAX_PROTOCOL_FEE) revert InvalidFeeRate();
@@ -349,7 +354,7 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
      * @param amount Amount of tokens sent
      * @param data Additional data for the bet
      */
-    function onTokenTransfer(address from, uint256 amount, bytes calldata data, address referral) external onlyBRB {
+    function onTokenTransfer(address from, uint256 amount, bytes calldata data, address referral) external onlyBRB whenNotPaused {
         if (!isBettingOpen()) revert BettingClosed();
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         uint256 currentRound = $.currentRound;
@@ -1049,6 +1054,10 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     function roundResolutionLocked() external view returns (bool) {
         return _getStakedBRBStorage().roundResolutionLocked;
     }
+
+    /// @dev Emergency pause — blocks new bets (onTokenTransfer). Does NOT block withdrawals, cleaning, or payout processing.
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) { _pause(); }
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) { _unpause(); }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

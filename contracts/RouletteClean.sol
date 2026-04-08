@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { VRFConsumerBaseV2 } from "./external/VRFConsumerBaseV2.sol";
 import { VRFV2PlusClient } from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
@@ -17,18 +18,23 @@ import { RouletteLib } from "./RouletteLib.sol";
  * @title RouletteClean
  * @dev SIMPLE roulette contract - easy to understand
  */
-contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface, IRoulette {
+contract RouletteClean is AccessControlUpgradeable, PausableUpgradeable, VRFConsumerBaseV2, UUPSUpgradeable, AutomationCompatibleInterface, IRoulette {
     
     // ========== SIMPLE CONSTANTS ==========
-    /// @dev No-bet lock after the betting window lasts 6–10s: 6 + (firstBetTimestamp % 5) from StakedBRB
+    /// @dev Pre-VRF lock window = [6,10]s: NO_BET_LOCK_MIN + (firstBetTimestamp % NO_BET_LOCK_MOD).
+    ///      Jitter prevents MEV timing attacks on the exact lock boundary.
     uint256 private constant NO_BET_LOCK_MIN = 6;
     uint256 private constant NO_BET_LOCK_MOD = 5;
-    uint32 private constant BATCH_SIZE = 35; // Users per batch for payout processing
-    
+    /// @dev Default max users per payout batch; sized so worst-case gas (all bets win) stays under Chainlink's 10M limit.
+    uint32 private constant BATCH_SIZE = 35;
+
     // GAS LIMIT CALCULATION FOR WORST-CASE SCENARIO (all bets win)
-    uint32 private constant BASE_GAS_OVERHEAD = 100000; // Base transaction overhead
-    uint32 private constant GAS_PER_WINNING_BET = 50000; // Gas per winning bet payout (transfer + events)
-    uint32 private constant MAX_GAS_LIMIT = 5000000; // Conservative limit under Chainlink's default 10M
+    /// @dev Base gas overhead per payout upkeep tx (storage reads, ABI decode, bitmap write, event emission).
+    uint32 private constant BASE_GAS_OVERHEAD = 100000;
+    /// @dev Conservative per-bet gas budget: covers ERC20.transfer() + event emission + storage updates per winner.
+    uint32 private constant GAS_PER_WINNING_BET = 50000;
+    /// @dev Absolute ceiling; stays well under Chainlink Automation's 10M default callback limit.
+    uint32 private constant MAX_GAS_LIMIT = 5000000;
     
     // CALCULATED GAS LIMIT: Covers BATCH_SIZE winning bets + overhead
     uint32 private constant UPKEEP_GAS_LIMIT = BASE_GAS_OVERHEAD + (BATCH_SIZE * GAS_PER_WINNING_BET);
@@ -105,7 +111,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     enum UpkeepKind {
         Vrf,
         PayoutBatch,
-        JackpotPayoutBatch
+        JackpotPayoutBatch,
+        ForceResolve
     }
     
     struct PerformDataPayload {
@@ -137,6 +144,9 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     struct RouletteStorage {
         uint256 currentRound;
         uint256 lastRoundPaid; // Last round where all users were paid
+        /// @dev Admin-configurable payout batch size. Defaults to BATCH_SIZE (35).
+        ///      Changing above 35 may require re-registering Chainlink upkeeps with a higher gas limit.
+        uint32 batchSize;
         
         // EFFICIENT BET COUNTER (instead of gas-intensive loops)
         mapping(uint256 => uint256) totalBetsInRound; // roundId => total bet count
@@ -216,6 +226,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     uint256 constant BET_TRIO_023 = 15;   // Trio 0-2-3
     
     // ========== VRF TIMEOUT ==========
+    /// @dev Timeout before admin (or automation) can void a round stuck waiting for a VRF callback.
+    ///      After this delay, `forceResolveRound()` sets winningNumber=37 (impossible), returning all bets to the vault.
     uint256 private constant VRF_TIMEOUT = 1 hours;
 
     // ========== EVENTS ==========
@@ -227,13 +239,15 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
     event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
     event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
     event RoundForceResolved(uint256 indexed roundId, uint256 timestamp);
-    event JackpotPayoutFailed(uint256 indexed roundId, uint256 batchIndex);
-    event PayoutBatchFailed(uint256 indexed roundId, uint256 batchIndex);
-    
+    event JackpotPayoutFailed(uint256 indexed roundId, uint256 batchIndex, bytes reason);
+    event PayoutBatchFailed(uint256 indexed roundId, uint256 batchIndex, bytes reason);
+    event BatchSizeUpdated(uint32 newBatchSize);
+
     // ========== ERRORS ==========
     error InvalidBet();
     error ZeroAddress();
     error ZeroAmount();
+    error InvalidBatchSize();
     error MalformedData();
     error InvalidBetType();
     error InvalidNumber();
@@ -273,13 +287,15 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         address admin
     ) external initializer {
         __AccessControl_init();
+        __Pausable_init();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        
+
         RouletteStorage storage $ = _getRouletteStorage();
         $.currentRound = 1;
         $.minJackpotCondition = minJackpotCondition;
+        $.batchSize = BATCH_SIZE;
     }
-    
+
     // ========== MODIFIERS ==========
     
     /// @dev Registered Chainlink forwarders only (VRF and payout batches on this contract).
@@ -300,15 +316,23 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         $.minJackpotCondition = newMinCondition;
         emit MinJackpotConditionUpdated(newMinCondition);
     }
-    
+
+    /// @dev Update the payout batch size. Increasing above BATCH_SIZE (35) may require
+    ///      re-registering Chainlink payout upkeeps with a higher gas limit.
+    function setBatchSize(uint32 newBatchSize) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newBatchSize < 10 || newBatchSize > 100) revert InvalidBatchSize();
+        _getRouletteStorage().batchSize = newBatchSize;
+        emit BatchSizeUpdated(newBatchSize);
+    }
+
     /**
      * @dev Called when user places bet(s) - supports multiple bets in one call
      * @param sender Who placed the bet
      * @param totalValue Total amount bet (in wei) across all bets
      * @param data Bet data: abi.encode(MultipleBets) OR abi.encode(betType, number) for single bet
      */
-    function bet(address sender, uint256 totalValue, bytes calldata data) 
-        external override returns (uint256)
+    function bet(address sender, uint256 totalValue, bytes calldata data)
+        external override whenNotPaused returns (uint256)
     {
         // Only allow calls from the immutable StakedBRB contract
         if (msg.sender != STAKED_BRB_CONTRACT) revert UnauthorizedCaller();
@@ -542,6 +566,24 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
                 }));
             }
 
+            // Auto-resolve if VRF callback timed out (avoids indefinite protocol freeze)
+            if (!upkeepNeeded) {
+                uint256 currentRound = $.currentRound;
+                uint256 vrfTs = $.vrfRequestTimestamp[currentRound];
+                if (vrfTs > 0
+                    && block.timestamp >= vrfTs + VRF_TIMEOUT
+                    && !$.randomResults[currentRound].set
+                    && IStakedBRB(STAKED_BRB_CONTRACT).roundTransitionInProgress()
+                ) {
+                    upkeepNeeded = true;
+                    performData = abi.encode(PerformDataPayload({
+                        roundId: currentRound,
+                        kind: UpkeepKind.ForceResolve,
+                        payload: bytes("")
+                    }));
+                }
+            }
+
         } else if (checkData.length >= 3) {
             // PAYOUT USERS: Check if we need to pay users from completed rounds
             uint256 roundToBePaid = $.lastRoundPaid + 1;
@@ -550,7 +592,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             if ($.randomResults[roundToBePaid].set && $.totalWinningBetsSet[roundToBePaid]) {
                 // checkData.length 3 => batch 0, 4 => batch 1, ...
                 uint256 batchIndex = checkData.length - 3;
-                uint256 startIndex = batchIndex * BATCH_SIZE;
+                uint32 currentBatchSize = $.batchSize;
+                uint256 startIndex = batchIndex * currentBatchSize;
                 
                 // ATOMIC CHECK: Only process if this specific batch hasn't been processed yet
                 bool batchAlreadyProcessed = ($.roundBatchBitmap[roundToBePaid] & (1 << batchIndex)) != 0;
@@ -617,6 +660,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
             _processBatch(payload.roundId, abi.decode(payload.payload, (PayoutBatch)));
         } else if (payload.kind == UpkeepKind.JackpotPayoutBatch) {
             _processJackpotPayout(payload.roundId, abi.decode(payload.payload, (JackpotPayoutPayload)));
+        } else if (payload.kind == UpkeepKind.ForceResolve) {
+            _forceResolve(payload.roundId);
         }
     }
     
@@ -650,7 +695,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         $.winningBetsProcessed[roundId] += batchJackpotPayout.payouts.length;
         
         // Single call to Jackpot contract with entire batch — non-reverting to prevent round blocking
-        (bool success, ) = JACKPOT_CONTRACT.call(
+        (bool success, bytes memory returnData) = JACKPOT_CONTRACT.call(
             abi.encodeWithSelector(
                 IJackpotContract.jackpotWin.selector,
                 batchJackpotPayout.payouts
@@ -658,7 +703,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         );
 
         if (!success) {
-            emit JackpotPayoutFailed(roundId, batchJackpotPayout.batchIndex);
+            emit JackpotPayoutFailed(roundId, batchJackpotPayout.batchIndex, returnData);
         }
 
         if ($.winningBetsProcessed[roundId] == $.jackpotResult[roundId].jackpotWinnerCount) { // isLastBatch
@@ -685,8 +730,8 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         // Single call to StakedBRB with entire batch — non-reverting to prevent round blocking
         try IStakedBRB(STAKED_BRB_CONTRACT).processRouletteResult(roundId, batchData.payouts, batchData.totalPayouts, isLastBatch) {
             // success
-        } catch {
-            emit PayoutBatchFailed(roundId, batchData.batchIndex);
+        } catch (bytes memory reason) {
+            emit PayoutBatchFailed(roundId, batchData.batchIndex, reason);
         }
         if (isLastBatch) {
             $.lastRoundPaid = roundId;
@@ -757,12 +802,13 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         uint256 jackpotAmount,
         uint256 totalJackpotBetAmount
     ) private view returns (IRoulette.PayoutInfo[] memory) {
-        IRoulette.PayoutInfo[] memory payouts = new IRoulette.PayoutInfo[](BATCH_SIZE);
+        uint32 bs = $.batchSize;
+        IRoulette.PayoutInfo[] memory payouts = new IRoulette.PayoutInfo[](bs);
         uint256 totalLength = $.roundBigStraightBets[roundId][winningNumber].length;
         uint256 j = startIndex;
         uint256 i;
         Bet storage currentBet;
-        for (; i < BATCH_SIZE && j < totalLength;) {
+        for (; i < bs && j < totalLength;) {
             currentBet = $.roundBigStraightBets[roundId][winningNumber][j];
             payouts[i] = IRoulette.PayoutInfo({
                 player: currentBet.player,
@@ -788,12 +834,13 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         RouletteLib.WinningBetTypes memory winningTypes,
         uint256 startIndex
     ) private view returns (IRoulette.PayoutInfo[] memory, uint256) {
-        IRoulette.PayoutInfo[] memory tempPayouts = new IRoulette.PayoutInfo[](BATCH_SIZE);
+        uint32 bs = $.batchSize;
+        IRoulette.PayoutInfo[] memory tempPayouts = new IRoulette.PayoutInfo[](bs);
         CollectWinningsValues memory v = CollectWinningsValues({
             payoutCount: 0,
             totalPayouts: 0,
             currentIndex: 0,
-            endIndex: startIndex + BATCH_SIZE
+            endIndex: startIndex + bs
         });
         // Process each bet type in order, skipping entire arrays when possible
         
@@ -804,63 +851,63 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
 
         // 2. SPLIT BETS
         uint256 j;
-        for (; v.payoutCount < BATCH_SIZE && j < winningTypes.winningSplits.length;) {
+        for (; v.payoutCount < bs && j < winningTypes.winningSplits.length;) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundSplitBets[roundId][winningTypes.winningSplits[j]], 18, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
             unchecked { ++j; }
         }
         
         // 3. STREET BETS
-        if (v.payoutCount < BATCH_SIZE && winningTypes.winningStreets > 0) {
+        if (v.payoutCount < bs && winningTypes.winningStreets > 0) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundStreetBets[roundId][winningTypes.winningStreets], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
         
         // 4. CORNER BETS  
-        for (j = 0; v.payoutCount < BATCH_SIZE && j < winningTypes.winningCorners.length;) {
+        for (j = 0; v.payoutCount < bs && j < winningTypes.winningCorners.length;) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundCornerBets[roundId][winningTypes.winningCorners[j]], 9, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
             unchecked { ++j; }
         }
         
         // 5. LINE BETS
-        for (j = 0; v.payoutCount < BATCH_SIZE && j < winningTypes.winningLines.length;) {
+        for (j = 0; v.payoutCount < bs && j < winningTypes.winningLines.length;) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundLineBets[roundId][winningTypes.winningLines[j]], 6, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
             unchecked { ++j; }
         }
         
         // 6. COLUMN BETS
-        if (v.payoutCount < BATCH_SIZE && winningTypes.winningColumn > 0) {
+        if (v.payoutCount < bs && winningTypes.winningColumn > 0) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundColumnBets[roundId][winningTypes.winningColumn], 3, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
         
         // 7. DOZEN BETS
-        if (v.payoutCount < BATCH_SIZE && winningTypes.winningDozen > 0) {
+        if (v.payoutCount < bs && winningTypes.winningDozen > 0) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundDozenBets[roundId][winningTypes.winningDozen], 3, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
         
         // 8. SIMPLE OUTSIDE BETS (1:1 payouts) - use simple function for basic arrays
-        if (v.payoutCount < BATCH_SIZE && winningTypes.red) {
+        if (v.payoutCount < bs && winningTypes.red) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundRedBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
-        if (v.payoutCount < BATCH_SIZE && winningTypes.black) {
+        if (v.payoutCount < bs && winningTypes.black) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundBlackBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
-        if (v.payoutCount < BATCH_SIZE && winningTypes.odd) {
+        if (v.payoutCount < bs && winningTypes.odd) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundOddBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
-        if (v.payoutCount < BATCH_SIZE && winningTypes.even) {
+        if (v.payoutCount < bs && winningTypes.even) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundEvenBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
-        if (v.payoutCount < BATCH_SIZE && winningTypes.low) {
+        if (v.payoutCount < bs && winningTypes.low) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundLowBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
-        if (v.payoutCount < BATCH_SIZE && winningTypes.high) {
+        if (v.payoutCount < bs && winningTypes.high) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundHighBets[roundId], 2, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
 
-        if (v.payoutCount < BATCH_SIZE && winningTypes.trio012) {
+        if (v.payoutCount < bs && winningTypes.trio012) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio012Bets[roundId], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
 
-        if (v.payoutCount < BATCH_SIZE && winningTypes.trio023) {
+        if (v.payoutCount < bs && winningTypes.trio023) {
             (v.currentIndex, v.payoutCount, v.totalPayouts) = _skipOrProcessSimpleBets($.roundTrio023Bets[roundId], 12, tempPayouts, v.payoutCount, v.currentIndex, startIndex, v.endIndex, v.totalPayouts);
         }
         
@@ -1049,7 +1096,7 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
      *      Max lock uses StakedBRB `firstBetTimestamp() % NO_BET_LOCK_MOD`.
      */
     function getConstants() external view returns (uint256, uint256, uint256, uint32) {
-        return (NO_BET_LOCK_MIN, BATCH_SIZE, IStakedBRB(STAKED_BRB_CONTRACT).gamePeriod(), UPKEEP_GAS_LIMIT);
+        return (NO_BET_LOCK_MIN, _getRouletteStorage().batchSize, IStakedBRB(STAKED_BRB_CONTRACT).gamePeriod(), UPKEEP_GAS_LIMIT);
     }
 
     /**
@@ -1076,6 +1123,11 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
      * Can only be called after VRF_TIMEOUT (1 hour) has elapsed since the VRF request.
      */
     function forceResolveRound(uint256 roundId) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _forceResolve(roundId);
+    }
+
+    /// @dev Internal force-resolve logic, shared by admin `forceResolveRound()` and Chainlink `ForceResolve` upkeep.
+    function _forceResolve(uint256 roundId) private {
         RouletteStorage storage $ = _getRouletteStorage();
 
         // Must be waiting for VRF (transition in progress, no result yet)
@@ -1100,6 +1152,10 @@ contract RouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUpgra
         emit RoundForceResolved(roundId, block.timestamp);
         emit RoundResolved(roundId);
     }
+
+    /// @dev Emergency pause — blocks new bets. Does NOT block payouts, VRF callbacks, or force-resolve.
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) { _pause(); }
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) { _unpause(); }
 
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }
