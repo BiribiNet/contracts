@@ -5,8 +5,9 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IAutomationRegistrar2_1 } from "./interfaces/IAutomationRegistrar2_1.sol";
 import { IAutomationRegistry2_1 } from "./interfaces/IAutomationRegistry2_1.sol";
+import { IUpkeepForwarderAuthority } from "./interfaces/IUpkeepForwarderAuthority.sol";
 
-contract UpkeepManager is AccessControl {
+contract UpkeepManager is AccessControl, IUpkeepForwarderAuthority {
     bytes32 public constant REGISTRANT_ROLE = keccak256("REGISTRANT_ROLE");
 
     address public immutable LINK_TOKEN;
@@ -14,6 +15,7 @@ contract UpkeepManager is AccessControl {
     address public immutable KEEPER_REGISTRY;
     address public immutable UPKEEP_TARGET;
 
+    /// @dev Automation forwarder address => registered upkeep id (`registerLaneUpkeep`).
     mapping(address => uint256) public forwarderToUpkeepId;
 
     error ZeroAddress();
@@ -52,6 +54,11 @@ contract UpkeepManager is AccessControl {
         IERC20(linkToken).approve(keeperRegistrar, type(uint256).max);
     }
 
+    /// @inheritdoc IUpkeepForwarderAuthority
+    function isApprovedAutomationForwarder(address forwarder) external view returns (bool) {
+        return forwarderToUpkeepId[forwarder] != 0;
+    }
+
     function registerLaneUpkeep(
         uint256 lane,
         uint32 gasLimit,
@@ -69,7 +76,7 @@ contract UpkeepManager is AccessControl {
                 gasLimit: gasLimit,
                 adminAddress: upkeepAdmin,
                 triggerType: 0,
-                checkData: abi.encode(lane),
+                checkData: lane == 0 ? new bytes(0) : abi.encode(lane),
                 triggerConfig: new bytes(0),
                 offchainConfig: new bytes(0),
                 amount: linkAmount

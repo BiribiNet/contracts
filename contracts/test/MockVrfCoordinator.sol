@@ -18,10 +18,14 @@ contract MockVrfCoordinator {
         requestId = nextRequestId++;
     }
 
+    /// @notice Second word XOR-masks `randomWord` so `(a % 37) != ((a ^ mask) % 37)` in normal test use (avoid accidental jackpot).
+    /// @dev `RouletteEngine` triggers the jackpot round when `(randomWords[0] % 37) == (randomWords[1] % 37)` with two words.
     function fulfill(address consumer, uint256 requestId, uint256 randomWord) external {
         uint256[] memory words = new uint256[](2);
         words[0] = randomWord;
-        words[1] = randomWord;
+        unchecked {
+            words[1] = randomWord ^ 0xa5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5;
+        }
         IVrfConsumer(consumer).rawFulfillRandomWords(requestId, words);
     }
 

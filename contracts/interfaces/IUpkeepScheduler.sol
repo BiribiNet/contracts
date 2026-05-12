@@ -6,6 +6,10 @@ interface IUpkeepScheduler {
 
     function setMaxPayoutsPerCall(uint32 maxPayoutsPerCall) external;
 
+    function setForwarderAuthority(address newAuthority) external;
+
+    function forwarderAuthority() external view returns (address);
+
     function scanLimit() external view returns (uint32);
 
     function maxPayoutsPerCall() external view returns (uint32);

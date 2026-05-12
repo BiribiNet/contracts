@@ -34,6 +34,7 @@ Interpretation:
 - Enforce checks-effects-interactions and use pull payments where possible.
 - Bound loops; never rely on unbounded user-controlled iteration.
 - Minimize external calls and verify return values.
+- Do not use `indexed` event parameters by default; we do not rely on topic-based filtering and it increases log/topic footprint. Only use `indexed` if there is a specific, current consumer that needs topic filtering.
 - Use role separation and least privilege with delayed admin transitions.
 - Require explicit pause/unpause policy with transparent scope.
 

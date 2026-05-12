@@ -20,7 +20,8 @@ import '@openzeppelin/hardhat-upgrades';
 import networks from './hardhat.network';
 
 const defaultSettings: SolcUserConfig['settings'] = {
-  // Low runs minimizes deployed bytecode (EIP-170); StakedBRB is near the limit.
+  // IR pipeline avoids stack-too-deep in `RouletteEngine`; tune `runs` if bytecode approaches EIP-170.
+  viaIR: true,
   optimizer: { enabled: true, runs: 1 },
   metadata: { bytecodeHash: 'none' },
   // Use Cancun EVM for newer OZ (mcopy, Memory, etc.)

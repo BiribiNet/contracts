@@ -32,6 +32,9 @@ export default defineConfig({
       include: [
         'MockUSDC.sol/MockUSDC.json',
         'BankVault4626.sol/BankVault4626.json',
+        'BRBToken.sol/BRBToken.json',
+        'BRBJackpotFunder.sol/BRBJackpotFunder.json',
+        'LPVestingLock.sol/LPVestingLock.json',
         'JackpotTreasury.sol/JackpotTreasury.json',
         'MarketRegistry.sol/MarketRegistry.json',
         'RouletteEngine.sol/RouletteEngine.json',

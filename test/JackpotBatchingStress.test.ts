@@ -1,0 +1,153 @@
+import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { expect } from "chai";
+import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits } from "viem";
+
+function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
+    return encodeAbiParameters(
+        [{ type: "uint256[]" }, { type: "uint256[]" }, { type: "uint256[]" }],
+        [[betType], [number], [amount]],
+    );
+}
+
+async function deploySingleMarket(maxPayoutsPerCall: number) {
+    const [admin, alice] = await viem.getWalletClients();
+    const publicClient = await viem.getPublicClient();
+
+    const usdc = await viem.deployContract("MockUSDC");
+    const vrf = await viem.deployContract("MockVrfCoordinator");
+
+    const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+
+    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
+    const mockRouter = await viem.deployContract("MockUniswapV2Router");
+    const funder = await viem.deployContract("BRBJackpotFunder", [
+        "0x0000000000000000000000000000000000000000",
+        brb.address,
+        mockRouter.address,
+        jackpotTreasury.address,
+        admin.account.address,
+    ]);
+
+    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+    const engine = await viem.deployContract("RouletteEngine", [
+        registry.address,
+        jackpotTreasury.address,
+        funder.address,
+        admin.account.address,
+        vrf.address,
+        1n,
+        "0x" + "11".repeat(32),
+        2_000_000,
+        1,
+        500,
+        admin.account.address,
+    ]);
+
+    await jackpotTreasury.write.setEngine([engine.address]);
+    await funder.write.setEngine([engine.address]);
+    await registry.write.setEngine([engine.address], { account: admin.account });
+
+    const ratio = 10n ** 30n;
+    await funder.write.setBrbPerAssetUnitRatio([1n, ratio], { account: admin.account });
+
+    // Ensure treasury has BRB before jackpot triggers (so batch payout is meaningful).
+    await brb.write.transfer([jackpotTreasury.address, parseUnits("1000", 18)], { account: admin.account });
+
+    const scheduler = await viem.deployContract("UpkeepScheduler", [
+        engine.address,
+        admin.account.address,
+        15,
+        maxPayoutsPerCall,
+    ]);
+    await engine.write.registerScheduler([scheduler.address, true]);
+
+    const vaultImpl = await viem.deployContract("BankVault4626");
+    const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
+    await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
+
+    await registry.write.createMarket(
+        [
+            {
+                asset: usdc.address,
+                bankName: "Bank",
+                bankSymbol: "b",
+                bankAdmin: admin.account.address,
+            },
+        ],
+        { account: admin.account },
+    );
+    const cfg = await registry.read.getMarket([1]);
+    const bank = await viem.getContractAt("BankVault4626", cfg.bank);
+
+    // Seed liquidity to cover 36x payouts.
+    const lpAmount = parseUnits("20000", 6);
+    await usdc.write.mint([admin.account.address, lpAmount]);
+    await usdc.write.approve([bank.address, lpAmount], { account: admin.account });
+    await bank.write.deposit([lpAmount, admin.account.address], { account: admin.account });
+
+    // Fund bettor.
+    await usdc.write.mint([alice.account.address, parseUnits("50000", 6)]);
+    await usdc.write.approve([bank.address, parseUnits("50000", 6)], { account: alice.account });
+
+    return { publicClient, admin, alice, usdc, brb, vrf, engine, scheduler, bank, jackpotTreasury };
+}
+
+async function performOneUpkeep(scheduler: any, lane: bigint) {
+    const checkData =
+        lane === 0n ? ("0x" as const) : encodeAbiParameters([{ type: "uint256" }], [lane]);
+    const [needed, performData] = await scheduler.read.checkUpkeep([checkData]);
+    if (!needed) return false;
+    await scheduler.write.performUpkeep([performData]);
+    return true;
+}
+
+describe("Jackpot batching stress", function () {
+    it("pays jackpot across multiple upkeep calls (respects maxPayoutsPerCall)", async function () {
+        const { engine, scheduler, bank, alice, vrf } = await deploySingleMarket(5);
+
+        // Open round 1.
+        expect(await performOneUpkeep(scheduler, 0n)).to.equal(true);
+
+        const betAmount = parseUnits("10", 6);
+        const betData7 = encodeSingleBet(1n, 7n, betAmount);
+
+        // Round 1: winning 7 vs second word yielding a different mod 37 (no jackpot this round).
+        await bank.write.placeBet([betAmount, betData7], { account: alice.account });
+        await time.increase(550);
+        while (await performOneUpkeep(scheduler, 0n)) {}
+        await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
+        while (await performOneUpkeep(scheduler, 0n)) {}
+
+        // Open round 2.
+        while (await performOneUpkeep(scheduler, 0n)) {}
+
+        // Round 2: many jackpot-eligible bets on winning/jackpot number 7.
+        // Using same player repeatedly still creates many winner entries.
+        const winnerCount = 40;
+        for (let i = 0; i < winnerCount; i++) {
+            await bank.write.placeBet([betAmount, betData7], { account: alice.account });
+        }
+        await time.increase(550);
+        while (await performOneUpkeep(scheduler, 0n)) {}
+        await vrf.write.fulfillWithJackpot([engine.address, 2n, 7n, 7n]);
+
+        // First payout call should decrease pool but not drain it (batching).
+        const poolBefore = await engine.read.jackpotPool();
+        expect(poolBefore).to.be.gt(0n);
+
+        // Drive upkeep until idle; count payout calls.
+        let payoutCalls = 0;
+        for (let i = 0; i < 200; i++) {
+            const progressed = await performOneUpkeep(scheduler, 0n);
+            if (!progressed) break;
+            payoutCalls++;
+        }
+        const poolAfter = await engine.read.jackpotPool();
+        expect(poolAfter).to.equal(0n);
+
+        // With 40 winners and maxPayoutsPerCall=5, jackpot alone needs >1 batch.
+        expect(payoutCalls).to.be.gt(1);
+    });
+});
+

@@ -5,19 +5,32 @@ interface IMarketRegistry {
     struct MarketConfig {
         address asset;
         address bank;
-        uint32 roundDuration;
-        uint32 maxBetsPerRound;
-        bool enabled;
     }
 
-    function registerMarket(
-        address asset,
-        address bank,
-        uint32 roundDuration,
-        uint32 maxBetsPerRound
-    ) external returns (uint32 marketId);
+    struct CreateMarketParams {
+        address asset;
+        string bankName;
+        string bankSymbol;
+        address bankAdmin;
+    }
 
-    function setMarketEnabled(uint32 marketId, bool enabled) external;
+    /// @notice Next market id that will be assigned on registration.
+    function previewNextMarketId() external view returns (uint32);
+
+    /// @notice Beacon used for all vault proxies.
+    function vaultBeacon() external view returns (address);
+
+    /// @notice Sets the beacon used for vault proxies.
+    function setVaultBeacon(address newBeacon) external;
+
+    /// @notice Engine used for all created markets.
+    function ENGINE() external view returns (address);
+
+    /// @notice Sets the engine used for all created markets.
+    function setEngine(address newEngine) external;
+
+    /// @notice Creates a new market vault (proxy) and registers it.
+    function createMarket(CreateMarketParams calldata params) external returns (uint32 marketId, address bank);
 
     function marketCount() external view returns (uint32);
 
