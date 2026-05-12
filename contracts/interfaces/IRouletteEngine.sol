@@ -12,8 +12,8 @@ interface IRouletteEngine {
         Payout
     }
 
-    /// @notice For `JobKind.Payout` when parallel payout lanes are enabled: `payoutShardIndex`/`payoutShardWidth`
-    /// select a deterministic slice of winners; `type(uint32).max` shard index is reserved for jackpot-only steps.
+    /// @notice For `JobKind.Payout`, winner payouts use a single per-market cursor; `payoutShardIndex` and `payoutShardWidth`
+    /// must be zero (reserved ABI fields; parallel sharding was removed for bytecode size).
     struct Job {
         JobKind kind;
         uint32 marketId;
@@ -42,7 +42,7 @@ interface IRouletteEngine {
         uint32 scanLimit
     ) external view returns (bool found, Job memory job);
 
-    /// @notice Like `findNextJob` but routes payout shards to lane `payoutLane % payoutParallelLaneCount` when lanes & width are active.
+    /// @notice Legacy overload: `payoutLane` / `payoutShardWidth` ignored; identical to two-argument `findNextJob`.
     function findNextJob(
         uint32 startCursor,
         uint32 scanLimit,
@@ -50,17 +50,10 @@ interface IRouletteEngine {
         uint32 payoutShardWidth
     ) external view returns (bool found, Job memory job);
 
-    /// @param winnerPayoutRows Precomputed slice from Automation `checkUpkeep` (`previewWinnerPayoutBundle`).
-    /// Empty = build payouts on-chain. Non-empty trusts DON + scheduler; engine bounds `winnerPayoutRows.length <= chunk`.
+    /// @param winnerPayoutRows Must be empty; winner payouts are built from storage in `executeJob` (saves bytecode vs DON-bundled rows).
     function executeJob(Job memory job, uint32 maxPayoutsPerCall, IBankVault.Payout[] memory winnerPayoutRows)
         external
         returns (bool didWork);
-
-    /// @notice `checkUpkeep`/`eth_call` helper: materializes payout rows for the next winner slice when applicable (else empty array).
-    function previewWinnerPayoutBundle(Job memory job, uint32 maxPayoutsPerCall)
-        external
-        view
-        returns (IBankVault.Payout[] memory payouts);
 
     function currentGlobalRound() external view returns (uint64);
 
@@ -69,12 +62,6 @@ interface IRouletteEngine {
     function vrfActiveRound() external view returns (uint64);
 
     function vrfActiveMarket() external view returns (uint32);
-
-    function pushPayouts(
-        uint32 marketId,
-        uint64 roundId,
-        IBankVault.Payout[] calldata payouts
-    ) external;
 
     /// @notice True while this market's global round is sealed but not yet settled for that market (deposits / enqueue-withdraw blocked).
     function isBankLiquidityRestricted(uint32 marketId) external view returns (bool);

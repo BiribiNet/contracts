@@ -19,7 +19,7 @@ library RouletteBetLib {
         bool trio023;
     }
 
-    function getWinningBetTypes(uint256 winningNumber) internal pure returns (WinningBetTypes memory winning) {
+    function getWinningBetTypes(uint256 winningNumber) external pure returns (WinningBetTypes memory winning) {
         winning.red = _isRedNumber(winningNumber);
         winning.black = !_isRedNumber(winningNumber) && winningNumber != 0;
         winning.odd = winningNumber > 0 && winningNumber % 2 == 1;
@@ -40,7 +40,7 @@ library RouletteBetLib {
         winning.winningLines = _getWinningLines(winningNumber);
     }
 
-    function isValidSplit(uint256 splitId) internal pure returns (bool) {
+    function isValidSplit(uint256 splitId) external pure returns (bool) {
         if (splitId > 3636 || splitId < 100) return false;
         uint256 num1 = splitId / 100;
         uint256 num2 = splitId % 100;
@@ -50,7 +50,7 @@ library RouletteBetLib {
         return horizontalAdjacent || verticalAdjacent;
     }
 
-    function isValidCorner(uint256 cornerId) internal pure returns (bool) {
+    function isValidCorner(uint256 cornerId) external pure returns (bool) {
         if (cornerId == 0) return true;
         if (cornerId < 1 || cornerId > 33) return false;
         return cornerId % 3 != 0;

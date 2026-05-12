@@ -20,11 +20,9 @@ import '@openzeppelin/hardhat-upgrades';
 import networks from './hardhat.network';
 
 const defaultSettings: SolcUserConfig['settings'] = {
-  // IR pipeline avoids stack-too-deep in `RouletteEngine`; tune `runs` if bytecode approaches EIP-170.
-  viaIR: true,
+  viaIR: false,
   optimizer: { enabled: true, runs: 1 },
   metadata: { bytecodeHash: 'none' },
-  // Use Cancun EVM for newer OZ (mcopy, Memory, etc.)
   evmVersion: 'cancun',
 };
 

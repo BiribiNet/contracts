@@ -70,43 +70,27 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
         emit MaxPayoutsPerCallUpdated(newMaxPayoutsPerCall);
     }
 
-    /// @notice Simulation step for Chainlink Automation: selects the next `ENGINE` job (`findNextJob`) and, when applicable,
-    /// materializes the next bank winner-payout slice via `ENGINE.previewWinnerPayoutBundle` for the DON to carry in `performData`.
-    /// @dev `abi.encode(lane, job, payouts, maxPayoutsSnapshot)` — snapshot ties `performUpkeep` to the same `maxPayoutsPerCall`
-    /// used in `checkUpkeep` / `findNextJob` / `previewWinnerPayoutBundle`, so admin updates cannot desync parallel shard width.
-    /// Engine re-validates pre-built payout rows against storage; stale bundles fall back to on-chain settlement.
+    /// @notice Simulation step for Chainlink Automation: selects the next `ENGINE` job (`findNextJob`).
+    /// @dev `abi.encode(lane, job, payouts, maxPayoutsSnapshot)` — `payouts` is always empty; the engine builds winner rows
+    /// on-chain in `executeJob`. Snapshot still ties `maxPayoutsPerCall` across `checkUpkeep` / `performUpkeep`.
+    /// Only automation lane `0` is used (parallel payout lanes removed).
     function checkUpkeep(
         bytes calldata checkData
     ) external view override returns (bool upkeepNeeded, bytes memory performData) {
         uint256 lane = checkData.length == 0 ? 0 : abi.decode(checkData, (uint256));
-        uint32 startCursor = laneCursor[lane];
+        if (lane != 0) return (false, bytes(""));
+
+        uint32 startCursor = laneCursor[0];
         uint32 maxSnapshot = maxPayoutsPerCall;
 
-        uint32 payoutLanes = ENGINE.payoutParallelLaneCount();
-        if (payoutLanes > 1 && lane >= payoutLanes) {
-            return (false, bytes(""));
-        }
-
-        (bool found, IRouletteEngine.Job memory job) = payoutLanes > 1
-            ? ENGINE.findNextJob(startCursor, scanLimit, uint32(lane), maxSnapshot)
-            : ENGINE.findNextJob(startCursor, scanLimit);
+        (bool found, IRouletteEngine.Job memory job) = ENGINE.findNextJob(startCursor, scanLimit);
         if (!found) {
             return (false, bytes(""));
         }
 
-        IBankVault.Payout[] memory payouts;
-        if (job.kind == IRouletteEngine.JobKind.Payout) {
-            if (
-                payoutLanes > 1 && job.payoutShardWidth != 0 && uint256(job.payoutShardWidth) != uint256(maxSnapshot)
-            ) {
-                return (false, bytes(""));
-            }
-            payouts = ENGINE.previewWinnerPayoutBundle(job, maxSnapshot);
-        } else {
-            payouts = new IBankVault.Payout[](0);
-        }
+        IBankVault.Payout[] memory payouts = new IBankVault.Payout[](0);
 
-        performData = abi.encode(lane, job, payouts, maxSnapshot);
+        performData = abi.encode(uint256(0), job, payouts, maxSnapshot);
         return (true, performData);
     }
 

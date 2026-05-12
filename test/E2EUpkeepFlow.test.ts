@@ -1,6 +1,7 @@
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { viem } from "hardhat";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -35,7 +36,7 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,

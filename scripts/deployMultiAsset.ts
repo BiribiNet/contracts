@@ -1,5 +1,18 @@
+import "dotenv/config";
+
 import { viem } from "hardhat";
-import { parseUnits } from "viem";
+import { isAddress, parseUnits } from "viem";
+
+import { deployRouletteEngine } from "./utils/deployRouletteEngine";
+
+/** Treat unset, blank, literal "null" / "undefined" as no address → deploy mocks. */
+function optionalAddressEnv(name: string, raw: string | undefined): `0x${string}` | undefined {
+    if (raw === undefined) return undefined;
+    const v = raw.trim();
+    if (v === "" || v.toLowerCase() === "null" || v.toLowerCase() === "undefined") return undefined;
+    if (!isAddress(v)) throw new Error(`${name} must be a valid 0x address or empty / null for mock deployment: ${raw}`);
+    return v;
+}
 
 async function main() {
     const [deployer] = await viem.getWalletClients();
@@ -8,16 +21,36 @@ async function main() {
     const linkToken = process.env.LINK_TOKEN as `0x${string}` | undefined;
     const keeperRegistrar = process.env.KEEPER_REGISTRAR as `0x${string}` | undefined;
     const keeperRegistry = process.env.KEEPER_REGISTRY as `0x${string}` | undefined;
-    const assetAAddress = process.env.ASSET_A_TOKEN as `0x${string}` | undefined;
-    const assetBAddress = process.env.ASSET_B_TOKEN as `0x${string}` | undefined;
-    const infraRecipient = process.env.INFRA_RECIPIENT as `0x${string}` | undefined;
+    const assetAAddress = optionalAddressEnv("ASSET_A_TOKEN", process.env.ASSET_A_TOKEN);
+    const assetBAddress = optionalAddressEnv("ASSET_B_TOKEN", process.env.ASSET_B_TOKEN);
+    const infraRecipient = (process.env.INFRA_RECIPIENT as `0x${string}` | undefined) ?? deployer.account.address;
     const brbAddressEnv = process.env.BRB_TOKEN as `0x${string}` | undefined;
     const routerAddressEnv = process.env.UNISWAP_V2_ROUTER as `0x${string}` | undefined;
 
-    if (!vrfCoordinator || !linkToken || !keeperRegistrar || !keeperRegistry || !assetAAddress || !assetBAddress || !infraRecipient) {
+    if (!vrfCoordinator || !linkToken || !keeperRegistrar || !keeperRegistry) {
         throw new Error(
-            "Missing env vars. Required: VRF_COORDINATOR, LINK_TOKEN, KEEPER_REGISTRAR, KEEPER_REGISTRY, ASSET_A_TOKEN, ASSET_B_TOKEN, INFRA_RECIPIENT. Optional: BRB_TOKEN, UNISWAP_V2_ROUTER (deployed if unset for local dev).",
+            "Missing env vars. Required: VRF_COORDINATOR, LINK_TOKEN, KEEPER_REGISTRAR, KEEPER_REGISTRY. For assets: set both ASSET_A_TOKEN and ASSET_B_TOKEN to real addresses, or leave both unset / empty / null to deploy MockUSDC + MockDAI. Optional: INFRA_RECIPIENT (defaults to deployer), BRB_TOKEN (deployed if unset), UNISWAP_V2_ROUTER (required when using mock assets; otherwise optional and a mock router is deployed if unset).",
         );
+    }
+
+    const usingMockAssets = !assetAAddress && !assetBAddress;
+    if (Boolean(assetAAddress) !== Boolean(assetBAddress)) {
+        throw new Error("Set both ASSET_A_TOKEN and ASSET_B_TOKEN, or omit both for mock USDC + mock DAI.");
+    }
+    if (usingMockAssets && !routerAddressEnv) {
+        throw new Error("When omitting ASSET_A_TOKEN / ASSET_B_TOKEN, set UNISWAP_V2_ROUTER (testnet pool router you use).");
+    }
+
+    let assetA: `0x${string}`;
+    let assetB: `0x${string}`;
+    if (usingMockAssets) {
+        const mockA = await viem.deployContract("MockUSDC");
+        const mockB = await viem.deployContract("MockDAI");
+        assetA = mockA.address;
+        assetB = mockB.address;
+    } else {
+        assetA = assetAAddress as `0x${string}`;
+        assetB = assetBAddress as `0x${string}`;
     }
 
     let brb: `0x${string}`;
@@ -50,7 +83,7 @@ async function main() {
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [deployer.account.address]);
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,
@@ -93,7 +126,7 @@ async function main() {
 
     await registry.write.createMarket([
         {
-            asset: assetAAddress,
+            asset: assetA,
             bankName: "Biribi Asset A Bank",
             bankSymbol: "bASA",
             bankAdmin: deployer.account.address,
@@ -101,7 +134,7 @@ async function main() {
     ]);
     await registry.write.createMarket([
         {
-            asset: assetBAddress,
+            asset: assetB,
             bankName: "Biribi Asset B Bank",
             bankSymbol: "bASB",
             bankAdmin: deployer.account.address,
@@ -130,6 +163,7 @@ async function main() {
         brb,
         jackpotFunder: funder.address,
         uniswapRouter: router,
+        ...(usingMockAssets ? { mockUsdc: assetA, mockDai: assetB } : { assetA, assetB }),
         assetABank: marketA.bank,
         assetBBank: marketB.bank,
     });

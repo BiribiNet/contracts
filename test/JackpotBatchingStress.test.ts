@@ -1,6 +1,7 @@
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { viem } from "hardhat";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -30,7 +31,7 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,
@@ -104,7 +105,7 @@ async function performOneUpkeep(scheduler: any, lane: bigint) {
 
 describe("Jackpot batching stress", function () {
     it("pays jackpot across multiple upkeep calls (respects maxPayoutsPerCall)", async function () {
-        const { engine, scheduler, bank, alice, vrf } = await deploySingleMarket(5);
+        const { engine, scheduler, bank, alice, vrf, jackpotTreasury } = await deploySingleMarket(5);
 
         // Open round 1.
         expect(await performOneUpkeep(scheduler, 0n)).to.equal(true);
@@ -133,7 +134,7 @@ describe("Jackpot batching stress", function () {
         await vrf.write.fulfillWithJackpot([engine.address, 2n, 7n, 7n]);
 
         // First payout call should decrease pool but not drain it (batching).
-        const poolBefore = await engine.read.jackpotPool();
+        const poolBefore = await jackpotTreasury.read.jackpotPool();
         expect(poolBefore).to.be.gt(0n);
 
         // Drive upkeep until idle; count payout calls.
@@ -143,7 +144,7 @@ describe("Jackpot batching stress", function () {
             if (!progressed) break;
             payoutCalls++;
         }
-        const poolAfter = await engine.read.jackpotPool();
+        const poolAfter = await jackpotTreasury.read.jackpotPool();
         expect(poolAfter).to.equal(0n);
 
         // With 40 winners and maxPayoutsPerCall=5, jackpot alone needs >1 batch.

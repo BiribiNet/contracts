@@ -35,6 +35,7 @@ describe("BankVault4626", function () {
             vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
+        await vault.write.setMinBet([1n], { account: admin.account });
 
         await expect(vault.write.placeBet([0n, "0x"], { account: alice.account })).to.be.rejected;
         await expect(vault.write.releaseBets([1n], { account: alice.account })).to.be.rejected;

@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { viem } from "hardhat";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { parseUnits } from "viem";
 
 async function deploySchedulerStack() {
@@ -19,7 +20,7 @@ async function deploySchedulerStack() {
     ]);
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,

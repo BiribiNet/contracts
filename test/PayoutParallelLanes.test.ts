@@ -1,6 +1,7 @@
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { viem } from "hardhat";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -10,7 +11,7 @@ function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     );
 }
 
-async function deploySingleMarket(opts: { parallelLanes: bigint; shardWidth: number }) {
+async function deploySingleMarket(opts: { maxPayoutsPerCall: number }) {
     const [admin] = await viem.getWalletClients();
 
     const asset = await viem.deployContract("MockUSDC");
@@ -26,7 +27,7 @@ async function deploySingleMarket(opts: { parallelLanes: bigint; shardWidth: num
         admin.account.address,
     ]);
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,
@@ -49,14 +50,10 @@ async function deploySingleMarket(opts: { parallelLanes: bigint; shardWidth: num
         engine.address,
         admin.account.address,
         250,
-        opts.shardWidth,
+        opts.maxPayoutsPerCall,
     ]);
     await engine.write.registerScheduler([scheduler.address, true]);
-
-    if (opts.parallelLanes !== 1n) {
-        await engine.write.setPayoutParallelLaneCount([Number(opts.parallelLanes)], { account: admin.account });
-        expect(await engine.read.payoutParallelLaneCount()).to.equal(Number(opts.parallelLanes));
-    }
+    expect(await engine.read.payoutParallelLaneCount()).to.equal(1);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -99,12 +96,10 @@ async function runLaneUntilStable(opts: {
     throw new Error("expected convergence");
 }
 
-describe("Payout parallel lanes (protocol-wide workers)", function () {
-    it("settles shards in parallel lanes when payoutParallelLaneCount > 1", async function () {
-        const shardWidth = 2;
+describe("Payout upkeep (sequential winner chunks)", function () {
+    it("settles a crowded round using chunked maxPayoutsPerCall on a single automation lane", async function () {
         const { admin, engine, scheduler, vrf, bank, asset } = await deploySingleMarket({
-            parallelLanes: 3n,
-            shardWidth,
+            maxPayoutsPerCall: 2,
         });
 
         const lpAmount = parseUnits("5000", 6);
@@ -129,7 +124,7 @@ describe("Payout parallel lanes (protocol-wide workers)", function () {
         await runLaneUntilStable({ scheduler, lanes: [0n], rounds: 20 });
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
 
-        await runLaneUntilStable({ scheduler, lanes: [0n, 1n, 2n], rounds: 2000 });
+        await runLaneUntilStable({ scheduler, lanes: [0n], rounds: 2000 });
 
         const st = await engine.read.marketRoundStateByRound([1n, 1n]);
         const settledOut = Array.isArray(st) ? Boolean(st[4]) : Boolean((st as { settled: boolean }).settled);
@@ -137,11 +132,9 @@ describe("Payout parallel lanes (protocol-wide workers)", function () {
         expect(await engine.read.roundPhase([1n])).to.equal(4n);
     });
 
-    it("defaults to sequential payouts when payoutParallelLaneCount is 1", async function () {
-        const shardWidth = 3;
+    it("settles with a larger per-call payout chunk", async function () {
         const { admin, vrf, scheduler, bank, asset, engine } = await deploySingleMarket({
-            parallelLanes: 1n,
-            shardWidth,
+            maxPayoutsPerCall: 3,
         });
 
         const wallets = await viem.getWalletClients();

@@ -89,6 +89,11 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         _;
     }
 
+    /// @inheritdoc IBRBJackpotFunder
+    function brbToken() external view returns (address) {
+        return address(brb);
+    }
+
     function setSwapAssetBps(uint256 totalBps) external onlyRole(FUNDER_ADMIN_ROLE) {
         if (totalBps > 1_000) revert InvalidBps();
         swapAssetTotalBps = totalBps;
@@ -117,8 +122,6 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// @inheritdoc IBRBJackpotFunder
     function fundFromMarket(uint32 marketId, address asset, uint256 marketWin) external override onlyEngine {
         if (marketWin == 0) return;
-        uint256 ratio = brbPerAssetUnitRatio[marketId];
-        if (ratio == 0) revert RatioNotSet();
 
         uint256 swapIn = (marketWin * swapAssetTotalBps) / BPS_DENOM;
         if (swapIn == 0) return;
@@ -127,19 +130,28 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         uint256 bal = assetToken.balanceOf(address(this));
         if (bal < swapIn) revert AssetBrbMismatch();
 
-        uint256 minBrbOut = (swapIn * ratio) / RATIO_SCALE;
-        minBrbOut = (minBrbOut * (BPS_DENOM - slippageBps)) / BPS_DENOM;
+        uint256 brbOut;
+        if (asset == address(brb)) {
+            // Native BRB bank: `swapExactTokensForTokens(BRB, BRB, ...)` is invalid / pointless.
+            brbOut = swapIn;
+        } else {
+            uint256 ratio = brbPerAssetUnitRatio[marketId];
+            if (ratio == 0) revert RatioNotSet();
 
-        address[] memory path = new address[](2);
-        path[0] = asset;
-        path[1] = address(brb);
+            uint256 minBrbOut = (swapIn * ratio) / RATIO_SCALE;
+            minBrbOut = (minBrbOut * (BPS_DENOM - slippageBps)) / BPS_DENOM;
 
-        assetToken.forceApprove(address(router), swapIn);
+            address[] memory path = new address[](2);
+            path[0] = asset;
+            path[1] = address(brb);
 
-        uint256 brbBefore = brb.balanceOf(address(this));
-        router.swapExactTokensForTokens(swapIn, minBrbOut, path, address(this), block.timestamp + 600);
-        uint256 brbOut = brb.balanceOf(address(this)) - brbBefore;
-        assetToken.forceApprove(address(router), 0);
+            assetToken.forceApprove(address(router), swapIn);
+
+            uint256 brbBefore = brb.balanceOf(address(this));
+            router.swapExactTokensForTokens(swapIn, minBrbOut, path, address(this), block.timestamp + 600);
+            brbOut = brb.balanceOf(address(this)) - brbBefore;
+            assetToken.forceApprove(address(router), 0);
+        }
 
         uint256 toTreasury = (brbOut * treasuryBrbNumerator) / treasuryBrbDenominator;
         uint256 toBurn = brbOut - toTreasury;

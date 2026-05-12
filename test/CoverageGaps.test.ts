@@ -1,6 +1,7 @@
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { viem } from "hardhat";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, encodeFunctionData, parseUnits, type Address, type Hex } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -30,7 +31,7 @@ describe("Coverage gaps", function () {
             treasury.address,
             admin.account.address,
         ]);
-        const engine = await viem.deployContract("RouletteEngine", [
+        const engine = await deployRouletteEngine([
             registry.address,
             treasury.address,
             funder.address,
@@ -237,7 +238,7 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await viem.deployContract("RouletteEngine", [
+        const engine = await deployRouletteEngine([
             registry.address,
             treasury.address,
             funder.address,
@@ -299,7 +300,7 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await viem.deployContract("RouletteEngine", [
+        const engine = await deployRouletteEngine([
             registry.address,
             treasury.address,
             funder.address,
@@ -362,7 +363,7 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await viem.deployContract("RouletteEngine", [
+        const engine = await deployRouletteEngine([
             registry.address,
             treasury.address,
             funder.address,

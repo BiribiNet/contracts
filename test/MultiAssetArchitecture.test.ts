@@ -1,5 +1,6 @@
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { viem } from "hardhat";
 import { encodeAbiParameters, parseUnits } from "viem";
 
@@ -33,7 +34,7 @@ async function deployStack() {
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,
@@ -253,7 +254,7 @@ describe("Multi-Asset architecture", function () {
     });
 
     it("funds and pays jackpot when winning and jackpot numbers match", async function () {
-        const { bankUsdc, usdc, alice, bob, scheduler, vrf, engine } = await deployStack();
+        const { bankUsdc, usdc, alice, bob, scheduler, vrf, engine, jackpotTreasury } = await deployStack();
         const betAmount = parseUnits("10", 6);
         const straight7 = encodeSingleBet(1n, 7n, betAmount);
 
@@ -276,11 +277,12 @@ describe("Multi-Asset architecture", function () {
 
         const after = await usdc.read.balanceOf([alice.account.address]);
         expect(after).to.equal(before - parseUnits("10", 6) + parseUnits("360", 6));
-        expect(await engine.read.jackpotPool()).to.equal(0n);
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
     });
 
     it("takes infra fee and swaps market win slice to BRB for jackpot", async function () {
-        const { bankUsdc, bankAssetB, usdc, assetB, alice, admin, scheduler, vrf, engine, brb } = await deployStack();
+        const { bankUsdc, bankAssetB, usdc, assetB, alice, admin, scheduler, vrf, engine, brb, jackpotTreasury } =
+            await deployStack();
         await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
         const betAmount = parseUnits("10", 6);
         const straight7 = encodeSingleBet(1n, 7n, betAmount);
@@ -303,7 +305,7 @@ describe("Multi-Asset architecture", function () {
         const brbOut = swapIn * 10n ** 12n;
         const toTreasury = (brbOut * 250n) / 300n;
 
-        expect(await engine.read.jackpotPool()).to.equal(toTreasury);
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         const infraAfter = await usdc.read.balanceOf([admin.account.address]);
         expect(infraAfter - infraBefore).to.equal(250_000n);
 

@@ -2,6 +2,7 @@ import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { type Address } from "viem";
 import { viem } from "hardhat";
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
 
 /** Matches `RouletteEngine.sol` INFRA_BPS constant. */
@@ -46,7 +47,7 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-    const engine = await viem.deployContract("RouletteEngine", [
+    const engine = await deployRouletteEngine([
         registry.address,
         jackpotTreasury.address,
         funder.address,
@@ -175,7 +176,7 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         const toBurn = brbOut - toTreasury;
         const dead = "0x000000000000000000000000000000000000dEaD" as Address;
 
-        expect(await engine.read.jackpotPool()).to.equal(toTreasury);
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         expect(await brb.read.balanceOf([dead])).to.equal(toBurn);
 
         const usdcSupply = await usdc.read.totalSupply();
@@ -235,7 +236,7 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         const gr = await engine.read.globalRoundState([1n]);
         expect(extractJackpotTriggered(gr)).to.equal(true);
 
-        expect(await engine.read.jackpotPool()).to.equal(0n);
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
 
         const grossAlice = betAlice * 36n;
         const grossBob = betBob * 36n;

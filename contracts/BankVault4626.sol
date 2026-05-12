@@ -104,7 +104,6 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     }
 
     function _placeBetCore(uint256 amount, bytes calldata betData) private nonReentrant {
-        if (amount == 0) revert ZeroAmount();
         if (amount < minBet) revert BetTooSmall();
         lockedBetLiquidity += amount;
         ENGINE.recordBet(marketId, msg.sender, amount, betData);
