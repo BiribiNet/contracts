@@ -8,6 +8,7 @@
     "deploy:local": "hardhat ignition deploy ignition/modules/deployMultiAssetArchitecture.ts --network localhost",
     "deploy:multiasset:local": "hardhat ignition deploy ignition/modules/deployMultiAssetArchitecture.ts --network localhost",
     "deploy:multiasset": "hardhat run scripts/deployMultiAsset.ts",
+    "deploy:protocol:sepolia": "hardhat run scripts/deployProtocolSepolia.ts --network sepolia",
     "coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
     "clean": "hardhat clean",
     "test": "hardhat test",

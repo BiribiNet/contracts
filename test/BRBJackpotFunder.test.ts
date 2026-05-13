@@ -42,10 +42,14 @@ describe("BRBJackpotFunder", function () {
         const swapIn = parseUnits("3", 18);
         await brb.write.transfer([funder.address, swapIn], { account: admin.account });
 
+        const supplyBefore = await brb.read.totalSupply();
         const treasuryBefore = await brb.read.balanceOf([treasury.address]);
         await funder.write.fundFromMarket([1n, brb.address, parseUnits("100", 18)], { account: admin.account });
         const treasuryAfter = await brb.read.balanceOf([treasury.address]);
 
-        expect(treasuryAfter - treasuryBefore).to.equal((swapIn * 250n) / 300n);
+        const toTreasury = (swapIn * 250n) / 300n;
+        const toBurn = swapIn - toTreasury;
+        expect(treasuryAfter - treasuryBefore).to.equal(toTreasury);
+        expect(await brb.read.totalSupply()).to.equal(supplyBefore - toBurn);
     });
 });

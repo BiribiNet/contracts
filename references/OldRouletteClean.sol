@@ -214,9 +214,9 @@ contract OldRouletteClean is AccessControlUpgradeable, VRFConsumerBaseV2, UUPSUp
     event BatchProcessed(uint256 roundId, uint256 batchIndex, uint256 payoutsCount);
     event JackpotResultEvent(uint256 roundId, uint256 jackpotWinnerCount);
     event ComputedPayouts(uint256 roundId, uint256 totalWinningBets);
-    event RoundForceResolved(uint256 indexed roundId, uint256 timestamp);
-    event JackpotPayoutFailed(uint256 indexed roundId, uint256 batchIndex);
-    event PayoutBatchFailed(uint256 indexed roundId, uint256 batchIndex);
+    event RoundForceResolved(uint256 roundId, uint256 timestamp);
+    event JackpotPayoutFailed(uint256 roundId, uint256 batchIndex);
+    event PayoutBatchFailed(uint256 roundId, uint256 batchIndex);
     
     // ========== ERRORS ==========
     error InvalidBet();

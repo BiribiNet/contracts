@@ -7,7 +7,12 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
 
-/// @notice Swaps a slice of per-round market profit (in market asset) to BRB via Uniswap V2; splits BRB between jackpot treasury and burn.
+/// @dev BRB must implement burn-on-holder balance (e.g. OpenZeppelin `ERC20Burnable`).
+interface IERC20BurnFromSelf {
+    function burn(uint256 value) external;
+}
+
+/// @notice Swaps a slice of per-round market profit (in market asset) to BRB via Uniswap V2; splits BRB between jackpot treasury and on-chain burn (reduces total supply).
 contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
@@ -46,8 +51,8 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     event SlippageBpsUpdated(uint256 slippageBps);
     event BrbRatioUpdated(uint32 marketId, uint256 ratioPerAssetUnit);
     event FundedFromMarket(
-        uint32 indexed marketId,
-        address indexed asset,
+        uint32 marketId,
+        address asset,
         uint256 marketWin,
         uint256 assetSwapped,
         uint256 brbOut,
@@ -160,7 +165,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
             brb.safeTransfer(jackpotTreasury, toTreasury);
         }
         if (toBurn > 0) {
-            brb.safeTransfer(address(0x000000000000000000000000000000000000dEaD), toBurn);
+            IERC20BurnFromSelf(address(brb)).burn(toBurn);
         }
 
         emit FundedFromMarket(marketId, asset, marketWin, swapIn, brbOut, toTreasury, toBurn);

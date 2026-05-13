@@ -31,19 +31,22 @@ describe("Coverage gaps", function () {
             treasury.address,
             admin.account.address,
         ]);
-        const engine = await deployRouletteEngine([
-            registry.address,
-            treasury.address,
-            funder.address,
-            admin.account.address,
-            vrf.address,
-            1n,
-            "0x" + "11".repeat(32),
-            2_000_000,
-            1,
-            500,
-            admin.account.address,
-        ]);
+        const { engine, scheduler } = await deployRouletteEngine(
+            [
+                registry.address,
+                treasury.address,
+                funder.address,
+                admin.account.address,
+                vrf.address,
+                1n,
+                "0x" + "11".repeat(32),
+                2_000_000,
+                1,
+                500,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+        );
         await treasury.write.setEngine([engine.address]);
         await funder.write.setEngine([engine.address]);
 
@@ -238,25 +241,25 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await deployRouletteEngine([
-            registry.address,
-            treasury.address,
-            funder.address,
-            admin.account.address,
-            vrf.address,
-            1n,
-            "0x" + "11".repeat(32),
-            2_000_000,
-            1,
-            500,
-            admin.account.address,
-        ]);
+        const { engine, scheduler } = await deployRouletteEngine(
+            [
+                registry.address,
+                treasury.address,
+                funder.address,
+                admin.account.address,
+                vrf.address,
+                1n,
+                "0x" + "11".repeat(32),
+                2_000_000,
+                1,
+                500,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall: 10 },
+        );
         await treasury.write.setEngine([engine.address]);
         await funder.write.setEngine([engine.address]);
         await registry.write.setEngine([engine.address], { account: admin.account });
-
-        const scheduler = await viem.deployContract("UpkeepScheduler", [engine.address, admin.account.address, 10, 10]);
-        await engine.write.registerScheduler([scheduler.address, true]);
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -300,25 +303,25 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await deployRouletteEngine([
-            registry.address,
-            treasury.address,
-            funder.address,
-            admin.account.address,
-            vrf.address,
-            1n,
-            "0x" + "11".repeat(32),
-            2_000_000,
-            1,
-            500,
-            admin.account.address,
-        ]);
+        const { engine, scheduler } = await deployRouletteEngine(
+            [
+                registry.address,
+                treasury.address,
+                funder.address,
+                admin.account.address,
+                vrf.address,
+                1n,
+                "0x" + "11".repeat(32),
+                2_000_000,
+                1,
+                500,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall: 10 },
+        );
         await treasury.write.setEngine([engine.address]);
         await funder.write.setEngine([engine.address]);
         await registry.write.setEngine([engine.address], { account: admin.account });
-
-        const scheduler = await viem.deployContract("UpkeepScheduler", [engine.address, admin.account.address, 10, 10]);
-        await engine.write.registerScheduler([scheduler.address, true]);
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -363,26 +366,26 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await deployRouletteEngine([
-            registry.address,
-            treasury.address,
-            funder.address,
-            admin.account.address,
-            vrf.address,
-            1n,
-            "0x" + "11".repeat(32),
-            2_000_000,
-            1,
-            500,
-            admin.account.address,
-        ]);
+        const { engine, scheduler } = await deployRouletteEngine(
+            [
+                registry.address,
+                treasury.address,
+                funder.address,
+                admin.account.address,
+                vrf.address,
+                1n,
+                "0x" + "11".repeat(32),
+                2_000_000,
+                1,
+                500,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall: 10 },
+        );
         await treasury.write.setEngine([engine.address]);
         await funder.write.setEngine([engine.address]);
         await registry.write.setEngine([engine.address], { account: admin.account });
         await funder.write.setBrbPerAssetUnitRatio([1n, 10n ** 30n], { account: admin.account });
-
-        const scheduler = await viem.deployContract("UpkeepScheduler", [engine.address, admin.account.address, 10, 10]);
-        await engine.write.registerScheduler([scheduler.address, true]);
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);

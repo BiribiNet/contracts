@@ -1,6 +1,5 @@
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { type Address } from "viem";
 import { viem } from "hardhat";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
@@ -47,19 +46,24 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        admin.account.address,
-        vrf.address,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        1,
-        500,
-        admin.account.address,
-    ]);
+    const publicClient = await viem.getPublicClient();
+    const maxPayouts = opts?.maxPayoutsPerCall ?? 50;
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            admin.account.address,
+            vrf.address,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: 20, maxPayoutsPerCall: maxPayouts },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
@@ -73,15 +77,6 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     if (treasuryBrbSeed > 0n) {
         await brb.write.transfer([jackpotTreasury.address, treasuryBrbSeed], { account: admin.account });
     }
-
-    const maxPayouts = opts?.maxPayoutsPerCall ?? 50;
-    const scheduler = await viem.deployContract("UpkeepScheduler", [
-        engine.address,
-        admin.account.address,
-        20,
-        maxPayouts,
-    ]);
-    await engine.write.registerScheduler([scheduler.address, true]);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -148,6 +143,7 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         await time.increase(550);
 
         await runSchedulerUntilIdle(scheduler);
+        const brbSupplyBeforeFulfill = await brb.read.totalSupply();
         await vrf.write.fulfill([engine.address, 1n, 7n]);
         await runSchedulerUntilIdle(scheduler);
 
@@ -174,10 +170,9 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         const treasuryDen = await funder.read.treasuryBrbDenominator();
         const toTreasury = (brbOut * treasuryNum) / treasuryDen;
         const toBurn = brbOut - toTreasury;
-        const dead = "0x000000000000000000000000000000000000dEaD" as Address;
 
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
-        expect(await brb.read.balanceOf([dead])).to.equal(toBurn);
+        expect(await brb.read.totalSupply()).to.equal(brbSupplyBeforeFulfill - toBurn);
 
         const usdcSupply = await usdc.read.totalSupply();
         const brbSupply = await brb.read.totalSupply();
@@ -284,10 +279,10 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         expect(navD).to.be.closeTo(expectNavD, parseUnits("2", 6));
     });
 
-    it("USDC totalSupply invariant (no burns/mints mid-round): loser round only moves liquidity between actors", async function () {
+    it("USDC totalSupply invariant; BRB supply drops by funder burn slice on losing round", async function () {
         const ctx = await deploySingleMarketSettlement({ treasuryBrbSeed: 0n });
 
-        const { admin, alice, carol, usdc, brb, vrf, engine, scheduler, bank } = ctx;
+        const { admin, alice, carol, usdc, brb, vrf, engine, scheduler, bank, funder } = ctx;
 
         await usdc.write.mint([carol.account.address, parseUnits("40000", 6)]);
         await usdc.write.approve([bank.address, parseUnits("40000", 6)], { account: carol.account });
@@ -311,7 +306,14 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
 
         expect(await engine.read.roundPhase([1n])).to.equal(4n);
         expect(await usdc.read.totalSupply()).to.equal(usdcSupplyBefore);
-        expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore);
+
+        const marketWin = bobBet;
+        const swapIn = (marketWin * (await funder.read.swapAssetTotalBps())) / SW_BPS_DENOM;
+        const brbOut = swapIn * 10n ** 12n;
+        const treasuryNum = await funder.read.treasuryBrbNumerator();
+        const treasuryDen = await funder.read.treasuryBrbDenominator();
+        const toBurn = brbOut - (brbOut * treasuryNum) / treasuryDen;
+        expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore - toBurn);
 
         expect(await usdc.read.balanceOf([admin.account.address])).to.be.gt(0n);
     });

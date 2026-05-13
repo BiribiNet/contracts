@@ -83,30 +83,32 @@ async function main() {
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [deployer.account.address]);
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        infraRecipient,
-        vrfCoordinator,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        3,
-        60,
-        deployer.account.address,
-    ]);
+
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            infraRecipient,
+            vrfCoordinator,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            3,
+            60,
+            deployer.account.address,
+        ],
+        {
+            admin: deployer.account.address,
+            scanLimit: 25,
+            maxPayoutsPerCall: 60,
+        },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address]);
 
-    const scheduler = await viem.deployContract("UpkeepScheduler", [
-        engine.address,
-        deployer.account.address,
-        25,
-        60,
-    ]);
     const upkeepManager = await viem.deployContract("UpkeepManager", [
         linkToken,
         keeperRegistrar,
@@ -117,8 +119,6 @@ async function main() {
     ]);
 
     await scheduler.write.setForwarderAuthority([upkeepManager.address]);
-
-    await engine.write.registerScheduler([scheduler.address, true]);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);

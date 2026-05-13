@@ -23,8 +23,6 @@ interface IRouletteEngine {
         uint32 payoutShardWidth;
     }
 
-    function registerScheduler(address scheduler, bool allowed) external;
-
     /// @notice Registry-only market registration hook (e.g. `MarketRegistry.createMarket`).
     function registerMarketFromRegistry(uint32 marketId, address bank) external;
 

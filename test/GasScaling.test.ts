@@ -18,7 +18,10 @@ describe("Gas scaling guards", function () {
         const [admin, alice] = await viem.getWalletClients();
         const publicClient = await viem.getPublicClient();
 
-        const assets = await Promise.all(Array.from({ length: marketCount }, async () => viem.deployContract("MockUSDC")));
+        const assets = [];
+        for (let i = 0; i < marketCount; i++) {
+            assets.push(await viem.deployContract("MockUSDC"));
+        }
         const vrf = await viem.deployContract("MockVrfCoordinator");
 
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
@@ -32,19 +35,22 @@ describe("Gas scaling guards", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-        const engine = await deployRouletteEngine([
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
-            admin.account.address,
-            vrf.address,
-            1n,
-            "0x" + "11".repeat(32),
-            2_000_000,
-            1,
-            500,
-            admin.account.address,
-        ]);
+        const { engine, scheduler } = await deployRouletteEngine(
+            [
+                registry.address,
+                jackpotTreasury.address,
+                funder.address,
+                admin.account.address,
+                vrf.address,
+                1n,
+                "0x" + "11".repeat(32),
+                2_000_000,
+                1,
+                500,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+        );
 
         await jackpotTreasury.write.setEngine([engine.address]);
         await funder.write.setEngine([engine.address]);
@@ -54,9 +60,6 @@ describe("Gas scaling guards", function () {
         for (let i = 0; i < marketCount; i++) {
             await funder.write.setBrbPerAssetUnitRatio([BigInt(i + 1), ratio], { account: admin.account });
         }
-
-        const scheduler = await viem.deployContract("UpkeepScheduler", [engine.address, admin.account.address, 25, 10]);
-        await engine.write.registerScheduler([scheduler.address, true]);
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);

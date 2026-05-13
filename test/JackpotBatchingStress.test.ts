@@ -31,19 +31,22 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        admin.account.address,
-        vrf.address,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        1,
-        500,
-        admin.account.address,
-    ]);
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            admin.account.address,
+            vrf.address,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: 15, maxPayoutsPerCall: maxPayoutsPerCall },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
@@ -54,14 +57,6 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
 
     // Ensure treasury has BRB before jackpot triggers (so batch payout is meaningful).
     await brb.write.transfer([jackpotTreasury.address, parseUnits("1000", 18)], { account: admin.account });
-
-    const scheduler = await viem.deployContract("UpkeepScheduler", [
-        engine.address,
-        admin.account.address,
-        15,
-        maxPayoutsPerCall,
-    ]);
-    await engine.write.registerScheduler([scheduler.address, true]);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);

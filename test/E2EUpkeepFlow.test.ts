@@ -18,7 +18,10 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
     const [admin, alice, bob, carol, dave] = await viem.getWalletClients();
     const publicClient = await viem.getPublicClient();
 
-    const assets = await Promise.all(Array.from({ length: marketCount }, async () => viem.deployContract("MockUSDC")));
+    const assets = [];
+    for (let i = 0; i < marketCount; i++) {
+        assets.push(await viem.deployContract("MockUSDC"));
+    }
     const vrf = await viem.deployContract("MockVrfCoordinator");
 
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
@@ -36,19 +39,22 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        admin.account.address,
-        vrf.address,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        1,
-        500,
-        admin.account.address,
-    ]);
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            admin.account.address,
+            vrf.address,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
@@ -60,14 +66,6 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
     }
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
-
-    const scheduler = await viem.deployContract("UpkeepScheduler", [
-        engine.address,
-        admin.account.address,
-        10,
-        maxPayoutsPerCall,
-    ]);
-    await engine.write.registerScheduler([scheduler.address, true]);
 
     // Touch admin setters for coverage (and to validate they work).
     await scheduler.write.setScanLimit([12], { account: admin.account });

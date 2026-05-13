@@ -28,7 +28,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     event ScanLimitUpdated(uint32 newScanLimit);
     event MaxPayoutsPerCallUpdated(uint32 newMaxPayoutsPerCall);
     event LaneCursorAdvanced(uint256 lane, uint32 previousCursor, uint32 newCursor);
-    event ForwarderAuthorityUpdated(address indexed authority);
+    event ForwarderAuthorityUpdated(address authority);
 
     constructor(address engine, address admin, uint32 initialScanLimit, uint32 initialMaxPayoutsPerCall) {
         if (engine == address(0) || admin == address(0)) revert ZeroAddress();

@@ -34,19 +34,22 @@ async function deployStack() {
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        admin.account.address,
-        vrf.address,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        1,
-        500,
-        admin.account.address,
-    ]);
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            admin.account.address,
+            vrf.address,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: 5, maxPayoutsPerCall: 25 },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
@@ -57,15 +60,6 @@ async function deployStack() {
     await funder.write.setBrbPerAssetUnitRatio([2n, ratio], { account: admin.account });
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
-
-    const scheduler = await viem.deployContract("UpkeepScheduler", [
-        engine.address,
-        admin.account.address,
-        5,
-        25,
-    ]);
-
-    await engine.write.registerScheduler([scheduler.address, true]);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -295,6 +289,7 @@ describe("Multi-Asset architecture", function () {
         await scheduler.write.performUpkeep([preLockData]);
         const [, vrfData] = await scheduler.read.checkUpkeep(["0x"]);
         await scheduler.write.performUpkeep([vrfData]);
+        const brbSupplyBeforeFulfill = await brb.read.totalSupply();
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 8n, 10n]);
 
         const [, payoutData] = await scheduler.read.checkUpkeep(["0x"]);
@@ -304,12 +299,12 @@ describe("Multi-Asset architecture", function () {
         const swapIn = (marketWin * 300n) / 10_000n;
         const brbOut = swapIn * 10n ** 12n;
         const toTreasury = (brbOut * 250n) / 300n;
+        const toBurn = brbOut - toTreasury;
 
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         const infraAfter = await usdc.read.balanceOf([admin.account.address]);
         expect(infraAfter - infraBefore).to.equal(250_000n);
 
-        const dead = "0x000000000000000000000000000000000000dEaD" as const;
-        expect(await brb.read.balanceOf([dead])).to.equal(brbOut - toTreasury);
+        expect(await brb.read.totalSupply()).to.equal(brbSupplyBeforeFulfill - toBurn);
     });
 });

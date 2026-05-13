@@ -22,7 +22,7 @@ import { RoulettePayoutMulLib } from "./libraries/RoulettePayoutMulLib.sol";
 contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     using BetStorageLib for BetStorageLib.RoundTotals;
 
-    /// @dev Legacy role id bytes (off-chain / tooling); access is `onlyOwner` / scheduler mapping.
+    /// @dev Legacy role id bytes (off-chain / tooling); access is `onlyOwner` / `UPKEEP_SCHEDULER`.
     bytes32 public constant ENGINE_ADMIN_ROLE = keccak256("ENGINE_ADMIN_ROLE");
     bytes32 public constant SCHEDULER_ROLE = keccak256("SCHEDULER_ROLE");
 
@@ -148,8 +148,8 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     uint256 public constant MAX_MAX_WITHDRAWAL_QUEUE_LENGTH = 1000;
 
     address public immutable INFRA_RECIPIENT;
-
-    mapping(address => bool) private _schedulerAllowed;
+    /// @notice Only this contract may call scheduler-gated engine entrypoints (`executeJob`, round transitions).
+    address public immutable UPKEEP_SCHEDULER;
 
     mapping(uint64 => GlobalRoundState) public globalRoundState;
     mapping(uint64 => mapping(uint32 => MarketRoundState)) public marketRoundStateByRound;
@@ -202,7 +202,6 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     error UnexpectedWinnerAttachment();
     error JackpotAssetRatioNotSet();
 
-    event SchedulerRegistered(address scheduler, bool allowed);
     event MarketRegistered(uint32 marketId, address bank);
 
     event VrfRequested(uint256 newRoundId, uint256 requestId, uint256 timestamp);
@@ -228,7 +227,7 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     event MaxWithdrawalQueueLengthUpdated(uint256 newMaxLength);
 
     modifier onlyScheduler() {
-        if (!_schedulerAllowed[msg.sender]) revert UnauthorizedScheduler();
+        if (msg.sender != UPKEEP_SCHEDULER) revert UnauthorizedScheduler();
         _;
     }
 
@@ -254,17 +253,20 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         uint32 callbackGasLimit,
         uint16 confirmations,
         uint32 roundDuration,
-        address admin
+        address admin,
+        address upkeepScheduler
     ) Ownable(admin) VRFConsumerBaseV2(vrfCoordinator) {
         if (
             registry == address(0) || jackpotTreasury == address(0) || jackpotFunder == address(0)
                 || infraRecipient == address(0) || vrfCoordinator == address(0) || admin == address(0)
+                || upkeepScheduler == address(0)
         ) revert ZeroAddress();
         if (roundDuration == 0) revert InvalidRoundDuration();
         REGISTRY = IMarketRegistry(registry);
         JACKPOT_TREASURY = IJackpotTreasury(jackpotTreasury);
         JACKPOT_FUNDER = IBRBJackpotFunder(jackpotFunder);
         INFRA_RECIPIENT = infraRecipient;
+        UPKEEP_SCHEDULER = upkeepScheduler;
         VRF_COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
         VRF_SUBSCRIPTION_ID = subscriptionId;
         VRF_KEY_HASH = keyHash;
@@ -302,12 +304,6 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     /// @dev Always `1`; parallel payout lanes / shards were removed to satisfy EIP-170 bytecode limits.
     function payoutParallelLaneCount() external pure returns (uint32) {
         return 1;
-    }
-
-    function registerScheduler(address scheduler, bool allowed) external onlyOwner {
-        if (scheduler == address(0)) revert ZeroAddress();
-        _schedulerAllowed[scheduler] = allowed;
-        emit SchedulerRegistered(scheduler, allowed);
     }
 
     function setMinJackpotBet(uint256 newMinJackpotBet) external onlyOwner {

@@ -1,5 +1,11 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
+/**
+ * `RouletteEngine` is wired to a single immutable `UpkeepScheduler` address at construction.
+ * Pass the predicted scheduler CREATE address via deployment parameters (see
+ * `predictUpkeepSchedulerAddress` in `scripts/utils/deployRouletteEngine.ts`: `libraryDeployCount + 1`
+ * CREATEs after the deployer's current nonce, matching `deployRouletteEngine` internals).
+ */
 const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitecture", (m) => {
     const admin = m.getAccount(0);
 
@@ -19,29 +25,63 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
     ]);
 
     const registry = m.contract("MarketRegistry", [admin]);
-    const engine = m.contract("RouletteEngine", [
-        registry,
-        jackpotTreasury,
-        funder,
-        admin,
-        mockVrf,
-        1n,
-        "0x1111111111111111111111111111111111111111111111111111111111111111",
-        2_000_000,
-        1,
-        60,
-        admin,
-    ]);
+
+    const rouletteLib = m.library("RouletteLib");
+    const rouletteBetLib = m.library("RouletteBetLib");
+    const jackpotBatchLib = m.library("JackpotBatchLib");
+    const roulettePayoutMulLib = m.library("RoulettePayoutMulLib");
+
+    const rouletteLiabilityMathLib = m.library("RouletteLiabilityMathLib", [], {
+        libraries: {
+            RouletteLib: rouletteLib,
+        },
+    });
+
+    const rouletteBetCodecLib = m.library("RouletteBetCodecLib", [], {
+        libraries: {
+            RouletteBetLib: rouletteBetLib,
+        },
+    });
+
+    const upkeepScheduler = m.getParameter("upkeepScheduler", "0x0000000000000000000000000000000000000000");
+
+    const engine = m.contract(
+        "RouletteEngine",
+        [
+            registry,
+            jackpotTreasury,
+            funder,
+            admin,
+            mockVrf,
+            1n,
+            "0x1111111111111111111111111111111111111111111111111111111111111111",
+            2_000_000,
+            1,
+            60,
+            admin,
+            upkeepScheduler,
+        ],
+        {
+            libraries: {
+                RouletteBetLib: rouletteBetLib,
+                JackpotBatchLib: jackpotBatchLib,
+                RouletteBetCodecLib: rouletteBetCodecLib,
+                RoulettePayoutMulLib: roulettePayoutMulLib,
+                RouletteLiabilityMathLib: rouletteLiabilityMathLib,
+            },
+        },
+    );
+
     m.call(jackpotTreasury, "setEngine", [engine]);
     m.call(funder, "setEngine", [engine]);
     m.call(registry, "setEngine", [engine]);
 
-    const scheduler = m.contract("UpkeepScheduler", [engine, admin, 25, 60]);
+    const scheduler = m.contract("UpkeepScheduler", [engine, admin, 25, 60], { id: "UpkeepScheduler" });
     const upkeepManager = m.contract("UpkeepManager", [mockLink, admin, admin, scheduler, admin, admin]);
     m.call(scheduler, "setForwarderAuthority", [upkeepManager]);
 
-    const vaultImpl = m.contract("BankVault4626");
-    const vaultBeacon = m.contract("UpgradeableBeacon", [vaultImpl, admin]);
+    const vaultImpl = m.contract("BankVault4626", [], { after: [upkeepManager] });
+    const vaultBeacon = m.contract("UpgradeableBeacon", [vaultImpl, admin], { after: [vaultImpl] });
     m.call(registry, "setVaultBeacon", [vaultBeacon]);
 
     m.call(registry, "createMarket", [

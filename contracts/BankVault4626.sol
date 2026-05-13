@@ -134,7 +134,6 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     }
 
     function transferOut(address recipient, uint256 amount) external onlyEngine {
-        if (amount == 0) return;
         IERC20(asset()).safeTransfer(recipient, amount);
         emit FundsTransferred(recipient, amount);
     }

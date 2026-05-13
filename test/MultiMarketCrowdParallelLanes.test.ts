@@ -131,19 +131,22 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        admin.account.address,
-        vrf.address,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        1,
-        500,
-        admin.account.address,
-    ]);
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            admin.account.address,
+            vrf.address,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: opts.scanLimit, maxPayoutsPerCall: opts.maxPayoutsPerCall },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
@@ -155,13 +158,6 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
 
-    const scheduler = await viem.deployContract("UpkeepScheduler", [
-        engine.address,
-        admin.account.address,
-        opts.scanLimit,
-        opts.maxPayoutsPerCall,
-    ]);
-    await engine.write.registerScheduler([scheduler.address, true]);
     expect(await engine.read.payoutParallelLaneCount()).to.equal(1);
 
     const vaultImpl = await viem.deployContract("BankVault4626");

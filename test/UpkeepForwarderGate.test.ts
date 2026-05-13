@@ -20,19 +20,22 @@ async function deploySchedulerStack() {
     ]);
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
-    const engine = await deployRouletteEngine([
-        registry.address,
-        jackpotTreasury.address,
-        funder.address,
-        admin.account.address,
-        vrf.address,
-        1n,
-        "0x" + "11".repeat(32),
-        2_000_000,
-        1,
-        500,
-        admin.account.address,
-    ]);
+    const { engine, scheduler } = await deployRouletteEngine(
+        [
+            registry.address,
+            jackpotTreasury.address,
+            funder.address,
+            admin.account.address,
+            vrf.address,
+            1n,
+            "0x" + "11".repeat(32),
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+    );
 
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
@@ -41,10 +44,6 @@ async function deploySchedulerStack() {
     await funder.write.setBrbPerAssetUnitRatio([1n, 10n ** 30n], { account: admin.account });
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
-
-    const scheduler = await viem.deployContract("UpkeepScheduler", [engine.address, admin.account.address, 25, 10]);
-
-    await engine.write.registerScheduler([scheduler.address, true]);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
