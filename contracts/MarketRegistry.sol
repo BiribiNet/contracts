@@ -21,6 +21,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     error ZeroImplementation();
     error InvalidMarketId();
     error MarketAlreadyRegistered();
+    error MinBetRequired();
 
     event MarketRegistered(uint32 marketId, address asset, address bank);
     event MarketCreated(uint32 marketId, address asset, address bank);
@@ -34,6 +35,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         uint32 marketId;
         address engine;
         address bankAdmin;
+        uint256 minBet;
     }
 
     constructor(address admin) {
@@ -68,12 +70,14 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
 
     /// @dev Call `setVaultBeacon` and `setEngine` before any `createMarket`. Setters enforce non-zero values; this function does not repeat those checks.
     /// @dev Vault share `name` is `BRB ` + asset `name()`, share `symbol` is `brb` + asset `symbol()` (via `IERC20Metadata`).
+    /// @dev `params.minBet` MUST be non-zero (anti-DoS) and is forwarded to `BankVault4626.initialize`.
     function createMarket(CreateMarketParams calldata params)
         external
         onlyRole(MARKET_FACTORY_ROLE)
         returns (uint32 marketId, address bank)
     {
         if (params.asset == address(0) || params.bankAdmin == address(0)) revert ZeroAddress();
+        if (params.minBet == 0) revert MinBetRequired();
 
         IERC20Metadata assetMeta = IERC20Metadata(params.asset);
         string memory bankName = string.concat("BRB ", assetMeta.name());
@@ -89,6 +93,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         p.marketId = nextId;
         p.engine = engine;
         p.bankAdmin = params.bankAdmin;
+        p.minBet = params.minBet;
 
         bytes memory initData = _encodeVaultInitData(p);
         bank = _deployVault(beacon, initData);
@@ -106,7 +111,8 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
             p.bankSymbol,
             p.marketId,
             p.engine,
-            p.bankAdmin
+            p.bankAdmin,
+            p.minBet
         );
     }
 

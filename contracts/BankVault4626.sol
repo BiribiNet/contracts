@@ -13,8 +13,14 @@ import { IBankVault } from "./interfaces/IBankVault.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
 
-/// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `ERC1967Proxy`.
+/// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `BeaconProxy`.
 /// @dev Deposit / withdraw enqueue policy follows `ENGINE.isBankLiquidityRestricted(marketId)`. Queue limits and batch sizes are read from the engine (global per protocol).
+///
+/// Audit fixes (Critical + High) vs initial `markets`-branch implementation:
+/// - C-2: ERC-4626 first-deposit inflation attack mitigated via `_decimalsOffset() == 6`.
+/// - C-3: `__gap` reserved at the end of this contract's storage to protect upgrades.
+/// - H-9: `_placeBetCore` measures the actual received delta — fee-on-transfer assets that net zero revert.
+/// - H-11: `minBet` is enforced non-zero at `initialize` time (no dust-bet griefing window).
 contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgradeable, ReentrancyGuardTransient, IBankVault {
     using SafeERC20 for IERC20;
 
@@ -31,6 +37,10 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     mapping(address => QueuedWithdrawal) private _pendingWithdrawal;
     mapping(address => uint256) private _userQueueIndex;
 
+    /// @dev Storage gap reserved for future state additions. Decrement when adding
+    /// new state variables to keep the inherited layout stable across beacon upgrades.
+    uint256[50] private __gap;
+
     error OnlyEngine();
     error ZeroAmount();
     error BetTooSmall();
@@ -42,8 +52,11 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     error UnauthorizedCaller();
     error InvalidReceiver();
     error QueueFull();
+    error FeeOnTransferAsset();
+    error InvalidInitParams();
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
+    /// `amount` is the effective (post-transfer) amount the bank received.
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
     event MinBetUpdated(uint256 previousMinBet, uint256 newMinBet);
     event BetsReleased(uint256 amount, uint256 newLockedTotal);
@@ -58,23 +71,38 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         _;
     }
 
+    /// @notice Initializer. `minBet_` MUST be non-zero in production to avoid dust-bet griefing.
+    /// @dev Pass an asset-appropriate value (e.g. `1e6` for USDC = $1; `1e18` for 18-decimal stables / BRB).
     function initialize(
         address assetToken_,
         string calldata name_,
         string calldata symbol_,
         uint32 marketId_,
         address engine_,
-        address admin
+        address admin,
+        uint256 minBet_
     ) external initializer {
+        if (assetToken_ == address(0) || engine_ == address(0) || admin == address(0)) revert InvalidInitParams();
+        if (minBet_ == 0) revert ZeroAmount();
+
         __ERC20_init(name_, symbol_);
         __ERC4626_init(IERC20(assetToken_));
         __AccessControl_init();
 
         marketId = marketId_;
         ENGINE = IRouletteEngine(engine_);
+        minBet = minBet_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(BANK_ADMIN_ROLE, admin);
+
+        emit MinBetUpdated(0, minBet_);
+    }
+
+    /// @notice Increases the share-to-asset offset to mitigate the ERC-4626 first-depositor inflation attack.
+    /// @dev OZ v5 recommendation. With offset = 6, the attacker would need to donate ≥ 1e6 asset units to make rounding bite.
+    function _decimalsOffset() internal pure override returns (uint8) {
+        return 6;
     }
 
     function setMinBet(uint256 newMinBet) external onlyRole(BANK_ADMIN_ROLE) {
@@ -103,12 +131,27 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         _placeBetCore(amount, betData);
     }
 
+    /// @dev Measures the actual received delta on the asset to be fee-on-transfer-safe.
+    /// The check `effectiveAmount < minBet` runs AFTER the transfer so the engine
+    /// receives the true wagered amount and `lockedBetLiquidity` matches the on-chain
+    /// balance. Reverts with `FeeOnTransferAsset` if the bank received nothing.
     function _placeBetCore(uint256 amount, bytes calldata betData) private nonReentrant {
-        if (amount < minBet) revert BetTooSmall();
-        lockedBetLiquidity += amount;
-        ENGINE.recordBet(marketId, msg.sender, amount, betData);
-        emit BetPlaced(msg.sender, amount, betData, ENGINE.currentGlobalRound());
-        IERC20(asset()).safeTransferFrom(msg.sender, address(this), amount);
+        if (amount == 0) revert ZeroAmount();
+        IERC20 token = IERC20(asset());
+        uint256 balanceBefore = token.balanceOf(address(this));
+        token.safeTransferFrom(msg.sender, address(this), amount);
+        uint256 balanceAfter = token.balanceOf(address(this));
+        uint256 effectiveAmount;
+        unchecked {
+            // Solvent ERC-20s only grow the balance; fee-on-transfer assets net less, never more.
+            effectiveAmount = balanceAfter - balanceBefore;
+        }
+        if (effectiveAmount == 0) revert FeeOnTransferAsset();
+        if (effectiveAmount < minBet) revert BetTooSmall();
+
+        lockedBetLiquidity += effectiveAmount;
+        ENGINE.recordBet(marketId, msg.sender, effectiveAmount, betData);
+        emit BetPlaced(msg.sender, effectiveAmount, betData, ENGINE.currentGlobalRound());
     }
 
     function releaseBets(uint256 amount) external onlyEngine {
