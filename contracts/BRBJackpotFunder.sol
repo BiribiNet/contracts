@@ -14,6 +14,10 @@ interface IERC20BurnFromSelf {
 
 /// @notice Swaps the contract's current `asset` balance to BRB via Uniswap V2 (when `asset != brb`); splits BRB between jackpot treasury and on-chain burn (reduces total supply).
 /// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send.
+///
+/// Audit fixes vs initial `markets`-branch implementation:
+/// - C-1: slippage protection — `amountOutMin` is now derived from an on-chain quote (`getAmountsOut`) bounded by the existing `slippageBps` (default 100 bps).
+///   Bypass available via admin-set `bypassSlippageCheck` for emergency drain only.
 contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
@@ -21,6 +25,8 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
     /// @dev Skip reason: router `swapExactTokensForTokens` reverted (liquidity, path, deadline, etc.).
     uint8 public constant SKIP_SWAP_REVERTED = 2;
+    /// @dev Skip reason: `getAmountsOut` quote reverted; cannot price `amountOutMin` safely.
+    uint8 public constant SKIP_PRICE_QUOTE = 3;
 
     address public engine;
     IERC20 public immutable brb;
@@ -34,8 +40,11 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     uint256 public treasuryBrbNumerator;
     uint256 public treasuryBrbDenominator;
 
-    /// @notice Reserved for future policy; swaps use `amountOutMin = 0` so upkeep is not bricked by pool moves.
+    /// @notice Slippage tolerance applied to the on-chain quote when computing `amountOutMin`. Default 100 bps = 1%.
     uint256 public slippageBps;
+
+    /// @notice Emergency-only override that restores legacy `amountOutMin = 0` behaviour for clearing a stuck queue.
+    bool public bypassSlippageCheck;
 
     /// @notice Optional metadata / off-chain jackpot parity (decimals across assets); not read in `fundFromMarket`.
     mapping(uint32 => uint256) public brbPerAssetUnitRatio;
@@ -52,6 +61,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     event SwapAssetBpsUpdated(uint256 totalBps);
     event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
     event SlippageBpsUpdated(uint256 slippageBps);
+    event BypassSlippageUpdated(bool bypass);
     event BrbRatioUpdated(uint32 marketId, uint256 ratioPerAssetUnit);
     event FundFromMarketSkipped(uint32 indexed marketId, address indexed asset, uint8 reason);
     event JackpotTreasuryTransferFailed(uint32 indexed marketId, address indexed treasury, uint256 amount);
@@ -123,6 +133,11 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         emit SlippageBpsUpdated(bps);
     }
 
+    function setBypassSlippageCheck(bool bypass) external onlyRole(FUNDER_ADMIN_ROLE) {
+        bypassSlippageCheck = bypass;
+        emit BypassSlippageUpdated(bypass);
+    }
+
     function setBrbPerAssetUnitRatio(uint32 marketId, uint256 ratio) external onlyRole(FUNDER_ADMIN_ROLE) {
         if (ratio == 0) revert RatioNotSet();
         brbPerAssetUnitRatio[marketId] = ratio;
@@ -143,12 +158,25 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
             path[0] = asset;
             path[1] = address(brb);
 
+            uint256 amountOutMin;
+            if (bypassSlippageCheck) {
+                amountOutMin = 0;
+            } else {
+                try router.getAmountsOut(swapIn, path) returns (uint256[] memory amounts) {
+                    uint256 expectedOut = amounts[amounts.length - 1];
+                    amountOutMin = (expectedOut * (BPS_DENOM - slippageBps)) / BPS_DENOM;
+                } catch {
+                    emit FundFromMarketSkipped(marketId, asset, SKIP_PRICE_QUOTE);
+                    return;
+                }
+            }
+
             assetToken.forceApprove(address(router), swapIn);
 
             uint256 brbBefore = brb.balanceOf(address(this));
             try router.swapExactTokensForTokens(
                 swapIn,
-                0,
+                amountOutMin,
                 path,
                 address(this),
                 block.timestamp + 600
