@@ -48,7 +48,9 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const publicClient = await viem.getPublicClient();
     const maxPayouts = opts?.maxPayoutsPerCall ?? 50;
+    const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
     const { engine, scheduler } = await deployRouletteEngine(
+        [mockLaneKey, mockLaneKey, mockLaneKey],
         [
             registry.address,
             jackpotTreasury.address,
@@ -56,7 +58,6 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
             admin.account.address,
             vrf.address,
             1n,
-            "0x" + "11".repeat(32),
             2_000_000,
             1,
             500,
@@ -83,7 +84,7 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
 
     await registry.write.createMarket(
-        [{ asset: usdc.address, bankName: "Bank", bankSymbol: "b", bankAdmin: admin.account.address }],
+        [{ asset: usdc.address, bankAdmin: admin.account.address }],
         { account: admin.account },
     );
     const cfg = await registry.read.getMarket([1]);

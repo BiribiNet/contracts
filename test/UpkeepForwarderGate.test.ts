@@ -20,7 +20,9 @@ async function deploySchedulerStack() {
     ]);
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
+    const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
     const { engine, scheduler } = await deployRouletteEngine(
+        [mockLaneKey, mockLaneKey, mockLaneKey],
         [
             registry.address,
             jackpotTreasury.address,
@@ -28,7 +30,6 @@ async function deploySchedulerStack() {
             admin.account.address,
             vrf.address,
             1n,
-            "0x" + "11".repeat(32),
             2_000_000,
             1,
             500,
@@ -53,8 +54,6 @@ async function deploySchedulerStack() {
         [
             {
                 asset: usdc.address,
-                bankName: "Bank USDC",
-                bankSymbol: "bUSDC",
                 bankAdmin: admin.account.address,
             },
         ],

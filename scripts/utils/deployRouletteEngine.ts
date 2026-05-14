@@ -18,15 +18,24 @@ export type UpkeepSchedulerDeployConfig = {
  * Deploy linked libraries, `RouletteEngine` (immutable `UpkeepScheduler`), then `UpkeepScheduler`.
  * The scheduler address is the default-wallet next CREATE after the engine (computed from nonce).
  *
- * @param engineConstructorArgs `RouletteEngine` constructor args **without** trailing `upkeepScheduler` (11 args).
+ * @param vrfLaneKeyHashes Three Chainlink VRF key hashes (2 / 30 / 150 gwei lanes); engine picks by `tx.gasprice` like legacy `OldRouletteClean`.
+ * @param engineConstructorArgs `RouletteEngine` constructor args **without** trailing `upkeepScheduler` and **without** the packed VRF key tuple:
+ *   `[registry, jackpotTreasury, jackpotFunder, infraRecipient, vrfCoordinator, subscriptionId, callbackGasLimit, confirmations, roundDuration, admin]` (10 args).
  */
 export async function deployRouletteEngine(
+    vrfLaneKeyHashes: readonly [`0x${string}`, `0x${string}`, `0x${string}`],
     engineConstructorArgs: readonly unknown[],
     scheduler: UpkeepSchedulerDeployConfig,
 ) {
     const [deployer] = await viem.getWalletClients();
     const publicClient = await viem.getPublicClient();
     const account = deployer.account;
+
+    if (engineConstructorArgs.length !== 10) {
+        throw new Error(
+            `deployRouletteEngine: expected 10 engineConstructorArgs (registry … admin), got ${engineConstructorArgs.length}`,
+        );
+    }
 
     const rouletteLib = await viem.deployContract("RouletteLib", [], { account });
     const rouletteBetLib = await viem.deployContract("RouletteBetLib", [], { account });
@@ -51,9 +60,21 @@ export async function deployRouletteEngine(
         nonce: nonceBeforeEngine + 1n,
     });
 
+    const vrfTuple = {
+        keyHash2Gwei: vrfLaneKeyHashes[0],
+        keyHash30Gwei: vrfLaneKeyHashes[1],
+        keyHash150Gwei: vrfLaneKeyHashes[2],
+    };
+
+    const engineArgs = [
+        ...engineConstructorArgs.slice(0, 6),
+        vrfTuple,
+        ...engineConstructorArgs.slice(6),
+    ];
+
     const engine = await viem.deployContract(
         "RouletteEngine",
-        [...engineConstructorArgs, upkeepSchedulerAddress] as never,
+        [...engineArgs, upkeepSchedulerAddress] as never,
         {
             account,
             libraries: {
@@ -78,5 +99,16 @@ export async function deployRouletteEngine(
         );
     }
 
-    return { engine, scheduler: schedulerContract };
+    return {
+        engine,
+        scheduler: schedulerContract,
+        linkedLibraries: {
+            rouletteLib: rouletteLib.address,
+            rouletteBetLib: rouletteBetLib.address,
+            jackpotBatchLib: jackpotBatchLib.address,
+            roulettePayoutMulLib: roulettePayoutMulLib.address,
+            rouletteLiabilityMathLib: rouletteLiabilityMathLib.address,
+            rouletteBetCodecLib: rouletteBetCodecLib.address,
+        },
+    };
 }

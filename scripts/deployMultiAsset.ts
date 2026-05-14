@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import { viem } from "hardhat";
-import { isAddress, parseUnits } from "viem";
+import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 
@@ -16,6 +16,8 @@ function optionalAddressEnv(name: string, raw: string | undefined): `0x${string}
 
 async function main() {
     const [deployer] = await viem.getWalletClients();
+    const publicClient = await viem.getPublicClient();
+    if (!deployer.account) throw new Error("Deployer wallet has no account");
 
     const vrfCoordinator = process.env.VRF_COORDINATOR as `0x${string}` | undefined;
     const linkToken = process.env.LINK_TOKEN as `0x${string}` | undefined;
@@ -84,7 +86,9 @@ async function main() {
 
     const registry = await viem.deployContract("MarketRegistry", [deployer.account.address]);
 
+    const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
     const { engine, scheduler } = await deployRouletteEngine(
+        [mockLaneKey, mockLaneKey, mockLaneKey],
         [
             registry.address,
             jackpotTreasury.address,
@@ -92,7 +96,6 @@ async function main() {
             infraRecipient,
             vrfCoordinator,
             1n,
-            "0x" + "11".repeat(32),
             2_000_000,
             3,
             60,
@@ -127,16 +130,12 @@ async function main() {
     await registry.write.createMarket([
         {
             asset: assetA,
-            bankName: "Biribi Asset A Bank",
-            bankSymbol: "bASA",
             bankAdmin: deployer.account.address,
         },
     ]);
     await registry.write.createMarket([
         {
             asset: assetB,
-            bankName: "Biribi Asset B Bank",
-            bankSymbol: "bASB",
             bankAdmin: deployer.account.address,
         },
     ]);
@@ -148,6 +147,17 @@ async function main() {
         const brbContract = await viem.getContractAt("BRBToken", brb);
         await brbContract.write.transfer([router, parseUnits("1000000", 18)]);
     }
+
+    const erc20ApproveAbi = parseAbi(["function approve(address spender, uint256 amount) external returns (bool)"]);
+    const approveHash = await deployer.writeContract({
+        address: linkToken,
+        abi: erc20ApproveAbi,
+        functionName: "approve",
+        args: [upkeepManager.address, maxUint256],
+        account: deployer.account,
+        chain: publicClient.chain,
+    });
+    await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
     await upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
     await upkeepManager.write.registerLaneUpkeep([1n, 1_800_000, parseUnits("1", 18), deployer.account.address]);

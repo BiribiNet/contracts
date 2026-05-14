@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { BankVault4626 } from "./BankVault4626.sol";
@@ -66,6 +67,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     }
 
     /// @dev Call `setVaultBeacon` and `setEngine` before any `createMarket`. Setters enforce non-zero values; this function does not repeat those checks.
+    /// @dev Vault share `name` is `BRB ` + asset `name()`, share `symbol` is `brb` + asset `symbol()` (via `IERC20Metadata`).
     function createMarket(CreateMarketParams calldata params)
         external
         onlyRole(MARKET_FACTORY_ROLE)
@@ -73,13 +75,17 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     {
         if (params.asset == address(0) || params.bankAdmin == address(0)) revert ZeroAddress();
 
+        IERC20Metadata assetMeta = IERC20Metadata(params.asset);
+        string memory bankName = string.concat("BRB ", assetMeta.name());
+        string memory bankSymbol = string.concat("brb", assetMeta.symbol());
+
         uint32 nextId = _marketCount + 1;
         address beacon = vaultBeacon;
         address engine = ENGINE;
         VaultInit memory p;
         p.asset = params.asset;
-        p.bankName = params.bankName;
-        p.bankSymbol = params.bankSymbol;
+        p.bankName = bankName;
+        p.bankSymbol = bankSymbol;
         p.marketId = nextId;
         p.engine = engine;
         p.bankAdmin = params.bankAdmin;

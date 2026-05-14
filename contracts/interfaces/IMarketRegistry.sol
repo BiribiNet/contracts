@@ -9,8 +9,6 @@ interface IMarketRegistry {
 
     struct CreateMarketParams {
         address asset;
-        string bankName;
-        string bankSymbol;
         address bankAdmin;
     }
 

@@ -80,6 +80,13 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         uint256 payoutsCount;
     }
 
+    /// @dev Packed constructor arg for the three Chainlink VRF gas-lane key hashes (legacy `OldRouletteClean` tiers).
+    struct VrfLaneKeyHashes {
+        bytes32 keyHash2Gwei;
+        bytes32 keyHash30Gwei;
+        bytes32 keyHash150Gwei;
+    }
+
     /// @dev Carries traversal state across bucket sweeps (`gPos`: global ordinal in flattened winner stream).
     struct PayoutSweepCtx {
         uint64 rid;
@@ -125,7 +132,9 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     uint256 private constant JACKPOT_RATIO_SCALE = 1e18;
     VRFCoordinatorV2Interface public immutable VRF_COORDINATOR;
     uint256 public immutable VRF_SUBSCRIPTION_ID;
-    bytes32 public immutable VRF_KEY_HASH;
+    bytes32 public immutable VRF_KEY_HASH_2_GWEI;
+    bytes32 public immutable VRF_KEY_HASH_30_GWEI;
+    bytes32 public immutable VRF_KEY_HASH_150_GWEI;
     uint32 public immutable VRF_CALLBACK_GAS_LIMIT;
     uint16 public immutable VRF_CONFIRMATIONS;
     uint32 public immutable ROUND_DURATION;
@@ -249,7 +258,7 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         address infraRecipient,
         address vrfCoordinator,
         uint256 subscriptionId,
-        bytes32 keyHash,
+        VrfLaneKeyHashes memory vrfLaneKeyHashes,
         uint32 callbackGasLimit,
         uint16 confirmations,
         uint32 roundDuration,
@@ -269,7 +278,9 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         UPKEEP_SCHEDULER = upkeepScheduler;
         VRF_COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
         VRF_SUBSCRIPTION_ID = subscriptionId;
-        VRF_KEY_HASH = keyHash;
+        VRF_KEY_HASH_2_GWEI = vrfLaneKeyHashes.keyHash2Gwei;
+        VRF_KEY_HASH_30_GWEI = vrfLaneKeyHashes.keyHash30Gwei;
+        VRF_KEY_HASH_150_GWEI = vrfLaneKeyHashes.keyHash150Gwei;
         VRF_CALLBACK_GAS_LIMIT = callbackGasLimit;
         VRF_CONFIRMATIONS = confirmations;
         ROUND_DURATION = roundDuration;
@@ -563,8 +574,11 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         roundPhase[roundId] = RoundPhase.Settling;
         _activeVrfRound = roundId;
 
+        bytes32 keyHash = tx.gasprice < 2 gwei
+            ? VRF_KEY_HASH_2_GWEI
+            : tx.gasprice < 30 gwei ? VRF_KEY_HASH_30_GWEI : VRF_KEY_HASH_150_GWEI;
         uint256 req = VRF_COORDINATOR.requestRandomWords(
-            VRF_KEY_HASH,
+            keyHash,
             uint64(VRF_SUBSCRIPTION_ID),
             VRF_CONFIRMATIONS,
             VRF_CALLBACK_GAS_LIMIT,
@@ -701,7 +715,7 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         if (swapIn > 0) {
             address asset = IERC4626(bank).asset();
             IBankVault(bank).transferOut(address(JACKPOT_FUNDER), swapIn);
-            JACKPOT_FUNDER.fundFromMarket(marketId, asset, marketWin);
+            JACKPOT_FUNDER.fundFromMarket(marketId, asset);
             emit JackpotFunded(roundId, marketId, swapIn);
         }
         uint256 infraFee = (marketWin * INFRA_BPS) / 10_000;
@@ -1290,25 +1304,23 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     }
 
     function _bufferedMarketMaxLiability(uint64 rid, uint32 mid) private view returns (uint256) {
-        return RouletteLiabilityMathLib.bufferedMarketMaxLiability(
-            RouletteLiabilityMathLib.Inputs({
-                maxStraightBet: roundMaxStraightBet[rid][mid],
-                maxStreetBet: roundMaxStreetBet[rid][mid],
-                redSum: roundRedBetsSum[rid][mid],
-                blackSum: roundBlackBetsSum[rid][mid],
-                oddSum: roundOddBetsSum[rid][mid],
-                evenSum: roundEvenBetsSum[rid][mid],
-                lowSum: roundLowBetsSum[rid][mid],
-                highSum: roundHighBetsSum[rid][mid],
-                dozen1: roundDozenBetsSum[rid][mid][1],
-                dozen2: roundDozenBetsSum[rid][mid][2],
-                dozen3: roundDozenBetsSum[rid][mid][3],
-                col1: roundColumnBetsSum[rid][mid][1],
-                col2: roundColumnBetsSum[rid][mid][2],
-                col3: roundColumnBetsSum[rid][mid][3],
-                otherBetsWeightedPayout: roundOtherBetsWeightedPayout[rid][mid]
-            })
-        );
+        RouletteLiabilityMathLib.Inputs memory liab;
+        liab.maxStraightBet = roundMaxStraightBet[rid][mid];
+        liab.maxStreetBet = roundMaxStreetBet[rid][mid];
+        liab.redSum = roundRedBetsSum[rid][mid];
+        liab.blackSum = roundBlackBetsSum[rid][mid];
+        liab.oddSum = roundOddBetsSum[rid][mid];
+        liab.evenSum = roundEvenBetsSum[rid][mid];
+        liab.lowSum = roundLowBetsSum[rid][mid];
+        liab.highSum = roundHighBetsSum[rid][mid];
+        liab.dozen1 = roundDozenBetsSum[rid][mid][1];
+        liab.dozen2 = roundDozenBetsSum[rid][mid][2];
+        liab.dozen3 = roundDozenBetsSum[rid][mid][3];
+        liab.col1 = roundColumnBetsSum[rid][mid][1];
+        liab.col2 = roundColumnBetsSum[rid][mid][2];
+        liab.col3 = roundColumnBetsSum[rid][mid][3];
+        liab.otherBetsWeightedPayout = roundOtherBetsWeightedPayout[rid][mid];
+        return RouletteLiabilityMathLib.bufferedMarketMaxLiability(liab);
     }
 
 }

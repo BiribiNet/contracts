@@ -12,28 +12,32 @@ interface IERC20BurnFromSelf {
     function burn(uint256 value) external;
 }
 
-/// @notice Swaps a slice of per-round market profit (in market asset) to BRB via Uniswap V2; splits BRB between jackpot treasury and on-chain burn (reduces total supply).
+/// @notice Swaps the contract's current `asset` balance to BRB via Uniswap V2 (when `asset != brb`); splits BRB between jackpot treasury and on-chain burn (reduces total supply).
+/// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send.
 contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
     bytes32 public constant FUNDER_ADMIN_ROLE = keccak256("FUNDER_ADMIN_ROLE");
+
+    /// @dev Skip reason: router `swapExactTokensForTokens` reverted (liquidity, path, deadline, etc.).
+    uint8 public constant SKIP_SWAP_REVERTED = 2;
 
     address public engine;
     IERC20 public immutable brb;
     IUniswapV2Router02 public immutable router;
     address public immutable jackpotTreasury;
 
-    /// @notice BPS of `marketWin` used as swap input (e.g. 300 = 3%).
+    /// @notice BPS the engine uses against per-round profit to size `transferOut` before `fundFromMarket` (e.g. 300 = 3%). Not read here to size the swap input.
     uint256 public override swapAssetTotalBps;
 
     /// @notice After swap, BRB sent to treasury = `brbOut * treasuryBrbNumerator / treasuryBrbDenominator` (e.g. 250/300).
     uint256 public treasuryBrbNumerator;
     uint256 public treasuryBrbDenominator;
 
-    /// @notice Slippage guard on min BRB out: minOut *= (10_000 - slippageBps) / 10_000.
+    /// @notice Reserved for future policy; swaps use `amountOutMin = 0` so upkeep is not bricked by pool moves.
     uint256 public slippageBps;
 
-    /// @notice Expected BRB wei per 1 asset wei (1e18 scale) for min-out sanity bound per market.
+    /// @notice Optional metadata / off-chain jackpot parity (decimals across assets); not read in `fundFromMarket`.
     mapping(uint32 => uint256) public brbPerAssetUnitRatio;
 
     uint256 public constant RATIO_SCALE = 1e18;
@@ -44,16 +48,17 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     error EngineAlreadySet();
     error InvalidBps();
     error RatioNotSet();
-    error AssetBrbMismatch();
 
     event SwapAssetBpsUpdated(uint256 totalBps);
     event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
     event SlippageBpsUpdated(uint256 slippageBps);
     event BrbRatioUpdated(uint32 marketId, uint256 ratioPerAssetUnit);
+    event FundFromMarketSkipped(uint32 indexed marketId, address indexed asset, uint8 reason);
+    event JackpotTreasuryTransferFailed(uint32 indexed marketId, address indexed treasury, uint256 amount);
+    event JackpotBurnFailed(uint32 indexed marketId, uint256 amount);
     event FundedFromMarket(
         uint32 marketId,
         address asset,
-        uint256 marketWin,
         uint256 assetSwapped,
         uint256 brbOut,
         uint256 brbToTreasury,
@@ -125,27 +130,15 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     }
 
     /// @inheritdoc IBRBJackpotFunder
-    function fundFromMarket(uint32 marketId, address asset, uint256 marketWin) external override onlyEngine {
-        if (marketWin == 0) return;
-
-        uint256 swapIn = (marketWin * swapAssetTotalBps) / BPS_DENOM;
-        if (swapIn == 0) return;
-
+    function fundFromMarket(uint32 marketId, address asset) external override onlyEngine {
         IERC20 assetToken = IERC20(asset);
-        uint256 bal = assetToken.balanceOf(address(this));
-        if (bal < swapIn) revert AssetBrbMismatch();
+        uint256 swapIn = assetToken.balanceOf(address(this));
+        if (swapIn == 0) return;
 
         uint256 brbOut;
         if (asset == address(brb)) {
-            // Native BRB bank: `swapExactTokensForTokens(BRB, BRB, ...)` is invalid / pointless.
             brbOut = swapIn;
         } else {
-            uint256 ratio = brbPerAssetUnitRatio[marketId];
-            if (ratio == 0) revert RatioNotSet();
-
-            uint256 minBrbOut = (swapIn * ratio) / RATIO_SCALE;
-            minBrbOut = (minBrbOut * (BPS_DENOM - slippageBps)) / BPS_DENOM;
-
             address[] memory path = new address[](2);
             path[0] = asset;
             path[1] = address(brb);
@@ -153,21 +146,49 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
             assetToken.forceApprove(address(router), swapIn);
 
             uint256 brbBefore = brb.balanceOf(address(this));
-            router.swapExactTokensForTokens(swapIn, minBrbOut, path, address(this), block.timestamp + 600);
-            brbOut = brb.balanceOf(address(this)) - brbBefore;
+            try router.swapExactTokensForTokens(
+                swapIn,
+                0,
+                path,
+                address(this),
+                block.timestamp + 600
+            ) returns (uint256[] memory) {
+                brbOut = brb.balanceOf(address(this)) - brbBefore;
+            } catch {
+                emit FundFromMarketSkipped(marketId, asset, SKIP_SWAP_REVERTED);
+                brbOut = 0;
+            }
+
             assetToken.forceApprove(address(router), 0);
         }
+
+        if (brbOut == 0) return;
 
         uint256 toTreasury = (brbOut * treasuryBrbNumerator) / treasuryBrbDenominator;
         uint256 toBurn = brbOut - toTreasury;
 
+        uint256 sentTreasury;
         if (toTreasury > 0) {
-            brb.safeTransfer(jackpotTreasury, toTreasury);
-        }
-        if (toBurn > 0) {
-            IERC20BurnFromSelf(address(brb)).burn(toBurn);
+            try brb.transfer(jackpotTreasury, toTreasury) returns (bool ok) {
+                if (ok) {
+                    sentTreasury = toTreasury;
+                } else {
+                    emit JackpotTreasuryTransferFailed(marketId, jackpotTreasury, toTreasury);
+                }
+            } catch {
+                emit JackpotTreasuryTransferFailed(marketId, jackpotTreasury, toTreasury);
+            }
         }
 
-        emit FundedFromMarket(marketId, asset, marketWin, swapIn, brbOut, toTreasury, toBurn);
+        uint256 burnedAmt;
+        if (toBurn > 0) {
+            try IERC20BurnFromSelf(address(brb)).burn(toBurn) {
+                burnedAmt = toBurn;
+            } catch {
+                emit JackpotBurnFailed(marketId, toBurn);
+            }
+        }
+
+        emit FundedFromMarket(marketId, asset, swapIn, brbOut, sentTreasury, burnedAmt);
     }
 }

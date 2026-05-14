@@ -10,6 +10,13 @@ contract MockUniswapV2Router {
 
     uint256 public constant BRB_PER_ASSET_UNIT = 1e12;
 
+    /// @dev Test hook: when true, swap reverts (e.g. funder try/catch paths).
+    bool public forceRevertSwap;
+
+    function setForceRevertSwap(bool on) external {
+        forceRevertSwap = on;
+    }
+
     function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -17,6 +24,7 @@ contract MockUniswapV2Router {
         address to,
         uint256
     ) external returns (uint256[] memory amounts) {
+        if (forceRevertSwap) revert();
         IERC20 asset = IERC20(path[0]);
         IERC20 brb = IERC20(path[path.length - 1]);
         asset.safeTransferFrom(msg.sender, address(this), amountIn);

@@ -31,7 +31,9 @@ describe("Coverage gaps", function () {
             treasury.address,
             admin.account.address,
         ]);
+        const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
         const { engine, scheduler } = await deployRouletteEngine(
+            [mockLaneKey, mockLaneKey, mockLaneKey],
             [
                 registry.address,
                 treasury.address,
@@ -39,7 +41,6 @@ describe("Coverage gaps", function () {
                 admin.account.address,
                 vrf.address,
                 1n,
-                "0x" + "11".repeat(32),
                 2_000_000,
                 1,
                 500,
@@ -58,8 +59,6 @@ describe("Coverage gaps", function () {
             [
                 {
                     asset: token.address,
-                    bankName: "Bank",
-                    bankSymbol: "b",
                     bankAdmin: admin.account.address,
                 },
             ],
@@ -241,7 +240,9 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+        const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
         const { engine, scheduler } = await deployRouletteEngine(
+            [mockLaneKey, mockLaneKey, mockLaneKey],
             [
                 registry.address,
                 treasury.address,
@@ -249,7 +250,6 @@ describe("Coverage gaps", function () {
                 admin.account.address,
                 vrf.address,
                 1n,
-                "0x" + "11".repeat(32),
                 2_000_000,
                 1,
                 500,
@@ -268,8 +268,6 @@ describe("Coverage gaps", function () {
             [
                 {
                     asset: usdc.address,
-                    bankName: "Bank",
-                    bankSymbol: "b",
                     bankAdmin: admin.account.address,
                 },
             ],
@@ -303,7 +301,9 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+        const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
         const { engine, scheduler } = await deployRouletteEngine(
+            [mockLaneKey, mockLaneKey, mockLaneKey],
             [
                 registry.address,
                 treasury.address,
@@ -311,7 +311,6 @@ describe("Coverage gaps", function () {
                 admin.account.address,
                 vrf.address,
                 1n,
-                "0x" + "11".repeat(32),
                 2_000_000,
                 1,
                 500,
@@ -330,8 +329,6 @@ describe("Coverage gaps", function () {
             [
                 {
                     asset: usdc.address,
-                    bankName: "Bank",
-                    bankSymbol: "b",
                     bankAdmin: admin.account.address,
                 },
             ],
@@ -366,7 +363,9 @@ describe("Coverage gaps", function () {
             admin.account.address,
         ]);
         const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+        const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
         const { engine, scheduler } = await deployRouletteEngine(
+            [mockLaneKey, mockLaneKey, mockLaneKey],
             [
                 registry.address,
                 treasury.address,
@@ -374,7 +373,6 @@ describe("Coverage gaps", function () {
                 admin.account.address,
                 vrf.address,
                 1n,
-                "0x" + "11".repeat(32),
                 2_000_000,
                 1,
                 500,
@@ -394,8 +392,6 @@ describe("Coverage gaps", function () {
             [
                 {
                     asset: usdc.address,
-                    bankName: "Bank",
-                    bankSymbol: "b",
                     bankAdmin: admin.account.address,
                 },
             ],

@@ -34,7 +34,9 @@ async function deployStack() {
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
 
+    const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
     const { engine, scheduler } = await deployRouletteEngine(
+        [mockLaneKey, mockLaneKey, mockLaneKey],
         [
             registry.address,
             jackpotTreasury.address,
@@ -42,7 +44,6 @@ async function deployStack() {
             admin.account.address,
             vrf.address,
             1n,
-            "0x" + "11".repeat(32),
             2_000_000,
             1,
             500,
@@ -69,8 +70,6 @@ async function deployStack() {
         [
             {
                 asset: usdc.address,
-                bankName: "Bank USDC",
-                bankSymbol: "bUSDC",
                 bankAdmin: admin.account.address,
             },
         ],
@@ -80,8 +79,6 @@ async function deployStack() {
         [
             {
                 asset: assetB.address,
-                bankName: "Bank Asset B",
-                bankSymbol: "bASB",
                 bankAdmin: admin.account.address,
             },
         ],
@@ -140,6 +137,14 @@ async function depositLpForStraightCover(
 }
 
 describe("Multi-Asset architecture", function () {
+    it("derives vault share name and symbol from the asset ERC-20 metadata", async function () {
+        const { bankUsdc, usdc } = await deployStack();
+        const assetName = await usdc.read.name();
+        const assetSymbol = await usdc.read.symbol();
+        expect(await bankUsdc.read.name()).to.equal(`BRB ${assetName}`);
+        expect(await bankUsdc.read.symbol()).to.equal(`brb${assetSymbol}`);
+    });
+
     it("keeps fixed upkeep surface while handling multiple markets", async function () {
         const { scheduler, bankUsdc, bankAssetB, alice, bob, admin, publicClient, usdc, assetB } = await deployStack();
         await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);

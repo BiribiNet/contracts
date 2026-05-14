@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import { viem } from "hardhat";
-import { isAddress, parseAbi, parseUnits } from "viem";
+import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
@@ -12,7 +12,7 @@ import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithL
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` and `hardhat vars set SEPOLIA_RPC_URL` (see hardhat.network.ts)
- * - LINK on the deployer for `registerLaneUpkeep` (UpkeepManager approves the registrar max)
+ * - LINK on the deployer for `registerLaneUpkeep` (manager uses `transferFrom` from deployer; script `approve`s the manager)
  * - Sufficient Sepolia ETH for gas
  *
  * Run: `yarn deploy:protocol:sepolia`
@@ -26,7 +26,9 @@ import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithL
  * Env (optional overrides — defaults follow Chainlink + common Sepolia test tokens):
  * - VRF_SUBSCRIPTION_ID: omit to auto-create a subscription on the coordinator
  * - VRF_INITIAL_LINK_JUELS: optional LINK (Juels) to fund the subscription
- * - LINK_TOKEN, VRF_COORDINATOR, KEEPER_REGISTRAR, KEEPER_REGISTRY, VRF_KEY_HASH
+ * - LINK_TOKEN, VRF_COORDINATOR, KEEPER_REGISTRAR, KEEPER_REGISTRY
+ * - VRF_KEY_HASH (optional legacy: used as default for all three lanes when lane-specific vars unset)
+ * - VRF_KEY_HASH_2_GWEI, VRF_KEY_HASH_30_GWEI, VRF_KEY_HASH_150_GWEI (engine picks by `tx.gasprice`, same tiers as legacy roulette)
  * - USDC_TOKEN, DAI_TOKEN
  * - BRB_TOKEN (omit to deploy new BRBToken minted to deployer)
  * - UNISWAP_V2_ROUTER
@@ -39,7 +41,7 @@ const SEPOLIA_CHAIN_ID = 11155111n;
 /** Chainlink docs: VRF v2.5 subscription on Ethereum Sepolia */
 const DEFAULT_LINK = "0x779877A7B0D9E8603169DdbD7836e478b4624789" as const;
 const DEFAULT_VRF_COORDINATOR = "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B" as const;
-/** 500 gwei key — see Chainlink VRF supported networks (Sepolia subscription) */
+/** Sepolia subscription 500 gwei lane — see Chainlink VRF supported networks; used as default for each tier when unset. */
 const DEFAULT_VRF_KEY_HASH =
     "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae" as const;
 /** Chainlink Automation v2.1 on Ethereum Sepolia */
@@ -88,6 +90,21 @@ function envBytes32Or(name: string, fallback: `0x${string}`): `0x${string}` {
     return raw as `0x${string}`;
 }
 
+function vrfKeyHashTriple(): readonly [`0x${string}`, `0x${string}`, `0x${string}`] {
+    const legacy = process.env.VRF_KEY_HASH?.trim();
+    const legacyOk =
+        legacy &&
+        legacy.startsWith("0x") &&
+        legacy.length === 66 &&
+        /^0x[0-9a-fA-F]{64}$/.test(legacy);
+    const laneDefault = (legacyOk ? (legacy as `0x${string}`) : DEFAULT_VRF_KEY_HASH);
+    return [
+        envBytes32Or("VRF_KEY_HASH_2_GWEI", laneDefault),
+        envBytes32Or("VRF_KEY_HASH_30_GWEI", laneDefault),
+        envBytes32Or("VRF_KEY_HASH_150_GWEI", laneDefault),
+    ] as const;
+}
+
 async function main() {
     const publicClient = await viem.getPublicClient();
     const walletClients = await viem.getWalletClients();
@@ -95,6 +112,14 @@ async function main() {
     if (BigInt(chainId) !== SEPOLIA_CHAIN_ID) {
         throw new Error(`This script targets Ethereum Sepolia (11155111). Current chainId: ${chainId}`);
     }
+
+    const waitWrite = async (hashPromise: Promise<`0x${string}`>) => {
+        const hash = await hashPromise;
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") {
+            throw new Error(`Transaction reverted (hash ${hash})`);
+        }
+    };
 
     const [deployer] = walletClients;
     if (!deployer.account) throw new Error("Deployer wallet has no account");
@@ -133,7 +158,7 @@ async function main() {
         await vrfFundSubscriptionWithLink(deployer, publicClient, linkToken, vrfCoordinator, vrfSubscriptionId, vrfInitialLinkJuels);
         console.log(`Funded VRF subscription with ${vrfInitialLinkJuels.toString()} Juels LINK`);
     }
-    const vrfKeyHash = envBytes32Or("VRF_KEY_HASH", DEFAULT_VRF_KEY_HASH);
+    const [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei] = vrfKeyHashTriple();
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_000_000n));
     const confirmations = Number(envBigIntOr("VRF_CONFIRMATIONS", 3n));
     const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 60n));
@@ -158,7 +183,18 @@ async function main() {
 
     const registry = await viem.deployContract("MarketRegistry", [deployer.account.address]);
 
+    const vaultImpl = await viem.deployContract("BankVault4626");
+    const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
+    await waitWrite(registry.write.setVaultBeacon([beacon.address], { account: deployer.account }));
+    const vaultBeaconOnChain = await registry.read.vaultBeacon();
+    if (vaultBeaconOnChain.toLowerCase() !== beacon.address.toLowerCase()) {
+        throw new Error(
+            `setVaultBeacon did not persist: registry has ${vaultBeaconOnChain}, expected beacon ${beacon.address}. Check deployer is registry admin.`,
+        );
+    }
+
     const { engine, scheduler } = await deployRouletteEngine(
+        [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei],
         [
             registry.address,
             jackpotTreasury.address,
@@ -166,7 +202,6 @@ async function main() {
             infraRecipient,
             vrfCoordinator,
             vrfSubscriptionId,
-            vrfKeyHash,
             callbackGasLimit,
             confirmations,
             roundDuration,
@@ -181,9 +216,9 @@ async function main() {
 
     await vrfAddConsumerIfNeeded(deployer, publicClient, vrfCoordinator, vrfSubscriptionId, engine.address);
 
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address]);
+    await waitWrite(jackpotTreasury.write.setEngine([engine.address], { account: deployer.account }));
+    await waitWrite(funder.write.setEngine([engine.address], { account: deployer.account }));
+    await waitWrite(registry.write.setEngine([engine.address], { account: deployer.account }));
 
     const upkeepManager = await viem.deployContract("UpkeepManager", [
         linkToken,
@@ -197,56 +232,81 @@ async function main() {
     const schedulerForwarderAbi = parseAbi([
         "function setForwarderAuthority(address forwarderAuthority) external",
     ]);
-    await deployer.writeContract({
-        address: scheduler.address,
-        abi: schedulerForwarderAbi,
-        functionName: "setForwarderAuthority",
-        args: [upkeepManager.address],
-        account: deployer.account,
-        chain: publicClient.chain,
-    });
+    await waitWrite(
+        deployer.writeContract({
+            address: scheduler.address,
+            abi: schedulerForwarderAbi,
+            functionName: "setForwarderAuthority",
+            args: [upkeepManager.address],
+            account: deployer.account,
+            chain: publicClient.chain,
+        }),
+    );
 
-    const vaultImpl = await viem.deployContract("BankVault4626");
-    const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
-    await registry.write.setVaultBeacon([beacon.address]);
-
-    await registry.write.createMarket([
-        {
-            asset: usdc,
-            bankName: "Biribi USDC Bank",
-            bankSymbol: "bbiUSDC",
-            bankAdmin: deployer.account.address,
-        },
-    ]);
-    await registry.write.createMarket([
-        {
-            asset: dai,
-            bankName: "Biribi DAI Bank",
-            bankSymbol: "bbiDAI",
-            bankAdmin: deployer.account.address,
-        },
-    ]);
-    await registry.write.createMarket([
-        {
-            asset: brb,
-            bankName: "Biribi BRB Bank",
-            bankSymbol: "bbiBRB",
-            bankAdmin: deployer.account.address,
-        },
-    ]);
+    await waitWrite(
+        registry.write.createMarket(
+            [
+                {
+                    asset: usdc,
+                    bankAdmin: deployer.account.address,
+                },
+            ],
+            { account: deployer.account },
+        ),
+    );
+    await waitWrite(
+        registry.write.createMarket(
+            [
+                {
+                    asset: dai,
+                    bankAdmin: deployer.account.address,
+                },
+            ],
+            { account: deployer.account },
+        ),
+    );
+    await waitWrite(
+        registry.write.createMarket(
+            [
+                {
+                    asset: brb,
+                    bankAdmin: deployer.account.address,
+                },
+            ],
+            { account: deployer.account },
+        ),
+    );
 
     const ratioM1 = envBigIntOr("BRB_RATIO_MARKET_1", 10n ** 30n);
     const ratioM2 = envBigIntOr("BRB_RATIO_MARKET_2", 10n ** 30n);
-    await funder.write.setBrbPerAssetUnitRatio([1n, ratioM1] as never);
-    await funder.write.setBrbPerAssetUnitRatio([2n, ratioM2] as never);
+    await waitWrite(funder.write.setBrbPerAssetUnitRatio([1n, ratioM1] as never));
+    await waitWrite(funder.write.setBrbPerAssetUnitRatio([2n, ratioM2] as never));
 
     const marketUsdc = await registry.read.getMarket([1]);
     const marketDai = await registry.read.getMarket([2]);
     const marketBrb = await registry.read.getMarket([3]);
 
-    await upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
-    await upkeepManager.write.registerLaneUpkeep([1n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
-    await upkeepManager.write.registerLaneUpkeep([2n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
+    const erc20ApproveAbi = parseAbi(["function approve(address spender, uint256 amount) external returns (bool)"]);
+    await waitWrite(
+        deployer.writeContract({
+            address: linkToken,
+            abi: erc20ApproveAbi,
+            functionName: "approve",
+            args: [upkeepManager.address, maxUint256],
+            account: deployer.account,
+            chain: publicClient.chain,
+        }),
+    );
+
+    await waitWrite(
+        upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
+    );
+    await waitWrite(
+        upkeepManager.write.registerLaneUpkeep([1n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
+    );
+    await waitWrite(
+        upkeepManager.write.registerLaneUpkeep([2n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
+    );
 
     console.log("Ethereum Sepolia protocol deployment complete");
     console.log(
@@ -271,7 +331,9 @@ async function main() {
                     subscriptionId: vrfSubscriptionId.toString(),
                     subscriptionCreatedByScript: vrfSubscriptionCreatedByScript,
                     engineRegisteredAsConsumer: true,
-                    keyHash: vrfKeyHash,
+                    keyHash2Gwei: vrfKeyHash2Gwei,
+                    keyHash30Gwei: vrfKeyHash30Gwei,
+                    keyHash150Gwei: vrfKeyHash150Gwei,
                 },
                 nextSteps: [
                     vrfSubscriptionCreatedByScript

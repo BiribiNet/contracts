@@ -3,8 +3,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 /**
  * `RouletteEngine` is wired to a single immutable `UpkeepScheduler` address at construction.
  * Pass the predicted scheduler CREATE address via deployment parameters (see
- * `predictUpkeepSchedulerAddress` in `scripts/utils/deployRouletteEngine.ts`: `libraryDeployCount + 1`
- * CREATEs after the deployer's current nonce, matching `deployRouletteEngine` internals).
+ * `predictUpkeepSchedulerAddress` in `scripts/utils/deployRouletteEngine.ts`: one CREATE after the engine).
  */
 const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitecture", (m) => {
     const admin = m.getAccount(0);
@@ -45,6 +44,13 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
 
     const upkeepScheduler = m.getParameter("upkeepScheduler", "0x0000000000000000000000000000000000000000");
 
+    const mockVrfLaneKey = "0x1111111111111111111111111111111111111111111111111111111111111111";
+    const vrfLaneKeys = {
+        keyHash2Gwei: mockVrfLaneKey,
+        keyHash30Gwei: mockVrfLaneKey,
+        keyHash150Gwei: mockVrfLaneKey,
+    };
+
     const engine = m.contract(
         "RouletteEngine",
         [
@@ -54,7 +60,7 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
             admin,
             mockVrf,
             1n,
-            "0x1111111111111111111111111111111111111111111111111111111111111111",
+            vrfLaneKeys,
             2_000_000,
             1,
             60,
@@ -87,16 +93,12 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
     m.call(registry, "createMarket", [
         {
             asset: assetA,
-            bankName: "Biribi Asset A Bank",
-            bankSymbol: "bASA",
             bankAdmin: admin,
         },
     ]);
     m.call(registry, "createMarket", [
         {
             asset: assetB,
-            bankName: "Biribi Asset B Bank",
-            bankSymbol: "bASB",
             bankAdmin: admin,
         },
     ]);

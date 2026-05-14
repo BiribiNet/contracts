@@ -131,7 +131,9 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
     ]);
 
     const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+    const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
     const { engine, scheduler } = await deployRouletteEngine(
+        [mockLaneKey, mockLaneKey, mockLaneKey],
         [
             registry.address,
             jackpotTreasury.address,
@@ -139,7 +141,6 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
             admin.account.address,
             vrf.address,
             1n,
-            "0x" + "11".repeat(32),
             2_000_000,
             1,
             500,
@@ -165,11 +166,11 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
 
     await registry.write.createMarket(
-        [{ asset: asset0.address, bankName: "Bank A", bankSymbol: "bA", bankAdmin: admin.account.address }],
+        [{ asset: asset0.address, bankAdmin: admin.account.address }],
         { account: admin.account },
     );
     await registry.write.createMarket(
-        [{ asset: asset1.address, bankName: "Bank B", bankSymbol: "bB", bankAdmin: admin.account.address }],
+        [{ asset: asset1.address, bankAdmin: admin.account.address }],
         { account: admin.account },
     );
 
