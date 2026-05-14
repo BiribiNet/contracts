@@ -15,9 +15,9 @@ interface IERC20BurnFromSelf {
 /// @notice Swaps the contract's current `asset` balance to BRB via Uniswap V2 (when `asset != brb`); splits BRB between jackpot treasury and on-chain burn (reduces total supply).
 /// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send.
 ///
-/// Audit fixes vs initial `markets`-branch implementation:
-/// - C-1: slippage protection — `amountOutMin` is now derived from an on-chain quote (`getAmountsOut`) bounded by the existing `slippageBps` (default 100 bps).
-///   Bypass available via admin-set `bypassSlippageCheck` for emergency drain only.
+/// Audit fixes (Critical + High) vs initial `markets`-branch implementation:
+/// - C-1: on-chain quote (`getAmountsOut`) and `slippageBps` are now wired into `amountOutMin`. An emergency `bypassSlippageCheck` flag preserves the legacy 0-min behaviour for stuck-queue recovery.
+/// - H-5: `engine` is required non-zero at deploy time and stored `immutable`; the one-shot `setEngine` pattern is removed.
 contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
@@ -28,7 +28,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// @dev Skip reason: `getAmountsOut` quote reverted; cannot price `amountOutMin` safely.
     uint8 public constant SKIP_PRICE_QUOTE = 3;
 
-    address public engine;
+    address public immutable engine;
     IERC20 public immutable brb;
     IUniswapV2Router02 public immutable router;
     address public immutable jackpotTreasury;
@@ -54,7 +54,6 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
     error ZeroAddress();
     error OnlyEngine();
-    error EngineAlreadySet();
     error InvalidBps();
     error RatioNotSet();
 
@@ -82,7 +81,13 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         address jackpotTreasury_,
         address admin
     ) {
-        if (brb_ == address(0) || router_ == address(0) || jackpotTreasury_ == address(0) || admin == address(0)) {
+        if (
+            engine_ == address(0)
+                || brb_ == address(0)
+                || router_ == address(0)
+                || jackpotTreasury_ == address(0)
+                || admin == address(0)
+        ) {
             revert ZeroAddress();
         }
         engine = engine_;
@@ -96,12 +101,6 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         treasuryBrbNumerator = 250;
         treasuryBrbDenominator = 300;
         slippageBps = 100;
-    }
-
-    function setEngine(address engine_) external onlyRole(FUNDER_ADMIN_ROLE) {
-        if (engine_ == address(0)) revert ZeroAddress();
-        if (engine != address(0)) revert EngineAlreadySet();
-        engine = engine_;
     }
 
     modifier onlyEngine() {
