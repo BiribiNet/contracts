@@ -15,6 +15,41 @@ Conventions:
 
 ---
 
+## Status (post-fix branch)
+
+The original audit landed on `master` at `aed80386`. Follow-up fixes for every
+Critical and High finding were pushed on `claude/biribi-project-prompts-SWffc`
+(commits prefixed `fix(...)`). **Source-only** fixes are in the codebase now;
+fixes flagged **redeploy** require the migration sequence documented in
+[`DEPLOY-NOTES.md`](./DEPLOY-NOTES.md).
+
+| ID   | Severity  | Status                       | Migration class      | Fix commit                         |
+|------|-----------|------------------------------|----------------------|------------------------------------|
+| C-1  | Critical  | ✅ source patched            | redeploy funder      | `fix(funder): C-1`                 |
+| C-2  | Critical  | ✅ source patched            | beacon upgrade       | `fix(vault): C-2`                  |
+| C-3  | Critical  | ✅ source patched            | beacon upgrade       | `fix(vault): C-3`                  |
+| C-4  | Critical  | ✅ source patched            | redeploy engine      | `fix(engine): C-4`                 |
+| H-1  | High      | ✅ source patched            | redeploy engine      | `fix(engine): H-1`                 |
+| H-2  | High      | ✅ source patched            | redeploy engine      | `fix(engine): H-2`                 |
+| H-3  | High      | ✅ source patched            | redeploy scheduler   | `fix(scheduler): H-3`              |
+| H-4  | High      | 📄 doc-only enforcement     | ops play             | `fix(registry): H-4`               |
+| H-5  | High      | ✅ source patched            | redeploy funder+tr.  | `fix(funder/treasury): H-5`        |
+| H-6  | High      | 📄 doc-only                  | ops play             | `DEPLOY-NOTES.md`                  |
+| H-7  | High      | ✅ source patched            | redeploy engine      | `fix(engine): H-7`                 |
+| H-8  | High      | ✅ source patched            | redeploy registry    | `fix(registry): H-8`               |
+| H-9  | High      | ✅ source patched            | beacon upgrade       | `fix(vault): H-9`                  |
+| H-10 | High      | 🚧 subgraph PR              | subgraph rewrite     | prompt 2 (separate PR)             |
+| H-11 | High      | ✅ source patched            | beacon upgrade       | `fix(vault): H-11`                 |
+| H-12 | High      | ✅ source patched            | redeploy timelock    | `fix(timelock): H-12`              |
+
+Legend: ✅ source-only fix landed · 🚧 in-flight on another branch / repo ·
+📄 doc-only enforcement (no source change useful, operational play).
+
+Medium and Low findings are not addressed in this branch; they are tracked
+for future cleanup PRs.
+
+---
+
 ## Critical
 
 ### C-1 — Sandwich attack on jackpot funding (zero slippage)
