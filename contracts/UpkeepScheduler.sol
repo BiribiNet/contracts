@@ -8,6 +8,13 @@ import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IUpkeepForwarderAuthority } from "./interfaces/IUpkeepForwarderAuthority.sol";
 import { IUpkeepScheduler } from "./interfaces/IUpkeepScheduler.sol";
 
+/// @notice Chainlink Automation entrypoint that drives the engine's job lifecycle.
+///
+/// Audit fixes (Critical + High) vs initial `markets`-branch implementation:
+/// - H-3: `forwarderAuthority == address(0)` no longer opens `performUpkeep` to anyone in
+///   production. The legacy “any caller” behaviour is preserved behind an explicit
+///   `devMode` flag (default `false`, admin-only) so local tests stay convenient while
+///   production deploys cannot leak by omission.
 contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkeepScheduler {
     bytes32 public constant SCHEDULER_ADMIN_ROLE = keccak256("SCHEDULER_ADMIN_ROLE");
 
@@ -17,18 +24,27 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
 
     mapping(uint256 lane => uint32 cursor) public laneCursor;
 
-    /// @dev `address(0)` = any caller (tests / local tooling). Non-zero `forwarderAuthority`: only approved Automation forwarders.
+    /// @dev Production: must be set to the `UpkeepManager` (or any contract implementing
+    /// `IUpkeepForwarderAuthority`). When `address(0)`, `performUpkeep` reverts unless
+    /// `devMode` is explicitly enabled.
     address public forwarderAuthority;
+
+    /// @notice When `true`, `performUpkeep` accepts any caller (tests / local tooling).
+    /// MUST NOT be enabled in production — the operator should leave it `false` and
+    /// instead call `setForwarderAuthority(UpkeepManager)` once before going live.
+    bool public devMode;
 
     error ZeroAddress();
     error InvalidScanLimit();
     error InvalidMaxPayoutsPerCall();
     error UnauthorizedAutomationForwarder();
+    error ForwarderAuthorityNotSet();
 
     event ScanLimitUpdated(uint32 newScanLimit);
     event MaxPayoutsPerCallUpdated(uint32 newMaxPayoutsPerCall);
     event LaneCursorAdvanced(uint256 lane, uint32 previousCursor, uint32 newCursor);
     event ForwarderAuthorityUpdated(address authority);
+    event DevModeToggled(bool enabled);
 
     constructor(address engine, address admin, uint32 initialScanLimit, uint32 initialMaxPayoutsPerCall) {
         if (engine == address(0) || admin == address(0)) revert ZeroAddress();
@@ -44,11 +60,15 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     }
 
     modifier onlyApprovedAutomationForwarder() {
+        if (devMode) {
+            // Test/tooling escape hatch — must be explicitly enabled.
+            _;
+            return;
+        }
         address auth = forwarderAuthority;
-        if (auth != address(0)) {
-            if (!IUpkeepForwarderAuthority(auth).isApprovedAutomationForwarder(msg.sender)) {
-                revert UnauthorizedAutomationForwarder();
-            }
+        if (auth == address(0)) revert ForwarderAuthorityNotSet();
+        if (!IUpkeepForwarderAuthority(auth).isApprovedAutomationForwarder(msg.sender)) {
+            revert UnauthorizedAutomationForwarder();
         }
         _;
     }
@@ -56,6 +76,11 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     function setForwarderAuthority(address newAuthority) external onlyRole(SCHEDULER_ADMIN_ROLE) {
         forwarderAuthority = newAuthority;
         emit ForwarderAuthorityUpdated(newAuthority);
+    }
+
+    function setDevMode(bool enabled) external onlyRole(SCHEDULER_ADMIN_ROLE) {
+        devMode = enabled;
+        emit DevModeToggled(enabled);
     }
 
     function setScanLimit(uint32 newScanLimit) external onlyRole(SCHEDULER_ADMIN_ROLE) {

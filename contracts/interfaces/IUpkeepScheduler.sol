@@ -8,7 +8,11 @@ interface IUpkeepScheduler {
 
     function setForwarderAuthority(address newAuthority) external;
 
+    function setDevMode(bool enabled) external;
+
     function forwarderAuthority() external view returns (address);
+
+    function devMode() external view returns (bool);
 
     function scanLimit() external view returns (uint32);
 
