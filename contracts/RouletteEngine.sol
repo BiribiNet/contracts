@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { VRFCoordinatorV2Interface } from "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
 import { VRFConsumerBaseV2 } from "./external/VRFConsumerBaseV2.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
@@ -19,7 +20,18 @@ import { JackpotBatchLib } from "./libraries/JackpotBatchLib.sol";
 import { RouletteLiabilityMathLib } from "./libraries/RouletteLiabilityMathLib.sol";
 import { RoulettePayoutMulLib } from "./libraries/RoulettePayoutMulLib.sol";
 
-contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
+/// @notice Multi-market roulette engine.
+///
+/// Audit fixes (Critical + High) vs initial `markets`-branch implementation:
+/// - C-4: inherits `Pausable`. `recordBet` is `whenNotPaused`; `executeJob`
+///   blocks every job except `Payout` while paused.
+/// - H-1: `infraBps` replaces the private constant `INFRA_BPS = 250`.
+///   Initialised to 200 (whitepaper) and tweakable via owner-only setter.
+/// - H-7: VRF key-hash selection reads `vrfGasLane` instead of `tx.gasprice`.
+/// - H-2: missing `brbPerAssetUnitRatio` for a non-BRB market skips the
+///   jackpot for the round and emits `JackpotRatioMissing` instead of
+///   reverting `JackpotAssetRatioNotSet`.
+contract RouletteEngine is Ownable, VRFConsumerBaseV2, Pausable, IRouletteEngine {
     using BetStorageLib for BetStorageLib.RoundTotals;
 
     /// @dev Legacy role id bytes (off-chain / tooling); access is `onlyOwner` / `UPKEEP_SCHEDULER`.
@@ -41,7 +53,11 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     uint8 private constant BET_HIGH = 13;
     uint8 private constant BET_TRIO_012 = 14;
     uint8 private constant BET_TRIO_023 = 15;
-    uint256 private constant INFRA_BPS = 250;
+
+    /// @notice Upper bound for the configurable infra fee (10%).
+    uint256 public constant MAX_INFRA_BPS = 1_000;
+    /// @notice 0 → 2 gwei key hash, 1 → 30 gwei, 2 → 150 gwei.
+    uint8 public constant MAX_VRF_GAS_LANE = 2;
 
     struct BetEntry {
         address player;
@@ -80,7 +96,7 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         uint256 payoutsCount;
     }
 
-    /// @dev Packed constructor arg for the three Chainlink VRF gas-lane key hashes (legacy `OldRouletteClean` tiers).
+    /// @dev Packed constructor arg for the three Chainlink VRF gas-lane key hashes.
     struct VrfLaneKeyHashes {
         bytes32 keyHash2Gwei;
         bytes32 keyHash30Gwei;
@@ -146,6 +162,11 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     uint256 private _vrfQueueHead;
     uint256 public minJackpotBet;
 
+    /// @notice Configurable infrastructure fee in BPS (default 200 = 2.0% per whitepaper).
+    uint256 public infraBps;
+    /// @notice Selected VRF gas-tier key hash (0 / 1 / 2 → 2 / 30 / 150 gwei).
+    uint8 public vrfGasLane;
+
     /// @notice Shared across all markets: max withdrawals finalized per bank per settlement batch.
     uint256 public withdrawalQueueBatchSize;
     /// @notice Shared across all markets: max queued withdrawal owners per bank.
@@ -209,7 +230,9 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     error OnlyRegistry();
     error InsufficientBankForMaxPayout();
     error UnexpectedWinnerAttachment();
-    error JackpotAssetRatioNotSet();
+    error InvalidBps();
+    error InvalidGasLane();
+    error EnginePaused();
 
     event MarketRegistered(uint32 marketId, address bank);
 
@@ -218,6 +241,9 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     event RoundResolved(uint256 roundId);
 
     event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
+    event InfraBpsUpdated(uint256 previousBps, uint256 newBps);
+    event VrfGasLaneUpdated(uint8 previousLane, uint8 newLane);
+    event JackpotRatioMissing(uint64 indexed roundId, uint32 indexed marketId);
 
     event BetRecorded(
         uint32 marketId,
@@ -287,6 +313,8 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
 
         withdrawalQueueBatchSize = DEFAULT_WITHDRAWAL_QUEUE_BATCH_SIZE;
         maxWithdrawalQueueLength = DEFAULT_MAX_WITHDRAWAL_QUEUE_LENGTH;
+        infraBps = 200; // 2.0% per whitepaper.
+        vrfGasLane = 1; // 30 gwei lane by default.
     }
 
     /// @inheritdoc IRouletteEngine
@@ -311,6 +339,29 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         emit MaxWithdrawalQueueLengthUpdated(newMaxLength);
     }
 
+    function setInfraBps(uint256 newBps) external onlyOwner {
+        if (newBps > MAX_INFRA_BPS) revert InvalidBps();
+        uint256 previous = infraBps;
+        infraBps = newBps;
+        emit InfraBpsUpdated(previous, newBps);
+    }
+
+    function setVrfGasLane(uint8 newLane) external onlyOwner {
+        if (newLane > MAX_VRF_GAS_LANE) revert InvalidGasLane();
+        uint8 previous = vrfGasLane;
+        vrfGasLane = newLane;
+        emit VrfGasLaneUpdated(previous, newLane);
+    }
+
+    /// @notice Halts new bets and engine lifecycle transitions; `Payout` jobs keep draining so in-flight rounds still settle.
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     /// @inheritdoc IRouletteEngine
     /// @dev Always `1`; parallel payout lanes / shards were removed to satisfy EIP-170 bytecode limits.
     function payoutParallelLaneCount() external pure returns (uint32) {
@@ -332,7 +383,11 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         emit MarketRegistered(marketId, bank);
     }
 
-    function recordBet(uint32 marketId, address player, uint256 amount, bytes calldata betData) external onlyBank(marketId) {
+    function recordBet(uint32 marketId, address player, uint256 amount, bytes calldata betData)
+        external
+        onlyBank(marketId)
+        whenNotPaused
+    {
         uint64 roundId = _resolveOpenRound(marketId);
         if (roundPhase[roundId] != RoundPhase.Open) revert RoundIsLocked();
         if (_preLockUpkeepCandidate(roundId)) revert BettingClosedAwaitingSeal();
@@ -503,6 +558,9 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         IBankVault.Payout[] memory winnerPayoutRows
     ) external onlyScheduler returns (bool) {
         if (winnerPayoutRows.length != 0) revert UnexpectedWinnerAttachment();
+        // Allow `Payout` jobs to drain during pause so in-flight rounds can still settle;
+        // block every other lifecycle transition.
+        if (paused() && job.kind != JobKind.Payout) revert EnginePaused();
         if (job.kind == JobKind.OpenRound) {
             _openNextRound();
             return true;
@@ -574,9 +632,9 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         roundPhase[roundId] = RoundPhase.Settling;
         _activeVrfRound = roundId;
 
-        bytes32 keyHash = tx.gasprice < 2 gwei
+        bytes32 keyHash = vrfGasLane == 0
             ? VRF_KEY_HASH_2_GWEI
-            : tx.gasprice < 30 gwei ? VRF_KEY_HASH_30_GWEI : VRF_KEY_HASH_150_GWEI;
+            : (vrfGasLane == 1 ? VRF_KEY_HASH_30_GWEI : VRF_KEY_HASH_150_GWEI);
         uint256 req = VRF_COORDINATOR.requestRandomWords(
             keyHash,
             uint64(VRF_SUBSCRIPTION_ID),
@@ -718,7 +776,7 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
             JACKPOT_FUNDER.fundFromMarket(marketId, asset);
             emit JackpotFunded(roundId, marketId, swapIn);
         }
-        uint256 infraFee = (marketWin * INFRA_BPS) / 10_000;
+        uint256 infraFee = (marketWin * infraBps) / 10_000;
         if (infraFee > 0) {
             IBankVault(bank).transferOut(INFRA_RECIPIENT, infraFee);
             emit InfrastructureFeePaid(roundId, marketId, infraFee);
@@ -735,8 +793,15 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         if (marketId != markets[0]) return;
 
         uint8 winningNumber = gr.winningNumber;
-        (address[] memory winners, uint256[] memory stakes, uint256 totalStake) =
+        (address[] memory winners, uint256[] memory stakes, uint256 totalStake, bool aborted) =
             _collectJackpotEligibleStraightStakes(roundId, winningNumber);
+
+        if (aborted) {
+            // Ratio missing for at least one non-BRB market in this round.
+            // Skip the jackpot for this round so settlement can complete.
+            gr.jackpotDistributed = true;
+            return;
+        }
 
         _executeJackpotBatchFromList(gr, roundId, marketId, winners, stakes, totalStake, maxPayoutsPerCall);
     }
@@ -817,7 +882,7 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
         newTotalStake = totalStake;
         uint256 ratio = JACKPOT_FUNDER.brbPerAssetUnitRatio(marketId);
         if (ratio == 0) {
-            if (REGISTRY.getMarket(marketId).asset != JACKPOT_FUNDER.brbToken()) revert JackpotAssetRatioNotSet();
+            // Pre-checked by `_collectJackpotEligibleStraightStakes`; remaining defensive default for native BRB.
             ratio = JACKPOT_RATIO_SCALE;
         }
         BetEntry[] storage bucket2 =
@@ -845,12 +910,31 @@ contract RouletteEngine is Ownable, VRFConsumerBaseV2, IRouletteEngine {
     /// @dev Collects eligible STRAIGHT stakes on `winningNumber` across all markets in the round.
     /// Stakes are normalized into BRB-equivalent units using `JACKPOT_FUNDER.brbPerAssetUnitRatio(marketId)` (or `1e18` when the market asset is native BRB and the ratio was left unset),
     /// so share computation is simply `stake / totalStake` even across mixed-decimal assets.
+    ///
+    /// @return aborted true when at least one non-BRB market is missing its ratio. The caller
+    /// must skip the jackpot for the round (and the engine emits `JackpotRatioMissing` for each
+    /// offending market) so settlement is never bricked.
     function _collectJackpotEligibleStraightStakes(uint64 roundId, uint8 winningNumber)
         private
-        view
-        returns (address[] memory winners, uint256[] memory stakes, uint256 totalStake)
+        returns (address[] memory winners, uint256[] memory stakes, uint256 totalStake, bool aborted)
     {
         uint32[] storage markets = _roundMarkets[roundId];
+        address brbAddr = JACKPOT_FUNDER.brbToken();
+        // Precheck: if any non-BRB market lacks a configured ratio, abort and let the caller skip the jackpot.
+        for (uint256 mp; mp < markets.length; ) {
+            uint32 mid = markets[mp];
+            if (JACKPOT_FUNDER.brbPerAssetUnitRatio(mid) == 0 && REGISTRY.getMarket(mid).asset != brbAddr) {
+                emit JackpotRatioMissing(roundId, mid);
+                aborted = true;
+            }
+            unchecked { ++mp; }
+        }
+        if (aborted) {
+            winners = new address[](0);
+            stakes = new uint256[](0);
+            return (winners, stakes, 0, true);
+        }
+
         uint256 maxEntries;
         for (uint256 mi; mi < markets.length; ) {
             BetEntry[] storage bucket = roundNumberedBets[roundId][markets[mi]][uint8(NumberedBetBucket.Straight)][winningNumber];
