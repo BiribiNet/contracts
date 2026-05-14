@@ -26,14 +26,25 @@ const artifactsRoot = path.join(repoRoot, "artifacts", "contracts");
 
 /** Subgraph data-source file names → Solidity artifact base name */
 const ABI_COPY_MAP = [
-  ["BRB.json", "BRB"],
-  ["Game.json", "RouletteClean"],
-  ["StakedBRB.json", "StakedBRB"],
-  ["BRBReferal.json", "BRBReferal"],
+  ["AssetToken.json", "MockUSDC"],
+  ["Game.json", "RouletteEngine"],
+  ["JackpotTreasury.json", "JackpotTreasury"],
+  ["MarketRegistry.json", "MarketRegistry"],
+  ["BankVault4626.json", "BankVault4626"],
+  ["UpkeepScheduler.json", "UpkeepScheduler"],
+  ["UpkeepManager.json", "UpkeepManager"],
 ];
 
 /** Contracts whose events are merged for Goldsky (deduped). UpkeepManager included for UpkeepRegistered etc. */
-const MERGE_EVENT_SOURCES = ["BRB", "RouletteClean", "StakedBRB", "BRBReferal", "BRBUpkeepManager"];
+const MERGE_EVENT_SOURCES = [
+  "MockUSDC",
+  "RouletteEngine",
+  "JackpotTreasury",
+  "MarketRegistry",
+  "BankVault4626",
+  "UpkeepScheduler",
+  "UpkeepManager",
+];
 
 if (!process.env.SKIP_COMPILE) {
   const r = spawnSync("yarn", ["hardhat", "compile"], {

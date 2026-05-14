@@ -1,5 +1,5 @@
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import { mkdir, writeFile } from 'fs/promises';
+import { dirname, join } from 'path';
 
 import { TASK_COMPILE_SOLIDITY_EMIT_ARTIFACTS } from 'hardhat/builtin-tasks/task-names';
 import { subtask, vars, type HardhatUserConfig } from 'hardhat/config';
@@ -20,10 +20,9 @@ import '@openzeppelin/hardhat-upgrades';
 import networks from './hardhat.network';
 
 const defaultSettings: SolcUserConfig['settings'] = {
-  // Low runs minimizes deployed bytecode (EIP-170); StakedBRB is near the limit.
+  viaIR: true,
   optimizer: { enabled: true, runs: 1 },
   metadata: { bytecodeHash: 'none' },
-  // Use Cancun EVM for newer OZ (mcopy, Memory, etc.)
   evmVersion: 'cancun',
 };
 
@@ -35,9 +34,11 @@ subtask(TASK_COMPILE_SOLIDITY_EMIT_ARTIFACTS).setAction(
     const { artifacts } = env.config.paths;
     const promises = Object.entries(args.output.contracts).map(
       async ([sourceName, contract]) => {
+        const compiled = Object.values(contract as ContractMap)[0];
+        if (!compiled?.abi) return;
         const file = join(artifacts, sourceName, 'abi.ts');
-        const { abi } = Object.values(contract as ContractMap)[0];
-        const data = `export const abi = ${JSON.stringify(abi, null, 2)} as const;`;
+        const data = `export const abi = ${JSON.stringify(compiled.abi, null, 2)} as const;`;
+        await mkdir(dirname(file), { recursive: true });
         await writeFile(file, data);
       },
     );
@@ -46,9 +47,23 @@ subtask(TASK_COMPILE_SOLIDITY_EMIT_ARTIFACTS).setAction(
   },
 );
 
+const uniswapOptimizer = { enabled: true as const, runs: 999999 };
+const uniswap05Settings = {
+  optimizer: uniswapOptimizer,
+  evmVersion: 'istanbul' as const,
+};
+const uniswap06Settings = {
+  optimizer: uniswapOptimizer,
+  evmVersion: 'istanbul' as const,
+};
+
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [{ version: '0.8.27', settings: defaultSettings }],
+    compilers: [
+      { version: '0.8.27', settings: defaultSettings },
+      { version: '0.5.16', settings: uniswap05Settings },
+      { version: '0.6.6', settings: uniswap06Settings },
+    ],
   },
   networks,
   // comment this below to verify on Tenderly
@@ -60,17 +75,19 @@ const config: HardhatUserConfig = {
     currency: 'EUR',
   },
   etherscan: {
+    // Single string key → Hardhat uses Etherscan API v2 for all supported chains (incl. Arbitrum Sepolia).
     apiKey: vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : '',
     customChains: [
       {
-        network: "arbitrumsepolia",
+        network: 'arbitrumsepolia',
         chainId: 421614,
         urls: {
-          apiURL: "https://api.etherscan.io/v2/api?chainid=421614&apikey=" + (vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : ''),
-          browserURL: "https://sepolia.arbiscan.io"
-        }
+          // Ignored when using a string apiKey (v2); kept for tooling that reads customChains.urls.apiURL.
+          apiURL: 'https://api.etherscan.io/v2/api',
+          browserURL: 'https://sepolia.arbiscan.io',
+        },
       },
-    ]
+    ],
   },
 };
 export default config;

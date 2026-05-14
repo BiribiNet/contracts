@@ -3725,6 +3725,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@uniswap/lib@npm:1.1.1":
+  version: 1.1.1
+  resolution: "@uniswap/lib@npm:1.1.1"
+  checksum: 10c0/a70c14e6d9fb1f63f6d66d5190772f7069eccf12984f67e903224e0ad874472c5d96db2842558a12c170489125b2a7dad333bccf9ac3278d2de4492201f33de0
+  languageName: node
+  linkType: hard
+
+"@uniswap/v2-core@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@uniswap/v2-core@npm:1.0.0"
+  checksum: 10c0/43bb34b91a0ba68152f3e7b734a538dd3d7a3cd8351d8caf0c78b65549ed3f90cc77a8af8b33d22502769157028961f128a7b5e6054bf77010abbddd0dbf6bce
+  languageName: node
+  linkType: hard
+
+"@uniswap/v2-core@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@uniswap/v2-core@npm:1.0.1"
+  checksum: 10c0/61fc8beb5f2875fc3fe6b00043c9491f0eb9839b824af44d53a303f3df1970c6c3e8a555b7a0150e0ad75b8e49ad6e3cf7d923109da31884536a7a844c24cda0
+  languageName: node
+  linkType: hard
+
+"@uniswap/v2-periphery@npm:^1.1.0-beta.0":
+  version: 1.1.0-beta.0
+  resolution: "@uniswap/v2-periphery@npm:1.1.0-beta.0"
+  dependencies:
+    "@uniswap/lib": "npm:1.1.1"
+    "@uniswap/v2-core": "npm:1.0.0"
+  checksum: 10c0/45a7ee4f1fd1d534afab97323a2590f8b7ef6373fbb9df82f833de6167b7776592165621106b67818c4a2743bf7b713033cf9a47fa28cf4452cb3b901a5e4ba5
+  languageName: node
+  linkType: hard
+
 "@wagmi/cli@npm:^2.5.1":
   version: 2.5.1
   resolution: "@wagmi/cli@npm:2.5.1"
@@ -4250,6 +4281,8 @@ __metadata:
     "@types/fs-extra": "npm:^11.0.4"
     "@types/mocha": "npm:^10.0.10"
     "@types/node": "npm:^22.15.31"
+    "@uniswap/v2-core": "npm:^1.0.1"
+    "@uniswap/v2-periphery": "npm:^1.1.0-beta.0"
     "@wagmi/cli": "npm:^2.5.1"
     chai: "npm:4.3.7"
     dotenv: "npm:^16.5.0"

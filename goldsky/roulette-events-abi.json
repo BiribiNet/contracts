@@ -40,16 +40,6 @@
   {
     "anonymous": false,
     "inputs": [
-      {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"},
-      {"indexed": false, "internalType": "uint256", "name": "batchIndex", "type": "uint256"},
-      {"indexed": false, "internalType": "uint256", "name": "payoutsCount", "type": "uint256"}
-    ],
-    "name": "BatchProcessed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
       {"indexed": false, "internalType": "uint256", "name": "roundId", "type": "uint256"}
     ],
     "name": "RoundResolved",
