@@ -9,10 +9,19 @@ import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { BankVault4626 } from "./BankVault4626.sol";
 
+/// @notice Multi-asset market registry.
+///
+/// Audit fixes (Critical + High) vs initial `markets`-branch implementation:
+/// - H-4: documentation — `setVaultBeacon` and `setEngine` MUST be held by `ProtocolTimelock`
+///   after deploy. The contract enforces non-zero values; off-chain ops enforce timelock.
+/// - H-8: duplicate-asset registration is rejected via `assetToMarket`.
+/// - H-11: `createMarket` forwards a mandatory non-zero `minBet` to vault init.
 contract MarketRegistry is AccessControl, IMarketRegistry {
     bytes32 public constant MARKET_FACTORY_ROLE = keccak256("MARKET_FACTORY_ROLE");
 
     mapping(uint32 => MarketConfig) private _markets;
+    /// @notice Asset → market id. Zero means "not yet registered".
+    mapping(address => uint32) public assetToMarket;
     uint32 private _marketCount;
     address public override vaultBeacon;
     address public ENGINE;
@@ -21,6 +30,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     error ZeroImplementation();
     error InvalidMarketId();
     error MarketAlreadyRegistered();
+    error AssetAlreadyRegistered();
     error MinBetRequired();
 
     event MarketRegistered(uint32 marketId, address asset, address bank);
@@ -50,6 +60,12 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         }
     }
 
+    /// @notice Updates the beacon used for every vault proxy (existing AND future).
+    /// @dev SENSITIVE — retroactively upgrades every live `BankVault4626`. The
+    /// `MARKET_FACTORY_ROLE` MUST be held by `ProtocolTimelock` in production
+    /// so this call goes through a 48 h delay (cf. DEPLOY-NOTES.md). The EOA
+    /// admin used at deploy MUST renounce / revoke its role after the timelock
+    /// inherits it.
     function setVaultBeacon(address newBeacon) external onlyRole(MARKET_FACTORY_ROLE) {
         if (newBeacon == address(0)) revert ZeroAddress();
         if (newBeacon.code.length == 0) revert ZeroImplementation();
@@ -61,6 +77,9 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         emit VaultBeaconUpdated(previous, newBeacon);
     }
 
+    /// @notice Updates the engine wired to every future vault.
+    /// @dev SENSITIVE — must go through `ProtocolTimelock`; existing vaults
+    /// keep the engine they were initialised with (set at `initialize` time).
     function setEngine(address newEngine) external onlyRole(MARKET_FACTORY_ROLE) {
         if (newEngine == address(0)) revert ZeroAddress();
         address previous = ENGINE;
@@ -71,6 +90,10 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     /// @dev Call `setVaultBeacon` and `setEngine` before any `createMarket`. Setters enforce non-zero values; this function does not repeat those checks.
     /// @dev Vault share `name` is `BRB ` + asset `name()`, share `symbol` is `brb` + asset `symbol()` (via `IERC20Metadata`).
     /// @dev `params.minBet` MUST be non-zero (anti-DoS) and is forwarded to `BankVault4626.initialize`.
+    /// @dev Reverts with `AssetAlreadyRegistered` if the asset already has a market (H-8).
+    /// @dev For non-BRB assets, set `BRBJackpotFunder.setBrbPerAssetUnitRatio(nextMarketId, ratio)`
+    ///      BEFORE this call. If the ratio is missing, the engine skips the jackpot for any round
+    ///      that involves the market (silent skip; see `JackpotRatioMissing` event).
     function createMarket(CreateMarketParams calldata params)
         external
         onlyRole(MARKET_FACTORY_ROLE)
@@ -78,6 +101,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     {
         if (params.asset == address(0) || params.bankAdmin == address(0)) revert ZeroAddress();
         if (params.minBet == 0) revert MinBetRequired();
+        if (assetToMarket[params.asset] != 0) revert AssetAlreadyRegistered();
 
         IERC20Metadata assetMeta = IERC20Metadata(params.asset);
         string memory bankName = string.concat("BRB ", assetMeta.name());
@@ -131,6 +155,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
 
         _markets[next] = MarketConfig({ asset: asset, bank: bank });
         _marketCount = next;
+        assetToMarket[asset] = next;
 
         emit MarketRegistered(next, asset, bank);
         return next;
