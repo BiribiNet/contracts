@@ -5,7 +5,7 @@ import { vars } from "hardhat/config";
 import { viem } from "hardhat";
 import { parseAbi } from "viem";
 
-import { verifyContractWithDelay, verifyRouletteEngine } from "./utils/verifyWithEtherscan";
+import { verifyContractWithDelay, verifyRouletteEngineImplementation } from "./utils/verifyWithEtherscan";
 
 /**
  * Re-verify a protocol deployment on Arbitrum Sepolia (421614) on Arbiscan.
@@ -23,6 +23,9 @@ import { verifyContractWithDelay, verifyRouletteEngine } from "./utils/verifyWit
 const FQ_UNISWAP_FACTORY = "contracts/vendor/uniswap-v2-core/UniswapV2Factory.sol:UniswapV2Factory" as const;
 const FQ_WETH9 = "contracts/vendor/uniswap-v2-periphery/test/WETH9.sol:WETH9" as const;
 const FQ_UNISWAP_ROUTER = "contracts/vendor/uniswap-v2-periphery/UniswapV2Router02.sol:UniswapV2Router02" as const;
+
+const ERC1967_IMPLEMENTATION_SLOT =
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc" as const;
 
 const DEFAULT_LINK = "0xb1D4538B4571d411F07960EF2838Ce337FE1E80E" as const;
 const DEFAULT_VRF_COORDINATOR = "0x50d47e4142598E3411aA864e08a44284e471AC6f" as const;
@@ -50,6 +53,10 @@ type LinkedLibs = {
     roulettePayoutMulLib: `0x${string}`;
     rouletteLiabilityMathLib: `0x${string}`;
     rouletteBetCodecLib: `0x${string}`;
+    roulettePayoutSweepLib: `0x${string}`;
+    rouletteJackpotCollectLib: `0x${string}`;
+    rouletteExposureLib: `0x${string}`;
+    rouletteUpkeepScanLib: `0x${string}`;
 };
 
 type Deployment = {
@@ -149,12 +156,15 @@ async function main() {
         await verifyContractWithDelay(u.router, [u.factory, u.weth], verifyDelayMs, FQ_UNISWAP_ROUTER);
     }
 
+    const implSlot = await publicClient.getStorageAt({ address: d.engine, slot: ERC1967_IMPLEMENTATION_SLOT });
+    const engineImplementation = (`0x${implSlot.slice(-40)}`) as `0x${string}`;
+
     const engineAbi = parseAbi([
         "function REGISTRY() view returns (address)",
+        "function VRF_COORDINATOR() view returns (address)",
         "function JACKPOT_TREASURY() view returns (address)",
         "function JACKPOT_FUNDER() view returns (address)",
         "function INFRA_RECIPIENT() view returns (address)",
-        "function VRF_COORDINATOR() view returns (address)",
         "function VRF_SUBSCRIPTION_ID() view returns (uint256)",
         "function VRF_KEY_HASH_2_GWEI() view returns (bytes32)",
         "function VRF_KEY_HASH_30_GWEI() view returns (bytes32)",
@@ -238,34 +248,21 @@ async function main() {
     await verifyContractWithDelay(linked.roulettePayoutMulLib, [], verifyDelayMs);
     await verifyContractWithDelay(linked.rouletteLiabilityMathLib, [], verifyDelayMs);
     await verifyContractWithDelay(linked.rouletteBetCodecLib, [], verifyDelayMs);
+    await verifyContractWithDelay(linked.roulettePayoutSweepLib, [], verifyDelayMs);
+    await verifyContractWithDelay(linked.rouletteJackpotCollectLib, [], verifyDelayMs);
+    await verifyContractWithDelay(linked.rouletteExposureLib, [], verifyDelayMs);
+    await verifyContractWithDelay(linked.rouletteUpkeepScanLib, [], verifyDelayMs);
 
-    const vrfTuple = {
-        keyHash2Gwei: kh2,
-        keyHash30Gwei: kh30,
-        keyHash150Gwei: kh150,
-    };
-    const engineConstructorArgs = [
-        d.registry,
-        d.jackpotTreasury,
-        d.jackpotFunder,
-        infraOnChain,
-        vrfCoordOnChain,
-        vrfSubId,
-        vrfTuple,
-        cbGas,
-        vrfConf,
-        roundDur,
-        adminOnChain,
-        d.scheduler,
-    ];
     const libraryMap: Record<string, string> = {
-        RouletteBetLib: linked.rouletteBetLib,
-        JackpotBatchLib: linked.jackpotBatchLib,
-        RoulettePayoutMulLib: linked.roulettePayoutMulLib,
-        RouletteLiabilityMathLib: linked.rouletteLiabilityMathLib,
-        RouletteBetCodecLib: linked.rouletteBetCodecLib,
+        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": linked.jackpotBatchLib,
+        "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": linked.rouletteBetCodecLib,
+        "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": linked.rouletteExposureLib,
+        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": linked.rouletteJackpotCollectLib,
+        "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": linked.rouletteLiabilityMathLib,
+        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linked.roulettePayoutSweepLib,
+        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linked.rouletteUpkeepScanLib,
     };
-    await verifyRouletteEngine(d.engine, engineConstructorArgs, libraryMap, verifyDelayMs);
+    await verifyRouletteEngineImplementation(engineImplementation, vrfCoordOnChain, libraryMap, verifyDelayMs);
 
     await verifyContractWithDelay(d.scheduler, [d.engine, d.deployer, 25, 60], verifyDelayMs);
     await verifyContractWithDelay(

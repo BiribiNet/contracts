@@ -20,7 +20,7 @@ import '@openzeppelin/hardhat-upgrades';
 import networks from './hardhat.network';
 
 const defaultSettings: SolcUserConfig['settings'] = {
-  viaIR: true,
+  viaIR: false,
   optimizer: { enabled: true, runs: 1 },
   metadata: { bytecodeHash: 'none' },
   evmVersion: 'cancun',

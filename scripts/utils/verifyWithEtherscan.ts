@@ -43,6 +43,35 @@ export async function verifyContractWithDelay(
     if (delayMs > 0) await sleep(delayMs);
 }
 
+const FQ_ROULETTE_ENGINE = "contracts/RouletteEngine.sol:RouletteEngine" as const;
+
+/** Verify UUPS implementation (not the proxy). Proxy constructor is `(implementation, initData)`. */
+export async function verifyRouletteEngineImplementation(
+    implementation: `0x${string}`,
+    vrfCoordinator: `0x${string}`,
+    libraries: Record<string, string>,
+    delayMs: number,
+): Promise<void> {
+    try {
+        await hre.run("verify:verify", {
+            address: implementation,
+            constructorArguments: [vrfCoordinator],
+            contract: FQ_ROULETTE_ENGINE,
+            libraries,
+        });
+        console.log(`Verified RouletteEngine implementation ${implementation}`);
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (isAlreadyVerifiedMessage(msg)) {
+            console.log(`Skip verify (already verified): ${implementation}`);
+            return;
+        }
+        throw e;
+    }
+    if (delayMs > 0) await sleep(delayMs);
+}
+
+/** @deprecated Use `verifyRouletteEngineImplementation` for UUPS deployments. */
 export async function verifyRouletteEngine(
     address: `0x${string}`,
     constructorArguments: unknown[],

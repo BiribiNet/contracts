@@ -57,9 +57,7 @@ describe("Gas scaling guards", function () {
         await funder.write.setEngine([engine.address]);
         await registry.write.setEngine([engine.address], { account: admin.account });
 
-        const ratio = 10n ** 30n;
         for (let i = 0; i < marketCount; i++) {
-            await funder.write.setBrbPerAssetUnitRatio([BigInt(i + 1), ratio], { account: admin.account });
         }
 
         const vaultImpl = await viem.deployContract("BankVault4626");
@@ -78,18 +76,7 @@ describe("Gas scaling guards", function () {
             );
         }
 
-        // Open round should be cheap even with many markets registered.
-        const [openNeeded, openData] = await scheduler.read.checkUpkeep(["0x"]);
-        expect(openNeeded).to.equal(true);
-        const openGas = await publicClient.estimateContractGas({
-            address: scheduler.address,
-            abi: scheduler.abi,
-            functionName: "performUpkeep",
-            args: [openData],
-            account: admin.account,
-        });
-        expect(openGas).to.be.lt(1_500_000n);
-        await scheduler.write.performUpkeep([openData], { account: admin.account });
+        expect(await engine.read.currentGlobalRound()).to.equal(1n);
 
         // Place one bet in market 1 to start the lock timer.
         const cfg1 = await registry.read.getMarket([1]);

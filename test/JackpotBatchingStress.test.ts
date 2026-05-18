@@ -53,8 +53,6 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
 
-    const ratio = 10n ** 30n;
-    await funder.write.setBrbPerAssetUnitRatio([1n, ratio], { account: admin.account });
 
     // Ensure treasury has BRB before jackpot triggers (so batch payout is meaningful).
     await brb.write.transfer([jackpotTreasury.address, parseUnits("1000", 18)], { account: admin.account });
@@ -101,8 +99,7 @@ describe("Jackpot batching stress", function () {
     it("pays jackpot across multiple upkeep calls (respects maxPayoutsPerCall)", async function () {
         const { engine, scheduler, bank, alice, vrf, jackpotTreasury } = await deploySingleMarket(5);
 
-        // Open round 1.
-        expect(await performOneUpkeep(scheduler, 0n)).to.equal(true);
+        expect(await engine.read.currentGlobalRound()).to.equal(1n);
 
         const betAmount = parseUnits("10", 6);
         const betData7 = encodeSingleBet(1n, 7n, betAmount);
@@ -114,8 +111,7 @@ describe("Jackpot batching stress", function () {
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
         while (await performOneUpkeep(scheduler, 0n)) {}
 
-        // Open round 2.
-        while (await performOneUpkeep(scheduler, 0n)) {}
+        expect(await engine.read.currentGlobalRound()).to.equal(2n);
 
         // Round 2: many jackpot-eligible bets on winning/jackpot number 7.
         // Using same player repeatedly still creates many winner entries.

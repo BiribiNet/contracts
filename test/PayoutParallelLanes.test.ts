@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { viem } from "hardhat";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
+import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -48,9 +49,7 @@ async function deploySingleMarket(opts: { maxPayoutsPerCall: number }) {
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
-    await funder.write.setBrbPerAssetUnitRatio([1n, 10n ** 30n], { account: admin.account });
-
-    expect(await engine.read.payoutParallelLaneCount()).to.equal(1);
+    expect(await engine.read.payoutParallelLaneCount()).to.equal(10n);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -121,10 +120,10 @@ describe("Payout upkeep (sequential winner chunks)", function () {
         await runLaneUntilStable({ scheduler, lanes: [0n], rounds: 20 });
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
 
-        await runLaneUntilStable({ scheduler, lanes: [0n], rounds: 2000 });
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 800 });
 
         const st = await engine.read.marketRoundStateByRound([1n, 1n]);
-        const settledOut = Array.isArray(st) ? Boolean(st[4]) : Boolean((st as { settled: boolean }).settled);
+        const settledOut = Array.isArray(st) ? Boolean(st[3]) : Boolean((st as { settled: boolean }).settled);
         expect(settledOut).to.equal(true);
         expect(await engine.read.roundPhase([1n])).to.equal(4n);
     });
@@ -149,12 +148,12 @@ describe("Payout upkeep (sequential winner chunks)", function () {
         });
 
         await time.increase(550);
-        await runLaneUntilStable({ scheduler, lanes: [0n, 99n], rounds: 30 });
+        await runLaneUntilStable({ scheduler, lanes: [0n], rounds: 30 });
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
-        await runLaneUntilStable({ scheduler, lanes: [0n, 99n], rounds: 200 });
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 200 });
 
         const st = await engine.read.marketRoundStateByRound([1n, 1n]);
-        const settledOut = Array.isArray(st) ? Boolean(st[4]) : Boolean((st as { settled: boolean }).settled);
+        const settledOut = Array.isArray(st) ? Boolean(st[3]) : Boolean((st as { settled: boolean }).settled);
         expect(settledOut).to.equal(true);
     });
 });

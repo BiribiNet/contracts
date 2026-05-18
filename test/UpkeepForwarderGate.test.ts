@@ -1,7 +1,15 @@
+import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { viem } from "hardhat";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { parseUnits } from "viem";
+import { encodeAbiParameters, parseUnits } from "viem";
+
+function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
+    return encodeAbiParameters(
+        [{ type: "uint256[]" }, { type: "uint256[]" }, { type: "uint256[]" }],
+        [[betType], [number], [amount]],
+    );
+}
 
 async function deploySchedulerStack() {
     const [admin, alice, bob] = await viem.getWalletClients();
@@ -42,7 +50,6 @@ async function deploySchedulerStack() {
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
 
-    await funder.write.setBrbPerAssetUnitRatio([1n, 10n ** 30n], { account: admin.account });
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
 
@@ -59,6 +66,19 @@ async function deploySchedulerStack() {
         ],
         { account: admin.account },
     );
+
+    const cfg = await registry.read.getMarket([1]);
+    const bank = await viem.getContractAt("BankVault4626", cfg.bank);
+    const lpAmount = parseUnits("5000", 6);
+    await usdc.write.mint([admin.account.address, lpAmount]);
+    await usdc.write.approve([bank.address, lpAmount], { account: admin.account });
+    await bank.write.deposit([lpAmount, admin.account.address], { account: admin.account });
+    await usdc.write.mint([alice.account.address, parseUnits("1000", 6)]);
+    await usdc.write.approve([bank.address, parseUnits("1000", 6)], { account: alice.account });
+    await bank.write.placeBet([parseUnits("10", 6), encodeSingleBet(1n, 7n, parseUnits("10", 6))], {
+        account: alice.account,
+    });
+    await time.increase(550);
 
     return { admin, alice, bob, scheduler, engine };
 }

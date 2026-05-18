@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { viem } from "hardhat";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
+import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -61,9 +62,7 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
 
-    const ratio = 10n ** 30n;
     for (let i = 0; i < marketCount; i++) {
-        await funder.write.setBrbPerAssetUnitRatio([BigInt(i + 1), ratio], { account: admin.account });
     }
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
@@ -113,26 +112,8 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
     };
 }
 
-async function runUpkeepUntilIdle(opts: {
-    scheduler: any;
-    lanes: bigint[];
-    maxIters?: number;
-}) {
-    const maxIters = opts.maxIters ?? 200;
-    for (let i = 0; i < maxIters; i++) {
-        let progressed = false;
-        for (const lane of opts.lanes) {
-            const checkData =
-                lane === 0n ? ("0x" as const) : encodeAbiParameters([{ type: "uint256" }], [lane]);
-            const [needed, performData] = await opts.scheduler.read.checkUpkeep([checkData]);
-            if (needed) {
-                progressed = true;
-                await opts.scheduler.write.performUpkeep([performData]);
-            }
-        }
-        if (!progressed) return;
-    }
-    throw new Error("upkeep loop did not converge");
+async function runUpkeepUntilIdle(scheduler: Parameters<typeof runParallelLanesUntilIdle>[0], maxIters = 400) {
+    await runParallelLanesUntilIdle(scheduler, { maxIters });
 }
 
 describe("E2E upkeep flow", function () {
@@ -140,8 +121,7 @@ describe("E2E upkeep flow", function () {
         const { scheduler, engine, banks, alice, bob, carol, dave, assets, vrf, publicClient, admin, brb } =
             await deployE2EStack({ marketCount: 4, maxPayoutsPerCall: 2 });
 
-        // Open the first round.
-        await runUpkeepUntilIdle({ scheduler, lanes: [0n, 1n] });
+        expect(await engine.read.currentGlobalRound()).to.equal(1n);
 
         // Fund players and approve per market.
         const players = [alice, bob, carol, dave];
@@ -168,19 +148,19 @@ describe("E2E upkeep flow", function () {
 
         // Seal + request VRF + fulfill + pay out.
         await time.increase(550);
-        await runUpkeepUntilIdle({ scheduler, lanes: [0n, 1n] });
+        await runUpkeepUntilIdle(scheduler);
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
-        await runUpkeepUntilIdle({ scheduler, lanes: [0n, 1n] });
+        await runUpkeepUntilIdle(scheduler);
 
         // Round 2: same mod-37 pair (7,7) so jackpot triggers.
-        await runUpkeepUntilIdle({ scheduler, lanes: [0n, 1n] });
+        await runUpkeepUntilIdle(scheduler);
         for (let m = 0; m < banks.length; m++) {
             // Two jackpot-eligible straight bets on each market to force batching.
             await banks[m].write.placeBet([betAmount, betData7], { account: players[(m + 1) % players.length].account });
             await banks[m].write.placeBet([betAmount, betData7], { account: players[(m + 2) % players.length].account });
         }
         await time.increase(550);
-        await runUpkeepUntilIdle({ scheduler, lanes: [0n, 1n] });
+        await runUpkeepUntilIdle(scheduler);
         await vrf.write.fulfillWithJackpot([engine.address, 2n, 7n, 7n]);
 
         // Ensure scheduler calls stay within a conservative bound in this E2E run.
@@ -196,7 +176,7 @@ describe("E2E upkeep flow", function () {
             expect(gas).to.be.lt(2_500_000n);
         }
 
-        await runUpkeepUntilIdle({ scheduler, lanes: [0n, 1n] });
+        await runUpkeepUntilIdle(scheduler);
 
         // Jackpot should have been distributed (pool drained) or at least decreased.
         expect(await brb.read.balanceOf([scheduler.address])).to.equal(0n);

@@ -11,7 +11,4 @@ interface IBRBJackpotFunder {
     /// @notice Swaps the funder's entire `asset` balance to BRB when `asset != brb`, else splits that BRB in-place; treasury receives its BRB share, remainder is burned (supply reduction). The engine must `transferOut` the intended slice before calling.
     /// @dev Engine-only. Does not revert on swap failure, failed treasury transfer, or failed burn (emits / try-catch) so upkeep settlement cannot brick on those paths.
     function fundFromMarket(uint32 marketId, address asset) external;
-
-    /// @notice Optional BRB per 1 asset wei (1e18 scale); reserved for off-chain / engine jackpot parity across asset decimals — not required for `fundFromMarket` execution.
-    function brbPerAssetUnitRatio(uint32 marketId) external view returns (uint256);
 }

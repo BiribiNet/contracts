@@ -11,6 +11,7 @@ import {
     type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 /** One global round across two ERC-20 markets, 50 players; payouts chunked via a single upkeep lane. */
 
@@ -153,13 +154,10 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
 
-    const ratio = 10n ** 30n;
-    await funder.write.setBrbPerAssetUnitRatio([1n, ratio], { account: admin.account });
-    await funder.write.setBrbPerAssetUnitRatio([2n, ratio], { account: admin.account });
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
 
-    expect(await engine.read.payoutParallelLaneCount()).to.equal(1);
+    expect(await engine.read.payoutParallelLaneCount()).to.equal(10n);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -182,15 +180,6 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
     return { admin, vrf, engine, scheduler, registry, asset0, asset1, bank0, bank1, brb };
 }
 
-async function runSchedulerUntilIdle(scheduler: { read: any; write: any }, maxIters = 6000) {
-    for (let i = 0; i < maxIters; i++) {
-        const [needed, performData] = await scheduler.read.checkUpkeep(["0x"]);
-        if (!needed) return;
-        await scheduler.write.performUpkeep([performData]);
-    }
-    throw new Error(`upkeep loop did not converge within ${maxIters} scans`);
-}
-
 describe("multi-market crowd (50 players, sequential upkeep)", function () {
     it("settles one global round with varied bets across two banks", async function () {
         this.timeout(120_000);
@@ -201,7 +190,7 @@ describe("multi-market crowd (50 players, sequential upkeep)", function () {
             scanLimit: 80,
         });
 
-        await runSchedulerUntilIdle(scheduler);
+        await runParallelLanesUntilIdle(scheduler);
 
         const lp = parseUnits("250000", 6);
         for (const { token, bank } of [
@@ -230,10 +219,10 @@ describe("multi-market crowd (50 players, sequential upkeep)", function () {
         }
 
         await time.increase(550);
-        await runSchedulerUntilIdle(scheduler);
+        await runParallelLanesUntilIdle(scheduler);
 
         await vrf.write.fulfill([engine.address, 1n, WINNING_NUMBER]);
-        await runSchedulerUntilIdle(scheduler);
+        await runParallelLanesUntilIdle(scheduler);
 
         const roundId = 1n;
 

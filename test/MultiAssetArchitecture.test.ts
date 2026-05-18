@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { viem } from "hardhat";
 import { encodeAbiParameters, parseUnits } from "viem";
+import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -56,9 +57,6 @@ async function deployStack() {
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
 
-    const ratio = 10n ** 30n;
-    await funder.write.setBrbPerAssetUnitRatio([1n, ratio], { account: admin.account });
-    await funder.write.setBrbPerAssetUnitRatio([2n, ratio], { account: admin.account });
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
 
@@ -90,9 +88,8 @@ async function deployStack() {
     const bankUsdc = await viem.getContractAt("BankVault4626", cfg1.bank);
     const bankAssetB = await viem.getContractAt("BankVault4626", cfg2.bank);
 
-    const [openNeeded, openData] = await scheduler.read.checkUpkeep(["0x"]);
-    expect(openNeeded).to.equal(true);
-    await scheduler.write.performUpkeep([openData], { account: admin.account });
+    expect(await engine.read.currentGlobalRound()).to.equal(1n);
+    expect(await engine.read.roundPhase([1n])).to.equal(1); // RoundPhase.Open
 
     await usdc.write.mint([alice.account.address, parseUnits("1000", 6)]);
     await assetB.write.mint([bob.account.address, parseUnits("1000", 6)]);
@@ -239,14 +236,9 @@ describe("Multi-Asset architecture", function () {
         await bankUsdc.write.placeBet([betAmount, straight7], { account: alice.account });
         await time.increase(550);
 
-        const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLockData]);
-        const [, vrfData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([vrfData]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 13n]);
-
-        const [, payoutData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([payoutData]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
 
         const after = await usdc.read.balanceOf([alice.account.address]);
         expect(after).to.equal(before - parseUnits("10", 6) + parseUnits("360", 6));
@@ -265,14 +257,9 @@ describe("Multi-Asset architecture", function () {
         await bankUsdc.write.placeBet([betAmount, straight7], { account: alice.account });
         await time.increase(550);
 
-        const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLockData]);
-        const [, vrfData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([vrfData]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
-
-        const [, payoutData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([payoutData]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
 
         const after = await usdc.read.balanceOf([alice.account.address]);
         expect(after).to.equal(before - parseUnits("10", 6) + parseUnits("360", 6));
@@ -290,15 +277,10 @@ describe("Multi-Asset architecture", function () {
         await bankUsdc.write.placeBet([betAmount, straight7], { account: alice.account });
         await time.increase(550);
 
-        const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLockData]);
-        const [, vrfData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([vrfData]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
         const brbSupplyBeforeFulfill = await brb.read.totalSupply();
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 8n, 10n]);
-
-        const [, payoutData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([payoutData]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
 
         const marketWin = parseUnits("10", 6);
         const swapIn = (marketWin * 300n) / 10_000n;

@@ -277,10 +277,6 @@ async function main() {
         ),
     );
 
-    const ratioM1 = envBigIntOr("BRB_RATIO_MARKET_1", 10n ** 30n);
-    const ratioM2 = envBigIntOr("BRB_RATIO_MARKET_2", 10n ** 30n);
-    await waitWrite(funder.write.setBrbPerAssetUnitRatio([1n, ratioM1] as never));
-    await waitWrite(funder.write.setBrbPerAssetUnitRatio([2n, ratioM2] as never));
 
     const marketUsdc = await registry.read.getMarket([1]);
     const marketDai = await registry.read.getMarket([2]);

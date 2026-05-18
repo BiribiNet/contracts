@@ -70,38 +70,55 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
         emit MaxPayoutsPerCallUpdated(newMaxPayoutsPerCall);
     }
 
-    /// @notice Simulation step for Chainlink Automation: selects the next `ENGINE` job (`findNextJob`).
-    /// @dev `abi.encode(lane, job, payouts, maxPayoutsSnapshot)` — `payouts` is always empty; the engine builds winner rows
-    /// on-chain in `executeJob`. Snapshot still ties `maxPayoutsPerCall` across `checkUpkeep` / `performUpkeep`.
-    /// Only automation lane `0` is used (parallel payout lanes removed).
+    /// @notice Simulation (`checkUpkeep`) runs `previewPayoutBundle`; `performUpkeep` only applies transfers + engine storage.
+    /// @dev `abi.encode(lane, job, vaultPayouts, jackpotWinners, jackpotAmounts, maxPayoutsSnapshot)`.
     function checkUpkeep(
         bytes calldata checkData
     ) external view override returns (bool upkeepNeeded, bytes memory performData) {
         uint256 lane = checkData.length == 0 ? 0 : abi.decode(checkData, (uint256));
-        if (lane != 0) return (false, bytes(""));
+        uint32 laneCount = ENGINE.payoutParallelLaneCount();
+        if (lane >= laneCount) return (false, bytes(""));
 
-        uint32 startCursor = laneCursor[0];
+        uint32 startCursor = laneCursor[lane];
         uint32 maxSnapshot = maxPayoutsPerCall;
 
-        (bool found, IRouletteEngine.Job memory job) = ENGINE.findNextJob(startCursor, scanLimit);
+        (bool found, IRouletteEngine.Job memory job) =
+            ENGINE.findNextJob(startCursor, scanLimit, uint32(lane), 0);
         if (!found) {
             return (false, bytes(""));
         }
 
-        IBankVault.Payout[] memory payouts = new IBankVault.Payout[](0);
+        if (job.kind == IRouletteEngine.JobKind.Payout && !ENGINE.payoutLaneHasWork(job)) {
+            return (false, bytes(""));
+        }
 
-        performData = abi.encode(uint256(0), job, payouts, maxSnapshot);
+        IBankVault.Payout[] memory vaultPayouts;
+        address[] memory jackpotWinners;
+        uint256[] memory jackpotAmounts;
+        if (job.kind == IRouletteEngine.JobKind.Payout) {
+            (vaultPayouts, jackpotWinners, jackpotAmounts) = ENGINE.previewPayoutBundle(job, maxSnapshot);
+        }
+
+        performData = abi.encode(lane, job, vaultPayouts, jackpotWinners, jackpotAmounts, maxSnapshot);
         return (true, performData);
     }
 
     function performUpkeep(bytes calldata performData) external override onlyApprovedAutomationForwarder {
-        (uint256 lane, IRouletteEngine.Job memory job, IBankVault.Payout[] memory payouts, uint32 maxSnapshot) =
-            abi.decode(performData, (uint256, IRouletteEngine.Job, IBankVault.Payout[], uint32));
+        (
+            uint256 lane,
+            IRouletteEngine.Job memory job,
+            IBankVault.Payout[] memory vaultPayouts,
+            address[] memory jackpotWinners,
+            uint256[] memory jackpotAmounts,
+            uint32 maxSnapshot
+        ) = abi.decode(
+            performData, (uint256, IRouletteEngine.Job, IBankVault.Payout[], address[], uint256[], uint32)
+        );
 
         uint32 previousCursor = laneCursor[lane];
         laneCursor[lane] = job.nextCursor;
         emit LaneCursorAdvanced(lane, previousCursor, job.nextCursor);
 
-        ENGINE.executeJob(job, maxSnapshot, payouts);
+        ENGINE.executeJob(job, maxSnapshot, vaultPayouts, jackpotWinners, jackpotAmounts);
     }
 }

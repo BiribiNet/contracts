@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { viem } from "hardhat";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { encodeAbiParameters, parseUnits } from "viem";
+import { jackpotStakeWeight, runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 /** Matches `RouletteEngine.sol` INFRA_BPS constant. */
 const INFRA_BPS = 250n;
@@ -70,7 +71,6 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address], { account: admin.account });
 
-    await funder.write.setBrbPerAssetUnitRatio([1n, 10n ** 30n], { account: admin.account });
 
     await brb.write.transfer([mockRouter.address, ROUTER_BRB_LIQUIDITY], { account: admin.account });
 
@@ -107,20 +107,8 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     };
 }
 
-async function performOneUpkeep(scheduler: any, lane: bigint) {
-    const checkData =
-        lane === 0n ? ("0x" as const) : encodeAbiParameters([{ type: "uint256" }], [lane]);
-    const [needed, performData] = await scheduler.read.checkUpkeep([checkData]);
-    if (!needed) return false;
-    await scheduler.write.performUpkeep([performData]);
-    return true;
-}
-
-async function runSchedulerUntilIdle(scheduler: any, maxIters = 500) {
-    for (let i = 0; i < maxIters; i++) {
-        const progressed = await performOneUpkeep(scheduler, 0n);
-        if (!progressed) break;
-    }
+async function runSchedulerUntilIdle(scheduler: Parameters<typeof runParallelLanesUntilIdle>[0], maxIters = 500) {
+    await runParallelLanesUntilIdle(scheduler, { maxIters });
 }
 
 describe("Full balance settlement (players, jackpot BRB, LP stakers)", function () {
@@ -243,10 +231,8 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
 
         expect(await usdc.read.balanceOf([bob.account.address])).to.equal(mintExtraBob - betBob + grossBob);
 
-        const ratioScale = 10n ** 18n;
-        const ratioPerAsset = 10n ** 30n;
-        const stakeA = (betAlice * ratioPerAsset) / ratioScale;
-        const stakeB = (betBob * ratioPerAsset) / ratioScale;
+        const stakeA = jackpotStakeWeight(betAlice, 6);
+        const stakeB = jackpotStakeWeight(betBob, 6);
         const denom = stakeA + stakeB;
 
         const shareA = (treasurySeed * stakeA) / denom;

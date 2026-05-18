@@ -1,5 +1,9 @@
 import "dotenv/config";
 
+import { spawnSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { vars } from "hardhat/config";
 import { viem } from "hardhat";
 import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
@@ -7,7 +11,7 @@ import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
 import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
-import { verifyContractWithDelay, verifyRouletteEngine } from "./utils/verifyWithEtherscan";
+import { verifyContractWithDelay, verifyRouletteEngineImplementation } from "./utils/verifyWithEtherscan";
 
 /**
  * Full protocol deploy for Arbitrum Sepolia (chain 421614): local Uniswap V2 (factory + WETH + router),
@@ -229,7 +233,7 @@ async function main() {
         );
     }
 
-    const { engine, scheduler, linkedLibraries } = await deployRouletteEngine(
+    const { engine, engineImplementation, scheduler, linkedLibraries } = await deployRouletteEngine(
         [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei],
         [
             registry.address,
@@ -325,10 +329,6 @@ async function main() {
     };
     await waitMarketCountAtLeast(3);
 
-    const ratioM1 = envBigIntOr("BRB_RATIO_MARKET_1", 10n ** 30n);
-    const ratioM2 = envBigIntOr("BRB_RATIO_MARKET_2", 10n ** 30n);
-    await waitWrite(funder.write.setBrbPerAssetUnitRatio([1n, ratioM1] as never));
-    await waitWrite(funder.write.setBrbPerAssetUnitRatio([2n, ratioM2] as never));
 
     const marketUsdc = await registry.read.getMarket([1]);
     const marketDai = await registry.read.getMarket([2]);
@@ -346,15 +346,72 @@ async function main() {
         }),
     );
 
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
-    );
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([1n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
-    );
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([2n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
-    );
+    const upkeepGasLimit = 1_800_000;
+    const upkeepFundAmount = parseUnits("1", 18);
+    for (let lane = 0; lane < 10; lane++) {
+        await waitWrite(
+            upkeepManager.write.registerLaneUpkeep([
+                BigInt(lane),
+                upkeepGasLimit,
+                upkeepFundAmount,
+                deployer.account.address,
+            ]),
+        );
+    }
+
+    const deployBlock = Number(await publicClient.getBlockNumber());
+    const brbReferal =
+        optionalAddressEnv("BRB_REFERRAL_TOKEN", process.env.BRB_REFERRAL_TOKEN) ??
+        ("0x48e85e0f774f0d0d44519b13a959d9faa78e831b" as const);
+
+    const subgraphDeployment = {
+        startBlock: deployBlock,
+        startBlocks: {
+            brb: deployBlock,
+            roulette: deployBlock,
+            stakedBRB: deployBlock,
+            brbReferal: deployBlock,
+        },
+        addresses: {
+            brb,
+            roulette: engine.address,
+            stakedBRB: marketUsdc.bank,
+            brbReferal,
+            upkeepManager: upkeepManager.address,
+        },
+    };
+
+    const contractsRoot = join(__dirname, "..");
+    const subgraphRoot = join(contractsRoot, "..", "subgraph");
+    const deployJsonPath = join(subgraphRoot, "deployments", "arbitrum-sepolia.json");
+    writeFileSync(deployJsonPath, `${JSON.stringify(subgraphDeployment, null, 2)}\n`, "utf8");
+    console.log(`Wrote subgraph deployment manifest: ${deployJsonPath}`);
+
+    const abiSync = spawnSync("yarn", ["update:subgraph:abis"], {
+        cwd: contractsRoot,
+        stdio: "inherit",
+        shell: true,
+    });
+    if (abiSync.status !== 0) {
+        throw new Error("yarn update:subgraph:abis failed");
+    }
+
+    if (!envBool("SKIP_SUBGRAPH_SYNC", false)) {
+        const pipeline = spawnSync("yarn", ["sync:pipeline"], {
+            cwd: subgraphRoot,
+            stdio: "inherit",
+            shell: true,
+            env: {
+                ...process.env,
+                DEPLOY_JSON: "./deployments/arbitrum-sepolia.json",
+            },
+        });
+        if (pipeline.status !== 0) {
+            throw new Error("subgraph sync:pipeline failed (set SKIP_SUBGRAPH_SYNC=true to skip)");
+        }
+    } else {
+        console.log("SKIP_SUBGRAPH_SYNC=true — skipped Goldsky turbo + subgraph deploy.");
+    }
 
     if (runVerify) {
         console.log("Starting Arbiscan verification…");
@@ -396,34 +453,32 @@ async function main() {
         await verifyContractWithDelay(linkedLibraries.roulettePayoutMulLib, [], verifyDelayMs);
         await verifyContractWithDelay(linkedLibraries.rouletteLiabilityMathLib, [], verifyDelayMs);
         await verifyContractWithDelay(linkedLibraries.rouletteBetCodecLib, [], verifyDelayMs);
+        await verifyContractWithDelay(linkedLibraries.roulettePayoutSweepLib, [], verifyDelayMs);
+        await verifyContractWithDelay(linkedLibraries.rouletteJackpotCollectLib, [], verifyDelayMs);
+        await verifyContractWithDelay(linkedLibraries.rouletteExposureLib, [], verifyDelayMs);
+        await verifyContractWithDelay(linkedLibraries.rouletteUpkeepScanLib, [], verifyDelayMs);
 
-        const vrfTuple = {
-            keyHash2Gwei: vrfKeyHash2Gwei,
-            keyHash30Gwei: vrfKeyHash30Gwei,
-            keyHash150Gwei: vrfKeyHash150Gwei,
-        };
-        const engineConstructorArgs = [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
-            infraRecipient,
-            vrfCoordinator,
-            vrfSubscriptionId,
-            vrfTuple,
-            callbackGasLimit,
-            confirmations,
-            roundDuration,
-            deployer.account.address,
-            scheduler.address,
-        ];
         const libraryMap: Record<string, string> = {
-            RouletteBetLib: linkedLibraries.rouletteBetLib,
-            JackpotBatchLib: linkedLibraries.jackpotBatchLib,
-            RoulettePayoutMulLib: linkedLibraries.roulettePayoutMulLib,
-            RouletteLiabilityMathLib: linkedLibraries.rouletteLiabilityMathLib,
-            RouletteBetCodecLib: linkedLibraries.rouletteBetCodecLib,
+            "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": linkedLibraries.jackpotBatchLib,
+            "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": linkedLibraries.rouletteBetCodecLib,
+            "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": linkedLibraries.rouletteExposureLib,
+            "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib":
+                linkedLibraries.rouletteJackpotCollectLib,
+            "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib":
+                linkedLibraries.rouletteLiabilityMathLib,
+            "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linkedLibraries.roulettePayoutSweepLib,
+            "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linkedLibraries.rouletteUpkeepScanLib,
         };
-        await verifyRouletteEngine(engine.address, engineConstructorArgs, libraryMap, verifyDelayMs);
+        try {
+            await verifyRouletteEngineImplementation(
+                engineImplementation.address,
+                vrfCoordinator,
+                libraryMap,
+                verifyDelayMs,
+            );
+        } catch (e) {
+            console.warn("RouletteEngine implementation verify failed (proxy may still be live):", e);
+        }
 
         await verifyContractWithDelay(
             scheduler.address,
@@ -450,6 +505,7 @@ async function main() {
         JSON.stringify(
             {
                 chainId: Number(ARBITRUM_SEPOLIA_CHAIN_ID),
+                subgraphDeployment,
                 uniswap: uniswapDeployed
                     ? { ...uniswapDeployed, deployedLocally: true }
                     : { deployedLocally: false, router },

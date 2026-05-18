@@ -6,14 +6,13 @@ import { IBankVault } from "./IBankVault.sol";
 interface IRouletteEngine {
     enum JobKind {
         None,
-        OpenRound,
         PreLock,
         TriggerVrf,
         Payout
     }
 
-    /// @notice For `JobKind.Payout`, winner payouts use a single per-market cursor; `payoutShardIndex` and `payoutShardWidth`
-    /// must be zero (reserved ABI fields; parallel sharding was removed for bytecode size).
+    /// @notice For `JobKind.Payout`, `payoutShardIndex` is the automation lane and `payoutShardWidth` is `payoutParallelLaneCount`.
+    /// Vault winners are sharded by global winner index (`index % width`); all lanes may service the same market.
     struct Job {
         JobKind kind;
         uint32 marketId;
@@ -40,7 +39,7 @@ interface IRouletteEngine {
         uint32 scanLimit
     ) external view returns (bool found, Job memory job);
 
-    /// @notice Legacy overload: `payoutLane` / `payoutShardWidth` ignored; identical to two-argument `findNextJob`.
+    /// @notice `payoutLane` is the automation lane id; `payoutShardWidth` must be zero (width is set on the returned job).
     function findNextJob(
         uint32 startCursor,
         uint32 scanLimit,
@@ -48,10 +47,30 @@ interface IRouletteEngine {
         uint32 payoutShardWidth
     ) external view returns (bool found, Job memory job);
 
-    /// @param winnerPayoutRows Must be empty; winner payouts are built from storage in `executeJob` (saves bytecode vs DON-bundled rows).
-    function executeJob(Job memory job, uint32 maxPayoutsPerCall, IBankVault.Payout[] memory winnerPayoutRows)
+    /// @notice Whether this automation lane should run `performUpkeep` for a `Payout` job (false = no on-chain tx).
+    function payoutLaneHasWork(Job memory job) external view returns (bool);
+
+    /// @notice Simulation-only: builds the exact payout rows for `checkUpkeep` (no storage writes).
+    function previewPayoutBundle(Job memory job, uint32 maxPayoutsPerCall)
         external
-        returns (bool didWork);
+        view
+        returns (
+            IBankVault.Payout[] memory winnerPayoutRows,
+            address[] memory jackpotWinners,
+            uint256[] memory jackpotAmounts
+        );
+
+    /// @notice Apply-only path for Automation: rows must match the latest `previewPayoutBundle` for `job` (trusted scheduler).
+    /// @param winnerPayoutRows Vault winner rows from `previewPayoutBundle` (may be empty when only jackpot chunk applies).
+    /// @param jackpotWinners BRB jackpot recipients from `previewPayoutBundle` (may be empty).
+    /// @param jackpotAmounts BRB amounts aligned with `jackpotWinners`.
+    function executeJob(
+        Job memory job,
+        uint32 maxPayoutsPerCall,
+        IBankVault.Payout[] memory winnerPayoutRows,
+        address[] memory jackpotWinners,
+        uint256[] memory jackpotAmounts
+    ) external returns (bool didWork);
 
     function currentGlobalRound() external view returns (uint64);
 

@@ -383,7 +383,6 @@ describe("Coverage gaps", function () {
         await treasury.write.setEngine([engine.address]);
         await funder.write.setEngine([engine.address]);
         await registry.write.setEngine([engine.address], { account: admin.account });
-        await funder.write.setBrbPerAssetUnitRatio([1n, 10n ** 30n], { account: admin.account });
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -404,11 +403,6 @@ describe("Coverage gaps", function () {
         await usdc.write.mint([admin.account.address, parseUnits("1000", 6)]);
         await usdc.write.approve([bank.address, parseUnits("1000", 6)], { account: admin.account });
         await bank.write.deposit([parseUnits("500", 6), admin.account.address], { account: admin.account });
-
-        // Open round.
-        const [openNeeded, openData] = await scheduler.read.checkUpkeep(["0x"]);
-        expect(openNeeded).to.equal(true);
-        await scheduler.write.performUpkeep([openData]);
 
         // Place a Trio 0-1-2 bet; winningNumber=1 should make it win with 12x.
         const betAmount = parseUnits("10", 6);

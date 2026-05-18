@@ -37,22 +37,16 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// @notice Reserved for future policy; swaps use `amountOutMin = 0` so upkeep is not bricked by pool moves.
     uint256 public slippageBps;
 
-    /// @notice Optional metadata / off-chain jackpot parity (decimals across assets); not read in `fundFromMarket`.
-    mapping(uint32 => uint256) public brbPerAssetUnitRatio;
-
-    uint256 public constant RATIO_SCALE = 1e18;
     uint256 public constant BPS_DENOM = 10_000;
 
     error ZeroAddress();
     error OnlyEngine();
     error EngineAlreadySet();
     error InvalidBps();
-    error RatioNotSet();
 
     event SwapAssetBpsUpdated(uint256 totalBps);
     event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
     event SlippageBpsUpdated(uint256 slippageBps);
-    event BrbRatioUpdated(uint32 marketId, uint256 ratioPerAssetUnit);
     event FundFromMarketSkipped(uint32 indexed marketId, address indexed asset, uint8 reason);
     event JackpotTreasuryTransferFailed(uint32 indexed marketId, address indexed treasury, uint256 amount);
     event JackpotBurnFailed(uint32 indexed marketId, uint256 amount);
@@ -121,12 +115,6 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         if (bps >= BPS_DENOM) revert InvalidBps();
         slippageBps = bps;
         emit SlippageBpsUpdated(bps);
-    }
-
-    function setBrbPerAssetUnitRatio(uint32 marketId, uint256 ratio) external onlyRole(FUNDER_ADMIN_ROLE) {
-        if (ratio == 0) revert RatioNotSet();
-        brbPerAssetUnitRatio[marketId] = ratio;
-        emit BrbRatioUpdated(marketId, ratio);
     }
 
     /// @inheritdoc IBRBJackpotFunder

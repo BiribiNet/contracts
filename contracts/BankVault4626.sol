@@ -20,16 +20,43 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
 
     bytes32 public constant BANK_ADMIN_ROLE = keccak256("BANK_ADMIN_ROLE");
 
-    uint32 public override marketId;
-    IRouletteEngine public ENGINE;
+    /// @custom:storage-location erc7201:biribi.storage.BankVault4626
+    struct BankVaultStorage {
+        uint32 marketId;
+        IRouletteEngine ENGINE;
+        uint256 lockedBetLiquidity;
+        uint256 minBet;
+        address[] _withdrawalQueue;
+        uint256 _queueHead;
+        mapping(address => QueuedWithdrawal) _pendingWithdrawal;
+        mapping(address => uint256) _userQueueIndex;
+    }
 
-    uint256 public lockedBetLiquidity;
-    uint256 public override minBet;
+    // keccak256(abi.encode(uint256(keccak256("biribi.storage.BankVault4626")) - 1)) & ~bytes32(uint256(0xff));
+    bytes32 private constant BANK_VAULT_STORAGE_LOCATION =
+        0xb0c430920bd46af8c5ecb68ebf1a5f6f3805a863a6d4fa0fa5e65feb72f8e800;
 
-    address[] private _withdrawalQueue;
-    uint256 private _queueHead;
-    mapping(address => QueuedWithdrawal) private _pendingWithdrawal;
-    mapping(address => uint256) private _userQueueIndex;
+    function _s() private pure returns (BankVaultStorage storage $) {
+        assembly {
+            $.slot := BANK_VAULT_STORAGE_LOCATION
+        }
+    }
+
+    function marketId() external view override returns (uint32) {
+        return _s().marketId;
+    }
+
+    function ENGINE() external view returns (IRouletteEngine) {
+        return _s().ENGINE;
+    }
+
+    function lockedBetLiquidity() external view returns (uint256) {
+        return _s().lockedBetLiquidity;
+    }
+
+    function minBet() external view override returns (uint256) {
+        return _s().minBet;
+    }
 
     error OnlyEngine();
     error ZeroAmount();
@@ -54,7 +81,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     event WithdrawalEjected(address owner, uint8 reason);
 
     modifier onlyEngine() {
-        if (msg.sender != address(ENGINE)) revert OnlyEngine();
+        if (msg.sender != address(_s().ENGINE)) revert OnlyEngine();
         _;
     }
 
@@ -70,8 +97,9 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         __ERC4626_init(IERC20(assetToken_));
         __AccessControl_init();
 
-        marketId = marketId_;
-        ENGINE = IRouletteEngine(engine_);
+        BankVaultStorage storage $ = _s();
+        $.marketId = marketId_;
+        $.ENGINE = IRouletteEngine(engine_);
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(BANK_ADMIN_ROLE, admin);
@@ -79,8 +107,9 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
 
     function setMinBet(uint256 newMinBet) external onlyRole(BANK_ADMIN_ROLE) {
         if (newMinBet == 0) revert ZeroAmount();
-        uint256 previous = minBet;
-        minBet = newMinBet;
+        BankVaultStorage storage $ = _s();
+        uint256 previous = $.minBet;
+        $.minBet = newMinBet;
         emit MinBetUpdated(previous, newMinBet);
     }
 
@@ -104,17 +133,19 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     }
 
     function _placeBetCore(uint256 amount, bytes calldata betData) private nonReentrant {
-        if (amount < minBet) revert BetTooSmall();
-        lockedBetLiquidity += amount;
-        ENGINE.recordBet(marketId, msg.sender, amount, betData);
-        emit BetPlaced(msg.sender, amount, betData, ENGINE.currentGlobalRound());
+        BankVaultStorage storage $ = _s();
+        if (amount < $.minBet) revert BetTooSmall();
+        $.lockedBetLiquidity += amount;
+        $.ENGINE.recordBet($.marketId, msg.sender, amount, betData);
+        emit BetPlaced(msg.sender, amount, betData, $.ENGINE.currentGlobalRound());
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), amount);
     }
 
     function releaseBets(uint256 amount) external onlyEngine {
-        if (amount > lockedBetLiquidity) lockedBetLiquidity = 0;
-        else lockedBetLiquidity -= amount;
-        emit BetsReleased(amount, lockedBetLiquidity);
+        BankVaultStorage storage $ = _s();
+        if (amount > $.lockedBetLiquidity) $.lockedBetLiquidity = 0;
+        else $.lockedBetLiquidity -= amount;
+        emit BetsReleased(amount, $.lockedBetLiquidity);
     }
 
     function payoutBatch(Payout[] calldata payouts) external onlyEngine returns (uint256 totalPaid) {
@@ -146,9 +177,10 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         if (assets == 0) revert ZeroAmount();
         if (receiver == address(0)) revert InvalidReceiver();
         if (owner != msg.sender) revert UnauthorizedCaller();
-        if (ENGINE.isBankLiquidityRestricted(marketId)) revert WithdrawalBlockedDuringResolution();
-        if (_pendingWithdrawal[owner].kind != 0) revert WithdrawalPending();
-        if (_withdrawalQueue.length - _queueHead >= ENGINE.maxWithdrawalQueueLength()) revert QueueFull();
+        BankVaultStorage storage $ = _s();
+        if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
+        if ($._pendingWithdrawal[owner].kind != 0) revert WithdrawalPending();
+        if ($._withdrawalQueue.length - $._queueHead >= $.ENGINE.maxWithdrawalQueueLength()) revert QueueFull();
 
         shares = previewWithdraw(assets);
         _enqueueWithdrawal(owner, QueuedWithdrawal({ kind: 1, receiver: receiver, assets: assets, shares: 0 }));
@@ -162,45 +194,48 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         if (shares == 0) revert ZeroAmount();
         if (receiver == address(0)) revert InvalidReceiver();
         if (owner != msg.sender) revert UnauthorizedCaller();
-        if (ENGINE.isBankLiquidityRestricted(marketId)) revert WithdrawalBlockedDuringResolution();
-        if (_pendingWithdrawal[owner].kind != 0) revert WithdrawalPending();
-        if (_withdrawalQueue.length - _queueHead >= ENGINE.maxWithdrawalQueueLength()) revert QueueFull();
+        BankVaultStorage storage $ = _s();
+        if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
+        if ($._pendingWithdrawal[owner].kind != 0) revert WithdrawalPending();
+        if ($._withdrawalQueue.length - $._queueHead >= $.ENGINE.maxWithdrawalQueueLength()) revert QueueFull();
 
         assets = previewRedeem(shares);
         _enqueueWithdrawal(owner, QueuedWithdrawal({ kind: 2, receiver: receiver, assets: 0, shares: shares }));
     }
 
     function cancelWithdrawal() external override {
-        if (ENGINE.isBankLiquidityRestricted(marketId)) revert CancelWithdrawalBlockedDuringResolution();
-        QueuedWithdrawal memory q = _pendingWithdrawal[msg.sender];
+        BankVaultStorage storage $ = _s();
+        if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert CancelWithdrawalBlockedDuringResolution();
+        QueuedWithdrawal memory q = $._pendingWithdrawal[msg.sender];
         if (q.kind == 0) revert NoWithdrawalPending();
-        delete _pendingWithdrawal[msg.sender];
+        delete $._pendingWithdrawal[msg.sender];
 
-        uint256 idx = _userQueueIndex[msg.sender];
-        if (idx < _withdrawalQueue.length && _withdrawalQueue[idx] == msg.sender) {
-            _withdrawalQueue[idx] = address(0);
+        uint256 idx = $._userQueueIndex[msg.sender];
+        if (idx < $._withdrawalQueue.length && $._withdrawalQueue[idx] == msg.sender) {
+            $._withdrawalQueue[idx] = address(0);
         }
-        delete _userQueueIndex[msg.sender];
+        delete $._userQueueIndex[msg.sender];
         emit WithdrawalProcessed(msg.sender, 0, address(0), 0, 0);
     }
 
     function processWithdrawalQueue(uint256 maxCount) external override onlyEngine returns (uint256 processed) {
-        uint256 head = _queueHead;
-        uint256 len = _withdrawalQueue.length;
+        BankVaultStorage storage $ = _s();
+        uint256 head = $._queueHead;
+        uint256 len = $._withdrawalQueue.length;
         IERC20 token = IERC20(asset());
 
         while (processed < maxCount && head < len) {
-            address owner = _withdrawalQueue[head];
-            _withdrawalQueue[head] = address(0);
+            address owner = $._withdrawalQueue[head];
+            $._withdrawalQueue[head] = address(0);
             unchecked {
                 ++head;
             }
             if (owner == address(0)) continue;
 
-            QueuedWithdrawal memory q = _pendingWithdrawal[owner];
+            QueuedWithdrawal memory q = $._pendingWithdrawal[owner];
             if (q.kind == 0) continue;
-            delete _pendingWithdrawal[owner];
-            delete _userQueueIndex[owner];
+            delete $._pendingWithdrawal[owner];
+            delete $._userQueueIndex[owner];
 
             if (q.kind == 1) {
                 uint256 sh = previewWithdraw(q.assets);
@@ -209,7 +244,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
                     continue;
                 }
                 uint256 free = token.balanceOf(address(this));
-                if (free < q.assets + lockedBetLiquidity) {
+                if (free < q.assets + $.lockedBetLiquidity) {
                     emit WithdrawalEjected(owner, 3);
                     continue;
                 }
@@ -222,7 +257,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
                 }
                 uint256 aOut = previewRedeem(q.shares);
                 uint256 free = token.balanceOf(address(this));
-                if (free < aOut + lockedBetLiquidity) {
+                if (free < aOut + $.lockedBetLiquidity) {
                     emit WithdrawalEjected(owner, 3);
                     continue;
                 }
@@ -235,34 +270,38 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
             }
         }
 
-        _queueHead = head;
+        $._queueHead = head;
         if (head == len && head != 0) {
-            delete _withdrawalQueue;
-            _queueHead = 0;
+            delete $._withdrawalQueue;
+            $._queueHead = 0;
         }
     }
 
     function _enqueueWithdrawal(address owner, QueuedWithdrawal memory q) private {
-        _pendingWithdrawal[owner] = q;
-        uint256 idx = _withdrawalQueue.length;
-        _userQueueIndex[owner] = idx;
-        _withdrawalQueue.push(owner);
+        BankVaultStorage storage $ = _s();
+        $._pendingWithdrawal[owner] = q;
+        uint256 idx = $._withdrawalQueue.length;
+        $._userQueueIndex[owner] = idx;
+        $._withdrawalQueue.push(owner);
         emit WithdrawalRequested(owner, q.kind, q.receiver, q.assets, q.shares);
     }
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
-        if (ENGINE.isBankLiquidityRestricted(marketId)) revert DepositBlockedDuringResolution();
+        BankVaultStorage storage $ = _s();
+        if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert DepositBlockedDuringResolution();
         return super.deposit(assets, receiver);
     }
 
     function mint(uint256 shares, address receiver) public override returns (uint256) {
-        if (ENGINE.isBankLiquidityRestricted(marketId)) revert DepositBlockedDuringResolution();
+        BankVaultStorage storage $ = _s();
+        if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert DepositBlockedDuringResolution();
         return super.mint(shares, receiver);
     }
 
     function totalAssets() public view override returns (uint256) {
+        uint256 locked = _s().lockedBetLiquidity;
         uint256 gross = IERC20(asset()).balanceOf(address(this));
-        return gross > lockedBetLiquidity ? gross - lockedBetLiquidity : 0;
+        return gross > locked ? gross - locked : 0;
     }
 
     function maxWithdraw(address owner) public view override returns (uint256) {
