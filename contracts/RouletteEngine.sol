@@ -170,7 +170,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     error OnlyRegistry();
     error InsufficientBankForMaxPayout();
 
-    event MarketRegistered(uint32 marketId, address bank);
+    event MarketRegistered(uint32 marketId, address asset, address bank);
 
     event VrfRequested(uint64 newRoundId, uint256 requestId, uint256 timestamp);
     event VRFResult(uint64 roundId, uint8 winningNumber, uint8 jackpotNumber);
@@ -292,7 +292,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     function _registerMarket(uint32 marketId, address bank) private {
         IMarketRegistry.MarketConfig memory cfg = _s().REGISTRY.getMarket(marketId);
         if (bank != cfg.bank) revert InvalidRound();
-        emit MarketRegistered(marketId, bank);
+        emit MarketRegistered(marketId, cfg.asset, bank);
     }
 
     function recordBet(uint32 marketId, address player, uint256 amount, bytes calldata betData) external onlyBank(marketId) {

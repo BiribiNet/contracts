@@ -22,8 +22,6 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     error InvalidMarketId();
     error MarketAlreadyRegistered();
 
-    event MarketRegistered(uint32 marketId, address asset, address bank);
-    event MarketCreated(uint32 marketId, address asset, address bank);
     event VaultBeaconUpdated(address previousBeacon, address newBeacon);
     event EngineUpdated(address previousEngine, address newEngine);
 
@@ -95,7 +93,6 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
 
         marketId = _registerNextMarket(params.asset, bank);
         IRouletteEngine(engine).registerMarketFromRegistry(marketId, bank);
-        emit MarketCreated(marketId, params.asset, bank);
     }
 
     function _encodeVaultInitData(VaultInit memory p) private pure returns (bytes memory) {
@@ -126,7 +123,6 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         _markets[next] = MarketConfig({ asset: asset, bank: bank });
         _marketCount = next;
 
-        emit MarketRegistered(next, asset, bank);
         return next;
     }
 

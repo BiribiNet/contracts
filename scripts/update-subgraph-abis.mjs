@@ -29,22 +29,24 @@ const ABI_COPY_MAP = [
   ["AssetToken.json", "MockUSDC"],
   ["Game.json", "RouletteEngine"],
   ["JackpotTreasury.json", "JackpotTreasury"],
-  ["MarketRegistry.json", "MarketRegistry"],
   ["BankVault4626.json", "BankVault4626"],
   ["UpkeepScheduler.json", "UpkeepScheduler"],
   ["UpkeepManager.json", "UpkeepManager"],
 ];
 
 /** Contracts whose events are merged for Goldsky (deduped). UpkeepManager included for UpkeepRegistered etc. */
+/** Registry omitted: market catalog is RouletteEngine.MarketRegistered only (no MarketCreated). */
 const MERGE_EVENT_SOURCES = [
   "MockUSDC",
   "RouletteEngine",
   "JackpotTreasury",
-  "MarketRegistry",
   "BankVault4626",
   "UpkeepScheduler",
   "UpkeepManager",
 ];
+
+/** Legacy registry event; market catalog uses RouletteEngine.MarketRegistered only. */
+const EXCLUDED_MERGE_EVENT_NAMES = new Set(["MarketCreated"]);
 
 if (!process.env.SKIP_COMPILE) {
   const r = spawnSync("yarn", ["hardhat", "compile"], {
@@ -99,6 +101,9 @@ for (const solName of MERGE_EVENT_SOURCES) {
   if (!Array.isArray(artifact.abi)) continue;
   for (const item of artifact.abi) {
     if (!item || item.type !== "event") continue;
+    if (EXCLUDED_MERGE_EVENT_NAMES.has(item.name)) {
+      continue;
+    }
     const key = eventKey(item);
     if (seenEventKeys.has(key)) continue;
     seenEventKeys.add(key);

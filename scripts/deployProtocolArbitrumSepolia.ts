@@ -376,8 +376,10 @@ async function main() {
             brb,
             roulette: engine.address,
             stakedBRB: marketUsdc.bank,
+            banks: [marketUsdc.bank, marketDai.bank, marketBrb.bank],
             brbReferal,
             upkeepManager: upkeepManager.address,
+            jackpotTreasury: jackpotTreasury.address,
         },
     };
 
