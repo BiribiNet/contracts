@@ -135,8 +135,6 @@ library RouletteEngineStorageLib {
         mapping(uint64 => mapping(uint32 => bool)) _roundHasMarket;
         mapping(uint64 => uint32) _roundTriggerMarket;
         mapping(uint64 => uint40) _roundLockAt;
-        uint64 _payoutFinderRound;
-        uint32 _payoutFinderMarket;
         /// @dev Phase of `_globalRound` only; older rounds are `Completed`, newer ids are `Unset` (see `phaseOfRound`).
         RoundPhase _roundPhase;
         mapping(uint256 => uint64) requestIdToGlobalRound;

@@ -671,11 +671,6 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         $._vrfQueueHead += 1;
 
         emit VRFResult(roundId, winningNumber, jackpotNumber);
-
-        if ($._payoutFinderRound == 0 || roundId < $._payoutFinderRound) {
-            $._payoutFinderRound = roundId;
-            $._payoutFinderMarket = 1;
-        }
     }
 
     /// @dev Applies the bundle built in `previewPayoutBundle` during `checkUpkeep`. Trusted scheduler + Automation only.
@@ -757,10 +752,10 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
             ++$._roundMarketsSettledCount[roundId];
         }
         IBankVault(bank).processWithdrawalQueue($.withdrawalQueueBatchSize);
-        RouletteUpkeepScanLib.advancePayoutFinderHintAfterSettlement($, roundId, marketId, $.REGISTRY.marketCount());
         _tryCompleteGlobalRound($, roundId);
     }
 
+    /// @dev Opens the next global round only after every participating market is settled — never two unpaid rounds.
     function _tryCompleteGlobalRound(RouletteEngineStorageLib.Layout storage $, uint64 rid) private {
         if (!_isRoundDone($, rid)) return;
         $._roundPhase = RouletteEngineStorageLib.RoundPhase.Completed;

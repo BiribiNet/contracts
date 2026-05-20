@@ -1,10 +1,26 @@
 import { vars } from 'hardhat/config';
 import type { NetworksUserConfig } from 'hardhat/types';
 
+/** Same default as Hardhat / MetaMask dev — keeps `getWalletClients()[0]` predictable. */
+const HARDHAT_TEST_MNEMONIC =
+  'test test test test test test test test test test test junk';
+
+/**
+ * Hardhat’s built-in network only funds 20 signers by default.
+ * Crowd / parallel-lane tests need 100+ distinct `viem.getWalletClients()` accounts.
+ * Override with `HARDHAT_ACCOUNT_COUNT` (e.g. 256) if you need more headroom locally.
+ */
+const HARDHAT_ACCOUNT_COUNT = Number(process.env.HARDHAT_ACCOUNT_COUNT ?? 128);
+
 const networks: NetworksUserConfig = {};
 
 networks.hardhat = {
   allowUnlimitedContractSize: true,
+  accounts: {
+    mnemonic: HARDHAT_TEST_MNEMONIC,
+    count: HARDHAT_ACCOUNT_COUNT,
+    accountsBalance: '10000000000000000000000', // 10_000 ETH per signer
+  },
 };
 
 if (vars.has('BRB_KEY')) {
