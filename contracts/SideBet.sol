@@ -151,9 +151,18 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
             if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
         } else if (cfg.betType == SideBetType.COLOR_COUNT || cfg.betType == SideBetType.CONSECUTIVE_STREAK) {
             if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-        } else {
-            // RED_RATIO
+        } else if (cfg.betType == SideBetType.RED_RATIO) {
             if (cfg.redRatioBps == 0 || cfg.redRatioBps > BPS_DENOMINATOR) revert InvalidConfig();
+        } else if (cfg.betType == SideBetType.LIGHTNING_DOUBLE) {
+            // targetNumber 0-36, or 37 = any number; run length >= 2.
+            if (cfg.targetNumber > SideBetOutcomeLib.ANY_NUMBER) revert InvalidConfig();
+            if (cfg.targetCount < 2 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
+        } else if (cfg.betType == SideBetType.PERFECT_ALTERNATION) {
+            if (cfg.windowSpins < 2) revert InvalidConfig();
+        } else {
+            // DOZEN_HIT / COLUMN_HIT: a dozen/column index in 1..3.
+            if (cfg.targetNumber < 1 || cfg.targetNumber > 3) revert InvalidConfig();
+            if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
         }
     }
 

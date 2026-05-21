@@ -1,5 +1,19 @@
 import { viem } from "hardhat";
-import { encodeFunctionData, type Address } from "viem";
+import { encodeFunctionData, isAddress, type Address } from "viem";
+
+/** High-odds (>100x) demo templates seeded for a given staked token. */
+export function highOddsSeedTemplates(token: Address) {
+    const minStake = 1_000_000n; // 1.0 at 6 decimals (USDC-style); admin can retune per token
+    const maxStake = 1_000_000_000n; // 1,000.0 at 6 decimals
+    return [
+        // Lightning Double: any number twice in a row within 6 spins (~150x).
+        { token, betType: 4, color: 0, targetNumber: 37, targetCount: 2, redRatioBps: 0, windowSpins: 6, multiplierBps: 1_500_000, minStake, maxStake, enabled: true },
+        // Zebra: colors alternate perfectly for 8 spins (~150x).
+        { token, betType: 5, color: 0, targetNumber: 0, targetCount: 0, redRatioBps: 0, windowSpins: 8, multiplierBps: 1_500_000, minStake, maxStake, enabled: true },
+        // Dozen Sweep: the 1st dozen hits on all 5 spins (~250x).
+        { token, betType: 6, color: 0, targetNumber: 1, targetCount: 5, redRatioBps: 0, windowSpins: 5, multiplierBps: 2_500_000, minStake, maxStake, enabled: true },
+    ] as const;
+}
 
 export type SideBetDeployConfig = {
     admin: Address;
@@ -45,7 +59,7 @@ async function main(): Promise<void> {
     const { sideBet, implementation } = await deploySideBet({
         admin: deployer.account.address,
         minMultiplierBps: 50_000, // 5x
-        maxMultiplierBps: 200_000, // 20x
+        maxMultiplierBps: 5_000_000, // 500x — headroom for the >100x bet types
         resolverFeeBps: 10, // 0.1%
     });
 
@@ -53,6 +67,19 @@ async function main(): Promise<void> {
     console.log("SideBet implementation:", implementation.address);
     // eslint-disable-next-line no-console
     console.log("SideBet proxy:", sideBet.address);
+
+    // Optionally seed high-odds demo templates against a configured token.
+    const seedToken = process.env.SIDE_BET_SEED_TOKEN;
+    if (seedToken && isAddress(seedToken)) {
+        for (const template of highOddsSeedTemplates(seedToken)) {
+            await sideBet.write.addConfig([template], { account: deployer.account });
+        }
+        // eslint-disable-next-line no-console
+        console.log("Seeded high-odds templates for token:", seedToken);
+    } else {
+        // eslint-disable-next-line no-console
+        console.log("Set SIDE_BET_SEED_TOKEN to a token address to seed demo templates.");
+    }
 }
 
 // Allow `hardhat run scripts/deploySideBet.ts` while keeping `deploySideBet` importable from tests.

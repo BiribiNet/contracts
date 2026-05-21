@@ -3,13 +3,23 @@ import { encodeFunctionData, parseUnits, type Address } from "viem";
 import { viem } from "hardhat";
 
 const MIN_MULTIPLIER_BPS = 50_000; // 5x
-const MAX_MULTIPLIER_BPS = 200_000; // 20x
+const MAX_MULTIPLIER_BPS = 5_000_000; // 500x — headroom for >100x bet types
 const RESOLVER_FEE_BPS = 10; // 0.1%
 
 const USDC = (value: string): bigint => parseUnits(value, 6);
 
 // ISideBet enum indices.
-const BetType = { COLOR_COUNT: 0, NUMBER_HIT: 1, CONSECUTIVE_STREAK: 2, RED_RATIO: 3 } as const;
+const BetType = {
+    COLOR_COUNT: 0,
+    NUMBER_HIT: 1,
+    CONSECUTIVE_STREAK: 2,
+    RED_RATIO: 3,
+    LIGHTNING_DOUBLE: 4,
+    PERFECT_ALTERNATION: 5,
+    DOZEN_HIT: 6,
+    COLUMN_HIT: 7,
+} as const;
+const ANY_NUMBER = 37;
 const Color = { RED: 0, BLACK: 1 } as const;
 const Status = { ACTIVE: 0, WON: 1, LOST: 2, EXPIRED: 3, CANCELLED: 4 } as const;
 
@@ -234,5 +244,88 @@ describe("SideBet", function () {
         expect(await sideBet.read.spinCount()).to.equal(4n);
         const slice = await sideBet.read.getSpins([1n, 2n]);
         expect(slice).to.deep.equal([7, 36]);
+    });
+
+    it("resolves LIGHTNING_DOUBLE (any number twice in a row) at >100x odds", async function () {
+        const { sideBet, usdc, admin, alice, keeper } = await deployFixture();
+        await sideBet.write.addConfig(
+            [
+                config({
+                    token: usdc.address,
+                    betType: BetType.LIGHTNING_DOUBLE,
+                    targetNumber: ANY_NUMBER,
+                    targetCount: 2,
+                    windowSpins: 6,
+                    multiplierBps: 1_500_000, // 150x
+                }),
+            ],
+            { account: admin.account },
+        );
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        // payout = 10 * 150 = 1500
+        expect(await sideBet.read.reservedOf([usdc.address])).to.equal(USDC("1500"));
+
+        await feedSpins(sideBet, keeper, [5, 5]);
+        expect(await sideBet.read.isResolvable([0n])).to.equal(true);
+        await sideBet.write.resolve([0n], { account: alice.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
+    });
+
+    it("resolves PERFECT_ALTERNATION (win on full window, early loss on a same-colour pair)", async function () {
+        const { sideBet, usdc, admin, alice, keeper } = await deployFixture();
+        await sideBet.write.addConfig(
+            [config({ token: usdc.address, betType: BetType.PERFECT_ALTERNATION, windowSpins: 4, multiplierBps: 50_000 })],
+            { account: admin.account },
+        );
+        // win: red, black, red, black (1,2,1,2)
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        expect(await sideBet.read.isResolvable([0n])).to.equal(false);
+        await feedSpins(sideBet, keeper, [1, 2, 1, 2]);
+        await sideBet.write.resolve([0n], { account: alice.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
+
+        // early loss: two reds in a row break the alternation immediately
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await feedSpins(sideBet, keeper, [1, 3]);
+        expect(await sideBet.read.isResolvable([1n])).to.equal(true);
+        await sideBet.write.resolve([1n], { account: alice.account });
+        expect((await sideBet.read.getBet([1n])).status).to.equal(Status.LOST);
+    });
+
+    it("resolves DOZEN_HIT (early win, early loss on an impossible sweep)", async function () {
+        const { sideBet, usdc, admin, alice, keeper } = await deployFixture();
+        await sideBet.write.addConfig(
+            [config({ token: usdc.address, betType: BetType.DOZEN_HIT, targetNumber: 1, targetCount: 3, windowSpins: 5, multiplierBps: 50_000 })],
+            { account: admin.account },
+        );
+        // win: three numbers in the first dozen (1-12)
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await feedSpins(sideBet, keeper, [1, 2, 3]);
+        await sideBet.write.resolve([0n], { account: alice.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
+
+        // early loss: a sweep (5/5) is impossible after one miss
+        await sideBet.write.addConfig(
+            [config({ token: usdc.address, betType: BetType.DOZEN_HIT, targetNumber: 1, targetCount: 5, windowSpins: 5, multiplierBps: 50_000 })],
+            { account: admin.account },
+        );
+        await sideBet.write.placeBet([1n, USDC("10")], { account: alice.account });
+        await feedSpins(sideBet, keeper, [1, 13]); // 13 is in the 2nd dozen
+        expect(await sideBet.read.isResolvable([1n])).to.equal(true);
+        await sideBet.write.resolve([1n], { account: alice.account });
+        expect((await sideBet.read.getBet([1n])).status).to.equal(Status.LOST);
+    });
+
+    it("resolves COLUMN_HIT", async function () {
+        const { sideBet, usdc, admin, alice, keeper } = await deployFixture();
+        await sideBet.write.addConfig(
+            [config({ token: usdc.address, betType: BetType.COLUMN_HIT, targetNumber: 1, targetCount: 2, windowSpins: 4, multiplierBps: 50_000 })],
+            { account: admin.account },
+        );
+        // column 1 = {1,4,7,...}; 1 and 4 both qualify
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await feedSpins(sideBet, keeper, [1, 4]);
+        await sideBet.write.resolve([0n], { account: alice.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
     });
 });

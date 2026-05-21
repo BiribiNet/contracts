@@ -33,10 +33,26 @@ library SideBetOutcomeLib {
             num == 36);
     }
 
+    /// @dev Sentinel `targetNumber` for LIGHTNING_DOUBLE meaning "any number".
+    uint8 internal constant ANY_NUMBER = 37;
+
     function _matchesColor(uint8 num, ISideBet.SideBetColor color) private pure returns (bool) {
         if (color == ISideBet.SideBetColor.RED) return isRed(num);
         // BLACK: any non-zero pocket that is not red (0 is green and matches neither colour).
         return num != 0 && !isRed(num);
+    }
+
+    /// @dev Dozen of a pocket: 1 (1-12), 2 (13-24), 3 (25-36); 0 (green) belongs to none.
+    function _dozenOf(uint8 num) private pure returns (uint8) {
+        if (num == 0) return 0;
+        return uint8((num - 1) / 12 + 1);
+    }
+
+    /// @dev Column of a pocket: 1, 2 or 3; 0 (green) belongs to none.
+    function _columnOf(uint8 num) private pure returns (uint8) {
+        if (num == 0) return 0;
+        uint8 mod = num % 3;
+        return mod == 0 ? 3 : mod;
     }
 
     /// @param observed Spins seen so far within the window (length <= windowSpins).
@@ -79,6 +95,51 @@ library SideBetOutcomeLib {
                     run = 0;
                 }
             }
+            return (windowComplete, false);
+        }
+
+        if (bet.betType == ISideBet.SideBetType.LIGHTNING_DOUBLE) {
+            // Same number on `targetCount` consecutive spins (targetNumber == 37 -> any number).
+            bool any = bet.targetNumber == ANY_NUMBER;
+            uint256 run;
+            for (uint256 i; i < observed.length; ++i) {
+                uint8 n = observed[i];
+                bool valueOk = any || n == bet.targetNumber;
+                if (i > 0 && n == observed[i - 1] && valueOk) {
+                    unchecked {
+                        ++run;
+                    }
+                } else if (valueOk) {
+                    run = 1;
+                } else {
+                    run = 0;
+                }
+                if (run >= bet.targetCount) return (true, true);
+            }
+            return (windowComplete, false);
+        }
+
+        if (bet.betType == ISideBet.SideBetType.PERFECT_ALTERNATION) {
+            // Colors strictly alternate across the full window; a 0 or same-colour pair fails it.
+            for (uint256 i; i < observed.length; ++i) {
+                uint8 n = observed[i];
+                if (n == 0) return (true, false);
+                if (i > 0 && isRed(n) == isRed(observed[i - 1])) return (true, false);
+            }
+            if (windowComplete) return (true, true);
+            return (false, false);
+        }
+
+        if (bet.betType == ISideBet.SideBetType.DOZEN_HIT || bet.betType == ISideBet.SideBetType.COLUMN_HIT) {
+            bool isDozen = bet.betType == ISideBet.SideBetType.DOZEN_HIT;
+            uint256 count;
+            for (uint256 i; i < observed.length; ++i) {
+                uint8 group = isDozen ? _dozenOf(observed[i]) : _columnOf(observed[i]);
+                if (group == bet.targetNumber) ++count;
+            }
+            if (count >= bet.targetCount) return (true, true);
+            uint256 remainingGroup = uint256(bet.windowSpins) - observed.length;
+            if (count + remainingGroup < bet.targetCount) return (true, false);
             return (windowComplete, false);
         }
 

@@ -8,11 +8,16 @@ pragma solidity ^0.8.27;
 ///         main `RouletteEngine` outcomes — this contract never touches the engine itself.
 interface ISideBet {
     /// @dev Order MUST match the subgraph `SideBetType` enum (schema.graphql).
+    ///      New types are appended so existing indices stay stable.
     enum SideBetType {
         COLOR_COUNT,
         NUMBER_HIT,
         CONSECUTIVE_STREAK,
-        RED_RATIO
+        RED_RATIO,
+        LIGHTNING_DOUBLE,
+        PERFECT_ALTERNATION,
+        DOZEN_HIT,
+        COLUMN_HIT
     }
 
     /// @dev Order MUST match the subgraph `SideBetColor` enum.
@@ -36,8 +41,8 @@ interface ISideBet {
         address token; // ERC-20 staked / paid in (one token per config)
         SideBetType betType;
         SideBetColor color; // COLOR_COUNT / CONSECUTIVE_STREAK
-        uint8 targetNumber; // NUMBER_HIT (0-36)
-        uint16 targetCount; // COLOR_COUNT / NUMBER_HIT / CONSECUTIVE_STREAK
+        uint8 targetNumber; // NUMBER_HIT (0-36); LIGHTNING_DOUBLE (0-36, or 37 = any number); DOZEN_HIT / COLUMN_HIT (1-3)
+        uint16 targetCount; // COLOR_COUNT / NUMBER_HIT / CONSECUTIVE_STREAK / LIGHTNING_DOUBLE (run length) / DOZEN_HIT / COLUMN_HIT
         uint16 redRatioBps; // RED_RATIO (1-10000)
         uint16 windowSpins; // spins observed before final resolution
         uint32 multiplierBps; // payout = stake * multiplierBps / 10_000
