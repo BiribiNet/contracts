@@ -2,7 +2,7 @@
 pragma solidity ^0.8.27;
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { VRFCoordinatorV2Interface } from "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
 import { VRFConsumerBaseV2 } from "./external/VRFConsumerBaseV2.sol";
@@ -25,13 +25,12 @@ import { RouletteJackpotCollectLib } from "./libraries/RouletteJackpotCollectLib
 import { RouletteUpkeepScanLib } from "./libraries/RouletteUpkeepScanLib.sol";
 
 /// @notice UUPS proxy implementation. Deploy implementation with `vrfCoordinator`, then `ERC1967Proxy` + `initialize`.
-contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsumerBaseV2, IRouletteEngine {
+contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeable, VRFConsumerBaseV2, IRouletteEngine {
     using BetStorageLib for BetStorageLib.RoundTotals;
 
-    /// @dev Legacy role id bytes (off-chain / tooling); access is `onlyOwner` / `UPKEEP_SCHEDULER`.
-    bytes32 public constant ENGINE_ADMIN_ROLE = keccak256("ENGINE_ADMIN_ROLE");
-    bytes32 public constant SCHEDULER_ROLE = keccak256("SCHEDULER_ROLE");
-
+    bytes32 public constant ENGINE_WITHDRAWAL_ROLE = keccak256("ENGINE_WITHDRAWAL_ROLE");
+    bytes32 public constant ENGINE_PAYOUT_ROLE = keccak256("ENGINE_PAYOUT_ROLE");
+    bytes32 public constant ENGINE_ROUND_ROLE = keccak256("ENGINE_ROUND_ROLE");
     uint8 private constant BET_STRAIGHT = 1;
     uint8 private constant BET_SPLIT = 2;
     uint8 private constant BET_STREET = 3;
@@ -47,7 +46,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     uint8 private constant BET_HIGH = 13;
     uint8 private constant BET_TRIO_012 = 14;
     uint8 private constant BET_TRIO_023 = 15;
-    uint256 private constant INFRA_BPS = 250;
+    uint256 private constant INFRA_BPS = 200;
 
     uint32 public constant DEFAULT_PAYOUT_LANE_COUNT = 10;
 
@@ -96,10 +95,6 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         return _s().ROUND_DURATION;
     }
 
-    function minJackpotBet() external view returns (uint256) {
-        return _s().minJackpotBet;
-    }
-
     function withdrawalQueueBatchSize() external view returns (uint256) {
         return _s().withdrawalQueueBatchSize;
     }
@@ -132,20 +127,8 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         return _s().marketRoundStateByRound[roundId][marketId];
     }
 
-    function roundStraightBetsSum(uint64 roundId, uint32 marketId, uint256 number)
-        external
-        view
-        returns (uint256)
-    {
-        return _s().roundStraightBetsSum[roundId][marketId][number];
-    }
-
     function roundPhase(uint64 roundId) external view returns (RouletteEngineStorageLib.RoundPhase) {
         return RouletteEngineStorageLib.phaseOfRound(_s(), roundId);
-    }
-
-    function requestIdToGlobalRound(uint256 requestId) external view returns (uint64) {
-        return _s().requestIdToGlobalRound[requestId];
     }
 
     uint256 public constant DEFAULT_WITHDRAWAL_QUEUE_BATCH_SIZE = 5;
@@ -157,7 +140,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     error UnauthorizedScheduler();
     error UnauthorizedBank();
     error RoundIsLocked();
-    error BettingClosedAwaitingSeal();
+    error BettingClosedAwaitingLock();
     error NoBets();
     error NoOpenRound();
     error VrfAlreadyPending();
@@ -176,23 +159,22 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     event VRFResult(uint64 roundId, uint8 winningNumber, uint8 jackpotNumber);
     event RoundResolved(uint64 roundId);
 
-    event MinJackpotConditionUpdated(uint256 newMinJackpotCondition);
-
+    /// @dev One log per `recordBet` call; decode `betData` as `(uint256[] betTypes, uint256[] numbers, uint256[] amounts)`.
     event BetRecorded(
         uint32 marketId,
         uint64 localRound,
         address player,
-        uint256 amount,
-        uint8 betType,
-        uint16 number
+        uint256 totalAmount,
+        bytes betData
     );
+    event RoundCountdownStarted(uint64 roundId, uint32 triggerMarketId, uint40 lockAt);
     event RoundLocked(uint32 marketId, uint64 roundId, uint64 globalRoundId);
-    event GlobalRoundSealed(uint64 globalRoundId, uint32 triggerMarketId);
     event PayoutProgress(uint64 globalRoundId, uint32 marketId, uint256 fromCursor, uint256 toCursor, uint256 paidAmount);
     event JackpotFunded(uint64 globalRoundId, uint32 marketId, uint256 amount);
     event InfrastructureFeePaid(uint64 globalRoundId, uint32 marketId, uint256 amount);
     event WithdrawalQueueBatchSizeUpdated(uint256 newBatchSize);
     event MaxWithdrawalQueueLengthUpdated(uint256 newMaxLength);
+    event RoundDurationUpdated(uint32 newRoundDuration);
 
     modifier onlyScheduler() {
         if (msg.sender != _s().UPKEEP_SCHEDULER) revert UnauthorizedScheduler();
@@ -223,7 +205,11 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         ) revert ZeroAddress();
         if (cfg.roundDuration == 0) revert InvalidRoundDuration();
 
-        __Ownable_init(cfg.admin);
+        __AccessControl_init();
+        _grantRole(DEFAULT_ADMIN_ROLE, cfg.admin);
+        _grantRole(ENGINE_WITHDRAWAL_ROLE, cfg.admin);
+        _grantRole(ENGINE_PAYOUT_ROLE, cfg.admin);
+        _grantRole(ENGINE_ROUND_ROLE, cfg.admin);
 
         RouletteEngineStorageLib.Layout storage $ = _s();
         $.REGISTRY = IMarketRegistry(cfg.registry);
@@ -245,7 +231,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         $._roundPhase = RouletteEngineStorageLib.RoundPhase.Open;
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     /// @inheritdoc IRouletteEngine
     function isBankLiquidityRestricted(uint32 marketId) public view returns (bool) {
@@ -257,19 +243,19 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         return !$.marketRoundStateByRound[r][marketId].settled;
     }
 
-    function setWithdrawalQueueBatchSize(uint256 newBatchSize) external onlyOwner {
+    function setWithdrawalQueueBatchSize(uint256 newBatchSize) external onlyRole(ENGINE_WITHDRAWAL_ROLE) {
         if (newBatchSize == 0 || newBatchSize > MAX_WITHDRAWAL_QUEUE_BATCH_SIZE) revert InvalidWithdrawalQueueBatchSize();
         _s().withdrawalQueueBatchSize = newBatchSize;
         emit WithdrawalQueueBatchSizeUpdated(newBatchSize);
     }
 
-    function setMaxWithdrawalQueueLength(uint256 newMaxLength) external onlyOwner {
+    function setMaxWithdrawalQueueLength(uint256 newMaxLength) external onlyRole(ENGINE_WITHDRAWAL_ROLE) {
         if (newMaxLength == 0 || newMaxLength > MAX_MAX_WITHDRAWAL_QUEUE_LENGTH) revert InvalidMaxWithdrawalQueueLength();
         _s().maxWithdrawalQueueLength = newMaxLength;
         emit MaxWithdrawalQueueLengthUpdated(newMaxLength);
     }
 
-    function setPayoutLaneCount(uint32 newLaneCount) external onlyOwner {
+    function setPayoutLaneCount(uint32 newLaneCount) external onlyRole(ENGINE_PAYOUT_ROLE) {
         if (newLaneCount == 0) revert InvalidJob();
         _s().payoutLaneCount = newLaneCount;
     }
@@ -280,9 +266,11 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         return n == 0 ? 1 : n;
     }
 
-    function setMinJackpotBet(uint256 newMinJackpotBet) external onlyOwner {
-        _s().minJackpotBet = newMinJackpotBet;
-        emit MinJackpotConditionUpdated(newMinJackpotBet);
+    /// @notice Updates betting countdown length for rounds that have not yet started their lock timer.
+    function setRoundDuration(uint32 newRoundDuration) external onlyRole(ENGINE_ROUND_ROLE) {
+        if (newRoundDuration == 0) revert InvalidRoundDuration();
+        _s().ROUND_DURATION = newRoundDuration;
+        emit RoundDurationUpdated(newRoundDuration);
     }
 
     function registerMarketFromRegistry(uint32 marketId, address bank) external onlyRegistry {
@@ -299,16 +287,19 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         RouletteEngineStorageLib.Layout storage $ = _s();
         uint64 roundId = _resolveOpenRound($, marketId);
         if ($._roundPhase != RouletteEngineStorageLib.RoundPhase.Open) revert RoundIsLocked();
-        if (_preLockUpkeepCandidate($, roundId)) revert BettingClosedAwaitingSeal();
+        if (_preLockUpkeepCandidate($, roundId)) revert BettingClosedAwaitingLock();
         RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
         if ($._roundTriggerMarket[roundId] == 0) {
             $._roundTriggerMarket[roundId] = marketId;
-            $._roundLockAt[roundId] = uint40(block.timestamp + uint256($.ROUND_DURATION));
+            uint40 lockAt = uint40(block.timestamp + uint256($.ROUND_DURATION));
+            $._roundLockAt[roundId] = lockAt;
+            emit RoundCountdownStarted(roundId, marketId, lockAt);
         }
 
         uint256 runningSum = _recordMultiBetPayload($, roundId, marketId, player, betData);
         if (runningSum != amount) revert IRouletteBetErrors.InvalidBetNumber();
         mr.totals.addBet(amount);
+        emit BetRecorded(marketId, roundId, player, amount, betData);
 
         // Bets are recorded before the vault pulls tokens; solvency is checked against balance after this transfer.
         IMarketRegistry.MarketConfig memory cfg = $.REGISTRY.getMarket(marketId);
@@ -333,12 +324,12 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         for (uint256 i; i < len; ) {
             uint256 a = amounts[i];
             runningSum += a;
-            _recordAndEmitBet($, roundId, marketId, player, a, betTypes[i], numbers[i]);
+            _recordSingleBet($, roundId, marketId, player, a, betTypes[i], numbers[i]);
             unchecked { ++i; }
         }
     }
 
-    function _recordAndEmitBet(
+    function _recordSingleBet(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
         uint32 marketId,
@@ -355,7 +346,6 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
             RouletteEngineStorageLib.BetEntry(player, uint128(amount), betType, number);
         _recordBetEntry($, roundId, marketId, bet);
         RouletteExposureLib.accumulate($, roundId, marketId, bet.betType, bet.number, bet.amount);
-        emit BetRecorded(marketId, roundId, player, amount, betType, number);
     }
 
     function _recordBetEntry(
@@ -373,10 +363,6 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         } else {
             $.roundFlatBets[roundId][marketId][bucket].push(bet);
         }
-    }
-
-    function findNextJob(uint32 startCursor, uint32 scanLimit) external view returns (bool found, Job memory job) {
-        return _findNextJob(startCursor, scanLimit, 0);
     }
 
     /// @inheritdoc IRouletteEngine
@@ -432,7 +418,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         return (false, job);
     }
 
-    /// @dev Same predicate as `JobKind.PreLock` in `findNextJob`: once true, `recordBet` is blocked until `_sealGlobalRound`.
+    /// @dev Same predicate as `JobKind.PreLock` in `findNextJob`: once true, `recordBet` is blocked until `_lockGlobalRound`.
     function _preLockUpkeepCandidate(RouletteEngineStorageLib.Layout storage $, uint64 roundId) private view returns (bool) {
         if ($._roundPhase != RouletteEngineStorageLib.RoundPhase.Open) return false;
         uint32 triggerMarketId = $._roundTriggerMarket[roundId];
@@ -528,7 +514,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
 
         if (lane == 0 && gr.jackpotTriggered && !gr.jackpotDistributed && marketId == $._roundTriggerMarket[roundId]) {
             (address[] memory winners,, uint256 totalStake) =
-                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, gr.winningNumber, $.minJackpotBet);
+                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, gr.winningNumber);
             if (totalStake > 0 && uint256(gr.jackpotCursor) < winners.length) return true;
         }
 
@@ -561,13 +547,12 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
 
     function executeJob(
         Job memory job,
-        uint32 maxPayoutsPerCall,
         IBankVault.Payout[] memory winnerPayoutRows,
         address[] memory jackpotWinners,
         uint256[] memory jackpotAmounts
     ) external onlyScheduler returns (bool) {
         if (job.kind == JobKind.PreLock) {
-            _sealGlobalRound();
+            _lockGlobalRound();
             return true;
         }
         if (job.kind == JobKind.TriggerVrf) {
@@ -584,7 +569,6 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     function currentGlobalRound() external view returns (uint64) { return _s()._globalRound; }
     function hasPendingVrf() external view returns (bool) { return _s()._pendingRequestId != 0; }
     function vrfActiveRound() external view returns (uint64) { return _s()._activeVrfRound; }
-    function vrfActiveMarket() external pure returns (uint32) { return 0; }
 
     function _resolveOpenRound(RouletteEngineStorageLib.Layout storage $, uint32 marketId) private returns (uint64 roundId) {
         roundId = $._globalRound;
@@ -605,20 +589,20 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
         $._roundPhase = RouletteEngineStorageLib.RoundPhase.Open;
     }
 
-    // Pre-VRF lock step: freezes the current global round.
-    function _sealGlobalRound() private {
+    /// @dev Pre-VRF lock step: freezes the current global round and enqueues it for VRF.
+    function _lockGlobalRound() private {
         RouletteEngineStorageLib.Layout storage $ = _s();
         uint64 roundId = $._globalRound;
         if ($._roundPhase != RouletteEngineStorageLib.RoundPhase.Open) revert InvalidRound();
+
         uint32 triggerMarketId = $._roundTriggerMarket[roundId];
         if (triggerMarketId == 0) revert InvalidRound();
         if (block.timestamp < uint256($._roundLockAt[roundId])) revert InvalidRound();
         if ($.marketRoundStateByRound[roundId][triggerMarketId].totals.betCount == 0) revert NoBets();
 
-        emit RoundLocked(triggerMarketId, roundId, roundId);
         $._roundPhase = RouletteEngineStorageLib.RoundPhase.Locked;
-        emit GlobalRoundSealed(roundId, triggerMarketId);
         $._vrfQueue.push(roundId);
+        emit RoundLocked(triggerMarketId, roundId, roundId);
     }
 
     function _triggerVrf() private {
@@ -796,7 +780,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     ) private view returns (address[] memory jackpotWinners, uint256[] memory jackpotAmounts) {
         RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
         (address[] memory winners, uint256[] memory stakes, uint256 totalStake) =
-            RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, winningNumber, $.minJackpotBet);
+            RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, winningNumber);
         uint256 n = winners.length;
         if (totalStake == 0 || n == 0) return (jackpotWinners, jackpotAmounts);
 
@@ -833,7 +817,7 @@ contract RouletteEngine is Initializable, OwnableUpgradeable, UUPSUpgradeable, V
     ) private {
         if (gr.jackpotPoolSnapshot == 0) {
             (address[] memory allWinners,, uint256 totalStake) =
-                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, winningNumber, $.minJackpotBet);
+                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, winningNumber);
             gr.jackpotPoolSnapshot = $.JACKPOT_TREASURY.jackpotPool();
             gr.jackpotTotalStake = totalStake;
             gr.jackpotWinnerCount = uint32(allWinners.length);

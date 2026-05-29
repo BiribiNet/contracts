@@ -94,12 +94,14 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
         {
             asset: assetA,
             bankAdmin: admin,
+            minBet: 1n,
         },
     ]);
     m.call(registry, "createMarket", [
         {
             asset: assetB,
             bankAdmin: admin,
+            minBet: 1n,
         },
     ]);
 

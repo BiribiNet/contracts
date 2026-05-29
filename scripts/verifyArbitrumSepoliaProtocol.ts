@@ -172,7 +172,8 @@ async function main() {
         "function VRF_CALLBACK_GAS_LIMIT() view returns (uint32)",
         "function VRF_CONFIRMATIONS() view returns (uint16)",
         "function ROUND_DURATION() view returns (uint32)",
-        "function owner() view returns (address)",
+        "function hasRole(bytes32 role, address account) view returns (bool)",
+        "function DEFAULT_ADMIN_ROLE() view returns (bytes32)",
         "function UPKEEP_SCHEDULER() view returns (address)",
     ]);
 
@@ -189,7 +190,7 @@ async function main() {
         cbGas,
         vrfConf,
         roundDur,
-        adminOnChain,
+        adminHasDefaultRole,
         schedOnChain,
     ] = await Promise.all([
         publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "REGISTRY" }),
@@ -204,7 +205,19 @@ async function main() {
         publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_CALLBACK_GAS_LIMIT" }),
         publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_CONFIRMATIONS" }),
         publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "ROUND_DURATION" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "owner" }),
+        publicClient.readContract({
+            address: d.engine,
+            abi: engineAbi,
+            functionName: "hasRole",
+            args: [
+                await publicClient.readContract({
+                    address: d.engine,
+                    abi: engineAbi,
+                    functionName: "DEFAULT_ADMIN_ROLE",
+                }),
+                d.admin,
+            ],
+        }),
         publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "UPKEEP_SCHEDULER" }),
     ]);
 
@@ -213,6 +226,7 @@ async function main() {
     if (norm(treasuryOnChain) !== norm(d.jackpotTreasury)) throw new Error("Engine JACKPOT_TREASURY mismatch");
     if (norm(funderOnChain) !== norm(d.jackpotFunder)) throw new Error("Engine JACKPOT_FUNDER mismatch");
     if (norm(schedOnChain) !== norm(d.scheduler)) throw new Error("Engine UPKEEP_SCHEDULER mismatch");
+    if (!adminHasDefaultRole) throw new Error("Engine deployer admin lacks DEFAULT_ADMIN_ROLE");
 
     const beaconAbi = parseAbi(["function implementation() view returns (address)", "function owner() view returns (address)"]);
     const registryAbi = parseAbi(["function vaultBeacon() view returns (address)"]);

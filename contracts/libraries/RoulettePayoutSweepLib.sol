@@ -45,54 +45,6 @@ library RoulettePayoutSweepLib {
         }
     }
 
-    function countMarketWinningBets(
-        RouletteEngineStorageLib.Layout storage $,
-        uint64 roundId,
-        uint32 marketId,
-        uint8 winningNumber,
-        RouletteBetLib.WinningBetTypes memory wt
-    ) public view returns (uint256 total) {
-        unchecked {
-            total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Straight)][winningNumber]
-                .length;
-            for (uint256 j; j < wt.winningSplits.length; ) {
-                total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Split)][wt.winningSplits[j]]
-                    .length;
-                ++j;
-            }
-            if (wt.winningStreet != 0) {
-                total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Street)][wt.winningStreet]
-                    .length;
-            }
-            for (uint256 j2; j2 < wt.winningCorners.length; ) {
-                total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Corner)][wt.winningCorners[j2]]
-                    .length;
-                ++j2;
-            }
-            for (uint256 j3; j3 < wt.winningLines.length; ) {
-                total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Line)][wt.winningLines[j3]]
-                    .length;
-                ++j3;
-            }
-            if (wt.winningColumn != 0) {
-                total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Column)][wt.winningColumn]
-                    .length;
-            }
-            if (wt.winningDozen != 0) {
-                total += $.roundNumberedBets[roundId][marketId][uint8(RouletteEngineStorageLib.NumberedBetBucket.Dozen)][wt.winningDozen]
-                    .length;
-            }
-            if (wt.red) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Red)].length;
-            if (wt.black) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Black)].length;
-            if (wt.odd) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Odd)].length;
-            if (wt.even) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Even)].length;
-            if (wt.low) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Low)].length;
-            if (wt.high) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.High)].length;
-            if (wt.trio012) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Trio012)].length;
-            if (wt.trio023) total += $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Trio023)].length;
-        }
-    }
-
     function snapshotMarketWinningShardCounts(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
@@ -229,7 +181,6 @@ library RoulettePayoutSweepLib {
                 $, roundId, marketId, $.roundFlatBets[roundId][marketId][uint8(RouletteEngineStorageLib.FlatBetBucket.Trio023)], gPos, shards, laneCount
             );
         }
-        gPos;
 
         RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
         uint256 total;

@@ -69,6 +69,8 @@ async function deployStack() {
             {
                 asset: usdc.address,
                 bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
             },
         ],
         { account: admin.account },
@@ -78,6 +80,8 @@ async function deployStack() {
             {
                 asset: assetB.address,
                 bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
             },
         ],
         { account: admin.account },
@@ -290,7 +294,7 @@ describe("Multi-Asset architecture", function () {
 
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         const infraAfter = await usdc.read.balanceOf([admin.account.address]);
-        expect(infraAfter - infraBefore).to.equal(250_000n);
+        expect(infraAfter - infraBefore).to.equal(200_000n);
 
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBeforeFulfill - toBurn);
     });

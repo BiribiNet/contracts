@@ -70,6 +70,8 @@ describe("Gas scaling guards", function () {
                     {
                         asset: assets[i].address,
                         bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                     },
                 ],
                 { account: admin.account },

@@ -39,7 +39,7 @@ Biribi uses a multi-market architecture where each market has:
   - Each market MUST have a configurable **minimum bet amount** to avoid griefing/DOS via dust bets that increase storage and automation work.
   - Prefer enforcing this **in `BankVault4626` before calling `recordBet`** (cheap rejection) and optionally mirror as a backstop in `RouletteEngine`.
 - **Jackpot eligibility + winning rule**:
-  - Jackpot can be won **only by STRAIGHT bets** that are jackpot-eligible and satisfy a `minCondition` (e.g. `minJackpotBet`).
+  - Jackpot can be won **only by STRAIGHT bets** on the winning number (per-market `minBet` on the bank enforces stake size).
   - **Jackpot is proportional**: eligible players receive a **share of the jackpot proportional to how much they bet on the jackpot number** (not winner-takes-all).
     - Example: if total eligible stake on the winning number is \(S\), and player stake is \(s_i\), then payout share is \(J \cdot s_i / S\).
 - **Liquidity + vesting/lock requirement**:

@@ -32,4 +32,8 @@ contract MockEngine {
     function processWithdrawals(address vault, uint256 maxCount) external returns (uint256 processed) {
         return IBankVault(vault).processWithdrawalQueue(maxCount);
     }
+
+    function transferOutFromVault(address vault, address recipient, uint256 amount) external {
+        IBankVault(vault).transferOut(recipient, amount);
+    }
 }

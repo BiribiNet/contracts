@@ -103,7 +103,6 @@ library RouletteEngineStorageLib {
         uint64 _activeVrfRound;
         uint64[] _vrfQueue;
         uint256 _vrfQueueHead;
-        uint256 minJackpotBet;
         uint256 withdrawalQueueBatchSize;
         uint256 maxWithdrawalQueueLength;
         uint32 payoutLaneCount;

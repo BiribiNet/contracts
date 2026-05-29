@@ -60,6 +60,8 @@ describe("Coverage gaps", function () {
                 {
                     asset: token.address,
                     bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                 },
             ],
             { account: admin.account },
@@ -78,7 +80,7 @@ describe("Coverage gaps", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address),
+            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address, 1_000_000n),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -107,7 +109,7 @@ describe("Coverage gaps", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address),
+            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address, 1_000_000n),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -116,7 +118,7 @@ describe("Coverage gaps", function () {
         await vault.write.deposit([parseUnits("100", 6), alice.account.address], { account: alice.account });
 
         await vault.write.withdraw([parseUnits("1", 6), alice.account.address, alice.account.address], { account: alice.account });
-        await vault.write.cancelWithdrawal({ account: alice.account });
+        await mockEngine.write.processWithdrawals([vault.address, 10n]);
 
         const shares = await vault.read.balanceOf([alice.account.address]);
         await vault.write.redeem([shares / 10n, alice.account.address, alice.account.address], { account: alice.account });
@@ -130,7 +132,7 @@ describe("Coverage gaps", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address),
+            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address, 1_000_000n),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -204,14 +206,14 @@ describe("Coverage gaps", function () {
         await expect(funder.write.setTreasuryBrbSplit([1, 0], { account: admin.account })).to.be.rejected;
     });
 
-    it("covers restricted deposit/mint/withdraw/cancel paths", async function () {
+    it("covers restricted deposit/mint/withdraw paths", async function () {
         const [admin, alice] = await viem.getWalletClients();
         const token = await viem.deployContract("MockUSDC");
         const restrictedEngine = await viem.deployContract("MockEngineRestricted");
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(token.address, "Bank", "b", 1, restrictedEngine.address, admin.account.address),
+            vaultInitData(token.address, "Bank", "b", 1, restrictedEngine.address, admin.account.address, 1_000_000n),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -221,7 +223,6 @@ describe("Coverage gaps", function () {
         await expect(vault.write.deposit([parseUnits("1", 6), alice.account.address], { account: alice.account })).to.be.rejected;
         await expect(vault.write.mint([1n, alice.account.address], { account: alice.account })).to.be.rejected;
         await expect(vault.write.withdraw([1n, alice.account.address, alice.account.address], { account: alice.account })).to.be.rejected;
-        await expect(vault.write.cancelWithdrawal({ account: alice.account })).to.be.rejected;
     });
 
     it("reverts on invalid roulette bet number (covers validateBetNumber revert)", async function () {
@@ -269,6 +270,8 @@ describe("Coverage gaps", function () {
                 {
                     asset: usdc.address,
                     bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                 },
             ],
             { account: admin.account },
@@ -330,6 +333,8 @@ describe("Coverage gaps", function () {
                 {
                     asset: usdc.address,
                     bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                 },
             ],
             { account: admin.account },
@@ -392,6 +397,8 @@ describe("Coverage gaps", function () {
                 {
                     asset: usdc.address,
                     bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                 },
             ],
             { account: admin.account },
@@ -434,6 +441,54 @@ describe("Coverage gaps", function () {
         const after = await usdc.read.balanceOf([alice.account.address]);
         expect(after).to.equal(before - betAmount + betAmount * 12n);
     });
+
+    it("enforces granular roles for engine configuration", async function () {
+        const [admin, payoutAdmin, stranger] = await viem.getWalletClients();
+        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+        const vrf = await viem.deployContract("MockVrfCoordinator");
+        const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
+        const router = await viem.deployContract("MockUniswapV2Router");
+        const funder = await viem.deployContract("BRBJackpotFunder", [
+            "0x0000000000000000000000000000000000000000",
+            brb.address,
+            router.address,
+            treasury.address,
+            admin.account.address,
+        ]);
+        const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
+        const { engine } = await deployRouletteEngine(
+            [mockLaneKey, mockLaneKey, mockLaneKey],
+            [
+                registry.address,
+                treasury.address,
+                funder.address,
+                admin.account.address,
+                vrf.address,
+                1n,
+                2_000_000,
+                1,
+                60,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+        );
+
+        const enginePayoutRole = await engine.read.ENGINE_PAYOUT_ROLE();
+        await engine.write.grantRole([enginePayoutRole, payoutAdmin.account.address], { account: admin.account });
+
+        expect(await engine.read.ROUND_DURATION()).to.equal(60);
+        await engine.write.setRoundDuration([120], { account: admin.account });
+        expect(await engine.read.ROUND_DURATION()).to.equal(120);
+
+        await expect(engine.write.setRoundDuration([0], { account: admin.account })).to.be.rejected;
+        await expect(engine.write.setRoundDuration([90], { account: stranger.account })).to.be.rejected;
+        await expect(engine.write.setRoundDuration([100], { account: payoutAdmin.account })).to.be.rejected;
+
+        await engine.write.setPayoutLaneCount([5], { account: payoutAdmin.account });
+        expect(await engine.read.payoutParallelLaneCount()).to.equal(5);
+        await expect(engine.write.setPayoutLaneCount([3], { account: stranger.account })).to.be.rejected;
+    });
 });
 
 function vaultInitData(
@@ -443,6 +498,7 @@ function vaultInitData(
     marketId: number,
     engine: Address,
     admin: Address,
+    minBet: bigint,
 ): Hex {
     return encodeFunctionData({
         abi: [
@@ -451,18 +507,35 @@ function vaultInitData(
                 name: "initialize",
                 stateMutability: "nonpayable",
                 inputs: [
-                    { name: "assetToken_", type: "address" },
-                    { name: "name_", type: "string" },
-                    { name: "symbol_", type: "string" },
-                    { name: "marketId_", type: "uint32" },
-                    { name: "engine_", type: "address" },
-                    { name: "admin", type: "address" },
+                    {
+                        name: "p",
+                        type: "tuple",
+                        components: [
+                            { name: "assetToken", type: "address" },
+                            { name: "name", type: "string" },
+                            { name: "symbol", type: "string" },
+                            { name: "marketId", type: "uint32" },
+                            { name: "engine", type: "address" },
+                            { name: "admin", type: "address" },
+                            { name: "minBet", type: "uint256" },
+                        ],
+                    },
                 ],
                 outputs: [],
             },
         ],
         functionName: "initialize",
-        args: [asset, name, symbol, marketId, engine, admin],
+        args: [
+            {
+                assetToken: asset,
+                name,
+                symbol,
+                marketId,
+                engine,
+                admin,
+                minBet,
+            },
+        ],
     });
 }
 

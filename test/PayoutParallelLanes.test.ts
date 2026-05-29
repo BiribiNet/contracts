@@ -55,7 +55,9 @@ async function deploySingleMarket(opts: { maxPayoutsPerCall: number }) {
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
     await registry.write.createMarket(
-        [{ asset: asset.address, bankAdmin: admin.account.address }],
+        [{ asset: asset.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }],
         { account: admin.account },
     );
 

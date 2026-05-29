@@ -34,11 +34,6 @@ interface IRouletteEngine {
 
     function payoutParallelLaneCount() external view returns (uint32);
 
-    function findNextJob(
-        uint32 startCursor,
-        uint32 scanLimit
-    ) external view returns (bool found, Job memory job);
-
     /// @notice `payoutLane` is the automation lane id; `payoutShardWidth` must be zero (width is set on the returned job).
     function findNextJob(
         uint32 startCursor,
@@ -66,7 +61,6 @@ interface IRouletteEngine {
     /// @param jackpotAmounts BRB amounts aligned with `jackpotWinners`.
     function executeJob(
         Job memory job,
-        uint32 maxPayoutsPerCall,
         IBankVault.Payout[] memory winnerPayoutRows,
         address[] memory jackpotWinners,
         uint256[] memory jackpotAmounts
@@ -78,9 +72,7 @@ interface IRouletteEngine {
 
     function vrfActiveRound() external view returns (uint64);
 
-    function vrfActiveMarket() external view returns (uint32);
-
-    /// @notice True while this market's global round is sealed but not yet settled for that market (deposits / enqueue-withdraw blocked).
+    /// @notice True while this market's global round is locked but not yet settled for that market (deposits / enqueue-withdraw blocked).
     function isBankLiquidityRestricted(uint32 marketId) external view returns (bool);
 
     /// @notice Max withdrawal queue entries to finalize per settlement step for any bank (shared across markets).

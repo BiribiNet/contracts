@@ -71,7 +71,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     }
 
     /// @notice Simulation (`checkUpkeep`) runs `previewPayoutBundle`; `performUpkeep` only applies transfers + engine storage.
-    /// @dev `abi.encode(lane, job, vaultPayouts, jackpotWinners, jackpotAmounts, maxPayoutsSnapshot)`.
+    /// @dev `abi.encode(lane, job, vaultPayouts, jackpotWinners, jackpotAmounts)`.
     function checkUpkeep(
         bytes calldata checkData
     ) external view override returns (bool upkeepNeeded, bytes memory performData) {
@@ -99,7 +99,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
             (vaultPayouts, jackpotWinners, jackpotAmounts) = ENGINE.previewPayoutBundle(job, maxSnapshot);
         }
 
-        performData = abi.encode(lane, job, vaultPayouts, jackpotWinners, jackpotAmounts, maxSnapshot);
+        performData = abi.encode(lane, job, vaultPayouts, jackpotWinners, jackpotAmounts);
         return (true, performData);
     }
 
@@ -109,16 +109,13 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
             IRouletteEngine.Job memory job,
             IBankVault.Payout[] memory vaultPayouts,
             address[] memory jackpotWinners,
-            uint256[] memory jackpotAmounts,
-            uint32 maxSnapshot
-        ) = abi.decode(
-            performData, (uint256, IRouletteEngine.Job, IBankVault.Payout[], address[], uint256[], uint32)
-        );
+            uint256[] memory jackpotAmounts
+        ) = abi.decode(performData, (uint256, IRouletteEngine.Job, IBankVault.Payout[], address[], uint256[]));
 
         uint32 previousCursor = laneCursor[lane];
         laneCursor[lane] = job.nextCursor;
         emit LaneCursorAdvanced(lane, previousCursor, job.nextCursor);
 
-        ENGINE.executeJob(job, maxSnapshot, vaultPayouts, jackpotWinners, jackpotAmounts);
+        ENGINE.executeJob(job, vaultPayouts, jackpotWinners, jackpotAmounts);
     }
 }

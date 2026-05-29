@@ -111,6 +111,7 @@ async function main() {
     await jackpotTreasury.write.setEngine([engine.address]);
     await funder.write.setEngine([engine.address]);
     await registry.write.setEngine([engine.address]);
+    await engine.write.setPayoutLaneCount([1], { account: deployer.account });
 
     const upkeepManager = await viem.deployContract("UpkeepManager", [
         linkToken,
@@ -127,16 +128,22 @@ async function main() {
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
     await registry.write.setVaultBeacon([beacon.address]);
 
+    const minAsset = parseUnits("1", 6);
+
     await registry.write.createMarket([
         {
             asset: assetA,
             bankAdmin: deployer.account.address,
+
+                                            minBet: minAsset,
         },
     ]);
     await registry.write.createMarket([
         {
             asset: assetB,
             bankAdmin: deployer.account.address,
+
+                                            minBet: minAsset,
         },
     ]);
 
@@ -160,8 +167,6 @@ async function main() {
     await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
     await upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
-    await upkeepManager.write.registerLaneUpkeep([1n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
-    await upkeepManager.write.registerLaneUpkeep([2n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
 
     console.log("Multi-asset deployment complete");
     console.log({

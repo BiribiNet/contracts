@@ -3,6 +3,8 @@ import { encodeFunctionData, parseUnits, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { viem } from "hardhat";
 
+import { vaultInitMinBet18, vaultInitMinBetUsdc6 } from "./helpers/marketLimits";
+
 describe("BankVault4626", function () {
     it("handles bets, liquidity locking and total assets", async function () {
         const [admin, alice] = await viem.getWalletClients();
@@ -11,7 +13,7 @@ describe("BankVault4626", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address),
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -32,10 +34,9 @@ describe("BankVault4626", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address),
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
-        await vault.write.setMinBet([1n], { account: admin.account });
 
         await expect(vault.write.placeBet([0n, "0x"], { account: alice.account })).to.be.rejected;
         await expect(vault.write.releaseBets([1n], { account: alice.account })).to.be.rejected;
@@ -50,7 +51,7 @@ describe("BankVault4626", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address),
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -74,14 +75,135 @@ describe("BankVault4626", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address),
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, parseUnits("5", 6)),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
-        await vault.write.setMinBet([parseUnits("5", 6)], { account: admin.account });
         await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
         await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
         await expect(vault.write.placeBet([parseUnits("4", 6), "0x"], { account: alice.account })).to.be.rejected;
         await vault.write.placeBet([parseUnits("5", 6), "0x"], { account: alice.account });
+    });
+
+    it("reverts when deposit is at or below flat fee", async function () {
+        const [admin, alice] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await expect(
+            vault.write.deposit([1_000_000n, alice.account.address], { account: alice.account }),
+        ).to.be.rejected;
+        await vault.write.deposit([parseUnits("2", 6), alice.account.address], { account: alice.account });
+    });
+
+    it("allows withdraw requests below the flat fee when bps is nonzero", async function () {
+        const [admin, alice] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
+
+        await vault.write.withdraw([1_000_000n, alice.account.address, alice.account.address], { account: alice.account });
+    });
+
+    it("charges one asset unit flat fee when processing a queued withdrawal", async function () {
+        const [admin, alice] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        expect(await vault.read.flatWithdrawFee()).to.equal(1_000_000n);
+        expect(await vault.read.assetDecimals()).to.equal(6);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
+
+        const withdrawGross = parseUnits("10", 6);
+        const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
+        const vaultBefore = await usdc.read.balanceOf([vault.address]);
+        const sharesBefore = await vault.read.balanceOf([alice.account.address]);
+        await vault.write.withdraw([withdrawGross, alice.account.address, alice.account.address], {
+            account: alice.account,
+        });
+        await mockEngine.write.processWithdrawals([vault.address, 10n]);
+
+        const fee = 1_000_000n;
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore + withdrawGross - fee);
+        expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultBefore - withdrawGross + fee);
+        expect(await vault.read.balanceOf([alice.account.address])).to.equal((sharesBefore * 8_000n) / 10_000n);
+    });
+
+    it("settles 100% bps at process-time NAV after vault loss", async function () {
+        const [admin, alice] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
+
+        const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
+        await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
+
+        const loss = parseUnits("10", 6);
+        await mockEngine.write.transferOutFromVault([vault.address, admin.account.address, loss]);
+        await mockEngine.write.processWithdrawals([vault.address, 10n]);
+
+        const fee = 1_000_000n;
+        const expectedPayout = parseUnits("40", 6) - fee;
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore + expectedPayout);
+        expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
+    });
+
+    it("burns shares and pays zero when post-settlement gross is below flat fee", async function () {
+        const [admin, alice] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await vault.write.deposit([parseUnits("2", 6), alice.account.address], { account: alice.account });
+
+        const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
+        await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
+        await mockEngine.write.transferOutFromVault([vault.address, admin.account.address, parseUnits("1.5", 6)]);
+        await mockEngine.write.processWithdrawals([vault.address, 10n]);
+
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore);
+        expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
     });
 
     it("placeBetWithPermit succeeds even if permit is stale (try/catch)", async function () {
@@ -94,7 +216,7 @@ describe("BankVault4626", function () {
         const impl = await viem.deployContract("BankVault4626");
         const proxy = await viem.deployContract("ERC1967Proxy", [
             impl.address,
-            vaultInitData(token.address, "Bank P", "bP", 1, mockEngine.address, admin.account.address),
+            vaultInitData(token.address, "Bank P", "bP", 1, mockEngine.address, admin.account.address, vaultInitMinBet18),
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
@@ -148,6 +270,7 @@ function vaultInitData(
     marketId: number,
     engine: Address,
     admin: Address,
+    minBet: bigint,
 ): Hex {
     return encodeFunctionData({
         abi: [
@@ -156,17 +279,34 @@ function vaultInitData(
                 name: "initialize",
                 stateMutability: "nonpayable",
                 inputs: [
-                    { name: "assetToken_", type: "address" },
-                    { name: "name_", type: "string" },
-                    { name: "symbol_", type: "string" },
-                    { name: "marketId_", type: "uint32" },
-                    { name: "engine_", type: "address" },
-                    { name: "admin", type: "address" },
+                    {
+                        name: "p",
+                        type: "tuple",
+                        components: [
+                            { name: "assetToken", type: "address" },
+                            { name: "name", type: "string" },
+                            { name: "symbol", type: "string" },
+                            { name: "marketId", type: "uint32" },
+                            { name: "engine", type: "address" },
+                            { name: "admin", type: "address" },
+                            { name: "minBet", type: "uint256" },
+                        ],
+                    },
                 ],
                 outputs: [],
             },
         ],
         functionName: "initialize",
-        args: [asset, name, symbol, marketId, engine, admin],
+        args: [
+            {
+                assetToken: asset,
+                name,
+                symbol,
+                marketId,
+                engine,
+                admin,
+                minBet,
+            },
+        ],
     });
 }

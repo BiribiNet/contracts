@@ -76,13 +76,19 @@ async function deployThreeMarketJackpotStack() {
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
 
-    await registry.write.createMarket([{ asset: usdc.address, bankAdmin: admin.account.address }], {
+    await registry.write.createMarket([{ asset: usdc.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }], {
         account: admin.account,
     });
-    await registry.write.createMarket([{ asset: mockDai.address, bankAdmin: admin.account.address }], {
+    await registry.write.createMarket([{ asset: mockDai.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }], {
         account: admin.account,
     });
-    await registry.write.createMarket([{ asset: brb.address, bankAdmin: admin.account.address }], {
+    await registry.write.createMarket([{ asset: brb.address, bankAdmin: admin.account.address,
+
+ minBet: parseUnits("1", 18) }], {
         account: admin.account,
     });
 

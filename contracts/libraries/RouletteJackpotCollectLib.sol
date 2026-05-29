@@ -22,10 +22,9 @@ library RouletteJackpotCollectLib {
     function collectJackpotEligibleStraightStakes(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
-        uint8 winningNumber,
-        uint256 minJackpotBet
+        uint8 winningNumber
     ) external view returns (address[] memory winners, uint256[] memory stakes, uint256 totalStake) {
-        uint256 maxEntries = _countEligible($, roundId, winningNumber, minJackpotBet);
+        uint256 maxEntries = _countEligible($, roundId, winningNumber);
         CollectState memory st;
         st.winners = new address[](maxEntries);
         st.stakes = new uint256[](maxEntries);
@@ -33,7 +32,7 @@ library RouletteJackpotCollectLib {
         uint32 totalMarkets = $.REGISTRY.marketCount();
         for (uint32 mid = 1; mid <= totalMarkets; ) {
             if ($._roundHasMarket[roundId][mid]) {
-                st = _appendMarket($, roundId, mid, winningNumber, minJackpotBet, st);
+                st = _appendMarket($, roundId, mid, winningNumber, st);
             }
             unchecked {
                 ++mid;
@@ -53,8 +52,7 @@ library RouletteJackpotCollectLib {
     function _countEligible(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
-        uint8 winningNumber,
-        uint256 minJackpotBet
+        uint8 winningNumber
     ) private view returns (uint256 maxEntries) {
         uint32 totalMarkets = $.REGISTRY.marketCount();
         for (uint32 mid = 1; mid <= totalMarkets; ) {
@@ -62,17 +60,7 @@ library RouletteJackpotCollectLib {
                 RouletteEngineStorageLib.BetEntry[] storage bucket = $.roundNumberedBets[roundId][mid][uint8(
                     RouletteEngineStorageLib.NumberedBetBucket.Straight
                 )][winningNumber];
-                uint256 len = bucket.length;
-                for (uint256 i; i < len; ) {
-                    if (uint256(bucket[i].amount) > minJackpotBet) {
-                        unchecked {
-                            ++maxEntries;
-                        }
-                    }
-                    unchecked {
-                        ++i;
-                    }
-                }
+                maxEntries += bucket.length;
             }
             unchecked {
                 ++mid;
@@ -85,7 +73,6 @@ library RouletteJackpotCollectLib {
         uint64 roundId,
         uint32 marketId,
         uint8 winningNumber,
-        uint256 minJackpotBet,
         CollectState memory st
     ) private view returns (CollectState memory) {
         uint8 dec = IERC20Metadata($.REGISTRY.getMarket(marketId).asset).decimals();
@@ -95,16 +82,12 @@ library RouletteJackpotCollectLib {
         uint256 len = bucket.length;
         for (uint256 j; j < len; ) {
             uint256 a = uint256(bucket[j].amount);
-            if (a > minJackpotBet) {
-                st.winners[st.out] = bucket[j].player;
-                uint256 stake = normalizeStakeWeight(a, dec);
-                st.stakes[st.out] = stake;
-                st.totalStake += stake;
-                unchecked {
-                    ++st.out;
-                }
-            }
+            st.winners[st.out] = bucket[j].player;
+            uint256 stake = normalizeStakeWeight(a, dec);
+            st.stakes[st.out] = stake;
+            st.totalStake += stake;
             unchecked {
+                ++st.out;
                 ++j;
             }
         }

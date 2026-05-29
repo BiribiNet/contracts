@@ -6,7 +6,7 @@ import { encodeAbiParameters, parseUnits } from "viem";
 import { jackpotStakeWeight, runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 /** Matches `RouletteEngine.sol` INFRA_BPS constant. */
-const INFRA_BPS = 250n;
+const INFRA_BPS = 200n;
 const SW_BPS_DENOM = 10_000n;
 
 /** Mock router BRB balance for swaps (within `BRBToken.TOTAL_SUPPLY`). */
@@ -84,7 +84,9 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
 
     await registry.write.createMarket(
-        [{ asset: usdc.address, bankAdmin: admin.account.address }],
+        [{ asset: usdc.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }],
         { account: admin.account },
     );
     const cfg = await registry.read.getMarket([1]);

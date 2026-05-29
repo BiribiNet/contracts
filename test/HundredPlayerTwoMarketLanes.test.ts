@@ -90,10 +90,14 @@ async function deployTwoMarketProductionLanes() {
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
 
-    await registry.write.createMarket([{ asset: asset0.address, bankAdmin: admin.account.address }], {
+    await registry.write.createMarket([{ asset: asset0.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }], {
         account: admin.account,
     });
-    await registry.write.createMarket([{ asset: asset1.address, bankAdmin: admin.account.address }], {
+    await registry.write.createMarket([{ asset: asset1.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }], {
         account: admin.account,
     });
 
@@ -179,7 +183,6 @@ function decodePayoutPerformData(performData: `0x${string}`) {
             { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
             { type: "address[]" },
             { type: "uint256[]" },
-            { type: "uint32" },
         ],
         performData,
     );

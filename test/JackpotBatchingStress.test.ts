@@ -66,6 +66,8 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
                     {
                         asset: usdc.address,
                         bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                     },
                 ],
         { account: admin.account },

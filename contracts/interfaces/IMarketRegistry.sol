@@ -10,6 +10,8 @@ interface IMarketRegistry {
     struct CreateMarketParams {
         address asset;
         address bankAdmin;
+        /// @dev Minimum asset amount per `placeBet`.
+        uint256 minBet;
     }
 
     /// @notice Next market id that will be assigned on registration.

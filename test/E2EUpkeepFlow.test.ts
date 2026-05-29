@@ -81,6 +81,8 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
                 {
                     asset: assets[i].address,
                     bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
                 },
             ],
             { account: admin.account },
@@ -146,7 +148,7 @@ describe("E2E upkeep flow", function () {
             await banks[m].write.placeBet([betAmount, betData7], { account: players[m % players.length].account });
         }
 
-        // Seal + request VRF + fulfill + pay out.
+        // Lock + request VRF + fulfill + pay out.
         await time.increase(550);
         await runUpkeepUntilIdle(scheduler);
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);

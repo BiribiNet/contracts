@@ -32,6 +32,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         uint32 marketId;
         address engine;
         address bankAdmin;
+        uint256 minBet;
     }
 
     constructor(address admin) {
@@ -71,7 +72,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         onlyRole(MARKET_FACTORY_ROLE)
         returns (uint32 marketId, address bank)
     {
-        if (params.asset == address(0) || params.bankAdmin == address(0)) revert ZeroAddress();
+        if (params.asset == address(0) || params.bankAdmin == address(0) || params.minBet == 0) revert ZeroAddress();
 
         IERC20Metadata assetMeta = IERC20Metadata(params.asset);
         string memory bankName = string.concat("BRB ", assetMeta.name());
@@ -87,6 +88,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         p.marketId = nextId;
         p.engine = engine;
         p.bankAdmin = params.bankAdmin;
+        p.minBet = params.minBet;
 
         bytes memory initData = _encodeVaultInitData(p);
         bank = _deployVault(beacon, initData);
@@ -98,12 +100,15 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     function _encodeVaultInitData(VaultInit memory p) private pure returns (bytes memory) {
         return abi.encodeWithSelector(
             BankVault4626.initialize.selector,
-            p.asset,
-            p.bankName,
-            p.bankSymbol,
-            p.marketId,
-            p.engine,
-            p.bankAdmin
+            BankVault4626.InitializeParams({
+                assetToken: p.asset,
+                name: p.bankName,
+                symbol: p.bankSymbol,
+                marketId: p.marketId,
+                engine: p.engine,
+                admin: p.bankAdmin,
+                minBet: p.minBet
+            })
         );
     }
 

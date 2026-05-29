@@ -60,7 +60,9 @@ async function deployThreeMarketStack(maxPayoutsPerCall: number) {
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
 
     for (const asset of [usdc, mockDai, brb]) {
-        await registry.write.createMarket([{ asset: asset.address, bankAdmin: admin.account.address }], {
+        await registry.write.createMarket([{ asset: asset.address, bankAdmin: admin.account.address,
+
+ minBet: 1_000_000n }], {
             account: admin.account,
         });
     }
@@ -183,7 +185,6 @@ function decodePerformData(performData: `0x${string}`) {
             { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
             { type: "address[]" },
             { type: "uint256[]" },
-            { type: "uint32" },
         ],
         performData,
     );

@@ -8,7 +8,7 @@ import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithL
 
 /**
  * Full protocol deploy for Ethereum Sepolia (chain 11155111): RouletteEngine, registry,
- * three markets (USDC, DAI, BRB), jackpot stack, upkeep manager + three automation lanes.
+ * three markets (USDC, DAI, BRB), jackpot stack, upkeep manager + one automation lane (lane 0).
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` and `hardhat vars set SEPOLIA_RPC_URL` (see hardhat.network.ts)
@@ -219,6 +219,7 @@ async function main() {
     await waitWrite(jackpotTreasury.write.setEngine([engine.address], { account: deployer.account }));
     await waitWrite(funder.write.setEngine([engine.address], { account: deployer.account }));
     await waitWrite(registry.write.setEngine([engine.address], { account: deployer.account }));
+    await waitWrite(engine.write.setPayoutLaneCount([1], { account: deployer.account }));
 
     const upkeepManager = await viem.deployContract("UpkeepManager", [
         linkToken,
@@ -243,12 +244,17 @@ async function main() {
         }),
     );
 
+    const minStable = parseUnits("1", 6);
+    const minBrb = parseUnits("1", 18);
+
     await waitWrite(
         registry.write.createMarket(
             [
                 {
                     asset: usdc,
                     bankAdmin: deployer.account.address,
+
+                                                    minBet: minStable,
                 },
             ],
             { account: deployer.account },
@@ -260,6 +266,8 @@ async function main() {
                 {
                     asset: dai,
                     bankAdmin: deployer.account.address,
+
+                                                    minBet: minStable,
                 },
             ],
             { account: deployer.account },
@@ -271,6 +279,8 @@ async function main() {
                 {
                     asset: brb,
                     bankAdmin: deployer.account.address,
+
+                                                    minBet: minBrb,
                 },
             ],
             { account: deployer.account },
@@ -296,12 +306,6 @@ async function main() {
 
     await waitWrite(
         upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
-    );
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([1n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
-    );
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([2n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
     );
 
     console.log("Ethereum Sepolia protocol deployment complete");
