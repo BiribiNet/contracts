@@ -1,13 +1,17 @@
+import { viem } from "hardhat";
+
 import { expect } from "chai";
 import { parseUnits } from "viem";
-import { viem } from "hardhat";
 
 describe("JackpotTreasury (BRB payBatch)", function () {
     it("pays explicit winner amounts (engine-style remainder on last)", async function () {
         const [admin, alice, bob] = await viem.getWalletClients();
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
-        await treasury.write.setEngine([alice.account.address], { account: admin.account });
+        const treasury = await viem.deployContract("JackpotTreasury", [
+            brb.address,
+            alice.account.address,
+            admin.account.address,
+        ]);
 
         const pool = parseUnits("1000", 18);
         await brb.write.transfer([treasury.address, pool], { account: admin.account });
@@ -30,13 +34,11 @@ describe("JackpotTreasury (BRB payBatch)", function () {
         const [admin] = await viem.getWalletClients();
 
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
-
-        await expect(
-            treasury.simulate.payBatch([[admin.account.address], [1n]], { account: admin.account }),
-        ).to.be.rejected;
-
-        await treasury.write.setEngine([admin.account.address], { account: admin.account });
+        const treasury = await viem.deployContract("JackpotTreasury", [
+            brb.address,
+            admin.account.address,
+            admin.account.address,
+        ]);
 
         await expect(
             treasury.simulate.payBatch([[admin.account.address], [1n, 2n]], { account: admin.account }),
@@ -44,5 +46,17 @@ describe("JackpotTreasury (BRB payBatch)", function () {
 
         const paid0 = await treasury.simulate.payBatch([[admin.account.address], [0n]], { account: admin.account });
         expect(paid0.result).to.equal(0n);
+    });
+
+    it("reverts constructor when engine is zero", async function () {
+        const [admin] = await viem.getWalletClients();
+        const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+        await expect(
+            viem.deployContract("JackpotTreasury", [
+                brb.address,
+                "0x0000000000000000000000000000000000000000",
+                admin.account.address,
+            ]),
+        ).to.be.rejected;
     });
 });

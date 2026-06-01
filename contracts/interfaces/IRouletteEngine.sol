@@ -29,7 +29,8 @@ interface IRouletteEngine {
         uint32 marketId,
         address player,
         uint256 amount,
-        bytes calldata betData
+        bytes calldata betData,
+        address referral
     ) external;
 
     function payoutParallelLaneCount() external view returns (uint32);
@@ -67,6 +68,14 @@ interface IRouletteEngine {
     ) external returns (bool didWork);
 
     function currentGlobalRound() external view returns (uint64);
+
+    function referrerOf(address player) external view returns (address);
+
+    /// @notice Outcome for a completed global round (`vrfFulfilled` must be true before `winningNumber` is authoritative).
+    function roundOutcome(uint64 roundId) external view returns (bool vrfFulfilled, uint8 winningNumber);
+
+    /// @notice Jackpot draw flag for a global round (`jackpotTriggered` is authoritative only when `vrfFulfilled` is true).
+    function roundJackpotTriggered(uint64 roundId) external view returns (bool vrfFulfilled, bool jackpotTriggered);
 
     function hasPendingVrf() external view returns (bool);
 

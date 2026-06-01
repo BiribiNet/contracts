@@ -38,23 +38,11 @@ Conventions:
   3. Optionally, batch swaps (accumulate `swapIn` in `PendingSwapBuffer`
      and flush off-peak) to amortize fixed slippage costs.
 
-### C-2 — ERC-4626 first-deposit inflation attack
-- **Where**: `contracts/BankVault4626.sol` — `initialize` and the inherited
-  `ERC4626Upgradeable` defaults.
-- **Issue**: `BankVault4626` does **not** override `_decimalsOffset()` nor
-  mint dead shares to `address(0)` in `initialize`. OZ v5 defaults
-  `_decimalsOffset() = 0`. The classic first-depositor inflation attack
-  applies on every freshly-created market vault: the attacker mints 1 wei
-  share, donates `N` asset tokens directly, then subsequent depositors get
-  zero shares due to integer division.
-- **Impact**: Any new market created by `MarketRegistry.createMarket` is
-  exploitable until its first "honest" deposit. Funds can be stolen from
-  late depositors.
-- **Recommendation**: Override `_decimalsOffset() => returns (uint8 6)`
-  (or higher), **or** seed each newly-created vault during
-  `MarketRegistry.createMarket` with a small `_mint(deadAddress, 1e6)` of
-  shares (via a privileged `initialize`-time seed call that pulls a tiny
-  amount of `asset` from the factory deployer).
+### C-2 — ERC-4626 first-deposit inflation attack ✅ **RESOLVED**
+- **Where**: `contracts/BankVault4626.sol` — `_decimalsOffset()`.
+- **Issue**: `BankVault4626` did **not** override `_decimalsOffset()` nor mint dead shares at init. OZ v5 defaults `_decimalsOffset() = 0`, leaving fresh vaults open to donation / inflation griefing.
+- **Fix (2025-05)**: Override `_decimalsOffset() => 6` on all market vaults (uniform across USDC, DAI, etc.). Virtual shares make donation attacks orders of magnitude more expensive than any realistic victim deposit. Complements existing `DepositTooSmall` (> 1 whole token unit) floor.
+- **Note**: Share token `decimals()` is `assetDecimals + 6` per OZ; APY / exchange-rate dynamics are unchanged at meaningful TVL.
 
 ### C-3 — Upgradeable storage without reserved gap
 - **Where**: `contracts/BankVault4626.sol` — entire storage layout.
@@ -194,17 +182,10 @@ Conventions:
   setter), or use a single VRF key hash and let Chainlink handle gas
   pricing inside the subscription.
 
-### H-8 — `MarketRegistry` allows the same asset to be registered twice
-- **Where**: `contracts/MarketRegistry.sol` — `_registerNextMarket`.
-- **Issue**: The collision check is `if (_markets[next].bank != address(0))
-  revert MarketAlreadyRegistered();` — which only fails when the **next
-  slot** is already occupied (it never is). There is no de-duplication
-  on `asset`. Two markets can wrap the same underlying, splitting
-  liquidity unintentionally and confusing the engine when assigning fees.
-- **Impact**: Misconfigured markets can be created accidentally; UX and
-  liquidity fragmentation.
-- **Recommendation**: Add a `mapping(address asset => uint32 marketId)
-  assetToMarket;` and revert when re-registering.
+### H-8 — `MarketRegistry` allows the same asset to be registered twice ✅ **RESOLVED**
+- **Where**: `contracts/MarketRegistry.sol` — `createMarket` / `_registerNextMarket`.
+- **Issue**: Market IDs were monotonic with no de-duplication on `asset`, allowing accidental liquidity fragmentation across duplicate markets.
+- **Fix (2025-05)**: Added `mapping(address => uint32) _assetToMarket` and `AssetAlreadyRegistered` revert in `createMarket`. Exposed `assetToMarket(asset)` view on the registry interface.
 
 ### H-9 — `BankVault4626.placeBet` is not fee-on-transfer-safe
 - **Where**: `contracts/BankVault4626.sol` — `_placeBetCore`.

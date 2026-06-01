@@ -13,17 +13,18 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
     bytes32 public constant MARKET_FACTORY_ROLE = keccak256("MARKET_FACTORY_ROLE");
 
     mapping(uint32 => MarketConfig) private _markets;
+    mapping(address => uint32) private _assetToMarket;
     uint32 private _marketCount;
     address public override vaultBeacon;
-    address public ENGINE;
+    address public immutable override ENGINE;
+    address public immutable override SIDE_BET;
 
     error ZeroAddress();
     error ZeroImplementation();
     error InvalidMarketId();
-    error MarketAlreadyRegistered();
+    error AssetAlreadyRegistered();
 
     event VaultBeaconUpdated(address previousBeacon, address newBeacon);
-    event EngineUpdated(address previousEngine, address newEngine);
 
     struct VaultInit {
         address asset;
@@ -33,12 +34,15 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         address engine;
         address bankAdmin;
         uint256 minBet;
+        address sideBet;
     }
 
-    constructor(address admin) {
-        if (admin == address(0)) revert ZeroAddress();
+    constructor(address admin, address engine_, address sideBet_) {
+        if (admin == address(0) || engine_ == address(0) || sideBet_ == address(0)) revert ZeroAddress();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(MARKET_FACTORY_ROLE, admin);
+        ENGINE = engine_;
+        SIDE_BET = sideBet_;
     }
 
     function previewNextMarketId() external view returns (uint32) {
@@ -58,14 +62,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         emit VaultBeaconUpdated(previous, newBeacon);
     }
 
-    function setEngine(address newEngine) external onlyRole(MARKET_FACTORY_ROLE) {
-        if (newEngine == address(0)) revert ZeroAddress();
-        address previous = ENGINE;
-        ENGINE = newEngine;
-        emit EngineUpdated(previous, newEngine);
-    }
-
-    /// @dev Call `setVaultBeacon` and `setEngine` before any `createMarket`. Setters enforce non-zero values; this function does not repeat those checks.
+    /// @dev Call `setVaultBeacon` before any `createMarket`.
     /// @dev Vault share `name` is `BRB ` + asset `name()`, share `symbol` is `brb` + asset `symbol()` (via `IERC20Metadata`).
     function createMarket(CreateMarketParams calldata params)
         external
@@ -73,6 +70,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         returns (uint32 marketId, address bank)
     {
         if (params.asset == address(0) || params.bankAdmin == address(0) || params.minBet == 0) revert ZeroAddress();
+        if (_assetToMarket[params.asset] != 0) revert AssetAlreadyRegistered();
 
         IERC20Metadata assetMeta = IERC20Metadata(params.asset);
         string memory bankName = string.concat("BRB ", assetMeta.name());
@@ -89,6 +87,7 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         p.engine = engine;
         p.bankAdmin = params.bankAdmin;
         p.minBet = params.minBet;
+        p.sideBet = SIDE_BET;
 
         bytes memory initData = _encodeVaultInitData(p);
         bank = _deployVault(beacon, initData);
@@ -107,7 +106,8 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
                 marketId: p.marketId,
                 engine: p.engine,
                 admin: p.bankAdmin,
-                minBet: p.minBet
+                minBet: p.minBet,
+                sideBetController: p.sideBet
             })
         );
     }
@@ -116,19 +116,23 @@ contract MarketRegistry is AccessControl, IMarketRegistry {
         bank = address(new BeaconProxy(beacon, initData));
     }
 
-    function _registerNextMarket(address asset, address bank) private returns (uint32 marketId) {
+    function _registerNextMarket(address asset, address bank) internal returns (uint32 marketId) {
         if (asset == address(0) || bank == address(0)) revert ZeroAddress();
 
         uint32 next;
         unchecked {
             next = _marketCount + 1;
         }
-        if (_markets[next].bank != address(0)) revert MarketAlreadyRegistered();
 
         _markets[next] = MarketConfig({ asset: asset, bank: bank });
+        _assetToMarket[asset] = next;
         _marketCount = next;
 
         return next;
+    }
+
+    function assetToMarket(address asset) external view returns (uint32 marketId) {
+        return _assetToMarket[asset];
     }
 
     function marketCount() external view returns (uint32) {

@@ -22,7 +22,8 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// @dev Skip reason: router `swapExactTokensForTokens` reverted (liquidity, path, deadline, etc.).
     uint8 public constant SKIP_SWAP_REVERTED = 2;
 
-    address public engine;
+    address public immutable engine;
+    address public immutable sideBet;
     IERC20 public immutable brb;
     IUniswapV2Router02 public immutable router;
     address public immutable jackpotTreasury;
@@ -40,8 +41,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     uint256 public constant BPS_DENOM = 10_000;
 
     error ZeroAddress();
-    error OnlyEngine();
-    error EngineAlreadySet();
+    error OnlyFeeCollector();
     error InvalidBps();
 
     event SwapAssetBpsUpdated(uint256 totalBps);
@@ -64,12 +64,17 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         address brb_,
         address router_,
         address jackpotTreasury_,
+        address sideBet_,
         address admin
     ) {
-        if (brb_ == address(0) || router_ == address(0) || jackpotTreasury_ == address(0) || admin == address(0)) {
+        if (
+            engine_ == address(0) || brb_ == address(0) || router_ == address(0) || jackpotTreasury_ == address(0)
+                || admin == address(0)
+        ) {
             revert ZeroAddress();
         }
         engine = engine_;
+        sideBet = sideBet_;
         brb = IERC20(brb_);
         router = IUniswapV2Router02(router_);
         jackpotTreasury = jackpotTreasury_;
@@ -82,14 +87,8 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         slippageBps = 100;
     }
 
-    function setEngine(address engine_) external onlyRole(FUNDER_ADMIN_ROLE) {
-        if (engine_ == address(0)) revert ZeroAddress();
-        if (engine != address(0)) revert EngineAlreadySet();
-        engine = engine_;
-    }
-
-    modifier onlyEngine() {
-        if (msg.sender != engine) revert OnlyEngine();
+    modifier onlyFeeCollector() {
+        if (msg.sender != engine && msg.sender != sideBet) revert OnlyFeeCollector();
         _;
     }
 
@@ -118,7 +117,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     }
 
     /// @inheritdoc IBRBJackpotFunder
-    function fundFromMarket(uint32 marketId, address asset) external override onlyEngine {
+    function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector {
         IERC20 assetToken = IERC20(asset);
         uint256 swapIn = assetToken.balanceOf(address(this));
         if (swapIn == 0) return;

@@ -1,5 +1,6 @@
-import { expect } from "chai";
 import { viem } from "hardhat";
+
+import { expect } from "chai";
 
 describe("PayoutMathLib", function () {
     it("caps payout to pool size when needed", async function () {

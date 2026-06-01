@@ -1,9 +1,15 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import { keccak256, toBytes } from "viem";
+
+const SETTLEMENT_ROLE = keccak256(toBytes("SETTLEMENT_ROLE"));
 
 /**
  * `RouletteEngine` is wired to a single immutable `UpkeepScheduler` address at construction.
  * Pass the predicted scheduler CREATE address via deployment parameters (see
- * `predictUpkeepSchedulerAddress` in `scripts/utils/deployRouletteEngine.ts`: one CREATE after the engine).
+ * `predictRouletteStackAddresses` in `scripts/utils/predictDeployAddresses.ts`).
+ *
+ * `engineProxy` and `sideBetProxy` must match the CREATE nonces from
+ * treasury → funder → registry → linked libraries → engine stack deployment.
  */
 const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitecture", (m) => {
     const admin = m.getAccount(0);
@@ -13,17 +19,15 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
     const assetA = m.contract("MockUSDC");
     const assetB = m.contract("MockUSDC");
     const brb = m.contract("BRBToken", [admin]);
-    const jackpotTreasury = m.contract("JackpotTreasury", [brb, admin]);
     const mockRouter = m.contract("MockUniswapV2Router");
-    const funder = m.contract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb,
-        mockRouter,
-        jackpotTreasury,
-        admin,
-    ]);
 
-    const registry = m.contract("MarketRegistry", [admin]);
+    const engineProxy = m.getParameter("engineProxy", "0x0000000000000000000000000000000000000000");
+    const sideBetProxy = m.getParameter("sideBetProxy", "0x0000000000000000000000000000000000000000");
+    const upkeepScheduler = m.getParameter("upkeepScheduler", "0x0000000000000000000000000000000000000000");
+
+    const jackpotTreasury = m.contract("JackpotTreasury", [brb, engineProxy, admin]);
+    const funder = m.contract("BRBJackpotFunder", [engineProxy, brb, mockRouter, jackpotTreasury, sideBetProxy, admin]);
+    const registry = m.contract("MarketRegistry", [admin, engineProxy, sideBetProxy]);
 
     const rouletteLib = m.library("RouletteLib");
     const rouletteBetLib = m.library("RouletteBetLib");
@@ -42,15 +46,6 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
         },
     });
 
-    const upkeepScheduler = m.getParameter("upkeepScheduler", "0x0000000000000000000000000000000000000000");
-
-    const mockVrfLaneKey = "0x1111111111111111111111111111111111111111111111111111111111111111";
-    const vrfLaneKeys = {
-        keyHash2Gwei: mockVrfLaneKey,
-        keyHash30Gwei: mockVrfLaneKey,
-        keyHash150Gwei: mockVrfLaneKey,
-    };
-
     const engine = m.contract(
         "RouletteEngine",
         [
@@ -60,7 +55,11 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
             admin,
             mockVrf,
             1n,
-            vrfLaneKeys,
+            {
+                keyHash2Gwei: "0x1111111111111111111111111111111111111111111111111111111111111111",
+                keyHash30Gwei: "0x1111111111111111111111111111111111111111111111111111111111111111",
+                keyHash150Gwei: "0x1111111111111111111111111111111111111111111111111111111111111111",
+            },
             2_000_000,
             1,
             60,
@@ -78,13 +77,17 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
         },
     );
 
-    m.call(jackpotTreasury, "setEngine", [engine]);
-    m.call(funder, "setEngine", [engine]);
-    m.call(registry, "setEngine", [engine]);
+    const sideBetImpl = m.contract("SideBet", [], { id: "SideBetImpl", after: [engine] });
+    const sideBetInit = m.encodeFunctionCall(sideBetImpl, "initialize", [admin, engine, registry, 50_000, 5_000_000]);
+    const sideBet = m.contract("ERC1967Proxy", [sideBetImpl, sideBetInit], { id: "SideBet", after: [sideBetImpl] });
 
-    const scheduler = m.contract("UpkeepScheduler", [engine, admin, 25, 60], { id: "UpkeepScheduler" });
+    const scheduler = m.contract("UpkeepScheduler", [engine, sideBet, admin, 25, 60], {
+        id: "UpkeepScheduler",
+        after: [sideBet],
+    });
     const upkeepManager = m.contract("UpkeepManager", [mockLink, admin, admin, scheduler, admin, admin]);
     m.call(scheduler, "setForwarderAuthority", [upkeepManager]);
+    m.call(sideBet, "grantRole", [SETTLEMENT_ROLE, scheduler], { after: [scheduler] });
 
     const vaultImpl = m.contract("BankVault4626", [], { after: [upkeepManager] });
     const vaultBeacon = m.contract("UpgradeableBeacon", [vaultImpl, admin], { after: [vaultImpl] });
@@ -114,6 +117,7 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
         funder,
         registry,
         engine,
+        sideBet,
         scheduler,
         upkeepManager,
         vaultImpl,

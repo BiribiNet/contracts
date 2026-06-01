@@ -1,8 +1,10 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { encodeAbiParameters, parseUnits } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -19,25 +21,14 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
     const vrf = await viem.deployContract("MockVrfCoordinator");
 
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry, jackpotTreasury } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -46,12 +37,15 @@ async function deploySingleMarket(maxPayoutsPerCall: number) {
             500,
             admin.account.address,
         ],
-        { admin: admin.account.address, scanLimit: 15, maxPayoutsPerCall: maxPayoutsPerCall },
+        { admin: admin.account.address, scanLimit: 15, maxPayoutsPerCall },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
 
 
     // Ensure treasury has BRB before jackpot triggers (so batch payout is meaningful).
@@ -107,7 +101,7 @@ describe("Jackpot batching stress", function () {
         const betData7 = encodeSingleBet(1n, 7n, betAmount);
 
         // Round 1: winning 7 vs second word yielding a different mod 37 (no jackpot this round).
-        await bank.write.placeBet([betAmount, betData7], { account: alice.account });
+        await bank.write.placeBet([betAmount, betData7, zeroAddress], { account: alice.account });
         await time.increase(550);
         while (await performOneUpkeep(scheduler, 0n)) {}
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 1n]);
@@ -119,7 +113,7 @@ describe("Jackpot batching stress", function () {
         // Using same player repeatedly still creates many winner entries.
         const winnerCount = 40;
         for (let i = 0; i < winnerCount; i++) {
-            await bank.write.placeBet([betAmount, betData7], { account: alice.account });
+            await bank.write.placeBet([betAmount, betData7, zeroAddress], { account: alice.account });
         }
         await time.increase(550);
         while (await performOneUpkeep(scheduler, 0n)) {}

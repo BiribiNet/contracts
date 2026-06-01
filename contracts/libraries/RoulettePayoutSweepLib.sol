@@ -417,9 +417,11 @@ library RoulettePayoutSweepLib {
         uint256 len = bucket.length;
         unchecked {
             RouletteEngineStorageLib.BetEntry storage bet;
+            uint256 gi;
+            bool pay;
             for (uint256 i; i < len; ) {
-                uint256 gi = c.gPos + i;
-                bool pay = true;
+                gi = c.gPos + i;
+                pay = true;
                 if (c.shardWidth > 1) {
                     if (gi % c.shardWidth != c.shardIndex) {
                         pay = false;

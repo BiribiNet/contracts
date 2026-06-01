@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import { IBankVault } from "../interfaces/IBankVault.sol";
 
 contract MockEngine {
-    function recordBet(uint32, address, uint256, bytes calldata) external pure {}
+    function recordBet(uint32, address, uint256, bytes calldata, address) external pure {}
 
     /// @dev Stub for legacy-shaped `BetPlaced` emission in {BankVault4626}.
     function currentGlobalRound() external pure returns (uint64) {

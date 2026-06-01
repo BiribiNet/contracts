@@ -1,8 +1,10 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { encodeAbiParameters, parseUnits } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -25,23 +27,14 @@ describe("Gas scaling guards", function () {
         const vrf = await viem.deployContract("MockVrfCoordinator");
 
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
         const mockRouter = await viem.deployContract("MockUniswapV2Router");
-        const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
-            brb.address,
-            mockRouter.address,
-            jackpotTreasury.address,
-            admin.account.address,
-        ]);
-        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
         const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-        const { engine, scheduler } = await deployRouletteEngine(
+        const { engine, scheduler, registry } = await deployRouletteEngine(
             [mockLaneKey, mockLaneKey, mockLaneKey],
             [
-                registry.address,
-                jackpotTreasury.address,
-                funder.address,
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
                 admin.account.address,
                 vrf.address,
                 1n,
@@ -51,11 +44,14 @@ describe("Gas scaling guards", function () {
                 admin.account.address,
             ],
             { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: mockRouter.address,
+                    admin: admin.account.address,
+                },
+            },
         );
-
-        await jackpotTreasury.write.setEngine([engine.address]);
-        await funder.write.setEngine([engine.address]);
-        await registry.write.setEngine([engine.address], { account: admin.account });
 
         for (let i = 0; i < marketCount; i++) {
         }
@@ -89,7 +85,7 @@ describe("Gas scaling guards", function () {
         await bank1.write.deposit([parseUnits("5000", 6), admin.account.address], { account: admin.account });
         await assets[0].write.mint([alice.account.address, parseUnits("1000", 6)]);
         await assets[0].write.approve([bank1.address, parseUnits("1000", 6)], { account: alice.account });
-        await bank1.write.placeBet([parseUnits("10", 6), encodeSingleBet(1n, 7n, parseUnits("10", 6))], { account: alice.account });
+        await bank1.write.placeBet([parseUnits("10", 6), encodeSingleBet(1n, 7n, parseUnits("10", 6)), zeroAddress], { account: alice.account });
 
         await time.increase(550);
 

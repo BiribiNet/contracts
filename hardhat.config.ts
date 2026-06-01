@@ -16,6 +16,7 @@ import '@nomicfoundation/hardhat-toolbox-viem';
 import '@nomicfoundation/hardhat-chai-matchers';
 import 'tsconfig-paths/register';
 import '@openzeppelin/hardhat-upgrades';
+import 'solidity-coverage';
 
 import networks from './hardhat.network';
 
@@ -58,6 +59,10 @@ const uniswap06Settings = {
 };
 
 const config: HardhatUserConfig = {
+  mocha: {
+    timeout: process.env.SOLIDITY_COVERAGE === 'true' ? 1_200_000 : 40_000,
+    require: ['./test/coverageHooks.ts'],
+  },
   solidity: {
     compilers: [
       { version: '0.8.27', settings: defaultSettings },
@@ -70,7 +75,10 @@ const config: HardhatUserConfig = {
   gasReporter: {
     L2: "arbitrum",
     etherscan: vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : '',
-    enabled: vars.has('REPORT_GAS') || vars.has('ETHERSCAN_API_KEY'),
+    enabled:
+      process.env.SOLIDITY_COVERAGE === 'true'
+        ? false
+        : vars.has('REPORT_GAS') || vars.has('ETHERSCAN_API_KEY'),
     coinmarketcap: vars.has('REPORT_GAS') ? vars.get('REPORT_GAS') : '',
     currency: 'EUR',
   },

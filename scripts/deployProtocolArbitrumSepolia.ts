@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 import { vars } from "hardhat/config";
 import { viem } from "hardhat";
-import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
+import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
@@ -211,34 +211,13 @@ async function main() {
         console.log("Deployed MockDAI for market 2 (set DAI_TOKEN to use an existing Arbitrum Sepolia DAI).");
     }
 
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb, deployer.account.address]);
-
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb,
-        router,
-        jackpotTreasury.address,
-        deployer.account.address,
-    ]);
-
-    const registry = await viem.deployContract("MarketRegistry", [deployer.account.address]);
-
-    const vaultImpl = await viem.deployContract("BankVault4626");
-    const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
-    await waitWrite(registry.write.setVaultBeacon([beacon.address], { account: deployer.account }));
-    const vaultBeaconOnChain = await registry.read.vaultBeacon();
-    if (vaultBeaconOnChain.toLowerCase() !== beacon.address.toLowerCase()) {
-        throw new Error(
-            `setVaultBeacon did not persist: registry has ${vaultBeaconOnChain}, expected beacon ${beacon.address}. Check deployer is registry admin.`,
-        );
-    }
-
-    const { engine, engineImplementation, scheduler, linkedLibraries } = await deployRouletteEngine(
+    const { engine, engineImplementation, scheduler, linkedLibraries, brbReferral: deployedBrbReferral, registry, jackpotTreasury, funder } =
+        await deployRouletteEngine(
         [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             infraRecipient,
             vrfCoordinator,
             vrfSubscriptionId,
@@ -252,13 +231,28 @@ async function main() {
             scanLimit: 25,
             maxPayoutsPerCall: 60,
         },
+        {
+            protocolPrefix: {
+                brb,
+                mockRouter: router,
+                admin: deployer.account.address,
+            },
+            deployBrbReferral: true,
+        },
     );
+
+    const vaultImpl = await viem.deployContract("BankVault4626");
+    const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
+    await waitWrite(registry.write.setVaultBeacon([beacon.address], { account: deployer.account }));
+    const vaultBeaconOnChain = await registry.read.vaultBeacon();
+    if (vaultBeaconOnChain.toLowerCase() !== beacon.address.toLowerCase()) {
+        throw new Error(
+            `setVaultBeacon did not persist: registry has ${vaultBeaconOnChain}, expected beacon ${beacon.address}. Check deployer is registry admin.`,
+        );
+    }
 
     await vrfAddConsumerIfNeeded(deployer, publicClient, vrfCoordinator, vrfSubscriptionId, engine.address);
 
-    await waitWrite(jackpotTreasury.write.setEngine([engine.address], { account: deployer.account }));
-    await waitWrite(funder.write.setEngine([engine.address], { account: deployer.account }));
-    await waitWrite(registry.write.setEngine([engine.address], { account: deployer.account }));
     await waitWrite(engine.write.setPayoutLaneCount([1], { account: deployer.account }));
 
     const upkeepManager = await viem.deployContract("UpkeepManager", [
@@ -367,8 +361,7 @@ async function main() {
 
     const deployBlock = Number(await publicClient.getBlockNumber());
     const brbReferal =
-        optionalAddressEnv("BRB_REFERRAL_TOKEN", process.env.BRB_REFERRAL_TOKEN) ??
-        ("0x48e85e0f774f0d0d44519b13a959d9faa78e831b" as const);
+        optionalAddressEnv("BRB_REFERRAL_TOKEN", process.env.BRB_REFERRAL_TOKEN) ?? deployedBrbReferral;
 
     const subgraphDeployment = {
         startBlock: deployBlock,

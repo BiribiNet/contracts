@@ -1,15 +1,19 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
-import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { decodeAbiParameters, encodeAbiParameters, keccak256, parseEther, parseUnits, stringToHex, type Hex } from "viem";
+import { encodeAbiParameters, keccak256, parseEther, parseUnits, stringToHex, zeroAddress, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
+
+import { decodeRoulettePerformData } from "./helpers/decodeUpkeepPerformData";
 import {
     DEFAULT_PAYOUT_LANE_COUNT,
     fulfillVrfForGlobalRound,
     laneCheckData,
-    runParallelLanesUntilIdle,
     runParallelLanesUntilGlobalRound,
+    runParallelLanesUntilIdle,
     runParallelLanesUntilMarketsSettled,
     runParallelLanesUntilVrfPending,
 } from "./helpers/parallelUpkeep";
@@ -52,24 +56,15 @@ async function deployTwoMarketProductionLanes() {
     const asset1 = await viem.deployContract("MockUSDC");
     const vrf = await viem.deployContract("MockVrfCoordinator");
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
 
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -79,11 +74,14 @@ async function deployTwoMarketProductionLanes() {
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: SCAN_LIMIT, maxPayoutsPerCall: MAX_PAYOUTS_PER_CALL },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
     expect(await engine.read.payoutParallelLaneCount()).to.equal(LANE_COUNT);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
@@ -142,7 +140,7 @@ async function placeBetsForRound(opts: {
             await opts.tokens[m].write.mint([account.address, mintEach], { account });
         }
         await opts.tokens[m].write.approve([opts.banks[m].address, mintEach], { account });
-        await opts.banks[m].write.placeBet([STAKE, straight(number)], { account });
+        await opts.banks[m].write.placeBet([STAKE, straight(number), zeroAddress], { account });
     }
 }
 
@@ -155,46 +153,15 @@ async function countLanesWithPayoutWork(
     for (let lane = 0; lane < Number(LANE_COUNT); lane++) {
         const [needed, performData] = await scheduler.read.checkUpkeep([laneCheckData(BigInt(lane))]);
         if (!needed) continue;
-        const decoded = decodePayoutPerformData(performData);
+        const decoded = decodeRoulettePerformData(performData);
         if (decoded.jobKind !== 3 || decoded.marketId !== marketId) continue;
         lanes++;
         expect(decoded.roundId).to.equal(roundId);
+        expect(decoded.lane).to.equal(lane);
         expect(decoded.shardIndex).to.equal(lane);
         expect(decoded.shardWidth).to.equal(Number(LANE_COUNT));
     }
     return lanes;
-}
-
-function decodePayoutPerformData(performData: `0x${string}`) {
-    const decoded = decodeAbiParameters(
-        [
-            { type: "uint256" },
-            {
-                type: "tuple",
-                components: [
-                    { type: "uint8" },
-                    { type: "uint32" },
-                    { type: "uint64" },
-                    { type: "uint32" },
-                    { type: "uint32" },
-                    { type: "uint32" },
-                ],
-            },
-            { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
-            { type: "address[]" },
-            { type: "uint256[]" },
-        ],
-        performData,
-    );
-    const job = decoded[1] as readonly [number, number, bigint, number, number, number];
-    return {
-        lane: Number(decoded[0]),
-        jobKind: job[0],
-        marketId: job[1],
-        roundId: job[2],
-        shardIndex: job[4],
-        shardWidth: job[5],
-    };
 }
 
 describe("Hundred-player two-market lane stress", function () {
@@ -321,7 +288,7 @@ describe("Hundred-player two-market lane stress", function () {
         // Round 2: dust on market 1 (losing), all 110 players on market 2 winning straight.
         await asset0.write.mint([admin.account.address, STAKE], { account: admin.account });
         await asset0.write.approve([bank0.address, STAKE], { account: admin.account });
-        await bank0.write.placeBet([STAKE, encodeSingleBet(STRAIGHT, 8n, STAKE)], { account: admin.account });
+        await bank0.write.placeBet([STAKE, encodeSingleBet(STRAIGHT, 8n, STAKE), zeroAddress], { account: admin.account });
 
         for (let i = 0; i < PLAYER_COUNT; i++) {
             const account = privateKeyToAccount(playerPrivateKey(i));
@@ -331,7 +298,7 @@ describe("Hundred-player two-market lane stress", function () {
                 await asset1.write.mint([account.address, mintEach], { account });
             }
             await asset1.write.approve([bank1.address, mintEach], { account });
-            await bank1.write.placeBet([STAKE, straight7], { account });
+            await bank1.write.placeBet([STAKE, straight7, zeroAddress], { account });
         }
 
         await time.increase(550);

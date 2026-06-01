@@ -102,8 +102,9 @@ library SideBetOutcomeLib {
             // Same number on `targetCount` consecutive spins (targetNumber == 37 -> any number).
             bool any = bet.targetNumber == ANY_NUMBER;
             uint256 run;
+            uint8 n;
             for (uint256 i; i < observed.length; ++i) {
-                uint8 n = observed[i];
+                n = observed[i];
                 bool valueOk = any || n == bet.targetNumber;
                 if (i > 0 && n == observed[i - 1] && valueOk) {
                     unchecked {
@@ -121,8 +122,9 @@ library SideBetOutcomeLib {
 
         if (bet.betType == ISideBet.SideBetType.PERFECT_ALTERNATION) {
             // Colors strictly alternate across the full window; a 0 or same-colour pair fails it.
+            uint8 n;
             for (uint256 i; i < observed.length; ++i) {
-                uint8 n = observed[i];
+                n = observed[i];
                 if (n == 0) return (true, false);
                 if (i > 0 && isRed(n) == isRed(observed[i - 1])) return (true, false);
             }
@@ -133,8 +135,9 @@ library SideBetOutcomeLib {
         if (bet.betType == ISideBet.SideBetType.DOZEN_HIT || bet.betType == ISideBet.SideBetType.COLUMN_HIT) {
             bool isDozen = bet.betType == ISideBet.SideBetType.DOZEN_HIT;
             uint256 count;
+            uint8 group;
             for (uint256 i; i < observed.length; ++i) {
-                uint8 group = isDozen ? _dozenOf(observed[i]) : _columnOf(observed[i]);
+                group = isDozen ? _dozenOf(observed[i]) : _columnOf(observed[i]);
                 if (group == bet.targetNumber) ++count;
             }
             if (count >= bet.targetCount) return (true, true);

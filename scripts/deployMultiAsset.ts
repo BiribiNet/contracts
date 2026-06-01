@@ -4,6 +4,7 @@ import { viem } from "hardhat";
 import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
+import { zeroAddress } from "viem";
 
 /** Treat unset, blank, literal "null" / "undefined" as no address → deploy mocks. */
 function optionalAddressEnv(name: string, raw: string | undefined): `0x${string}` | undefined {
@@ -63,8 +64,6 @@ async function main() {
         brb = brbC.address;
     }
 
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb, deployer.account.address]);
-
     let router: `0x${string}`;
     let deployedMockRouter: boolean;
     if (routerAddressEnv) {
@@ -76,23 +75,13 @@ async function main() {
         deployedMockRouter = true;
     }
 
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb,
-        router,
-        jackpotTreasury.address,
-        deployer.account.address,
-    ]);
-
-    const registry = await viem.deployContract("MarketRegistry", [deployer.account.address]);
-
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry, jackpotTreasury, funder } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             infraRecipient,
             vrfCoordinator,
             1n,
@@ -106,11 +95,15 @@ async function main() {
             scanLimit: 25,
             maxPayoutsPerCall: 60,
         },
+        {
+            protocolPrefix: {
+                brb,
+                mockRouter: router,
+                admin: deployer.account.address,
+            },
+        },
     );
 
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address]);
     await engine.write.setPayoutLaneCount([1], { account: deployer.account });
 
     const upkeepManager = await viem.deployContract("UpkeepManager", [

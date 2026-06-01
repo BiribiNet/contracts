@@ -1,9 +1,21 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
 import { encodeFunctionData } from "viem";
 
 describe("ProtocolTimelock", function () {
+    it("reverts on zero constructor addresses", async function () {
+        const [admin, proposer, executor] = await viem.getWalletClients();
+        await expect(
+            viem.deployContract("ProtocolTimelock", [
+                "0x0000000000000000000000000000000000000000",
+                proposer.account.address,
+                executor.account.address,
+            ]),
+        ).to.be.rejected;
+    });
+
     it("queues, waits 24h, then executes; rejects early execute and double-queue", async function () {
         const [admin, proposer, executor, other] = await viem.getWalletClients();
         const timelock = await viem.deployContract("ProtocolTimelock", [
@@ -85,5 +97,22 @@ describe("ProtocolTimelock", function () {
             timelock.write.execute([callee.address, 0n, data, salt], { account: executor.account, value: 0n }),
         ).to.be.rejected;
         expect(await callee.read.x()).to.equal(0n);
+    });
+
+    it("reverts cancel and execute on unknown operations", async function () {
+        const [admin, proposer, executor] = await viem.getWalletClients();
+        const timelock = await viem.deployContract("ProtocolTimelock", [
+            admin.account.address,
+            proposer.account.address,
+            executor.account.address,
+        ]);
+        const unknownId = "0x" + "ab".repeat(32);
+
+        await expect(timelock.write.cancel([unknownId], { account: admin.account })).to.be.rejected;
+
+        const callee = await viem.deployContract("MockTimelockCallee");
+        await expect(
+            timelock.write.execute([callee.address, 0n, "0x", 99n], { account: executor.account, value: 0n }),
+        ).to.be.rejected;
     });
 });

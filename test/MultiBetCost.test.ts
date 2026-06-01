@@ -1,7 +1,10 @@
-import { expect } from "chai";
-import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { viem } from "hardhat";
-import { parseUnits } from "viem";
+
+import { expect } from "chai";
+import { parseUnits, zeroAddress } from "viem";
+
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
+
 import { marketLimitsUsdc6 } from "./helpers/marketLimits";
 import { distinctRouletteLegs, encodeMultiBet, straightLegs } from "./helpers/multiBetEncode";
 
@@ -15,23 +18,14 @@ async function deployBetCostFixture() {
     const usdc = await viem.deployContract("MockUSDC");
     const vrf = await viem.deployContract("MockVrfCoordinator");
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine } = await deployRouletteEngine(
+    const { engine, registry } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -41,11 +35,14 @@ async function deployBetCostFixture() {
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: 5, maxPayoutsPerCall: 25 },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -84,11 +81,11 @@ describe("Multi-bet placeBet cost", function () {
             address: bank.address,
             abi: bank.abi,
             functionName: "placeBet",
-            args: [totalStake, betData],
+            args: [totalStake, betData, zeroAddress],
             account: alice.account,
         });
 
-        await bank.write.placeBet([totalStake, betData], { account: alice.account });
+        await bank.write.placeBet([totalStake, betData, zeroAddress], { account: alice.account });
 
         const balanceAfter = await usdc.read.balanceOf([alice.account.address]);
         expect(totalStake).to.equal(parseUnits("30", 6));
@@ -119,11 +116,11 @@ describe("Multi-bet placeBet cost", function () {
             address: bank.address,
             abi: bank.abi,
             functionName: "placeBet",
-            args: [totalStake, betData],
+            args: [totalStake, betData, zeroAddress],
             account: alice.account,
         });
 
-        await bank.write.placeBet([totalStake, betData], { account: alice.account });
+        await bank.write.placeBet([totalStake, betData, zeroAddress], { account: alice.account });
 
         const balanceAfter = await usdc.read.balanceOf([alice.account.address]);
         expect(totalStake).to.equal(parseUnits("50", 6));
@@ -132,6 +129,8 @@ describe("Multi-bet placeBet cost", function () {
         expect(legs).to.have.length(legCount);
 
         expect(gas).to.be.gte(5_000_000n);
-        expect(gas).to.be.lt(5_500_000n);
+        // Coverage instrumentation adds ~5–10% overhead.
+        const gasUpperBound = process.env.SOLIDITY_COVERAGE === "true" ? 6_000_000n : 5_500_000n;
+        expect(gas).to.be.lt(gasUpperBound);
     });
 });

@@ -1,8 +1,11 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { encodeAbiParameters, parseUnits } from "viem";
+
 import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -26,27 +29,14 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
     const vrf = await viem.deployContract("MockVrfCoordinator");
 
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry, jackpotTreasury, funder } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -56,18 +46,17 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
-
-    for (let i = 0; i < marketCount; i++) {
-    }
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
 
-    // Touch admin setters for coverage (and to validate they work).
     await scheduler.write.setScanLimit([12], { account: admin.account });
     await scheduler.write.setMaxPayoutsPerCall([maxPayoutsPerCall], { account: admin.account });
 
@@ -81,8 +70,7 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
                 {
                     asset: assets[i].address,
                     bankAdmin: admin.account.address,
-
-                minBet: 1_000_000n,
+                    minBet: 1_000_000n,
                 },
             ],
             { account: admin.account },
@@ -145,7 +133,7 @@ describe("E2E upkeep flow", function () {
         const betAmount = parseUnits("10", 6);
         const betData7 = encodeSingleBet(1n, 7n, betAmount);
         for (let m = 0; m < banks.length; m++) {
-            await banks[m].write.placeBet([betAmount, betData7], { account: players[m % players.length].account });
+            await banks[m].write.placeBet([betAmount, betData7, zeroAddress], { account: players[m % players.length].account });
         }
 
         // Lock + request VRF + fulfill + pay out.
@@ -158,8 +146,8 @@ describe("E2E upkeep flow", function () {
         await runUpkeepUntilIdle(scheduler);
         for (let m = 0; m < banks.length; m++) {
             // Two jackpot-eligible straight bets on each market to force batching.
-            await banks[m].write.placeBet([betAmount, betData7], { account: players[(m + 1) % players.length].account });
-            await banks[m].write.placeBet([betAmount, betData7], { account: players[(m + 2) % players.length].account });
+            await banks[m].write.placeBet([betAmount, betData7, zeroAddress], { account: players[(m + 1) % players.length].account });
+            await banks[m].write.placeBet([betAmount, betData7, zeroAddress], { account: players[(m + 2) % players.length].account });
         }
         await time.increase(550);
         await runUpkeepUntilIdle(scheduler);

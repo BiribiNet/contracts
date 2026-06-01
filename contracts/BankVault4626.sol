@@ -12,11 +12,19 @@ import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/Reentran
 
 import { IBankVault } from "./interfaces/IBankVault.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
+import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
 
 /// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `ERC1967Proxy`.
 /// @dev Deposit / withdraw enqueue policy follows `ENGINE.isBankLiquidityRestricted(marketId)`. Queue limits and batch sizes are read from the engine (global per protocol).
-contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgradeable, ReentrancyGuardTransient, IBankVault {
+contract BankVault4626 is
+    Initializable,
+    ERC4626Upgradeable,
+    AccessControlUpgradeable,
+    ReentrancyGuardTransient,
+    IBankVault,
+    ISideBetVault
+{
     using SafeERC20 for IERC20;
 
     uint16 internal constant BPS_DENOM = 10_000;
@@ -29,6 +37,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         address engine;
         address admin;
         uint256 minBet;
+        address sideBetController;
     }
 
     bytes32 public constant BANK_ADMIN_ROLE = keccak256("BANK_ADMIN_ROLE");
@@ -38,6 +47,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         uint32 marketId;
         IRouletteEngine ENGINE;
         uint256 lockedBetLiquidity;
+        address sideBetController;
         uint256 minBet;
         uint8 assetDecimals;
         uint256 flatWithdrawFee;
@@ -69,6 +79,14 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         return _s().lockedBetLiquidity;
     }
 
+    function sideBetController() external view returns (address) {
+        return _s().sideBetController;
+    }
+
+    function availableForSideBet() public view returns (uint256) {
+        return totalAssets();
+    }
+
     function minBet() external view override returns (uint256) {
         return _s().minBet;
     }
@@ -83,6 +101,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     }
 
     error OnlyEngine();
+    error UnauthorizedSettlementCaller();
     error InvalidAssetDecimals();
     error ZeroAmount();
     error BetTooSmall();
@@ -94,6 +113,8 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     error UnauthorizedCaller();
     error InvalidReceiver();
     error QueueFull();
+    error OnlySideBet();
+    error InsufficientSideBetLiquidity();
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
@@ -103,9 +124,25 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
     event FundsTransferred(address recipient, uint256 amount);
     event WithdrawalRequested(address owner, uint16 bps, address receiver);
     event WithdrawalProcessed(address owner, uint16 bps, address receiver, uint256 assetsPaid, uint256 sharesBurned);
+    event SideBetControllerUpdated(address previousController, address newController);
+    event SideBetStakeLocked(address indexed player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
 
     modifier onlyEngine() {
         if (msg.sender != address(_s().ENGINE)) revert OnlyEngine();
+        _;
+    }
+
+    modifier onlySideBet() {
+        if (msg.sender != _s().sideBetController) revert OnlySideBet();
+        _;
+    }
+
+    /// @dev Roulette engine or the configured {SideBet} module may settle via `releaseBets` / `payoutBatch` / `transferOut`.
+    modifier onlyEngineOrSideBet() {
+        BankVaultStorage storage $ = _s();
+        if (msg.sender != address($.ENGINE) && msg.sender != $.sideBetController) {
+            revert UnauthorizedSettlementCaller();
+        }
         _;
     }
 
@@ -124,9 +161,32 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         $.minBet = p.minBet;
         $.assetDecimals = decimals;
         $.flatWithdrawFee = 10 ** uint256(decimals);
+        $.sideBetController = p.sideBetController;
 
         _grantRole(DEFAULT_ADMIN_ROLE, p.admin);
         _grantRole(BANK_ADMIN_ROLE, p.admin);
+
+        if (p.sideBetController != address(0)) {
+            emit SideBetControllerUpdated(address(0), p.sideBetController);
+        }
+    }
+
+    function setSideBetController(address newController) external onlyRole(BANK_ADMIN_ROLE) {
+        if (newController == address(0)) revert ZeroAmount();
+        BankVaultStorage storage $ = _s();
+        address previous = $.sideBetController;
+        $.sideBetController = newController;
+        emit SideBetControllerUpdated(previous, newController);
+    }
+
+    function lockSideBetStake(address player, uint256 stake, uint256 payoutReserve) public virtual onlySideBet {
+        if (player == address(0) || stake == 0) revert ZeroAmount();
+        BankVaultStorage storage $ = _s();
+        uint256 free = availableForSideBet();
+        if (free + stake < payoutReserve) revert InsufficientSideBetLiquidity();
+        IERC20(asset()).safeTransferFrom(player, address(this), stake);
+        $.lockedBetLiquidity += payoutReserve;
+        emit SideBetStakeLocked(player, stake, payoutReserve, $.lockedBetLiquidity);
     }
 
     function setMinBet(uint256 newMinBet) external onlyRole(BANK_ADMIN_ROLE) {
@@ -137,13 +197,14 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         emit MinBetUpdated(previous, newMinBet);
     }
 
-    function placeBet(uint256 amount, bytes calldata betData) external {
-        _placeBetCore(amount, betData);
+    function placeBet(uint256 amount, bytes calldata betData, address referral) external {
+        _placeBetCore(amount, betData, referral);
     }
 
     function placeBetWithPermit(
         uint256 amount,
         bytes calldata betData,
+        address referral,
         uint256 deadline,
         uint8 v,
         bytes32 r,
@@ -153,26 +214,26 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         try IERC20PermitCompat(address(asset())).permit(msg.sender, address(this), amount, deadline, v, r, s) {
             // solhint-disable-next-line no-empty-blocks
         } catch {}
-        _placeBetCore(amount, betData);
+        _placeBetCore(amount, betData, referral);
     }
 
-    function _placeBetCore(uint256 amount, bytes calldata betData) private nonReentrant {
+    function _placeBetCore(uint256 amount, bytes calldata betData, address referral) private nonReentrant {
         BankVaultStorage storage $ = _s();
         if (amount < $.minBet) revert BetTooSmall();
         $.lockedBetLiquidity += amount;
-        $.ENGINE.recordBet($.marketId, msg.sender, amount, betData);
+        $.ENGINE.recordBet($.marketId, msg.sender, amount, betData, referral);
         emit BetPlaced(msg.sender, amount, betData, $.ENGINE.currentGlobalRound());
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function releaseBets(uint256 amount) external onlyEngine {
+    function releaseBets(uint256 amount) public virtual onlyEngineOrSideBet {
         BankVaultStorage storage $ = _s();
         if (amount > $.lockedBetLiquidity) $.lockedBetLiquidity = 0;
         else $.lockedBetLiquidity -= amount;
         emit BetsReleased(amount, $.lockedBetLiquidity);
     }
 
-    function payoutBatch(Payout[] calldata payouts) external onlyEngine returns (uint256 totalPaid) {
+    function payoutBatch(Payout[] calldata payouts) external onlyEngineOrSideBet returns (uint256 totalPaid) {
         IERC20 token = IERC20(asset());
         uint256 length = payouts.length;
         Payout calldata payout;
@@ -188,7 +249,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         return totalPaid;
     }
 
-    function transferOut(address recipient, uint256 amount) external onlyEngine {
+    function transferOut(address recipient, uint256 amount) external onlyEngineOrSideBet {
         IERC20(asset()).safeTransfer(recipient, amount);
         emit FundsTransferred(recipient, amount);
     }
@@ -228,28 +289,31 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         uint256 len = $._withdrawalQueue.length;
         IERC20 token = IERC20(asset());
         uint256 fee = $.flatWithdrawFee;
+        address owner;
+        QueuedWithdrawal memory q;
+        uint256 shares;
+        uint256 paid;
+        uint256 gross;
+        uint256 net;
 
         while (processed < maxCount && head < len) {
-            address owner = $._withdrawalQueue[head];
-            QueuedWithdrawal memory q = $._pendingWithdrawal[owner];
+            owner = $._withdrawalQueue[head];
+            q = $._pendingWithdrawal[owner];
             delete $._pendingWithdrawal[owner];
             delete $._userQueueIndex[owner];
             unchecked {
                 ++head;
             }
 
-            uint256 shares = _sharesForBps(owner, q.bps);
-            uint256 paid;
+            shares = _sharesForBps(owner, q.bps);
+            paid = 0;
             if (shares != 0) {
-                uint256 gross = convertToAssets(shares);
+                gross = convertToAssets(shares);
                 _burn(owner, shares);
                 if (gross > fee) {
-                    uint256 net = gross - fee;
-                    uint256 balance = token.balanceOf(address(this));
-                    paid = net > balance ? balance : net;
-                    if (paid > 0) {
-                        token.safeTransfer(q.receiver, paid);
-                    }
+                    net = gross - fee;
+                    paid = net;
+                    token.safeTransfer(q.receiver, paid);
                 }
             }
 
@@ -274,7 +338,7 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         if ($._withdrawalQueue.length - $._queueHead >= $.ENGINE.maxWithdrawalQueueLength()) revert QueueFull();
     }
 
-    function _enqueueWithdrawal(address owner, uint16 bps, address receiver) private {
+    function _enqueueWithdrawal(address owner, uint16 bps, address receiver) internal {
         if (receiver == address(0)) revert InvalidReceiver();
         if (owner != msg.sender) revert UnauthorizedCaller();
         _assertCanEnqueue(owner);
@@ -336,15 +400,15 @@ contract BankVault4626 is Initializable, ERC4626Upgradeable, AccessControlUpgrad
         return gross > locked ? gross - locked : 0;
     }
 
-    function maxWithdraw(address owner) public view override returns (uint256) {
-        uint256 base = super.maxWithdraw(owner);
-        uint256 freeLiquidity = totalAssets();
-        return base > freeLiquidity ? freeLiquidity : base;
-    }
-
     function maxRedeem(address owner) public view override returns (uint256) {
         uint256 base = super.maxRedeem(owner);
         uint256 freeLiquidityShares = convertToShares(totalAssets());
         return base > freeLiquidityShares ? freeLiquidityShares : base;
+    }
+
+    /// @inheritdoc ERC4626Upgradeable
+    /// @dev Uniform virtual-share offset across all market assets; mitigates ERC-4626 inflation / donation attacks (AUDIT C-2).
+    function _decimalsOffset() internal view virtual override returns (uint8) {
+        return 6;
     }
 }

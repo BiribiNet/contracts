@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-/// @title ISideBet — BRBGAME single-player side bets resolved over a window of roulette spins.
-/// @notice A player stakes against the house bankroll on a parametrised outcome that resolves
-///         over `windowSpins` consecutive roulette results. Payout is a fixed multiple of the
-///         stake (`multiplierBps`). Spin results are fed by an authorised keeper relaying the
-///         main `RouletteEngine` outcomes — this contract never touches the engine itself.
+import { IBankVault } from "./IBankVault.sol";
+
+/// @title ISideBet — single-player side bets resolved over a window of global roulette rounds.
+/// @notice Stakes and payouts use each market's `BankVault4626` LP pool. Outcomes are read from `RouletteEngine`.
 interface ISideBet {
     /// @dev Order MUST match the subgraph `SideBetType` enum (schema.graphql).
-    ///      New types are appended so existing indices stay stable.
     enum SideBetType {
         COLOR_COUNT,
         NUMBER_HIT,
@@ -17,16 +15,15 @@ interface ISideBet {
         LIGHTNING_DOUBLE,
         PERFECT_ALTERNATION,
         DOZEN_HIT,
-        COLUMN_HIT
+        COLUMN_HIT,
+        JACKPOT_IN_WINDOW
     }
 
-    /// @dev Order MUST match the subgraph `SideBetColor` enum.
     enum SideBetColor {
         RED,
         BLACK
     }
 
-    /// @dev Order MUST match the subgraph `SideBetStatus` enum.
     enum SideBetStatus {
         ACTIVE,
         WON,
@@ -35,30 +32,25 @@ interface ISideBet {
         CANCELLED
     }
 
-    /// @notice Admin-managed bet template. Bounds the odds (multiplier band) and stake range so
-    ///         the house edge stays controlled. `configId` is the index in insertion order.
     struct SideBetConfig {
-        address token; // ERC-20 staked / paid in (one token per config)
+        uint32 marketId;
         SideBetType betType;
-        SideBetColor color; // COLOR_COUNT / CONSECUTIVE_STREAK
-        uint8 targetNumber; // NUMBER_HIT (0-36); LIGHTNING_DOUBLE (0-36, or 37 = any number); DOZEN_HIT / COLUMN_HIT (1-3)
-        uint16 targetCount; // COLOR_COUNT / NUMBER_HIT / CONSECUTIVE_STREAK / LIGHTNING_DOUBLE (run length) / DOZEN_HIT / COLUMN_HIT
-        uint16 redRatioBps; // RED_RATIO (1-10000)
-        uint16 windowSpins; // spins observed before final resolution
-        uint32 multiplierBps; // payout = stake * multiplierBps / 10_000
+        SideBetColor color;
+        uint8 targetNumber;
+        uint16 targetCount;
+        uint16 redRatioBps;
+        uint16 windowSpins;
+        uint32 multiplierBps;
         uint256 minStake;
         uint256 maxStake;
-        bool enabled;
     }
 
-    /// @notice A placed bet. Resolution-relevant params are snapshotted so a later config edit
-    ///         cannot change the outcome of an already-active bet.
     struct Bet {
         address player;
-        address token;
+        uint32 marketId;
         uint256 stake;
-        uint256 payout; // potential payout reserved from the bankroll
-        uint64 startSpinIndex; // first spin observed (spins recorded at/after placement)
+        uint256 payout;
+        uint64 startGlobalRound;
         uint16 windowSpins;
         SideBetType betType;
         SideBetColor color;
@@ -70,63 +62,77 @@ interface ISideBet {
         uint64 resolvedAt;
     }
 
-    event SpinRecorded(uint256 indexed index, uint8 number);
-    event ConfigAdded(uint256 indexed configId, address indexed token, SideBetType betType);
-    event ConfigUpdated(uint256 indexed configId, bool enabled);
+    /// @dev Outcome row built in `previewSettleBundle` during Automation `checkUpkeep`; applied in `settleBatch`.
+    /// @param payoutAmount Player payout when `won`; zero when lost.
+    struct SettleRow {
+        uint256 betId;
+        bool won;
+        uint256 payoutAmount;
+    }
+
+    /// @dev Per-vault apply bundle built in `previewSettleBundle`; passed through Automation `performData`.
+    struct SettleVaultApply {
+        address bank;
+        uint32 marketId;
+        uint256 releaseTotal;
+        uint256 totalStakes;
+        uint256 totalPaid;
+        IBankVault.Payout[] winnerPayouts;
+    }
+
+    event ConfigAdded(uint256 configId, uint32 marketId, SideBetType betType);
+    event ConfigUpdated(uint256 configId);
+    event ConfigRemoved(uint256 configId);
+    event ConfigStakeLimitsUpdated(uint256 configId, uint256 minStake, uint256 maxStake);
     event MultiplierBandUpdated(uint32 minMultiplierBps, uint32 maxMultiplierBps);
-    event ResolverFeeUpdated(uint16 resolverFeeBps);
-    event BankrollFunded(address indexed token, address indexed from, uint256 amount);
-    event BankrollWithdrawn(address indexed token, address indexed to, uint256 amount);
     event SideBetPlaced(
-        uint256 indexed betId,
-        address indexed player,
-        uint256 indexed configId,
-        address token,
+        uint256 betId,
+        address player,
+        uint256 configId,
+        uint32 marketId,
         uint256 stake,
         uint256 payout,
-        uint64 startSpinIndex,
+        uint64 startGlobalRound,
         uint16 windowSpins
     );
-    event SideBetSettled(
-        uint256 indexed betId,
-        address indexed player,
-        SideBetStatus outcome,
-        uint256 payout,
-        address resolver,
-        uint256 resolverFee
-    );
+    event SideBetSettled(uint256 betId, address player, SideBetStatus outcome, uint256 payout);
+    event SideBetJackpotFunded(uint32 marketId, uint256 amount);
+    event SideBetInfrastructureFeePaid(uint32 marketId, uint256 amount);
 
     error ZeroAddress();
     error ZeroAmount();
     error InvalidNumber();
     error InvalidConfig();
     error UnknownConfig();
-    error ConfigDisabled();
+    error ConfigInactive();
+    error UnknownMarket();
     error StakeOutOfRange();
-    error InsufficientBankroll();
+    error StakeLimitsNotSet();
+    error InsufficientVaultLiquidity();
     error NotResolvableYet();
     error AlreadyResolved();
     error MultiplierOutOfBand();
 
-    function recordSpin(uint8 number) external;
-    function recordSpins(uint8[] calldata numbers) external;
     function addConfig(SideBetConfig calldata cfg) external returns (uint256 configId);
     function updateConfig(uint256 configId, SideBetConfig calldata cfg) external;
-    function setConfigEnabled(uint256 configId, bool enabled) external;
-    function fundBankroll(address token, uint256 amount) external;
-    function withdrawBankroll(address token, uint256 amount, address to) external;
+    function removeConfig(uint256 configId) external;
+    function setConfigStakeLimits(uint256 configId, uint256 minStake, uint256 maxStake) external;
+    function isConfigActive(uint256 configId) external view returns (bool active);
     function placeBet(uint256 configId, uint256 stake) external returns (uint256 betId);
-    function resolve(uint256 betId) external;
+    /// @notice Simulation-only bundle for one automation lane (`betId % laneCount == lane`).
+    function previewSettleBundle(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
+        external
+        view
+        returns (SettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies);
+    /// @notice Apply-only: bet rows + pre-built vault bundles from `previewSettleBundle` (trusted scheduler + DON).
+    function settleBatch(SettleRow[] calldata rows, SettleVaultApply[] calldata vaultApplies) external returns (uint256 settled);
 
     function getBet(uint256 betId) external view returns (Bet memory);
     function getConfig(uint256 configId) external view returns (SideBetConfig memory);
     function configCount() external view returns (uint256);
     function betCount() external view returns (uint256);
-    function spinCount() external view returns (uint256);
-    function getSpins(uint256 from, uint256 count) external view returns (uint8[] memory);
-    function bankrollOf(address token) external view returns (uint256);
-    function reservedOf(address token) external view returns (uint256);
-    function idleBankrollOf(address token) external view returns (uint256);
+    function reservedOf(uint32 marketId) external view returns (uint256);
+    function availableVaultLiquidity(uint32 marketId) external view returns (uint256);
     function playerBetCount(address player) external view returns (uint256);
     function playerBetAt(address player, uint256 index) external view returns (uint256 betId);
     function isResolvable(uint256 betId) external view returns (bool);

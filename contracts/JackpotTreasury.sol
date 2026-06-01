@@ -12,33 +12,24 @@ contract JackpotTreasury is AccessControl, IJackpotTreasury {
 
     bytes32 public constant TREASURY_ADMIN_ROLE = keccak256("TREASURY_ADMIN_ROLE");
 
-    address public engine;
+    address public immutable engine;
     IERC20 public immutable brb;
 
     error OnlyEngine();
     error ZeroAddress();
-    error EngineAlreadySet();
     error LengthMismatch();
-
-    event EngineSet(address engine);
 
     modifier onlyEngine() {
         if (msg.sender != engine) revert OnlyEngine();
         _;
     }
 
-    constructor(address brb_, address admin) {
-        if (brb_ == address(0) || admin == address(0)) revert ZeroAddress();
+    constructor(address brb_, address engine_, address admin) {
+        if (brb_ == address(0) || engine_ == address(0) || admin == address(0)) revert ZeroAddress();
         brb = IERC20(brb_);
+        engine = engine_;
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(TREASURY_ADMIN_ROLE, admin);
-    }
-
-    function setEngine(address engine_) external onlyRole(TREASURY_ADMIN_ROLE) {
-        if (engine_ == address(0)) revert ZeroAddress();
-        if (engine != address(0)) revert EngineAlreadySet();
-        engine = engine_;
-        emit EngineSet(engine_);
     }
 
     function jackpotPool() public view override returns (uint256) {
@@ -69,4 +60,3 @@ contract JackpotTreasury is AccessControl, IJackpotTreasury {
         }
     }
 }
-

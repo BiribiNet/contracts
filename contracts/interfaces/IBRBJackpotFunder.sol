@@ -9,6 +9,6 @@ interface IBRBJackpotFunder {
     function swapAssetTotalBps() external view returns (uint256);
 
     /// @notice Swaps the funder's entire `asset` balance to BRB when `asset != brb`, else splits that BRB in-place; treasury receives its BRB share, remainder is burned (supply reduction). The engine must `transferOut` the intended slice before calling.
-    /// @dev Engine-only. Does not revert on swap failure, failed treasury transfer, or failed burn (emits / try-catch) so upkeep settlement cannot brick on those paths.
+    /// @dev Callable only by the configured roulette engine or side-bet module. Does not revert on swap failure, failed treasury transfer, or failed burn (emits / try-catch) so upkeep settlement cannot brick on those paths.
     function fundFromMarket(uint32 marketId, address asset) external;
 }

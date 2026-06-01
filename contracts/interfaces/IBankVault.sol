@@ -21,11 +21,12 @@ interface IBankVault {
 
     function flatWithdrawFee() external view returns (uint256);
 
-    function placeBet(uint256 amount, bytes calldata betData) external;
+    function placeBet(uint256 amount, bytes calldata betData, address referral) external;
 
     function placeBetWithPermit(
         uint256 amount,
         bytes calldata betData,
+        address referral,
         uint256 deadline,
         uint8 v,
         bytes32 r,

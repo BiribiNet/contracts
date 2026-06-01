@@ -1,8 +1,12 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { decodeAbiParameters, encodeAbiParameters, parseUnits } from "viem";
+
+import { decodeRoulettePerformData } from "./helpers/decodeUpkeepPerformData";
 import { laneCheckData, runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 const LANE_COUNT = 10n;
@@ -22,24 +26,14 @@ async function deployThreeMarketStack(maxPayoutsPerCall: number) {
     const vrf = await viem.deployContract("MockVrfCoordinator");
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
 
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
-
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -49,11 +43,14 @@ async function deployThreeMarketStack(maxPayoutsPerCall: number) {
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -108,9 +105,9 @@ describe("Ten-lane parallel payout upkeeps", function () {
         const daiBefore = await mockDai.read.balanceOf([bob.account.address]);
         const brbBefore = await brb.read.balanceOf([carol.account.address]);
 
-        await bankUsdc.write.placeBet([betUsdc, straight7], { account: alice.account });
-        await bankDai.write.placeBet([betDai, encodeSingleBet(1n, 7n, betDai)], { account: bob.account });
-        await bankBrb.write.placeBet([betBrb, encodeSingleBet(1n, 7n, betBrb)], { account: carol.account });
+        await bankUsdc.write.placeBet([betUsdc, straight7, zeroAddress], { account: alice.account });
+        await bankDai.write.placeBet([betDai, encodeSingleBet(1n, 7n, betDai), zeroAddress], { account: bob.account });
+        await bankBrb.write.placeBet([betBrb, encodeSingleBet(1n, 7n, betBrb), zeroAddress], { account: carol.account });
 
         await time.increase(550);
         await runParallelLanesUntilIdle(scheduler);
@@ -140,7 +137,7 @@ describe("Ten-lane parallel payout upkeeps", function () {
         for (const p of [alice, bob, carol]) {
             await usdc.write.mint([p.account.address, parseUnits("500", 6)]);
             await usdc.write.approve([bankUsdc.address, parseUnits("500", 6)], { account: p.account });
-            await bankUsdc.write.placeBet([bet, straight7], { account: p.account });
+            await bankUsdc.write.placeBet([bet, straight7, zeroAddress], { account: p.account });
         }
 
         await time.increase(550);
@@ -152,7 +149,9 @@ describe("Ten-lane parallel payout upkeeps", function () {
             const [needed, performData] = await scheduler.read.checkUpkeep([laneCheckData(BigInt(lane))]);
             if (!needed) continue;
             lanesWithWork++;
-            const decoded = decodePerformData(performData);
+            const decoded = decodeRoulettePerformData(performData);
+            expect(decoded.workKind).to.equal(0);
+            expect(decoded.lane).to.equal(lane);
             expect(decoded.jobKind).to.equal(3);
             expect(decoded.marketId).to.equal(1);
             expect(decoded.shardIndex).to.equal(lane);
@@ -166,29 +165,3 @@ describe("Ten-lane parallel payout upkeeps", function () {
         expect(settled).to.equal(true);
     });
 });
-
-function decodePerformData(performData: `0x${string}`) {
-    const decoded = decodeAbiParameters(
-        [
-            { type: "uint256" },
-            {
-                type: "tuple",
-                components: [
-                    { type: "uint8" },
-                    { type: "uint32" },
-                    { type: "uint64" },
-                    { type: "uint32" },
-                    { type: "uint32" },
-                    { type: "uint32" },
-                ],
-            },
-            { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
-            { type: "address[]" },
-            { type: "uint256[]" },
-        ],
-        performData,
-    );
-    const lane = Number(decoded[0]);
-    const job = decoded[1] as readonly [number, number, bigint, number, number, number];
-    return { lane, jobKind: job[0], marketId: job[1], shardIndex: job[4], shardWidth: job[5] };
-}

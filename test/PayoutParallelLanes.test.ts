@@ -1,8 +1,11 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { encodeAbiParameters, parseUnits } from "viem";
+
 import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -18,23 +21,14 @@ async function deploySingleMarket(opts: { maxPayoutsPerCall: number }) {
     const asset = await viem.deployContract("MockUSDC");
     const vrf = await viem.deployContract("MockVrfCoordinator");
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -44,11 +38,14 @@ async function deploySingleMarket(opts: { maxPayoutsPerCall: number }) {
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: 250, maxPayoutsPerCall: opts.maxPayoutsPerCall },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
     expect(await engine.read.payoutParallelLaneCount()).to.equal(10n);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
@@ -115,7 +112,7 @@ describe("Payout upkeep (sequential winner chunks)", function () {
         for (const p of players) {
             await asset.write.mint([p.account.address, parseUnits("1000", 6)]);
             await asset.write.approve([bank.address, parseUnits("1000", 6)], { account: p.account });
-            await bank.write.placeBet([betPer, betData], { account: p.account });
+            await bank.write.placeBet([betPer, betData, zeroAddress], { account: p.account });
         }
 
         await time.increase(550);
@@ -145,7 +142,7 @@ describe("Payout upkeep (sequential winner chunks)", function () {
         await asset.write.approve([bank.address, parseUnits("1000", 6)], { account: p1.account });
 
         await runLaneUntilStable({ scheduler, lanes: [0n], rounds: 5 });
-        await bank.write.placeBet([parseUnits("1", 6), encodeSingleBet(1n, 7n, parseUnits("1", 6))], {
+        await bank.write.placeBet([parseUnits("1", 6), encodeSingleBet(1n, 7n, parseUnits("1", 6)), zeroAddress], {
             account: p1.account,
         });
 

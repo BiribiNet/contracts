@@ -66,21 +66,13 @@ library RouletteEngineStorageLib {
         Completed
     }
 
-    struct VrfLaneKeyHashes {
-        bytes32 keyHash2Gwei;
-        bytes32 keyHash30Gwei;
-        bytes32 keyHash150Gwei;
-    }
-
     struct InitConfig {
         address registry;
         address jackpotTreasury;
         address jackpotFunder;
         address infraRecipient;
         uint256 subscriptionId;
-        VrfLaneKeyHashes vrfLaneKeyHashes;
         uint32 callbackGasLimit;
-        uint16 confirmations;
         uint32 roundDuration;
         address admin;
         address upkeepScheduler;
@@ -92,17 +84,10 @@ library RouletteEngineStorageLib {
         IJackpotTreasury JACKPOT_TREASURY;
         IBRBJackpotFunder JACKPOT_FUNDER;
         uint256 VRF_SUBSCRIPTION_ID;
-        bytes32 VRF_KEY_HASH_2_GWEI;
-        bytes32 VRF_KEY_HASH_30_GWEI;
-        bytes32 VRF_KEY_HASH_150_GWEI;
         uint32 VRF_CALLBACK_GAS_LIMIT;
-        uint16 VRF_CONFIRMATIONS;
         uint32 ROUND_DURATION;
         uint64 _globalRound;
         uint256 _pendingRequestId;
-        uint64 _activeVrfRound;
-        uint64[] _vrfQueue;
-        uint256 _vrfQueueHead;
         uint256 withdrawalQueueBatchSize;
         uint256 maxWithdrawalQueueLength;
         uint32 payoutLaneCount;
@@ -133,10 +118,11 @@ library RouletteEngineStorageLib {
         mapping(uint64 => uint32) _roundMarketsSettledCount;
         mapping(uint64 => mapping(uint32 => bool)) _roundHasMarket;
         mapping(uint64 => uint32) _roundTriggerMarket;
-        mapping(uint64 => uint40) _roundLockAt;
+        mapping(uint64 => uint256) _roundLockAt;
         /// @dev Phase of `_globalRound` only; older rounds are `Completed`, newer ids are `Unset` (see `phaseOfRound`).
         RoundPhase _roundPhase;
         mapping(uint256 => uint64) requestIdToGlobalRound;
+        mapping(address => address) referrerOf;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.RouletteEngine")) - 1)) & ~bytes32(uint256(0xff));

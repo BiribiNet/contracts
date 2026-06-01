@@ -1,7 +1,8 @@
-import { expect } from "chai";
-import { encodeFunctionData, parseUnits, type Address, type Hex } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 import { viem } from "hardhat";
+
+import { expect } from "chai";
+import { encodeFunctionData, parseUnits, zeroAddress, type Address, type Hex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 
 import { vaultInitMinBet18, vaultInitMinBetUsdc6 } from "./helpers/marketLimits";
 
@@ -22,7 +23,7 @@ describe("BankVault4626", function () {
         await vault.write.deposit([parseUnits("100", 6), alice.account.address], { account: alice.account });
 
         expect(await vault.read.totalAssets()).to.equal(parseUnits("100", 6));
-        await vault.write.placeBet([parseUnits("10", 6), "0x"], { account: alice.account });
+        await vault.write.placeBet([parseUnits("10", 6), "0x", zeroAddress], { account: alice.account });
         expect(await vault.read.lockedBetLiquidity()).to.equal(parseUnits("10", 6));
         expect(await vault.read.totalAssets()).to.equal(parseUnits("100", 6));
     });
@@ -38,7 +39,7 @@ describe("BankVault4626", function () {
         ]);
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
 
-        await expect(vault.write.placeBet([0n, "0x"], { account: alice.account })).to.be.rejected;
+        await expect(vault.write.placeBet([0n, "0x", zeroAddress], { account: alice.account })).to.be.rejected;
         await expect(vault.write.releaseBets([1n], { account: alice.account })).to.be.rejected;
         await expect(vault.write.payoutBatch([[{ player: alice.account.address, amount: 1n }]], { account: alice.account })).to
             .be.rejected;
@@ -57,7 +58,7 @@ describe("BankVault4626", function () {
 
         await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
         await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
-        await vault.write.placeBet([parseUnits("40", 6), "0x"], { account: alice.account });
+        await vault.write.placeBet([parseUnits("40", 6), "0x", zeroAddress], { account: alice.account });
         expect(await vault.read.lockedBetLiquidity()).to.equal(parseUnits("40", 6));
 
         await mockEngine.write.releaseFromVault([vault.address, parseUnits("999", 6)]);
@@ -80,8 +81,8 @@ describe("BankVault4626", function () {
         const vault = await viem.getContractAt("BankVault4626", proxy.address);
         await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
         await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
-        await expect(vault.write.placeBet([parseUnits("4", 6), "0x"], { account: alice.account })).to.be.rejected;
-        await vault.write.placeBet([parseUnits("5", 6), "0x"], { account: alice.account });
+        await expect(vault.write.placeBet([parseUnits("4", 6), "0x", zeroAddress], { account: alice.account })).to.be.rejected;
+        await vault.write.placeBet([parseUnits("5", 6), "0x", zeroAddress], { account: alice.account });
     });
 
     it("reverts when deposit is at or below flat fee", async function () {
@@ -255,11 +256,45 @@ describe("BankVault4626", function () {
         const v = Number.parseInt(signature.slice(130, 132), 16);
 
         await token.write.approve([vault.address, 0n], { account: pkAccount });
-        await vault.write.placeBetWithPermit([amount, "0x", deadline, v, r, s], { account: pkAccount });
+        await vault.write.placeBetWithPermit([amount, "0x", zeroAddress, deadline, v, r, s], { account: pkAccount });
 
         await token.write.mint([pkAccount.address, amount]);
         await token.write.approve([vault.address, amount], { account: pkAccount });
-        await vault.write.placeBetWithPermit([amount, "0x", deadline, v, r, s], { account: pkAccount });
+        await vault.write.placeBetWithPermit([amount, "0x", zeroAddress, deadline, v, r, s], { account: pkAccount });
+    });
+
+    it("uses decimals offset 6 and resists donation inflation on second deposit", async function () {
+        const [admin, attacker, victim] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        expect(await vault.read.decimals()).to.equal(12);
+
+        const minDeposit = parseUnits("1.000001", 6);
+        const victimDeposit = parseUnits("100", 6);
+        const donation = parseUnits("1000000", 6);
+
+        await usdc.write.mint([attacker.account.address, minDeposit + donation], { account: admin.account });
+        await usdc.write.mint([victim.account.address, victimDeposit], { account: admin.account });
+
+        await usdc.write.approve([vault.address, minDeposit + donation], { account: attacker.account });
+        await vault.write.deposit([minDeposit, attacker.account.address], { account: attacker.account });
+        await usdc.write.transfer([vault.address, donation], { account: attacker.account });
+
+        await usdc.write.approve([vault.address, victimDeposit], { account: victim.account });
+        await vault.write.deposit([victimDeposit, victim.account.address], { account: victim.account });
+
+        expect(await vault.read.balanceOf([victim.account.address])).to.be.gt(0n);
+        expect(await vault.read.convertToAssets([await vault.read.balanceOf([victim.account.address])])).to.be.closeTo(
+            victimDeposit,
+            parseUnits("1", 6),
+        );
     });
 });
 
@@ -290,6 +325,7 @@ function vaultInitData(
                             { name: "engine", type: "address" },
                             { name: "admin", type: "address" },
                             { name: "minBet", type: "uint256" },
+                            { name: "sideBetController", type: "address" },
                         ],
                     },
                 ],
@@ -306,6 +342,7 @@ function vaultInitData(
                 engine,
                 admin,
                 minBet,
+                sideBetController: "0x0000000000000000000000000000000000000000",
             },
         ],
     });

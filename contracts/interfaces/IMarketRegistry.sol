@@ -26,11 +26,14 @@ interface IMarketRegistry {
     /// @notice Engine used for all created markets.
     function ENGINE() external view returns (address);
 
-    /// @notice Sets the engine used for all created markets.
-    function setEngine(address newEngine) external;
+    /// @notice SideBet contract wired into new market vaults at creation time.
+    function SIDE_BET() external view returns (address);
 
     /// @notice Creates a new market vault (proxy) and registers it.
     function createMarket(CreateMarketParams calldata params) external returns (uint32 marketId, address bank);
+
+    /// @notice Registered market id for `asset`, or `0` if none.
+    function assetToMarket(address asset) external view returns (uint32 marketId);
 
     function marketCount() external view returns (uint32);
 

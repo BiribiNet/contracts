@@ -80,10 +80,12 @@ library RouletteJackpotCollectLib {
             RouletteEngineStorageLib.NumberedBetBucket.Straight
         )][winningNumber];
         uint256 len = bucket.length;
+        uint256 a;
+        uint256 stake;
         for (uint256 j; j < len; ) {
-            uint256 a = uint256(bucket[j].amount);
+            a = uint256(bucket[j].amount);
             st.winners[st.out] = bucket[j].player;
-            uint256 stake = normalizeStakeWeight(a, dec);
+            stake = normalizeStakeWeight(a, dec);
             st.stakes[st.out] = stake;
             st.totalStake += stake;
             unchecked {

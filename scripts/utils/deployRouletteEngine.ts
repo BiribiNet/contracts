@@ -1,5 +1,6 @@
 import { viem } from "hardhat";
-import { encodeFunctionData, getContractAddress, type Address } from "viem";
+import { encodeFunctionData, getContractAddress, zeroAddress, type Address } from "viem";
+import { predictRouletteStackAddresses } from "./predictDeployAddresses";
 
 const ROULETTE_LIB = "contracts/RouletteLib.sol:RouletteLib" as const;
 const ROULETTE_BET_LIB = "contracts/libraries/RouletteBetLib.sol:RouletteBetLib" as const;
@@ -12,15 +13,34 @@ const ROULETTE_JACKPOT_COLLECT_LIB = "contracts/libraries/RouletteJackpotCollect
 const ROULETTE_EXPOSURE_LIB = "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib" as const;
 const ROULETTE_UPKEEP_SCAN_LIB = "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib" as const;
 
+const DEFAULT_SIDE_BET_MIN_MULTIPLIER_BPS = 50_000;
+const DEFAULT_SIDE_BET_MAX_MULTIPLIER_BPS = 5_000_000;
+
 export type UpkeepSchedulerDeployConfig = {
     admin: Address;
     scanLimit: number;
     maxPayoutsPerCall: number;
 };
 
+export type DeployRouletteEngineOptions = {
+    /** Pre-deployed referral token wired into the implementation constructor. */
+    brbReferral?: Address;
+    /** Deploy `BRBReferal` against the predicted engine proxy address before the implementation. */
+    deployBrbReferral?: boolean;
+    sideBetMinMultiplierBps?: number;
+    sideBetMaxMultiplierBps?: number;
+    /** When set, deploys treasury / funder / registry immediately before linked libraries using predicted proxy addresses. */
+    protocolPrefix?: {
+        brb: Address;
+        mockRouter: Address;
+        admin: Address;
+    };
+};
+
 /**
- * Deploy linked libraries, `RouletteEngine` implementation + `ERC1967Proxy` (`initialize`), then `UpkeepScheduler`.
- * Scheduler address is predicted as the third CREATE after the implementation (impl → proxy → scheduler).
+ * Deploy linked libraries, `RouletteEngine` implementation + `ERC1967Proxy` (`initialize`), `SideBet` proxy, then `UpkeepScheduler`.
+ * Scheduler address is predicted as the last CREATE after optional `BRBReferal`
+ * (referral → engine impl → engine proxy → side-bet impl → side-bet proxy → scheduler).
  *
  * @param vrfLaneKeyHashes Three Chainlink VRF key hashes (2 / 30 / 150 gwei lanes); engine picks by `tx.gasprice` like legacy `OldRouletteClean`.
  * @param engineConstructorArgs `[registry, jackpotTreasury, jackpotFunder, infraRecipient, vrfCoordinator, subscriptionId, callbackGasLimit, confirmations, roundDuration, admin]` (10 args).
@@ -29,6 +49,7 @@ export async function deployRouletteEngine(
     vrfLaneKeyHashes: readonly [`0x${string}`, `0x${string}`, `0x${string}`],
     engineConstructorArgs: readonly unknown[],
     scheduler: UpkeepSchedulerDeployConfig,
+    options: DeployRouletteEngineOptions = {},
 ) {
     const [deployer] = await viem.getWalletClients();
     const publicClient = await viem.getPublicClient();
@@ -38,6 +59,44 @@ export async function deployRouletteEngine(
         throw new Error(
             `deployRouletteEngine: expected 10 engineConstructorArgs (registry … admin), got ${engineConstructorArgs.length}`,
         );
+    }
+
+    const registryAddress = engineConstructorArgs[0] as Address;
+    const sideBetMinMultiplierBps = options.sideBetMinMultiplierBps ?? DEFAULT_SIDE_BET_MIN_MULTIPLIER_BPS;
+    const sideBetMaxMultiplierBps = options.sideBetMaxMultiplierBps ?? DEFAULT_SIDE_BET_MAX_MULTIPLIER_BPS;
+
+    let jackpotTreasuryAddress = engineConstructorArgs[1] as Address;
+    let jackpotFunderAddress = engineConstructorArgs[2] as Address;
+    let wiredRegistryAddress = registryAddress;
+
+    if (options.protocolPrefix) {
+        const prefix = options.protocolPrefix;
+        const nonceBeforePrefix = BigInt(
+            await publicClient.getTransactionCount({ address: account.address, blockTag: "latest" }),
+        );
+        const { engineProxy, sideBetProxy } = predictRouletteStackAddresses(account.address, nonceBeforePrefix, {
+            deployBrbReferral: options.deployBrbReferral,
+        });
+
+        const jackpotTreasury = await viem.deployContract(
+            "JackpotTreasury",
+            [prefix.brb, engineProxy, prefix.admin],
+            { account },
+        );
+        const funder = await viem.deployContract(
+            "BRBJackpotFunder",
+            [engineProxy, prefix.brb, prefix.mockRouter, jackpotTreasury.address, sideBetProxy, prefix.admin],
+            { account },
+        );
+        const registry = await viem.deployContract(
+            "MarketRegistry",
+            [prefix.admin, engineProxy, sideBetProxy],
+            { account },
+        );
+
+        wiredRegistryAddress = registry.address;
+        jackpotTreasuryAddress = jackpotTreasury.address;
+        jackpotFunderAddress = funder.address;
     }
 
     const rouletteLib = await viem.deployContract("RouletteLib", [], { account });
@@ -77,38 +136,58 @@ export async function deployRouletteEngine(
     };
 
     const vrfCoordinator = engineConstructorArgs[4];
-    const vrfTuple = {
-        keyHash2Gwei: vrfLaneKeyHashes[0],
-        keyHash30Gwei: vrfLaneKeyHashes[1],
-        keyHash150Gwei: vrfLaneKeyHashes[2],
-    };
+    const vrfConfirmations = Number(engineConstructorArgs[7]);
 
     const nonceBeforeImpl = BigInt(
-        await publicClient.getTransactionCount({ address: account.address, blockTag: "pending" }),
+        await publicClient.getTransactionCount({ address: account.address, blockTag: "latest" }),
     );
-    const upkeepSchedulerAddress = getContractAddress({
+    const deployBrbReferral = options.deployBrbReferral ?? false;
+    const implNonceOffset = deployBrbReferral ? 1n : 0n;
+    const engineProxyForReferral = getContractAddress({
         from: account.address,
-        nonce: nonceBeforeImpl + 2n,
+        nonce: nonceBeforeImpl + 1n + implNonceOffset,
     });
 
-    const engineImplementation = await viem.deployContract("RouletteEngine", [vrfCoordinator] as never, {
-        account,
-        libraries: libraryLinks,
-    });
+    let brbReferral = options.brbReferral ?? zeroAddress;
+    if (deployBrbReferral) {
+        const referralContract = await viem.deployContract("BRBReferal", [engineProxyForReferral], { account });
+        brbReferral = referralContract.address;
+    }
+
+    const engineImplementation = await viem.deployContract(
+        "RouletteEngine",
+        [
+            vrfCoordinator,
+            vrfLaneKeyHashes[0],
+            vrfLaneKeyHashes[1],
+            vrfLaneKeyHashes[2],
+            vrfConfirmations,
+            brbReferral,
+        ] as never,
+        {
+            account,
+            libraries: libraryLinks,
+        },
+    );
+
+    const nonceBeforeProxy = BigInt(
+        await publicClient.getTransactionCount({ address: account.address, blockTag: "latest" }),
+    );
+    const engineProxyAddress = getContractAddress({ from: account.address, nonce: nonceBeforeProxy });
+    const sideBetProxyAddress = getContractAddress({ from: account.address, nonce: nonceBeforeProxy + 2n });
+    const upkeepSchedulerAddress = getContractAddress({ from: account.address, nonce: nonceBeforeProxy + 3n });
 
     const initData = encodeFunctionData({
         abi: engineImplementation.abi,
         functionName: "initialize",
         args: [
             {
-                registry: engineConstructorArgs[0],
-                jackpotTreasury: engineConstructorArgs[1],
-                jackpotFunder: engineConstructorArgs[2],
+                registry: wiredRegistryAddress,
+                jackpotTreasury: jackpotTreasuryAddress,
+                jackpotFunder: jackpotFunderAddress,
                 infraRecipient: engineConstructorArgs[3],
                 subscriptionId: engineConstructorArgs[5],
-                vrfLaneKeyHashes: vrfTuple,
                 callbackGasLimit: engineConstructorArgs[6],
-                confirmations: engineConstructorArgs[7],
                 roundDuration: engineConstructorArgs[8],
                 admin: engineConstructorArgs[9],
                 upkeepScheduler: upkeepSchedulerAddress,
@@ -120,9 +199,38 @@ export async function deployRouletteEngine(
 
     const engine = await viem.getContractAt("RouletteEngine", proxy.address);
 
+    const sideBetImplementation = await viem.deployContract("SideBet", [], { account });
+    const sideBetInitData = encodeFunctionData({
+        abi: sideBetImplementation.abi,
+        functionName: "initialize",
+        args: [
+            scheduler.admin,
+            engine.address,
+            wiredRegistryAddress,
+            sideBetMinMultiplierBps,
+            sideBetMaxMultiplierBps,
+        ],
+    });
+    const sideBetProxy = await viem.deployContract(
+        "ERC1967Proxy",
+        [sideBetImplementation.address, sideBetInitData],
+        { account },
+    );
+    const sideBet = await viem.getContractAt("SideBet", sideBetProxy.address);
+
+    if (sideBet.address.toLowerCase() !== sideBetProxyAddress.toLowerCase()) {
+        const registry = await viem.getContractAt("MarketRegistry", wiredRegistryAddress);
+        const expectedSideBet = await registry.read.SIDE_BET();
+        if (sideBet.address.toLowerCase() !== expectedSideBet.toLowerCase()) {
+            throw new Error(
+                `SideBet proxy CREATE mismatch: expected ${sideBetProxyAddress} (registry ${expectedSideBet}) got ${sideBet.address}`,
+            );
+        }
+    }
+
     const schedulerContract = await viem.deployContract(
         "UpkeepScheduler",
-        [engine.address, scheduler.admin, scheduler.scanLimit, scheduler.maxPayoutsPerCall],
+        [engine.address, sideBet.address, scheduler.admin, scheduler.scanLimit, scheduler.maxPayoutsPerCall],
         { account },
     );
 
@@ -132,10 +240,19 @@ export async function deployRouletteEngine(
         );
     }
 
+    const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
+    await sideBet.write.grantRole([settlementRole, schedulerContract.address], { account });
+
     return {
         engine,
         engineImplementation,
+        sideBet,
+        sideBetImplementation,
         scheduler: schedulerContract,
+        brbReferral,
+        registry: await viem.getContractAt("MarketRegistry", wiredRegistryAddress),
+        jackpotTreasury: await viem.getContractAt("JackpotTreasury", jackpotTreasuryAddress),
+        funder: await viem.getContractAt("BRBJackpotFunder", jackpotFunderAddress),
         linkedLibraries: {
             rouletteLib: rouletteLib.address,
             rouletteBetLib: rouletteBetLib.address,

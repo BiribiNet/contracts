@@ -2,6 +2,13 @@ import { encodeAbiParameters } from "viem";
 
 export type BetLeg = { betType: bigint; number: bigint; amount: bigint };
 
+export function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
+    return encodeAbiParameters(
+        [{ type: "uint256[]" }, { type: "uint256[]" }, { type: "uint256[]" }],
+        [[betType], [number], [amount]],
+    );
+}
+
 export function encodeMultiBet(legs: readonly BetLeg[]) {
     return encodeAbiParameters(
         [{ type: "uint256[]" }, { type: "uint256[]" }, { type: "uint256[]" }],

@@ -1,8 +1,11 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { encodeAbiParameters, parseUnits } from "viem";
+
 import { jackpotStakeWeight, runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 /** Matches `RouletteEngine.sol` INFRA_BPS constant. */
@@ -35,27 +38,16 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
     const usdc = await viem.deployContract("MockUSDC");
     const vrf = await viem.deployContract("MockVrfCoordinator");
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const publicClient = await viem.getPublicClient();
     const maxPayouts = opts?.maxPayoutsPerCall ?? 50;
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry, jackpotTreasury, funder } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -65,11 +57,14 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: 20, maxPayoutsPerCall: maxPayouts },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
 
 
     await brb.write.transfer([mockRouter.address, ROUTER_BRB_LIQUIDITY], { account: admin.account });
@@ -130,7 +125,7 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
 
         await runSchedulerUntilIdle(scheduler);
 
-        await bank.write.placeBet([bet, encodeSingleBet(1n, 8n, bet)], { account: alice.account });
+        await bank.write.placeBet([bet, encodeSingleBet(1n, 8n, bet), zeroAddress], { account: alice.account });
         await time.increase(550);
 
         await runSchedulerUntilIdle(scheduler);
@@ -210,8 +205,8 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         await usdc.write.approve([bank.address, betAlice + betBob], { account: alice.account });
         await usdc.write.approve([bank.address, betAlice + betBob], { account: bob.account });
 
-        await bank.write.placeBet([betAlice, encodeSingleBet(1n, 7n, betAlice)], { account: alice.account });
-        await bank.write.placeBet([betBob, encodeSingleBet(1n, 7n, betBob)], { account: bob.account });
+        await bank.write.placeBet([betAlice, encodeSingleBet(1n, 7n, betAlice), zeroAddress], { account: alice.account });
+        await bank.write.placeBet([betBob, encodeSingleBet(1n, 7n, betBob), zeroAddress], { account: bob.account });
         await time.increase(550);
 
         await runSchedulerUntilIdle(scheduler);
@@ -283,7 +278,7 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
 
         await runSchedulerUntilIdle(scheduler);
 
-        await bank.write.placeBet([bobBet, encodeSingleBet(1n, 2n, bobBet)], { account: alice.account });
+        await bank.write.placeBet([bobBet, encodeSingleBet(1n, 2n, bobBet), zeroAddress], { account: alice.account });
         await time.increase(550);
 
         const usdcSupplyBefore = await usdc.read.totalSupply();

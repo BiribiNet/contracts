@@ -1,6 +1,7 @@
+import { viem } from "hardhat";
+
 import { expect } from "chai";
 import { parseUnits } from "viem";
-import { viem } from "hardhat";
 
 describe("BRBToken", function () {
     it("mints fixed supply and supports burn", async function () {

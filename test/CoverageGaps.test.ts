@@ -1,8 +1,10 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
+import { encodeAbiParameters, encodeFunctionData, parseUnits, zeroAddress, type Address, type Hex } from "viem";
+
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { encodeAbiParameters, encodeFunctionData, parseUnits, type Address, type Hex } from "viem";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -14,7 +16,12 @@ function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
 describe("Coverage gaps", function () {
     it("covers MarketRegistry getMarket validity and previewNextMarketId", async function () {
         const [admin] = await viem.getWalletClients();
-        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
+        const roundEngine = await viem.deployContract("MockRoundEngine");
+        const registry = await viem.deployContract("MarketRegistry", [
+            admin.account.address,
+            roundEngine.address,
+            admin.account.address,
+        ]);
 
         await expect(registry.read.getMarket([0])).to.be.rejected;
         await expect(registry.read.getMarket([1])).to.be.rejected;
@@ -22,22 +29,14 @@ describe("Coverage gaps", function () {
         const token = await viem.deployContract("MockUSDC");
         const vrf = await viem.deployContract("MockVrfCoordinator");
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
-        const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
-            brb.address,
-            router.address,
-            treasury.address,
-            admin.account.address,
-        ]);
         const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-        const { engine, scheduler } = await deployRouletteEngine(
+        const { jackpotTreasury: treasury, funder, registry: engineRegistry } = await deployRouletteEngine(
             [mockLaneKey, mockLaneKey, mockLaneKey],
             [
-                registry.address,
-                treasury.address,
-                funder.address,
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
                 admin.account.address,
                 vrf.address,
                 1n,
@@ -47,15 +46,19 @@ describe("Coverage gaps", function () {
                 admin.account.address,
             ],
             { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: router.address,
+                    admin: admin.account.address,
+                },
+            },
         );
-        await treasury.write.setEngine([engine.address]);
-        await funder.write.setEngine([engine.address]);
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
-        await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
-        await registry.write.setEngine([engine.address], { account: admin.account });
-        await registry.write.createMarket(
+        await engineRegistry.write.setVaultBeacon([beacon.address], { account: admin.account });
+        await engineRegistry.write.createMarket(
             [
                 {
                     asset: token.address,
@@ -67,10 +70,10 @@ describe("Coverage gaps", function () {
             { account: admin.account },
         );
 
-        const cfg = await registry.read.getMarket([1]);
+        const cfg = await engineRegistry.read.getMarket([1]);
         expect(cfg.asset.toLowerCase()).to.equal(token.address.toLowerCase());
-        await expect(registry.read.getMarket([2])).to.be.rejected;
-        expect(await registry.read.previewNextMarketId()).to.equal(2n);
+        await expect(engineRegistry.read.getMarket([2])).to.be.rejected;
+        expect(await engineRegistry.read.previewNextMarketId()).to.equal(2n);
     });
 
     it("covers BankVault4626 maxWithdraw/maxRedeem paths", async function () {
@@ -95,7 +98,7 @@ describe("Coverage gaps", function () {
         expect(mr).to.be.gt(0n);
 
         // Place a bet to exercise the view paths again under nonzero lockedBetLiquidity.
-        await vault.write.placeBet([parseUnits("10", 6), encodeSingleBet(1n, 7n, parseUnits("10", 6))], { account: alice.account });
+        await vault.write.placeBet([parseUnits("10", 6), encodeSingleBet(1n, 7n, parseUnits("10", 6)), zeroAddress], { account: alice.account });
         const mw2 = await vault.read.maxWithdraw([alice.account.address]);
         expect(mw2).to.be.gt(0n);
         const mr2 = await vault.read.maxRedeem([alice.account.address]);
@@ -139,20 +142,22 @@ describe("Coverage gaps", function () {
         await token.write.mint([alice.account.address, parseUnits("1000", 6)]);
         await token.write.approve([vault.address, parseUnits("1000", 6)], { account: alice.account });
 
-        const shares = await vault.write.mint([parseUnits("10", 6), alice.account.address], { account: alice.account });
+        // With `_decimalsOffset(6)`, empty-vault mint needs enough shares that previewMint assets > flatWithdrawFee (1 USDC).
+        const shares = await vault.write.mint([2n * 10n ** 12n, alice.account.address], { account: alice.account });
         expect(shares).to.not.equal(undefined);
     });
 
     it("covers BRBJackpotFunder.setSlippageBps bounds", async function () {
         const [admin] = await viem.getWalletClients();
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
+        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
         const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
+            admin.account.address,
             brb.address,
             router.address,
             treasury.address,
+            admin.account.address,
             admin.account.address,
         ]);
 
@@ -163,24 +168,26 @@ describe("Coverage gaps", function () {
     it("covers BRBJackpotFunder constructor and setSwapAssetBps bounds", async function () {
         const [admin] = await viem.getWalletClients();
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
+        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
 
         await expect(
             viem.deployContract("BRBJackpotFunder", [
-                "0x0000000000000000000000000000000000000000",
+                admin.account.address,
                 brb.address,
                 router.address,
                 "0x0000000000000000000000000000000000000000",
+                admin.account.address,
                 admin.account.address,
             ]),
         ).to.be.rejected;
 
         const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
+            admin.account.address,
             brb.address,
             router.address,
             treasury.address,
+            admin.account.address,
             admin.account.address,
         ]);
 
@@ -191,13 +198,14 @@ describe("Coverage gaps", function () {
     it("covers BRBJackpotFunder.setTreasuryBrbSplit bounds", async function () {
         const [admin] = await viem.getWalletClients();
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
+        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
         const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
+            admin.account.address,
             brb.address,
             router.address,
             treasury.address,
+            admin.account.address,
             admin.account.address,
         ]);
 
@@ -231,23 +239,14 @@ describe("Coverage gaps", function () {
         const usdc = await viem.deployContract("MockUSDC");
         const vrf = await viem.deployContract("MockVrfCoordinator");
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
-        const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
-            brb.address,
-            router.address,
-            treasury.address,
-            admin.account.address,
-        ]);
-        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
         const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-        const { engine, scheduler } = await deployRouletteEngine(
+        const { engine, scheduler, registry } = await deployRouletteEngine(
             [mockLaneKey, mockLaneKey, mockLaneKey],
             [
-                registry.address,
-                treasury.address,
-                funder.address,
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
                 admin.account.address,
                 vrf.address,
                 1n,
@@ -257,10 +256,14 @@ describe("Coverage gaps", function () {
                 admin.account.address,
             ],
             { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: router.address,
+                    admin: admin.account.address,
+                },
+            },
         );
-        await treasury.write.setEngine([engine.address]);
-        await funder.write.setEngine([engine.address]);
-        await registry.write.setEngine([engine.address], { account: admin.account });
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -284,7 +287,7 @@ describe("Coverage gaps", function () {
 
         // Straight bet number > 36 should revert in engine validation.
         await expect(
-            bank.write.placeBet([parseUnits("1", 6), encodeSingleBet(1n, 37n, parseUnits("1", 6))], { account: alice.account }),
+            bank.write.placeBet([parseUnits("1", 6), encodeSingleBet(1n, 37n, parseUnits("1", 6)), zeroAddress], { account: alice.account }),
         ).to.be.rejected;
     });
 
@@ -294,23 +297,14 @@ describe("Coverage gaps", function () {
         const usdc = await viem.deployContract("MockUSDC");
         const vrf = await viem.deployContract("MockVrfCoordinator");
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
-        const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
-            brb.address,
-            router.address,
-            treasury.address,
-            admin.account.address,
-        ]);
-        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
         const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-        const { engine, scheduler } = await deployRouletteEngine(
+        const { engine, scheduler, registry } = await deployRouletteEngine(
             [mockLaneKey, mockLaneKey, mockLaneKey],
             [
-                registry.address,
-                treasury.address,
-                funder.address,
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
                 admin.account.address,
                 vrf.address,
                 1n,
@@ -320,10 +314,14 @@ describe("Coverage gaps", function () {
                 admin.account.address,
             ],
             { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: router.address,
+                    admin: admin.account.address,
+                },
+            },
         );
-        await treasury.write.setEngine([engine.address]);
-        await funder.write.setEngine([engine.address]);
-        await registry.write.setEngine([engine.address], { account: admin.account });
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -347,7 +345,7 @@ describe("Coverage gaps", function () {
 
         // Red bet must have number==0; non-zero should revert.
         await expect(
-            bank.write.placeBet([parseUnits("1", 6), encodeSingleBet(8n, 1n, parseUnits("1", 6))], { account: alice.account }),
+            bank.write.placeBet([parseUnits("1", 6), encodeSingleBet(8n, 1n, parseUnits("1", 6)), zeroAddress], { account: alice.account }),
         ).to.be.rejected;
     });
 
@@ -358,23 +356,14 @@ describe("Coverage gaps", function () {
         const usdc = await viem.deployContract("MockUSDC");
         const vrf = await viem.deployContract("MockVrfCoordinator");
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
-        const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
-            brb.address,
-            router.address,
-            treasury.address,
-            admin.account.address,
-        ]);
-        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
         const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-        const { engine, scheduler } = await deployRouletteEngine(
+        const { engine, scheduler, registry } = await deployRouletteEngine(
             [mockLaneKey, mockLaneKey, mockLaneKey],
             [
-                registry.address,
-                treasury.address,
-                funder.address,
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
                 admin.account.address,
                 vrf.address,
                 1n,
@@ -384,10 +373,14 @@ describe("Coverage gaps", function () {
                 admin.account.address,
             ],
             { admin: admin.account.address, scanLimit: 10, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: router.address,
+                    admin: admin.account.address,
+                },
+            },
         );
-        await treasury.write.setEngine([engine.address]);
-        await funder.write.setEngine([engine.address]);
-        await registry.write.setEngine([engine.address], { account: admin.account });
 
         const vaultImpl = await viem.deployContract("BankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -417,7 +410,7 @@ describe("Coverage gaps", function () {
         await usdc.write.approve([bank.address, parseUnits("100", 6)], { account: alice.account });
         const trio012 = encodeSingleBet(14n, 0n, betAmount);
         const before = await usdc.read.balanceOf([alice.account.address]);
-        await bank.write.placeBet([betAmount, trio012], { account: alice.account });
+        await bank.write.placeBet([betAmount, trio012, zeroAddress], { account: alice.account });
 
         await time.increase(550);
         const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
@@ -444,25 +437,16 @@ describe("Coverage gaps", function () {
 
     it("enforces granular roles for engine configuration", async function () {
         const [admin, payoutAdmin, stranger] = await viem.getWalletClients();
-        const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
         const vrf = await viem.deployContract("MockVrfCoordinator");
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-        const treasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
         const router = await viem.deployContract("MockUniswapV2Router");
-        const funder = await viem.deployContract("BRBJackpotFunder", [
-            "0x0000000000000000000000000000000000000000",
-            brb.address,
-            router.address,
-            treasury.address,
-            admin.account.address,
-        ]);
         const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
         const { engine } = await deployRouletteEngine(
             [mockLaneKey, mockLaneKey, mockLaneKey],
             [
-                registry.address,
-                treasury.address,
-                funder.address,
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
                 admin.account.address,
                 vrf.address,
                 1n,
@@ -472,6 +456,13 @@ describe("Coverage gaps", function () {
                 admin.account.address,
             ],
             { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: router.address,
+                    admin: admin.account.address,
+                },
+            },
         );
 
         const enginePayoutRole = await engine.read.ENGINE_PAYOUT_ROLE();
@@ -488,6 +479,48 @@ describe("Coverage gaps", function () {
         await engine.write.setPayoutLaneCount([5], { account: payoutAdmin.account });
         expect(await engine.read.payoutParallelLaneCount()).to.equal(5);
         await expect(engine.write.setPayoutLaneCount([3], { account: stranger.account })).to.be.rejected;
+    });
+
+    it("enforces ENGINE_WITHDRAWAL_ROLE on withdrawal queue setters", async function () {
+        const [admin, withdrawalAdmin, stranger] = await viem.getWalletClients();
+        const vrf = await viem.deployContract("MockVrfCoordinator");
+        const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+        const router = await viem.deployContract("MockUniswapV2Router");
+        const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
+        const { engine } = await deployRouletteEngine(
+            [mockLaneKey, mockLaneKey, mockLaneKey],
+            [
+                zeroAddress,
+                zeroAddress,
+                zeroAddress,
+                admin.account.address,
+                vrf.address,
+                1n,
+                2_000_000,
+                1,
+                60,
+                admin.account.address,
+            ],
+            { admin: admin.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
+            {
+                protocolPrefix: {
+                    brb: brb.address,
+                    mockRouter: router.address,
+                    admin: admin.account.address,
+                },
+            },
+        );
+
+        const withdrawalRole = await engine.read.ENGINE_WITHDRAWAL_ROLE();
+        await engine.write.grantRole([withdrawalRole, withdrawalAdmin.account.address], { account: admin.account });
+
+        await engine.write.setWithdrawalQueueBatchSize([10], { account: withdrawalAdmin.account });
+        expect(await engine.read.withdrawalQueueBatchSize()).to.equal(10n);
+        await engine.write.setMaxWithdrawalQueueLength([250], { account: withdrawalAdmin.account });
+        expect(await engine.read.maxWithdrawalQueueLength()).to.equal(250n);
+
+        await expect(engine.write.setWithdrawalQueueBatchSize([5], { account: stranger.account })).to.be.rejected;
+        await expect(engine.write.setMaxWithdrawalQueueLength([100], { account: stranger.account })).to.be.rejected;
     });
 });
 
@@ -518,6 +551,7 @@ function vaultInitData(
                             { name: "engine", type: "address" },
                             { name: "admin", type: "address" },
                             { name: "minBet", type: "uint256" },
+                            { name: "sideBetController", type: "address" },
                         ],
                     },
                 ],
@@ -534,6 +568,7 @@ function vaultInitData(
                 engine,
                 admin,
                 minBet,
+                sideBetController: "0x0000000000000000000000000000000000000000",
             },
         ],
     });

@@ -1,16 +1,20 @@
+import { viem } from "hardhat";
+
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { viem } from "hardhat";
-import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import {
     encodeAbiParameters,
     keccak256,
     parseEther,
     parseUnits,
     stringToHex,
+    zeroAddress,
     type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
+
 import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
 /** One global round across two ERC-20 markets, 50 players; payouts chunked via a single upkeep lane. */
@@ -121,24 +125,14 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
     const vrf = await viem.deployContract("MockVrfCoordinator");
 
     const brb = await viem.deployContract("BRBToken", [admin.account.address]);
-    const jackpotTreasury = await viem.deployContract("JackpotTreasury", [brb.address, admin.account.address]);
     const mockRouter = await viem.deployContract("MockUniswapV2Router");
-    const funder = await viem.deployContract("BRBJackpotFunder", [
-        "0x0000000000000000000000000000000000000000",
-        brb.address,
-        mockRouter.address,
-        jackpotTreasury.address,
-        admin.account.address,
-    ]);
-
-    const registry = await viem.deployContract("MarketRegistry", [admin.account.address]);
     const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
-    const { engine, scheduler } = await deployRouletteEngine(
+    const { engine, scheduler, registry } = await deployRouletteEngine(
         [mockLaneKey, mockLaneKey, mockLaneKey],
         [
-            registry.address,
-            jackpotTreasury.address,
-            funder.address,
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
             admin.account.address,
             vrf.address,
             1n,
@@ -148,11 +142,14 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
             admin.account.address,
         ],
         { admin: admin.account.address, scanLimit: opts.scanLimit, maxPayoutsPerCall: opts.maxPayoutsPerCall },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
     );
-
-    await jackpotTreasury.write.setEngine([engine.address]);
-    await funder.write.setEngine([engine.address]);
-    await registry.write.setEngine([engine.address], { account: admin.account });
 
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
@@ -186,7 +183,7 @@ async function deployTwoMarketSchedulerStack(opts: { maxPayoutsPerCall: number; 
 
 describe("multi-market crowd (50 players, sequential upkeep)", function () {
     it("settles one global round with varied bets across two banks", async function () {
-        this.timeout(120_000);
+        this.timeout(process.env.SOLIDITY_COVERAGE === "true" ? 1_200_000 : 120_000);
 
         const testClient = await viem.getTestClient();
         const { admin, vrf, engine, scheduler, asset0, asset1, bank0, bank1 } = await deployTwoMarketSchedulerStack({
@@ -219,7 +216,7 @@ describe("multi-market crowd (50 players, sequential upkeep)", function () {
             await tokens[m].write.approve([banks[m].address, mintEach], { account });
 
             const { amount, data } = betForPlayer(i);
-            await banks[m].write.placeBet([amount, data], { account });
+            await banks[m].write.placeBet([amount, data, zeroAddress], { account });
         }
 
         await time.increase(550);
