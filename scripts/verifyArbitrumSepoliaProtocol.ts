@@ -5,7 +5,19 @@ import { vars } from "hardhat/config";
 import { viem } from "hardhat";
 import { parseAbi } from "viem";
 
-import { verifyContractWithDelay, verifyRouletteEngineImplementation } from "./utils/verifyWithEtherscan";
+import {
+    encodeBankVaultProxyInitDataFromBank,
+    encodeEngineProxyInitData,
+    encodeSideBetProxyInitData,
+    readErc1967Implementation,
+    verifyProtocolProxies,
+} from "./utils/proxyVerification";
+import {
+    buildRouletteEngineLibraryMap,
+    type RouletteLinkedLibraries,
+    verifyContractWithDelay,
+    verifyRouletteLinkedLibraries,
+} from "./utils/verifyWithEtherscan";
 
 /**
  * Re-verify a protocol deployment on Arbitrum Sepolia (421614) on Arbiscan.
@@ -24,11 +36,9 @@ const FQ_UNISWAP_FACTORY = "contracts/vendor/uniswap-v2-core/UniswapV2Factory.so
 const FQ_WETH9 = "contracts/vendor/uniswap-v2-periphery/test/WETH9.sol:WETH9" as const;
 const FQ_UNISWAP_ROUTER = "contracts/vendor/uniswap-v2-periphery/UniswapV2Router02.sol:UniswapV2Router02" as const;
 
-const ERC1967_IMPLEMENTATION_SLOT =
-    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc" as const;
-
 const DEFAULT_LINK = "0xb1D4538B4571d411F07960EF2838Ce337FE1E80E" as const;
-const DEFAULT_VRF_COORDINATOR = "0x50d47e4142598E3411aA864e08a44284e471AC6f" as const;
+/** Matches `deployProtocolArbitrumSepolia.ts` default. */
+const DEFAULT_VRF_COORDINATOR = "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61" as const;
 const DEFAULT_KEEPER_REGISTRY = "0x8194399B3f11fcA2E8cCEfc4c9A658c61B8Bf412" as const;
 const DEFAULT_KEEPER_REGISTRAR = "0x881918E24290084409DaA91979A30e6f0dB52eBe" as const;
 
@@ -46,19 +56,6 @@ const DEFAULT_DEPLOYMENT = {
     upkeepManager: "0xdbfab262996d221c72eeb9f2e6679c3d2c7bc95b",
 } as const;
 
-type LinkedLibs = {
-    rouletteLib: `0x${string}`;
-    rouletteBetLib: `0x${string}`;
-    jackpotBatchLib: `0x${string}`;
-    roulettePayoutMulLib: `0x${string}`;
-    rouletteLiabilityMathLib: `0x${string}`;
-    rouletteBetCodecLib: `0x${string}`;
-    roulettePayoutSweepLib: `0x${string}`;
-    rouletteJackpotCollectLib: `0x${string}`;
-    rouletteExposureLib: `0x${string}`;
-    rouletteUpkeepScanLib: `0x${string}`;
-};
-
 type Deployment = {
     deployer: `0x${string}`;
     brb: `0x${string}`;
@@ -70,7 +67,13 @@ type Deployment = {
     engine: `0x${string}`;
     scheduler: `0x${string}`;
     upkeepManager: `0x${string}`;
-    linkedLibraries?: LinkedLibs;
+    /** Omit to read `SIDE_BET()` from registry. */
+    sideBet?: `0x${string}`;
+    /** Omit to read `BRB_REFERRAL()` from engine implementation. */
+    brbReferral?: `0x${string}`;
+    /** Omit to discover banks via `registry.getMarket(1..marketCount)`. */
+    banks?: readonly `0x${string}`[];
+    linkedLibraries?: RouletteLinkedLibraries;
 };
 
 type TxRow = { contractAddress: string; to: string };
@@ -89,10 +92,14 @@ function envBigIntOr(name: string, fallback: bigint): bigint {
     return BigInt(raw);
 }
 
+/**
+ * Walk deployer CREATE txs older than the engine implementation (newest-first list).
+ * Assumes `BRBReferal` was deployed immediately before the implementation (this repo's default).
+ */
 async function discoverLibrariesFromExplorer(
     deployer: `0x${string}`,
-    engine: `0x${string}`,
-): Promise<LinkedLibs> {
+    engineImplementation: `0x${string}`,
+): Promise<RouletteLinkedLibraries> {
     const apiKey = vars.get("ETHERSCAN_API_KEY");
     const params = new URLSearchParams({
         chainid: "421614",
@@ -112,21 +119,32 @@ async function discoverLibrariesFromExplorer(
         throw new Error(`Etherscan txlist failed: ${json.message} — ${typeof json.result === "string" ? json.result : ""}`);
     }
     const creates = json.result.filter((t) => t.to === "" && t.contractAddress);
-    const eng = engine.toLowerCase();
+    const eng = engineImplementation.toLowerCase();
     const eIdx = creates.findIndex((t) => t.contractAddress.toLowerCase() === eng);
     if (eIdx === -1) {
         throw new Error(
-            "Could not find engine contract creation in Etherscan txlist; paste linkedLibraries into VERIFY_DEPLOYMENT_JSON or increase script offset.",
+            "Could not find RouletteEngine implementation in Etherscan txlist; paste linkedLibraries into VERIFY_DEPLOYMENT_JSON.",
         );
     }
-    const pick = (i: number) => creates[i]?.contractAddress as `0x${string}`;
+    const pick = (i: number) => {
+        const addr = creates[i]?.contractAddress;
+        if (!addr) {
+            throw new Error(`Missing CREATE at txlist index ${i}; paste linkedLibraries into VERIFY_DEPLOYMENT_JSON.`);
+        }
+        return addr as `0x${string}`;
+    };
+    const libBase = eIdx + 2;
     return {
-        rouletteBetCodecLib: pick(eIdx + 1),
-        rouletteLiabilityMathLib: pick(eIdx + 2),
-        roulettePayoutMulLib: pick(eIdx + 3),
-        jackpotBatchLib: pick(eIdx + 4),
-        rouletteBetLib: pick(eIdx + 5),
-        rouletteLib: pick(eIdx + 6),
+        rouletteBetCodecLib: pick(libBase),
+        rouletteLiabilityMathLib: pick(libBase + 1),
+        roulettePayoutSweepLib: pick(libBase + 2),
+        rouletteJackpotCollectLib: pick(libBase + 3),
+        rouletteUpkeepScanLib: pick(libBase + 4),
+        rouletteExposureLib: pick(libBase + 5),
+        roulettePayoutMulLib: pick(libBase + 6),
+        jackpotBatchLib: pick(libBase + 7),
+        rouletteBetLib: pick(libBase + 8),
+        rouletteLib: pick(libBase + 9),
     };
 }
 
@@ -156,70 +174,86 @@ async function main() {
         await verifyContractWithDelay(u.router, [u.factory, u.weth], verifyDelayMs, FQ_UNISWAP_ROUTER);
     }
 
-    const implSlot = await publicClient.getStorageAt({ address: d.engine, slot: ERC1967_IMPLEMENTATION_SLOT });
-    const engineImplementation = (`0x${implSlot.slice(-40)}`) as `0x${string}`;
-
-    const engineAbi = parseAbi([
+    const engineProxyAbi = parseAbi([
         "function REGISTRY() view returns (address)",
-        "function VRF_COORDINATOR() view returns (address)",
         "function JACKPOT_TREASURY() view returns (address)",
         "function JACKPOT_FUNDER() view returns (address)",
         "function INFRA_RECIPIENT() view returns (address)",
         "function VRF_SUBSCRIPTION_ID() view returns (uint256)",
-        "function VRF_KEY_HASH_2_GWEI() view returns (bytes32)",
-        "function VRF_KEY_HASH_30_GWEI() view returns (bytes32)",
-        "function VRF_KEY_HASH_150_GWEI() view returns (bytes32)",
         "function VRF_CALLBACK_GAS_LIMIT() view returns (uint32)",
-        "function VRF_CONFIRMATIONS() view returns (uint16)",
         "function ROUND_DURATION() view returns (uint32)",
         "function hasRole(bytes32 role, address account) view returns (bool)",
         "function DEFAULT_ADMIN_ROLE() view returns (bytes32)",
         "function UPKEEP_SCHEDULER() view returns (address)",
     ]);
+    const vrfCoordinatorForVerify =
+        (process.env.VRF_COORDINATOR as `0x${string}` | undefined) ?? DEFAULT_VRF_COORDINATOR;
+
+    const engineImplAbi = parseAbi([
+        "function VRF_KEY_HASH_2_GWEI() view returns (bytes32)",
+        "function VRF_KEY_HASH_30_GWEI() view returns (bytes32)",
+        "function VRF_KEY_HASH_150_GWEI() view returns (bytes32)",
+        "function VRF_CONFIRMATIONS() view returns (uint16)",
+        "function BRB_REFERRAL() view returns (address)",
+    ]);
+
+    const engineImplementation = await readErc1967Implementation(publicClient, d.engine);
 
     const [
         regOnChain,
         treasuryOnChain,
         funderOnChain,
         infraOnChain,
-        vrfCoordOnChain,
         vrfSubId,
-        kh2,
-        kh30,
-        kh150,
         cbGas,
-        vrfConf,
         roundDur,
         adminHasDefaultRole,
         schedOnChain,
+        kh2,
+        kh30,
+        kh150,
+        vrfConf,
     ] = await Promise.all([
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "REGISTRY" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "JACKPOT_TREASURY" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "JACKPOT_FUNDER" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "INFRA_RECIPIENT" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_COORDINATOR" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_SUBSCRIPTION_ID" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_KEY_HASH_2_GWEI" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_KEY_HASH_30_GWEI" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_KEY_HASH_150_GWEI" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_CALLBACK_GAS_LIMIT" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "VRF_CONFIRMATIONS" }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "ROUND_DURATION" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "REGISTRY" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "JACKPOT_TREASURY" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "JACKPOT_FUNDER" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "INFRA_RECIPIENT" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "VRF_SUBSCRIPTION_ID" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "VRF_CALLBACK_GAS_LIMIT" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "ROUND_DURATION" }),
         publicClient.readContract({
             address: d.engine,
-            abi: engineAbi,
+            abi: engineProxyAbi,
             functionName: "hasRole",
             args: [
                 await publicClient.readContract({
                     address: d.engine,
-                    abi: engineAbi,
+                    abi: engineProxyAbi,
                     functionName: "DEFAULT_ADMIN_ROLE",
                 }),
-                d.admin,
+                d.deployer,
             ],
         }),
-        publicClient.readContract({ address: d.engine, abi: engineAbi, functionName: "UPKEEP_SCHEDULER" }),
+        publicClient.readContract({ address: d.engine, abi: engineProxyAbi, functionName: "UPKEEP_SCHEDULER" }),
+        publicClient.readContract({ address: engineImplementation, abi: engineImplAbi, functionName: "VRF_KEY_HASH_2_GWEI" }),
+        publicClient.readContract({ address: engineImplementation, abi: engineImplAbi, functionName: "VRF_KEY_HASH_30_GWEI" }),
+        publicClient.readContract({ address: engineImplementation, abi: engineImplAbi, functionName: "VRF_KEY_HASH_150_GWEI" }),
+        publicClient.readContract({ address: engineImplementation, abi: engineImplAbi, functionName: "VRF_CONFIRMATIONS" }),
     ]);
+
+    const registryImmutableAbi = parseAbi([
+        "function ENGINE() view returns (address)",
+        "function SIDE_BET() view returns (address)",
+    ]);
+    const sideBetAddr =
+        d.sideBet ??
+        (await publicClient.readContract({
+            address: d.registry,
+            abi: registryImmutableAbi,
+            functionName: "SIDE_BET",
+        }));
+
+    const sideBetImplementation = await readErc1967Implementation(publicClient, sideBetAddr);
 
     const norm = (a: string) => a.toLowerCase();
     if (norm(regOnChain) !== norm(d.registry)) throw new Error("Engine REGISTRY mismatch vs VERIFY_DEPLOYMENT_JSON");
@@ -241,44 +275,127 @@ async function main() {
         functionName: "implementation",
     });
 
-    const linked: LinkedLibs = d.linkedLibraries ?? (await discoverLibrariesFromExplorer(d.deployer, d.engine));
+    const linked: RouletteLinkedLibraries =
+        d.linkedLibraries ?? (await discoverLibrariesFromExplorer(d.deployer, engineImplementation));
+
+    const brbReferralAddr =
+        d.brbReferral ??
+        (await publicClient.readContract({
+            address: engineImplementation,
+            abi: engineImplAbi,
+            functionName: "BRB_REFERRAL",
+        }));
+
+    const schedulerAbi = parseAbi([
+        "function scanLimit() view returns (uint32)",
+        "function maxPayoutsPerCall() view returns (uint32)",
+    ]);
+    const [scanLimit, maxPayoutsPerCall] = await Promise.all([
+        publicClient.readContract({ address: d.scheduler, abi: schedulerAbi, functionName: "scanLimit" }),
+        publicClient.readContract({ address: d.scheduler, abi: schedulerAbi, functionName: "maxPayoutsPerCall" }),
+    ]);
 
     console.log("Verifying core protocol…");
     await verifyContractWithDelay(d.brb, [d.deployer], verifyDelayMs);
     await verifyContractWithDelay(d.dai, [], verifyDelayMs);
-    await verifyContractWithDelay(d.jackpotTreasury, [d.brb, d.deployer], verifyDelayMs);
+    if (brbReferralAddr !== "0x0000000000000000000000000000000000000000") {
+        await verifyContractWithDelay(brbReferralAddr, [d.engine], verifyDelayMs);
+    }
+    await verifyContractWithDelay(d.jackpotTreasury, [d.brb, d.engine, d.deployer], verifyDelayMs);
     await verifyContractWithDelay(
         d.jackpotFunder,
-        ["0x0000000000000000000000000000000000000000", d.brb, d.router, d.jackpotTreasury, d.deployer],
+        [d.engine, d.brb, d.router, d.jackpotTreasury, sideBetAddr, d.deployer],
         verifyDelayMs,
     );
-    await verifyContractWithDelay(d.registry, [d.deployer], verifyDelayMs);
+    await verifyContractWithDelay(d.registry, [d.deployer, d.engine, sideBetAddr], verifyDelayMs);
     await verifyContractWithDelay(vaultImplAddr, [], verifyDelayMs);
     await verifyContractWithDelay(beaconAddr, [vaultImplAddr, d.deployer], verifyDelayMs);
 
-    await verifyContractWithDelay(linked.rouletteLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.rouletteBetLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.jackpotBatchLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.roulettePayoutMulLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.rouletteLiabilityMathLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.rouletteBetCodecLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.roulettePayoutSweepLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.rouletteJackpotCollectLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.rouletteExposureLib, [], verifyDelayMs);
-    await verifyContractWithDelay(linked.rouletteUpkeepScanLib, [], verifyDelayMs);
+    await verifyRouletteLinkedLibraries(linked, verifyDelayMs);
 
-    const libraryMap: Record<string, string> = {
-        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": linked.jackpotBatchLib,
-        "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": linked.rouletteBetCodecLib,
-        "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": linked.rouletteExposureLib,
-        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": linked.rouletteJackpotCollectLib,
-        "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": linked.rouletteLiabilityMathLib,
-        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linked.roulettePayoutSweepLib,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linked.rouletteUpkeepScanLib,
-    };
-    await verifyRouletteEngineImplementation(engineImplementation, vrfCoordOnChain, libraryMap, verifyDelayMs);
+    const engineInitData = encodeEngineProxyInitData({
+        registry: regOnChain,
+        jackpotTreasury: treasuryOnChain,
+        jackpotFunder: funderOnChain,
+        infraRecipient: infraOnChain,
+        subscriptionId: vrfSubId,
+        callbackGasLimit: cbGas,
+        roundDuration: roundDur,
+        admin: d.deployer,
+        upkeepScheduler: schedOnChain,
+    });
 
-    await verifyContractWithDelay(d.scheduler, [d.engine, d.deployer, 25, 60], verifyDelayMs);
+    const sideBetReadAbi = parseAbi([
+        "function ENGINE() view returns (address)",
+        "function REGISTRY() view returns (address)",
+        "function minMultiplierBps() view returns (uint32)",
+        "function maxMultiplierBps() view returns (uint32)",
+    ]);
+    const [sbMinBps, sbMaxBps] = await Promise.all([
+        publicClient.readContract({ address: sideBetAddr, abi: sideBetReadAbi, functionName: "minMultiplierBps" }),
+        publicClient.readContract({ address: sideBetAddr, abi: sideBetReadAbi, functionName: "maxMultiplierBps" }),
+    ]);
+    const sideBetInitData = encodeSideBetProxyInitData(
+        d.deployer,
+        d.engine,
+        regOnChain,
+        sbMinBps,
+        sbMaxBps,
+    );
+
+    const registryMarketAbi = parseAbi([
+        "function marketCount() view returns (uint32)",
+        "function getMarket(uint32 marketId) view returns ((address asset, address bank))",
+    ]);
+    let bankAddresses: readonly `0x${string}`[] = d.banks ?? [];
+    if (bankAddresses.length === 0) {
+        const marketCount = Number(
+            await publicClient.readContract({
+                address: d.registry,
+                abi: registryMarketAbi,
+                functionName: "marketCount",
+            }),
+        );
+        const discovered: `0x${string}`[] = [];
+        for (let marketId = 1; marketId <= marketCount; marketId++) {
+            const market = await publicClient.readContract({
+                address: d.registry,
+                abi: registryMarketAbi,
+                functionName: "getMarket",
+                args: [marketId],
+            });
+            discovered.push((market as { asset: `0x${string}`; bank: `0x${string}` }).bank);
+        }
+        bankAddresses = discovered;
+    }
+
+    const bankVaults = await Promise.all(
+        bankAddresses.map(async (bank) => ({
+            bank,
+            initData: await encodeBankVaultProxyInitDataFromBank(publicClient, bank, d.deployer),
+        })),
+    );
+
+    console.log("Verifying proxies (ERC1967 engine/side-bet, beacon bank vaults)…");
+    await verifyProtocolProxies({
+        delayMs: verifyDelayMs,
+        engineProxy: d.engine,
+        engineImplementation,
+        engineInitData,
+        engineImplCtorArgs: [vrfCoordinatorForVerify, kh2, kh30, kh150, vrfConf, brbReferralAddr],
+        engineLibraryMap: buildRouletteEngineLibraryMap(linked),
+        sideBetProxy: sideBetAddr,
+        sideBetImplementation,
+        sideBetInitData,
+        vaultBeacon: beaconAddr,
+        bankVaults,
+    });
+
+    await verifyContractWithDelay(
+        d.scheduler,
+        [d.engine, sideBetAddr, d.deployer, scanLimit, maxPayoutsPerCall],
+        verifyDelayMs,
+    );
     await verifyContractWithDelay(
         d.upkeepManager,
         [linkToken, keeperRegistrar, keeperRegistry, d.scheduler, d.deployer, d.deployer],

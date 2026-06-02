@@ -6,6 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
+import { UniswapV2TwapLib } from "./libraries/UniswapV2TwapLib.sol";
 
 /// @dev BRB must implement burn-on-holder balance (e.g. OpenZeppelin `ERC20Burnable`).
 interface IERC20BurnFromSelf {
@@ -13,14 +14,16 @@ interface IERC20BurnFromSelf {
 }
 
 /// @notice Swaps the contract's current `asset` balance to BRB via Uniswap V2 (when `asset != brb`); splits BRB between jackpot treasury and on-chain burn (reduces total supply).
-/// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send.
+/// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send. Non-BRB swaps use a Uniswap V2 TWAP floor when the observation window is warm (`slippageBps`); otherwise spot with `coldSlippageBps` (stricter, default 3%).
 contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
     bytes32 public constant FUNDER_ADMIN_ROLE = keccak256("FUNDER_ADMIN_ROLE");
 
-    /// @dev Skip reason: router `swapExactTokensForTokens` reverted (liquidity, path, deadline, etc.).
+    /// @dev Skip reason: router `swapExactTokensForTokens` reverted (liquidity, path, TWAP min, deadline, etc.).
     uint8 public constant SKIP_SWAP_REVERTED = 2;
+    /// @dev Skip reason: could not derive a positive `amountOutMin` (no pair / no liquidity / zero quote).
+    uint8 public constant SKIP_NO_QUOTE = 3;
 
     address public immutable engine;
     address public immutable sideBet;
@@ -35,21 +38,37 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     uint256 public treasuryBrbNumerator;
     uint256 public treasuryBrbDenominator;
 
-    /// @notice Reserved for future policy; swaps use `amountOutMin = 0` so upkeep is not bricked by pool moves.
+    /// @notice Max deviation below TWAP quote for `amountOutMin` when the pair observation window is warm (e.g. 100 = 1%).
     uint256 public slippageBps;
 
+    /// @notice Max deviation below spot / router quote when TWAP is cold (no observation yet or window not elapsed; e.g. 300 = 3%).
+    uint256 public coldSlippageBps;
+
+    /// @notice Minimum elapsed time since the last stored pair observation before TWAP is used (default 30 minutes).
+    uint32 public twapWindowSeconds;
+
+    /// @dev Last cumulative prices per Uniswap V2 pair (asset/BRB), updated after each successful swap.
+    mapping(address pair => UniswapV2TwapLib.Observation) public pairObservations;
+
     uint256 public constant BPS_DENOM = 10_000;
+    uint32 public constant DEFAULT_TWAP_WINDOW_SECONDS = 30 minutes;
 
     error ZeroAddress();
     error OnlyFeeCollector();
     error InvalidBps();
+    error ZeroAmount();
+    error InsufficientBalance();
 
     event SwapAssetBpsUpdated(uint256 totalBps);
     event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
     event SlippageBpsUpdated(uint256 slippageBps);
-    event FundFromMarketSkipped(uint32 indexed marketId, address indexed asset, uint8 reason);
-    event JackpotTreasuryTransferFailed(uint32 indexed marketId, address indexed treasury, uint256 amount);
-    event JackpotBurnFailed(uint32 indexed marketId, uint256 amount);
+    event ColdSlippageBpsUpdated(uint256 coldSlippageBps);
+    event TwapWindowUpdated(uint32 twapWindowSeconds);
+    event PairObservationUpdated(address pair, uint32 timestamp);
+    event FundFromMarketSkipped(uint32 marketId, address asset, uint8 reason);
+    event JackpotTreasuryTransferFailed(uint32 marketId, address treasury, uint256 amount);
+    event JackpotBurnFailed(uint32 marketId, uint256 amount);
+    event TokenSwept(address asset, address to, uint256 amount);
     event FundedFromMarket(
         uint32 marketId,
         address asset,
@@ -85,6 +104,8 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         treasuryBrbNumerator = 250;
         treasuryBrbDenominator = 300;
         slippageBps = 100;
+        coldSlippageBps = 300;
+        twapWindowSeconds = DEFAULT_TWAP_WINDOW_SECONDS;
     }
 
     modifier onlyFeeCollector() {
@@ -116,6 +137,29 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         emit SlippageBpsUpdated(bps);
     }
 
+    function setColdSlippageBps(uint256 bps) external onlyRole(FUNDER_ADMIN_ROLE) {
+        if (bps >= BPS_DENOM) revert InvalidBps();
+        coldSlippageBps = bps;
+        emit ColdSlippageBpsUpdated(bps);
+    }
+
+    function setTwapWindowSeconds(uint32 newWindow) external onlyRole(FUNDER_ADMIN_ROLE) {
+        twapWindowSeconds = newWindow;
+        emit TwapWindowUpdated(newWindow);
+    }
+
+    /// @notice Recover market assets left after skipped swaps (TWAP / liquidity). Use when migrating to a new funder or during prolonged pool stress.
+    /// @param amount `0` sweeps the full balance of `asset`.
+    function sweepToken(address asset, address to, uint256 amount) external onlyRole(FUNDER_ADMIN_ROLE) {
+        if (asset == address(0) || to == address(0)) revert ZeroAddress();
+        uint256 balance = IERC20(asset).balanceOf(address(this));
+        uint256 xfer = amount == 0 ? balance : amount;
+        if (xfer == 0) revert ZeroAmount();
+        if (xfer > balance) revert InsufficientBalance();
+        IERC20(asset).safeTransfer(to, xfer);
+        emit TokenSwept(asset, to, xfer);
+    }
+
     /// @inheritdoc IBRBJackpotFunder
     function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector {
         IERC20 assetToken = IERC20(asset);
@@ -130,23 +174,28 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
             path[0] = asset;
             path[1] = address(brb);
 
+            uint256 amountOutMin = _amountOutMin(asset, swapIn, path);
+            if (amountOutMin == 0) {
+                emit FundFromMarketSkipped(marketId, asset, SKIP_NO_QUOTE);
+                return;
+            }
+
             assetToken.forceApprove(address(router), swapIn);
 
             uint256 brbBefore = brb.balanceOf(address(this));
-            try router.swapExactTokensForTokens(
-                swapIn,
-                0,
-                path,
-                address(this),
-                block.timestamp + 600
-            ) returns (uint256[] memory) {
+            try router.swapExactTokensForTokens(swapIn, amountOutMin, path, address(this), block.timestamp + 600) returns (
+                uint256[] memory
+            ) {
                 brbOut = brb.balanceOf(address(this)) - brbBefore;
             } catch {
                 emit FundFromMarketSkipped(marketId, asset, SKIP_SWAP_REVERTED);
-                brbOut = 0;
             }
 
             assetToken.forceApprove(address(router), 0);
+
+            if (brbOut > 0) {
+                _snapshotPairObservation(asset);
+            }
         }
 
         if (brbOut == 0) return;
@@ -177,5 +226,75 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         }
 
         emit FundedFromMarket(marketId, asset, swapIn, brbOut, sentTreasury, burnedAmt);
+    }
+
+    /// @dev TWAP quote when `pairObservations` is older than `twapWindowSeconds`; otherwise spot. Applies warm or cold slippage on top.
+    function _amountOutMin(address asset, uint256 swapIn, address[] memory path) internal view returns (uint256 amountOutMin) {
+        address pair = UniswapV2TwapLib.pairFor(router.factory(), asset, address(brb));
+        if (pair.code.length == 0) {
+            return _routerSpotMinOut(swapIn, path, coldSlippageBps);
+        }
+
+        uint256 quotedOut;
+        bool usedTwap;
+        (quotedOut, usedTwap) = _quoteOut(pair, asset, swapIn);
+        if (quotedOut == 0) return 0;
+
+        uint256 slip = usedTwap ? slippageBps : coldSlippageBps;
+        unchecked {
+            amountOutMin = quotedOut * (BPS_DENOM - slip) / BPS_DENOM;
+        }
+    }
+
+    function _quoteOut(address pair, address asset, uint256 swapIn)
+        internal
+        view
+        returns (uint256 quotedOut, bool usedTwap)
+    {
+        uint256 spotOut = UniswapV2TwapLib.spotAmountOut(pair, asset, swapIn);
+        if (spotOut == 0) return (0, false);
+
+        UniswapV2TwapLib.Observation memory obs = pairObservations[pair];
+        uint32 nowTs = uint32(block.timestamp);
+        uint32 window = twapWindowSeconds;
+
+        if (window > 0 && obs.timestamp != 0 && nowTs > obs.timestamp && nowTs - obs.timestamp >= window) {
+            uint256 twapOut = UniswapV2TwapLib.quoteTwapAmountOut(pair, asset, swapIn, obs, nowTs);
+            // Ignore dust TWAP (likely truncation / stale cumulatives); keep spot for cold-tier slippage.
+            if (twapOut > 0 && twapOut < spotOut && twapOut * BPS_DENOM / spotOut >= 100) {
+                return (twapOut, true);
+            }
+        }
+
+        return (spotOut, false);
+    }
+
+    function _routerSpotMinOut(uint256 swapIn, address[] memory path, uint256 slipBps)
+        internal
+        view
+        returns (uint256 amountOutMin)
+    {
+        try router.getAmountsOut(swapIn, path) returns (uint256[] memory amounts) {
+            if (amounts.length < 2 || amounts[1] == 0) return 0;
+            unchecked {
+                amountOutMin = amounts[1] * (BPS_DENOM - slipBps) / BPS_DENOM;
+            }
+        } catch {
+            return 0;
+        }
+    }
+
+    function _snapshotPairObservation(address asset) internal {
+        address pair = UniswapV2TwapLib.pairFor(router.factory(), asset, address(brb));
+        if (pair.code.length == 0) return;
+
+        (uint256 price0Cumulative, uint256 price1Cumulative, uint32 timestamp) =
+            UniswapV2TwapLib.currentCumulativePrices(pair);
+        pairObservations[pair] = UniswapV2TwapLib.Observation({
+            timestamp: timestamp,
+            price0Cumulative: price0Cumulative,
+            price1Cumulative: price1Cumulative
+        });
+        emit PairObservationUpdated(pair, timestamp);
     }
 }

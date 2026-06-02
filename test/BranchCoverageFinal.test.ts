@@ -18,6 +18,7 @@ import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 import { createMarketWithBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { laneCheckData } from "./helpers/parallelUpkeep";
 
@@ -355,6 +356,7 @@ describe("Branch coverage — final gaps", function () {
             await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(), scheduler.address], {
                 account: admin.account,
             });
+            await wireTestSchedulerForwarder(scheduler, admin.account);
 
             await sideBet.write.addConfig(
                 [

@@ -18,6 +18,7 @@ import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { laneCheckData } from "./helpers/parallelUpkeep";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
 const USDC = (v: string) => parseUnits(v, 6);
 
@@ -287,6 +288,7 @@ describe("Branch coverage — last 102 branches", function () {
             await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(), scheduler.address], {
                 account: admin.account,
             });
+            await wireTestSchedulerForwarder(scheduler, admin.account);
             await usdc.write.mint([admin.account.address, USDC("10000")]);
             await usdc.write.approve([bank.address, USDC("10000")], { account: admin.account });
             await bank.write.deposit([USDC("5000"), admin.account.address], { account: admin.account });
@@ -335,7 +337,8 @@ describe("Branch coverage — last 102 branches", function () {
             await engine.write.setWithdrawalQueueBatchSize([8], { account: admin.account });
             await engine.write.setMaxWithdrawalQueueLength([120], { account: admin.account });
 
-            const v2 = await viem.deployContract("RouletteEngine", [vrf.address, ...Array(3).fill(("0x" + "11".repeat(32)) as Hex), 1, zeroAddress], {
+            const brbReferral = await engine.read.BRB_REFERRAL();
+            const v2 = await viem.deployContract("RouletteEngine", [vrf.address, ...Array(3).fill(("0x" + "11".repeat(32)) as Hex), 1, brbReferral], {
                 libraries: await deployEngineLibs(),
             });
             await engine.write.upgradeToAndCall([v2.address, "0x"], { account: admin.account });

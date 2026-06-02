@@ -8,7 +8,7 @@ import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 
 import { jackpotStakeWeight, runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 
-/** Matches `RouletteEngine.sol` INFRA_BPS constant. */
+/** Matches `MarketFeeLib.INFRA_BPS` (2% infrastructure fee on house profit). */
 const INFRA_BPS = 200n;
 const SW_BPS_DENOM = 10_000n;
 

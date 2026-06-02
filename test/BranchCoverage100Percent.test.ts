@@ -16,6 +16,7 @@ import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { laneCheckData } from "./helpers/parallelUpkeep";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
 const USDC = (v: string) => parseUnits(v, 6);
 const GWEI = 1_000_000_000n;
@@ -393,7 +394,7 @@ describe("Branch coverage — 100% target", function () {
                 32,
             ]);
             await sideBet.write.grantRole([settlementRole, scheduler.address], { account: admin.account });
-            await scheduler.write.setForwarderAuthority([zeroAddress], { account: admin.account });
+            await wireTestSchedulerForwarder(scheduler, admin.account);
             const [neededSettle, settleData] = await scheduler.read.checkUpkeep(["0x"]);
             expect(neededSettle).to.equal(true);
             await scheduler.write.performUpkeep([settleData]);

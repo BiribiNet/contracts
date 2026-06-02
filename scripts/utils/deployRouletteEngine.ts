@@ -1,6 +1,7 @@
 import { viem } from "hardhat";
-import { encodeFunctionData, getContractAddress, zeroAddress, type Address } from "viem";
+import { encodeFunctionData, getContractAddress, zeroAddress, type Address, type Hex } from "viem";
 import { predictRouletteStackAddresses } from "./predictDeployAddresses";
+import { wireTestSchedulerForwarder } from "../../test/helpers/wireTestSchedulerForwarder";
 
 const ROULETTE_LIB = "contracts/RouletteLib.sol:RouletteLib" as const;
 const ROULETTE_BET_LIB = "contracts/libraries/RouletteBetLib.sol:RouletteBetLib" as const;
@@ -243,11 +244,15 @@ export async function deployRouletteEngine(
     const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
     await sideBet.write.grantRole([settlementRole, schedulerContract.address], { account });
 
+    await wireTestSchedulerForwarder(schedulerContract, account);
+
     return {
         engine,
         engineImplementation,
+        engineProxyInitData: initData as Hex,
         sideBet,
         sideBetImplementation,
+        sideBetProxyInitData: sideBetInitData as Hex,
         scheduler: schedulerContract,
         brbReferral,
         registry: await viem.getContractAt("MarketRegistry", wiredRegistryAddress),

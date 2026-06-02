@@ -11,7 +11,15 @@ import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
 import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
-import { verifyContractWithDelay, verifyRouletteEngineImplementation } from "./utils/verifyWithEtherscan";
+import {
+    encodeBankVaultProxyInitDataFromAsset,
+    verifyProtocolProxies,
+} from "./utils/proxyVerification";
+import {
+    buildRouletteEngineLibraryMap,
+    verifyContractWithDelay,
+    verifyRouletteLinkedLibraries,
+} from "./utils/verifyWithEtherscan";
 
 /**
  * Full protocol deploy for Arbitrum Sepolia (chain 421614): local Uniswap V2 (factory + WETH + router),
@@ -43,10 +51,10 @@ import { verifyContractWithDelay, verifyRouletteEngineImplementation } from "./u
 const ARBITRUM_SEPOLIA_CHAIN_ID = 421614n;
 
 const DEFAULT_LINK = "0xb1D4538B4571d411F07960EF2838Ce337FE1E80E" as const;
-const DEFAULT_VRF_COORDINATOR = "0x50d47e4142598E3411aA864e08a44284e471AC6f" as const;
+const DEFAULT_VRF_COORDINATOR = "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61" as const;
 /** Arbitrum Sepolia VRF 50 gwei lane (public tutorials / Chainlink); override per lane with VRF_KEY_HASH_* if you use multiple lanes. */
 const DEFAULT_VRF_KEY_HASH =
-    "0x027f94ff1465b3525f9fc03e9ff7d6d2c0953482246dd6ae07570c45d6631414" as const;
+    "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be" as const;
 
 /** Chainlink Automation on Arbitrum Sepolia (see docs.chain.link automation supported networks). */
 const DEFAULT_KEEPER_REGISTRY = "0x8194399B3f11fcA2E8cCEfc4c9A658c61B8Bf412" as const;
@@ -211,8 +219,20 @@ async function main() {
         console.log("Deployed MockDAI for market 2 (set DAI_TOKEN to use an existing Arbitrum Sepolia DAI).");
     }
 
-    const { engine, engineImplementation, scheduler, linkedLibraries, brbReferral: deployedBrbReferral, registry, jackpotTreasury, funder } =
-        await deployRouletteEngine(
+    const {
+        engine,
+        engineImplementation,
+        engineProxyInitData,
+        scheduler,
+        sideBet,
+        sideBetImplementation,
+        sideBetProxyInitData,
+        linkedLibraries,
+        brbReferral: deployedBrbReferral,
+        registry,
+        jackpotTreasury,
+        funder,
+    } = await deployRouletteEngine(
         [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei],
         [
             zeroAddress,
@@ -287,9 +307,7 @@ async function main() {
                 {
                     asset: usdc,
                     bankAdmin: deployer.account.address,
-
-
-                                                    minBet: minStable,
+                    minBet: minStable,
                 },
             ],
             { account: deployer.account },
@@ -301,9 +319,7 @@ async function main() {
                 {
                     asset: dai,
                     bankAdmin: deployer.account.address,
-
-
-                                                    minBet: minStable,
+                    minBet: minStable,
                 },
             ],
             { account: deployer.account },
@@ -315,9 +331,7 @@ async function main() {
                 {
                     asset: brb,
                     bankAdmin: deployer.account.address,
-
-
-                                                    minBet: minBrb,
+                    minBet: minBrb,
                 },
             ],
             { account: deployer.account },
@@ -362,6 +376,7 @@ async function main() {
     const deployBlock = Number(await publicClient.getBlockNumber());
     const brbReferal =
         optionalAddressEnv("BRB_REFERRAL_TOKEN", process.env.BRB_REFERRAL_TOKEN) ?? deployedBrbReferral;
+    const sideBetAddr = await registry.read.SIDE_BET();
 
     const subgraphDeployment = {
         startBlock: deployBlock,
@@ -379,6 +394,8 @@ async function main() {
             brbReferal,
             upkeepManager: upkeepManager.address,
             jackpotTreasury: jackpotTreasury.address,
+            jackpotFunder: funder.address,
+            sideBet: sideBetAddr,
         },
     };
 
@@ -408,7 +425,9 @@ async function main() {
             },
         });
         if (pipeline.status !== 0) {
-            throw new Error("subgraph sync:pipeline failed (set SKIP_SUBGRAPH_SYNC=true to skip)");
+            console.warn(
+                "subgraph sync:pipeline failed (ABIs/addresses were still written). Set SKIP_SUBGRAPH_SYNC=true to skip on future runs.",
+            );
         }
     } else {
         console.log("SKIP_SUBGRAPH_SYNC=true — skipped Goldsky turbo + subgraph deploy.");
@@ -432,58 +451,81 @@ async function main() {
         if (deployedMockDai) {
             await verifyContractWithDelay(dai, [], verifyDelayMs);
         }
-        await verifyContractWithDelay(jackpotTreasury.address, [brb, deployer.account.address], verifyDelayMs);
+        if (deployedBrbReferral && deployedBrbReferral !== zeroAddress) {
+            await verifyContractWithDelay(deployedBrbReferral, [engine.address], verifyDelayMs);
+        }
+        await verifyContractWithDelay(jackpotTreasury.address, [brb, engine.address, deployer.account.address], verifyDelayMs);
         await verifyContractWithDelay(
             funder.address,
-            [
-                "0x0000000000000000000000000000000000000000",
-                brb,
-                router,
-                jackpotTreasury.address,
-                deployer.account.address,
-            ],
+            [engine.address, brb, router, jackpotTreasury.address, sideBet.address, deployer.account.address],
             verifyDelayMs,
         );
-        await verifyContractWithDelay(registry.address, [deployer.account.address], verifyDelayMs);
+        await verifyContractWithDelay(
+            registry.address,
+            [deployer.account.address, engine.address, sideBet.address],
+            verifyDelayMs,
+        );
         await verifyContractWithDelay(vaultImpl.address, [], verifyDelayMs);
         await verifyContractWithDelay(beacon.address, [vaultImpl.address, deployer.account.address], verifyDelayMs);
 
-        await verifyContractWithDelay(linkedLibraries.rouletteLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.rouletteBetLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.jackpotBatchLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.roulettePayoutMulLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.rouletteLiabilityMathLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.rouletteBetCodecLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.roulettePayoutSweepLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.rouletteJackpotCollectLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.rouletteExposureLib, [], verifyDelayMs);
-        await verifyContractWithDelay(linkedLibraries.rouletteUpkeepScanLib, [], verifyDelayMs);
+        await verifyRouletteLinkedLibraries(linkedLibraries, verifyDelayMs);
 
-        const libraryMap: Record<string, string> = {
-            "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": linkedLibraries.jackpotBatchLib,
-            "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": linkedLibraries.rouletteBetCodecLib,
-            "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": linkedLibraries.rouletteExposureLib,
-            "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib":
-                linkedLibraries.rouletteJackpotCollectLib,
-            "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib":
-                linkedLibraries.rouletteLiabilityMathLib,
-            "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linkedLibraries.roulettePayoutSweepLib,
-            "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linkedLibraries.rouletteUpkeepScanLib,
-        };
-        try {
-            await verifyRouletteEngineImplementation(
-                engineImplementation.address,
+        const [usdcVaultInit, daiVaultInit, brbVaultInit] = await Promise.all([
+            encodeBankVaultProxyInitDataFromAsset(publicClient, {
+                asset: usdc,
+                marketId: 1,
+                engine: engine.address,
+                bankAdmin: deployer.account.address,
+                minBet: minStable,
+                sideBetController: sideBet.address,
+            }),
+            encodeBankVaultProxyInitDataFromAsset(publicClient, {
+                asset: dai,
+                marketId: 2,
+                engine: engine.address,
+                bankAdmin: deployer.account.address,
+                minBet: minStable,
+                sideBetController: sideBet.address,
+            }),
+            encodeBankVaultProxyInitDataFromAsset(publicClient, {
+                asset: brb,
+                marketId: 3,
+                engine: engine.address,
+                bankAdmin: deployer.account.address,
+                minBet: minBrb,
+                sideBetController: sideBet.address,
+            }),
+        ]);
+
+        console.log("Verifying proxies (RouletteEngine, SideBet, bank vaults)…");
+        await verifyProtocolProxies({
+            delayMs: verifyDelayMs,
+            engineProxy: engine.address,
+            engineImplementation: engineImplementation.address,
+            engineInitData: engineProxyInitData,
+            engineImplCtorArgs: [
                 vrfCoordinator,
-                libraryMap,
-                verifyDelayMs,
-            );
-        } catch (e) {
-            console.warn("RouletteEngine implementation verify failed (proxy may still be live):", e);
-        }
+                vrfKeyHash2Gwei,
+                vrfKeyHash30Gwei,
+                vrfKeyHash150Gwei,
+                confirmations,
+                deployedBrbReferral,
+            ],
+            engineLibraryMap: buildRouletteEngineLibraryMap(linkedLibraries),
+            sideBetProxy: sideBet.address,
+            sideBetImplementation: sideBetImplementation.address,
+            sideBetInitData: sideBetProxyInitData,
+            vaultBeacon: beacon.address,
+            bankVaults: [
+                { bank: marketUsdc.bank, initData: usdcVaultInit },
+                { bank: marketDai.bank, initData: daiVaultInit },
+                { bank: marketBrb.bank, initData: brbVaultInit },
+            ],
+        });
 
         await verifyContractWithDelay(
             scheduler.address,
-            [engine.address, deployer.account.address, 25, 60],
+            [engine.address, sideBet.address, deployer.account.address, 25, 60],
             verifyDelayMs,
         );
         await verifyContractWithDelay(

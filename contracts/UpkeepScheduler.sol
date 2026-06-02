@@ -25,7 +25,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     mapping(uint256 lane => uint32 cursor) public laneCursor;
     mapping(uint256 lane => uint256 cursorBetId) public sideBetCursor;
 
-    /// @dev `address(0)` = any caller (tests / local tooling). Non-zero `forwarderAuthority`: only approved Automation forwarders.
+    /// @dev `UpkeepManager` (or test double) — only addresses it marks approved may call `performUpkeep`.
     address public forwarderAuthority;
 
     error ZeroAddress();
@@ -60,11 +60,8 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     }
 
     modifier onlyApprovedAutomationForwarder() {
-        address auth = forwarderAuthority;
-        if (auth != address(0)) {
-            if (!IUpkeepForwarderAuthority(auth).isApprovedAutomationForwarder(msg.sender)) {
-                revert UnauthorizedAutomationForwarder();
-            }
+        if (!IUpkeepForwarderAuthority(forwarderAuthority).isApprovedAutomationForwarder(msg.sender)) {
+            revert UnauthorizedAutomationForwarder();
         }
         _;
     }

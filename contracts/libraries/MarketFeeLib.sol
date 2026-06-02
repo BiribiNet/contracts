@@ -7,7 +7,8 @@ import { IBRBJackpotFunder } from "../interfaces/IBRBJackpotFunder.sol";
 
 /// @dev Shared protocol fee slice on house profit (`totalStakes - totalPaid`), matching `RouletteEngine._collectMarketFees`.
 library MarketFeeLib {
-    uint256 internal constant INFRA_BPS = 200;
+    /// @notice Infrastructure fee on house profit (2% = 200 bps); remainder after swap slice stays with LPs.
+    uint256 public constant INFRA_BPS = 200;
     uint256 private constant BPS_DENOMINATOR = 10_000;
 
     struct CollectResult {

@@ -342,9 +342,14 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     }
 
     function _collectMarketFees(uint32 marketId, address bank, uint256 totalStakes, uint256 totalPaid) private {
-        SideBetData storage $ = _s();
+        IRouletteFeeConfig feeCfg = IRouletteFeeConfig(address(ENGINE));
         MarketFeeLib.CollectResult memory fees = MarketFeeLib.collect(
-            $.jackpotFunder, $.infraRecipient, bank, marketId, totalStakes, totalPaid
+            IBRBJackpotFunder(feeCfg.JACKPOT_FUNDER()),
+            feeCfg.INFRA_RECIPIENT(),
+            bank,
+            marketId,
+            totalStakes,
+            totalPaid
         );
         if (fees.swapIn > 0) emit SideBetJackpotFunded(marketId, fees.swapIn);
         if (fees.infraFee > 0) emit SideBetInfrastructureFeePaid(marketId, fees.infraFee);

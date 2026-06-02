@@ -32,6 +32,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     bytes32 public constant ENGINE_WITHDRAWAL_ROLE = keccak256("ENGINE_WITHDRAWAL_ROLE");
     bytes32 public constant ENGINE_PAYOUT_ROLE = keccak256("ENGINE_PAYOUT_ROLE");
     bytes32 public constant ENGINE_ROUND_ROLE = keccak256("ENGINE_ROUND_ROLE");
+    bytes32 public constant ENGINE_FEE_ROLE = keccak256("ENGINE_FEE_ROLE");
     uint8 private constant BET_STRAIGHT = 1;
     uint8 private constant BET_SPLIT = 2;
     uint8 private constant BET_STREET = 3;
@@ -101,6 +102,10 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         return _s().INFRA_RECIPIENT;
     }
 
+    function INFRA_BPS() external pure returns (uint256) {
+        return MarketFeeLib.INFRA_BPS;
+    }
+
     function UPKEEP_SCHEDULER() external view returns (address) {
         return _s().UPKEEP_SCHEDULER;
     }
@@ -166,7 +171,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     event WithdrawalQueueBatchSizeUpdated(uint256 newBatchSize);
     event MaxWithdrawalQueueLengthUpdated(uint256 newMaxLength);
     event RoundDurationUpdated(uint32 newRoundDuration);
-    event ReferralSet(address indexed player, address indexed referrer);
+    event ReferralSet(address player, address referrer);
+    event JackpotFunderUpdated(address previousFunder, address newFunder);
+    event JackpotTreasuryUpdated(address previousTreasury, address newTreasury);
 
     modifier onlyScheduler() {
         if (msg.sender != _s().UPKEEP_SCHEDULER) revert UnauthorizedScheduler();
@@ -214,6 +221,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         _grantRole(ENGINE_WITHDRAWAL_ROLE, cfg.admin);
         _grantRole(ENGINE_PAYOUT_ROLE, cfg.admin);
         _grantRole(ENGINE_ROUND_ROLE, cfg.admin);
+        _grantRole(ENGINE_FEE_ROLE, cfg.admin);
 
         RouletteEngineStorageLib.Layout storage $ = _s();
         $.REGISTRY = IMarketRegistry(cfg.registry);
@@ -271,6 +279,24 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         if (newRoundDuration == 0) revert InvalidRoundDuration();
         _s().ROUND_DURATION = newRoundDuration;
         emit RoundDurationUpdated(newRoundDuration);
+    }
+
+    /// @notice Point fee collection at a new `BRBJackpotFunder` (e.g. router/TWAP policy upgrade). Sweep the old funder before deprecating it.
+    function setJackpotFunder(address newFunder) external onlyRole(ENGINE_FEE_ROLE) {
+        if (newFunder == address(0)) revert ZeroAddress();
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        address previous = address($.JACKPOT_FUNDER);
+        $.JACKPOT_FUNDER = IBRBJackpotFunder(newFunder);
+        emit JackpotFunderUpdated(previous, newFunder);
+    }
+
+    /// @notice Point jackpot BRB payouts at a new treasury (must trust `newTreasury` onlyEngine = this proxy).
+    function setJackpotTreasury(address newTreasury) external onlyRole(ENGINE_FEE_ROLE) {
+        if (newTreasury == address(0)) revert ZeroAddress();
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        address previous = address($.JACKPOT_TREASURY);
+        $.JACKPOT_TREASURY = IJackpotTreasury(newTreasury);
+        emit JackpotTreasuryUpdated(previous, newTreasury);
     }
 
     function registerMarketFromRegistry(uint32 marketId, address bank) external onlyRegistry {
@@ -333,7 +359,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
             }
         }
         address bound = $.referrerOf[player];
-        if (bound != address(0) && amount != 0 && address(BRB_REFERRAL) != address(0)) {
+        if (bound != address(0)) {
             BRB_REFERRAL.mint(bound, amount);
         }
     }
@@ -370,10 +396,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     ) private {
         if (betTypeRaw == 0 || betTypeRaw > BET_TRIO_023) revert IRouletteBetErrors.InvalidBetType();
         RouletteBetCodecLib.validateBetNumber(betTypeRaw, numberRaw);
-        uint8 betType = uint8(betTypeRaw);
-        uint16 number = uint16(numberRaw);
         RouletteEngineStorageLib.BetEntry memory bet =
-            RouletteEngineStorageLib.BetEntry(player, uint128(amount), betType, number);
+            RouletteEngineStorageLib.BetEntry(player, uint128(amount), uint8(betTypeRaw), uint16(numberRaw));
         _recordBetEntry($, roundId, marketId, bet);
         RouletteExposureLib.accumulate($, roundId, marketId, bet.betType, bet.number, bet.amount);
     }

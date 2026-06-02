@@ -6,6 +6,7 @@ import { getAddress, parseUnits } from "viem";
 import { predictSideBetProxyAddress } from "../scripts/utils/predictDeployAddresses";
 
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
 const MIN_MULTIPLIER_BPS = 50_000; // 5x
 const MAX_MULTIPLIER_BPS = 5_000_000; // 500x
@@ -114,6 +115,7 @@ async function deployFixture() {
     ]);
     const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
     await sideBet.write.grantRole([settlementRole, scheduler.address], { account: admin.account });
+    await wireTestSchedulerForwarder(scheduler, admin.account);
 
     await registry.write.createMarket(
         [{ asset: usdc.address, bankAdmin: admin.account.address, minBet: USDC("1") }],
@@ -593,6 +595,7 @@ describe("SideBet fees", function () {
         ]);
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, scheduler.address], { account: admin.account });
+        await wireTestSchedulerForwarder(scheduler, admin.account);
 
         if (marketAsset === "usdc") {
             await brb.write.transfer([mockRouter.address, ROUTER_BRB_LIQUIDITY], { account: admin.account });

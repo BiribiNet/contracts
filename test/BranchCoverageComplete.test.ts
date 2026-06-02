@@ -9,6 +9,7 @@ import { createMarketWithBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
 const USDC = (v: string) => parseUnits(v, 6);
 function vaultInit(
@@ -234,10 +235,10 @@ describe("Branch coverage — complete matrix", function () {
 
     describe("UpkeepScheduler admin setters", function () {
         it("reverts zero scan limit and max payouts", async function () {
-            const { scheduler, admin } = await deployProtocolStack();
-            await expect(scheduler.write.setScanLimit([0], { account: admin })).to.be.rejected;
-            await expect(scheduler.write.setMaxPayoutsPerCall([0], { account: admin })).to.be.rejected;
-            await scheduler.write.setForwarderAuthority([zeroAddress], { account: admin });
+            const { scheduler, deployer } = await deployProtocolStack();
+            await expect(scheduler.write.setScanLimit([0], { account: deployer.account })).to.be.rejected;
+            await expect(scheduler.write.setMaxPayoutsPerCall([0], { account: deployer.account })).to.be.rejected;
+            await wireTestSchedulerForwarder(scheduler, deployer.account);
         });
     });
 

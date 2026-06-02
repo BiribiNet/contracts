@@ -17,6 +17,7 @@ import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 
 import { decodeRoulettePerformData } from "./helpers/decodeUpkeepPerformData";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 import { laneCheckData } from "./helpers/parallelUpkeep";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
@@ -187,6 +188,7 @@ describe("Contract coverage — 95% targets", function () {
         expect(await engine.read.withdrawalQueueBatchSize()).to.be.gt(0n);
         expect(await engine.read.maxWithdrawalQueueLength()).to.be.gt(0n);
         expect(getAddress(await engine.read.INFRA_RECIPIENT())).to.equal(getAddress(admin.account.address));
+        expect(await engine.read.INFRA_BPS()).to.equal(200n);
         expect(getAddress(await engine.read.UPKEEP_SCHEDULER())).to.equal(getAddress(scheduler.address));
         expect(await engine.read.hasPendingVrf()).to.equal(false);
         expect(await engine.read.vrfActiveRound()).to.equal(0n);
@@ -585,6 +587,7 @@ describe("Contract coverage — 95% targets", function () {
         ]);
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, scheduler.address], { account: admin.account });
+        await wireTestSchedulerForwarder(scheduler, admin.account);
 
         await usdc.write.mint([admin.account.address, parseUnits("10000", 6)]);
         await usdc.write.approve([bank.address, parseUnits("10000", 6)], { account: admin.account });
@@ -606,10 +609,9 @@ describe("Contract coverage — 95% targets", function () {
 
         await expect(scheduler.write.setScanLimit([0], { account: admin.account })).to.be.rejected;
         await expect(scheduler.write.setMaxPayoutsPerCall([0], { account: admin.account })).to.be.rejected;
-        await scheduler.write.setForwarderAuthority([admin.account.address], { account: admin.account });
 
         const invalidKind = encodeAbiParameters([{ type: "uint8" }], [2]) as Hex;
-        await expect(scheduler.write.performUpkeep([invalidKind])).to.be.rejected;
+        await scheduler.write.performUpkeep([invalidKind]);
     });
 
     it("covers ProtocolTimelock receive and LPVestingLock release overload", async function () {

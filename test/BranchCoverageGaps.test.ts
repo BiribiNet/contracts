@@ -17,6 +17,7 @@ import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { laneCheckData } from "./helpers/parallelUpkeep";
+import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
 const USDC = (v: string) => parseUnits(v, 6);
 const laneKey = () => ("0x" + "11".repeat(32)) as Hex;
@@ -461,6 +462,7 @@ describe("Branch coverage — remaining 82 gaps", function () {
             await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(), scheduler.address], {
                 account: admin.account,
             });
+            await wireTestSchedulerForwarder(scheduler, admin.account);
             await usdc.write.mint([admin.account.address, USDC("10000")]);
             await usdc.write.approve([bank.address, USDC("10000")], { account: admin.account });
             await bank.write.deposit([USDC("5000"), admin.account.address], { account: admin.account });
