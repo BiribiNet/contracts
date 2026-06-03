@@ -693,7 +693,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     }
 
     /// @dev Requests VRF for the locked global round. Only scheduled when `findNextJob` returns `TriggerVrf`.
-    function _triggerVrf() internal {
+    function _triggerVrf() private {
         RouletteEngineStorageLib.Layout storage $ = _s();
         uint64 roundId = $._globalRound;
 
@@ -767,7 +767,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         uint256 n = winnerPayoutRows.length;
         if (n == 0) {
             if (mr.winningBetCount == 0 && _allPayoutShardsComplete($, roundId, marketId, laneCount)) {
-                _finalizeMarketSettlement($, roundId, marketId, bank, mr, 0, 0);
+                _finalizeMarketSettlement($, roundId, marketId, bank, mr);
             }
             return;
         }
@@ -780,7 +780,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         emit PayoutProgress(roundId, marketId, start, end, bankPaid);
 
         if (end >= $.winningBetCountByShard[roundId][marketId][lane] && _allPayoutShardsComplete($, roundId, marketId, laneCount)) {
-            _finalizeMarketSettlement($, roundId, marketId, bank, mr, uint32(start), bankPaid);
+            _finalizeMarketSettlement($, roundId, marketId, bank, mr);
         }
     }
 
@@ -806,9 +806,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         uint64 roundId,
         uint32 marketId,
         address bank,
-        RouletteEngineStorageLib.MarketRoundState storage mr,
-        uint32,
-        uint256
+        RouletteEngineStorageLib.MarketRoundState storage mr
     ) private {
         if (mr.settled) return;
         _collectMarketFees($, roundId, marketId, bank, mr.totals.totalAmount, mr.bankPaidRunning);

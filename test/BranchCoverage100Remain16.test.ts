@@ -409,17 +409,9 @@ describe("Branch coverage — last 16 arms", function () {
             for (const gasPrice of [1n * GWEI, 10n * GWEI, 30n * GWEI] as const) {
                 const [admin, alice] = await viem.getWalletClients();
                 const stack = await deployProtocolStack();
-                const { engine, scheduler, registry, vrf, deployer } = stack;
+                const { engine, scheduler, registry, vrf } = stack;
                 const usdc = await viem.deployContract("MockUSDC");
                 const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
-
-                const harnessImpl = await viem.deployContract(
-                    "RouletteEngineHarness",
-                    [vrf.address, laneKey(), laneKey(), laneKey(), 1, zeroAddress],
-                    { libraries: await deployEngineLibs() },
-                );
-                await engine.write.upgradeToAndCall([harnessImpl.address, "0x"], { account: deployer.account });
-                const harness = await viem.getContractAt("RouletteEngineHarness", engine.address);
 
                 await usdc.write.mint([admin.account.address, USDC("3000")]);
                 await usdc.write.approve([bank.address, USDC("3000")], { account: admin.account });
@@ -433,10 +425,24 @@ describe("Branch coverage — last 16 arms", function () {
                 await time.increase(550);
                 await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
 
+                const tierRound = await engine.read.currentGlobalRound();
+                const triggerJob = {
+                    kind: 2,
+                    marketId: 0,
+                    roundId: tierRound,
+                    nextCursor: 0,
+                    payoutShardIndex: 0,
+                    payoutShardWidth: 0,
+                };
+
                 await testClient.impersonateAccount({ address: scheduler.address });
                 await testClient.setBalance({ address: scheduler.address, value: parseUnits("1000", 18) });
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: gasPrice });
-                await harness.write.harnessTriggerVrf({ account: scheduler.address, gasPrice, gas: 2_000_000n });
+                await engine.write.executeJob([triggerJob, [], [], []], {
+                    account: scheduler.address,
+                    gasPrice: gasPrice + 1n,
+                    gas: 2_000_000n,
+                });
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: 0n });
                 await testClient.stopImpersonatingAccount({ address: scheduler.address });
 

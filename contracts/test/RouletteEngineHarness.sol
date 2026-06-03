@@ -53,8 +53,4 @@ contract RouletteEngineHarness is RouletteEngine {
     function harnessPayoutLaneHasWork(Job memory job) external {
         _payoutLaneHasWork(job);
     }
-
-    function harnessTriggerVrf() external {
-        _triggerVrf();
-    }
 }
