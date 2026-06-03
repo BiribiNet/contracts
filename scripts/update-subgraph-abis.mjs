@@ -30,6 +30,8 @@ const ABI_COPY_MAP = [
   ["Game.json", "RouletteEngine"],
   ["JackpotTreasury.json", "JackpotTreasury"],
   ["BankVault4626.json", "BankVault4626"],
+  ["BRBJackpotFunder.json", "BRBJackpotFunder"],
+  ["SideBet.json", "SideBet"],
   ["UpkeepScheduler.json", "UpkeepScheduler"],
   ["UpkeepManager.json", "UpkeepManager"],
 ];
@@ -41,6 +43,8 @@ const MERGE_EVENT_SOURCES = [
   "RouletteEngine",
   "JackpotTreasury",
   "BankVault4626",
+  "BRBJackpotFunder",
+  "SideBet",
   "UpkeepScheduler",
   "UpkeepManager",
 ];
