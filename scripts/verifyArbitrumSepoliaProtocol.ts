@@ -17,6 +17,7 @@ import {
     type RouletteLinkedLibraries,
     verifyContractWithDelay,
     verifyRouletteLinkedLibraries,
+    verifyUpgradeableBeaconWithDelay,
 } from "./utils/verifyWithEtherscan";
 
 /**
@@ -309,7 +310,7 @@ async function main() {
     );
     await verifyContractWithDelay(d.registry, [d.deployer, d.engine, sideBetAddr], verifyDelayMs);
     await verifyContractWithDelay(vaultImplAddr, [], verifyDelayMs);
-    await verifyContractWithDelay(beaconAddr, [vaultImplAddr, d.deployer], verifyDelayMs);
+    await verifyUpgradeableBeaconWithDelay(beaconAddr, [vaultImplAddr, d.deployer], verifyDelayMs);
 
     await verifyRouletteLinkedLibraries(linked, verifyDelayMs);
 

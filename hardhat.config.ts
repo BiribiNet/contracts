@@ -83,15 +83,14 @@ const config: HardhatUserConfig = {
     currency: 'EUR',
   },
   etherscan: {
-    // Single string key → Hardhat uses Etherscan API v2 for all supported chains (incl. Arbitrum Sepolia).
+    // Single Etherscan.io API key → Hardhat verify uses API v2 with `chainid` from `customChains` / network.
     apiKey: vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : '',
     customChains: [
       {
         network: 'arbitrumsepolia',
         chainId: 421614,
         urls: {
-          // Ignored when using a string apiKey (v2); kept for tooling that reads customChains.urls.apiURL.
-          apiURL: 'https://api.etherscan.io/v2/api',
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=421614',
           browserURL: 'https://sepolia.arbiscan.io',
         },
       },

@@ -19,6 +19,7 @@ import {
     buildRouletteEngineLibraryMap,
     verifyContractWithDelay,
     verifyRouletteLinkedLibraries,
+    verifyUpgradeableBeaconWithDelay,
 } from "./utils/verifyWithEtherscan";
 
 /**
@@ -466,7 +467,11 @@ async function main() {
             verifyDelayMs,
         );
         await verifyContractWithDelay(vaultImpl.address, [], verifyDelayMs);
-        await verifyContractWithDelay(beacon.address, [vaultImpl.address, deployer.account.address], verifyDelayMs);
+        await verifyUpgradeableBeaconWithDelay(
+            beacon.address,
+            [vaultImpl.address, deployer.account.address],
+            verifyDelayMs,
+        );
 
         await verifyRouletteLinkedLibraries(linkedLibraries, verifyDelayMs);
 

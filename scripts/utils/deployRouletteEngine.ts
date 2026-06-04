@@ -73,7 +73,7 @@ export async function deployRouletteEngine(
     if (options.protocolPrefix) {
         const prefix = options.protocolPrefix;
         const nonceBeforePrefix = BigInt(
-            await publicClient.getTransactionCount({ address: account.address, blockTag: "latest" }),
+            await publicClient.getTransactionCount({ address: account.address, blockTag: "pending" }),
         );
         const { engineProxy, sideBetProxy } = predictRouletteStackAddresses(account.address, nonceBeforePrefix, {
             deployBrbReferral: options.deployBrbReferral,
@@ -140,7 +140,7 @@ export async function deployRouletteEngine(
     const vrfConfirmations = Number(engineConstructorArgs[7]);
 
     const nonceBeforeImpl = BigInt(
-        await publicClient.getTransactionCount({ address: account.address, blockTag: "latest" }),
+        await publicClient.getTransactionCount({ address: account.address, blockTag: "pending" }),
     );
     const deployBrbReferral = options.deployBrbReferral ?? false;
     const implNonceOffset = deployBrbReferral ? 1n : 0n;
@@ -171,8 +171,9 @@ export async function deployRouletteEngine(
         },
     );
 
+    // Use `pending` so the count includes txs already mined in this script (some Arbitrum RPCs lag on `latest`).
     const nonceBeforeProxy = BigInt(
-        await publicClient.getTransactionCount({ address: account.address, blockTag: "latest" }),
+        await publicClient.getTransactionCount({ address: account.address, blockTag: "pending" }),
     );
     const engineProxyAddress = getContractAddress({ from: account.address, nonce: nonceBeforeProxy });
     const sideBetProxyAddress = getContractAddress({ from: account.address, nonce: nonceBeforeProxy + 2n });

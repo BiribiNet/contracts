@@ -151,13 +151,29 @@ export async function encodeBankVaultProxyInitDataFromBank(
     });
 }
 
+function isEtherscanV2LogLookupFailure(message: string): boolean {
+    return message.includes("Missing chainid parameter") || message.includes("Failed to get logs");
+}
+
 export async function verifyErc1967ProxyWithDelay(
     proxy: Address,
     implementation: Address,
     initData: Hex,
     delayMs: number,
 ): Promise<void> {
-    await verifyContractWithDelay(proxy, [implementation, initData], delayMs, FQ_ERC1967_PROXY);
+    try {
+        await verifyContractWithDelay(proxy, [implementation, initData], delayMs, FQ_ERC1967_PROXY);
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (isEtherscanV2LogLookupFailure(msg)) {
+            console.warn(
+                `Proxy ${proxy} verification skipped (OZ upgrades log lookup vs Etherscan API v2). ` +
+                    `Verify on Arbiscan: ERC1967Proxy(${implementation}, <initData>).`,
+            );
+            return;
+        }
+        throw e;
+    }
 }
 
 export async function verifyBeaconProxyWithDelay(
@@ -166,7 +182,19 @@ export async function verifyBeaconProxyWithDelay(
     initData: Hex,
     delayMs: number,
 ): Promise<void> {
-    await verifyContractWithDelay(proxy, [beacon, initData], delayMs, FQ_BEACON_PROXY);
+    try {
+        await verifyContractWithDelay(proxy, [beacon, initData], delayMs, FQ_BEACON_PROXY);
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (isEtherscanV2LogLookupFailure(msg)) {
+            console.warn(
+                `BeaconProxy ${proxy} verification skipped (OZ upgrades log lookup vs Etherscan API v2). ` +
+                    `Verify on Arbiscan: BeaconProxy(${beacon}, <initData>).`,
+            );
+            return;
+        }
+        throw e;
+    }
 }
 
 export async function verifySideBetImplementationWithDelay(implementation: Address, delayMs: number): Promise<void> {

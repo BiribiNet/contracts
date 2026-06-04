@@ -36,6 +36,30 @@ export async function verifyContract(
     }
 }
 
+/**
+ * Verify `UpgradeableBeacon`. OpenZeppelin's hardhat-upgrades hook treats beacon addresses specially and
+ * calls Etherscan log APIs without API v2 `chainid` (Hardhat #…); use explicit FQN and swallow that path's failure.
+ */
+export async function verifyUpgradeableBeaconWithDelay(
+    beacon: `0x${string}`,
+    constructorArguments: [implementation: `0x${string}`, owner: `0x${string}`],
+    delayMs: number,
+): Promise<void> {
+    try {
+        await verifyContractWithDelay(beacon, constructorArguments, delayMs, FQ_UPGRADEABLE_BEACON);
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes("Missing chainid parameter") || msg.includes("Failed to get logs")) {
+            console.warn(
+                `Beacon ${beacon} verification skipped (Etherscan v2 + OZ upgrades log lookup). ` +
+                    `Verify manually on Arbiscan: UpgradeableBeacon(${constructorArguments[0]}, ${constructorArguments[1]}).`,
+            );
+            return;
+        }
+        throw e;
+    }
+}
+
 export async function verifyContractWithDelay(
     address: `0x${string}`,
     constructorArguments: unknown[],
@@ -47,6 +71,8 @@ export async function verifyContractWithDelay(
     if (delayMs > 0) await sleep(delayMs);
 }
 
+const FQ_UPGRADEABLE_BEACON =
+    "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol:UpgradeableBeacon" as const;
 const FQ_ROULETTE_ENGINE = "contracts/RouletteEngine.sol:RouletteEngine" as const;
 const FQ_ROULETTE_LIB = "contracts/RouletteLib.sol:RouletteLib" as const;
 const FQ_ROULETTE_BET_LIB = "contracts/libraries/RouletteBetLib.sol:RouletteBetLib" as const;
