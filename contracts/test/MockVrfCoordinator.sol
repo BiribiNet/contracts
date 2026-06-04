@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
+import { VRFV2PlusClient } from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+
 interface IVrfConsumer {
     function rawFulfillRandomWords(uint256 requestId, uint256[] memory randomWords) external;
 }
 
+/// @dev Minimal VRFCoordinatorV2_5-shaped mock for local tests (LINK payment, struct request).
 contract MockVrfCoordinator {
     uint256 public nextRequestId = 1;
 
-    function requestRandomWords(
-        bytes32,
-        uint64,
-        uint16,
-        uint32,
-        uint32
-    ) external returns (uint256 requestId) {
+    function requestRandomWords(VRFV2PlusClient.RandomWordsRequest calldata)
+        external
+        returns (uint256 requestId)
+    {
         requestId = nextRequestId++;
     }
 

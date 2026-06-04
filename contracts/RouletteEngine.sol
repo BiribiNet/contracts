@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { VRFCoordinatorV2Interface } from "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
+import { VRFV2PlusClient } from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 import { VRFConsumerBaseV2 } from "./external/VRFConsumerBaseV2.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
@@ -700,15 +700,17 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         $.globalRoundState[roundId].vrfRequested = true;
         $._roundPhase = RouletteEngineStorageLib.RoundPhase.Settling;
 
-        bytes32 keyHash = tx.gasprice < 2 gwei
+        uint256 req = vrfCoordinator().requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: tx.gasprice < 2 gwei
             ? VRF_KEY_HASH_2_GWEI
-            : tx.gasprice < 30 gwei ? VRF_KEY_HASH_30_GWEI : VRF_KEY_HASH_150_GWEI;
-        uint256 req = VRFCoordinatorV2Interface(address(vrfCoordinator())).requestRandomWords(
-            keyHash,
-            uint64($.VRF_SUBSCRIPTION_ID),
-            VRF_CONFIRMATIONS,
-            $.VRF_CALLBACK_GAS_LIMIT,
-            2
+            : tx.gasprice < 30 gwei ? VRF_KEY_HASH_30_GWEI : VRF_KEY_HASH_150_GWEI,
+                subId: $.VRF_SUBSCRIPTION_ID,
+                requestConfirmations: VRF_CONFIRMATIONS,
+                callbackGasLimit: $.VRF_CALLBACK_GAS_LIMIT,
+                numWords: 2,
+                extraArgs: ""
+            })
         );
         $._pendingRequestId = req;
         $.requestIdToGlobalRound[req] = roundId;
