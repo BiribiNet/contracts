@@ -16,7 +16,8 @@
     "clean": "hardhat clean",
     "test": "hardhat test",
     "update:subgraph:abis": "node scripts/update-subgraph-abis.mjs",
-    "sync:subgraph:arbitrum-sepolia": "cd ../subgraph && DEPLOY_JSON=./deployments/arbitrum-sepolia.json yarn sync:pipeline"
+    "sync:subgraph:arbitrum-sepolia": "cd ../subgraph && DEPLOY_JSON=./deployments/arbitrum-sepolia.json yarn sync:pipeline",
+    "distribute:brb": "hardhat run scripts/distributeBRB.ts --network arbitrumsepolia"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
