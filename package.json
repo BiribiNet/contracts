@@ -12,6 +12,7 @@
     "deploy:multiasset": "hardhat run scripts/deployMultiAsset.ts",
     "deploy:protocol:sepolia": "hardhat run scripts/deployProtocolSepolia.ts --network sepolia",
     "deploy:protocol:arbitrum-sepolia": "hardhat run scripts/deployProtocolArbitrumSepolia.ts --network arbitrumsepolia",
+    "upgrade:engine:arbitrum-sepolia": "hardhat run scripts/upgradeRouletteEngineArbitrumSepolia.ts --network arbitrumsepolia",
     "deploy:protocol:arbitrum": "hardhat run scripts/deployProtocolArbitrum.ts --network arbitrum",
     "verify:protocol:arbitrum-sepolia": "hardhat run scripts/verifyArbitrumSepoliaProtocol.ts --network arbitrumsepolia",
     "sync:vercel:env": "hardhat run scripts/syncVercelEnvFromDeploy.ts",
