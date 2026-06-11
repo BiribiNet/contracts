@@ -4,7 +4,12 @@ import { viem } from "hardhat";
 import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
-import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
+import {
+    resolveVrfInitialLinkJuels,
+    vrfAddConsumerIfNeeded,
+    vrfCreateSubscription,
+    vrfFundSubscriptionWithLink,
+} from "./utils/vrfSubscription";
 
 /**
  * Full protocol deploy for Ethereum Sepolia (chain 11155111): RouletteEngine, registry,
@@ -19,13 +24,13 @@ import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithL
  *
  * VRF: if `VRF_SUBSCRIPTION_ID` is unset, the script calls the coordinator’s `createSubscription()` and uses
  * the new id for `RouletteEngine`. After deploy it calls `addConsumer` for the engine (owner = deployer).
- * Optional `VRF_INITIAL_LINK_JUELS` funds the subscription via LINK `transferAndCall`.
+ * New subscriptions auto-fund with 5 LINK unless `VRF_INITIAL_LINK_JUELS` is set (`0` skips funding).
  *
  * Router: default is Uniswap V2 `SwapRouter` on Sepolia (`0xeE567…`). Override with `UNISWAP_V2_ROUTER`.
  *
  * Env (optional overrides — defaults follow Chainlink + common Sepolia test tokens):
  * - VRF_SUBSCRIPTION_ID: omit to auto-create a subscription on the coordinator
- * - VRF_INITIAL_LINK_JUELS: optional LINK (Juels) to fund the subscription
+ * - VRF_INITIAL_LINK_JUELS: LINK Juels to fund (default 5 LINK when the script creates the subscription; `0` to skip)
  * - LINK_TOKEN, VRF_COORDINATOR, KEEPER_REGISTRAR, KEEPER_REGISTRY
  * - VRF_KEY_HASH (optional legacy: used as default for all three lanes when lane-specific vars unset)
  * - VRF_KEY_HASH_2_GWEI, VRF_KEY_HASH_30_GWEI, VRF_KEY_HASH_150_GWEI (engine picks by `tx.gasprice`, same tiers as legacy roulette)
@@ -153,10 +158,13 @@ async function main() {
         console.log(`Created VRF subscription id: ${vrfSubscriptionId.toString()}`);
     }
 
-    const vrfInitialLinkJuels = envBigIntOr("VRF_INITIAL_LINK_JUELS", 0n);
+    const vrfInitialLinkJuels = resolveVrfInitialLinkJuels(
+        process.env.VRF_INITIAL_LINK_JUELS,
+        vrfSubscriptionCreatedByScript,
+    );
     if (vrfInitialLinkJuels > 0n) {
         await vrfFundSubscriptionWithLink(deployer, publicClient, linkToken, vrfCoordinator, vrfSubscriptionId, vrfInitialLinkJuels);
-        console.log(`Funded VRF subscription with ${vrfInitialLinkJuels.toString()} Juels LINK`);
+        console.log(`Funded VRF subscription ${vrfSubscriptionId.toString()} with ${vrfInitialLinkJuels.toString()} Juels LINK`);
     }
     const [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei] = vrfKeyHashTriple();
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_000_000n));
@@ -196,6 +204,7 @@ async function main() {
                 mockRouter: router,
                 admin: deployer.account.address,
             },
+            wireMockForwarder: false,
         },
     );
 
@@ -329,7 +338,9 @@ async function main() {
                 },
                 nextSteps: [
                     vrfSubscriptionCreatedByScript
-                        ? "VRF subscription was created on-chain; fund it with LINK if you did not set VRF_INITIAL_LINK_JUELS (or use vrf.chain.link to top up)."
+                        ? vrfInitialLinkJuels > 0n
+                            ? `VRF subscription was created and funded with ${vrfInitialLinkJuels.toString()} Juels LINK (override with VRF_INITIAL_LINK_JUELS).`
+                            : "VRF subscription was created on-chain; set VRF_INITIAL_LINK_JUELS or fund via vrf.chain.link."
                         : "VRF subscription id was taken from VRF_SUBSCRIPTION_ID; ensure it is funded and the deployer is the subscription owner (required for addConsumer).",
                     "Fund each bank vault with initial liquidity; configure min bets / vault params as needed",
                     "Create BRB/USDC and BRB/DAI pools on Uniswap V2 (this router) and tune BRB_RATIO_MARKET_1 / BRB_RATIO_MARKET_2 to match pool economics",

@@ -11,7 +11,12 @@ import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
 import { seedBrbAssetPool } from "./utils/seedUniswapV2BrbPools";
-import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
+import {
+    resolveVrfInitialLinkJuels,
+    vrfAddConsumerIfNeeded,
+    vrfCreateSubscription,
+    vrfFundSubscriptionWithLink,
+} from "./utils/vrfSubscription";
 import {
     encodeBankVaultProxyInitDataFromAsset,
     verifyProtocolProxies,
@@ -38,7 +43,8 @@ import {
  * Uniswap: unless `UNISWAP_V2_ROUTER` is set, deploys vendored Uniswap V2 (`contracts/vendor/…`) and uses that router.
  * Set `SKIP_UNISWAP_DEPLOY=true` and `UNISWAP_V2_ROUTER` together only if you already have a router.
  *
- * VRF: same flow as Ethereum Sepolia script — optional `VRF_SUBSCRIPTION_ID`, `VRF_INITIAL_LINK_JUELS`.
+ * VRF: same flow as Ethereum Sepolia script — optional `VRF_SUBSCRIPTION_ID`; new subscriptions auto-fund
+ * with 5 LINK unless `VRF_INITIAL_LINK_JUELS` is set (`0` skips funding).
  *
  * Env (optional overrides):
  * - VERIFY_CONTRACTS: default true when `ETHERSCAN_API_KEY` is set; set `false` to skip
@@ -192,10 +198,13 @@ async function main() {
         console.log(`Created VRF subscription id: ${vrfSubscriptionId.toString()}`);
     }
 
-    const vrfInitialLinkJuels = envBigIntOr("VRF_INITIAL_LINK_JUELS", 0n);
+    const vrfInitialLinkJuels = resolveVrfInitialLinkJuels(
+        process.env.VRF_INITIAL_LINK_JUELS,
+        vrfSubscriptionCreatedByScript,
+    );
     if (vrfInitialLinkJuels > 0n) {
         await vrfFundSubscriptionWithLink(deployer, publicClient, linkToken, vrfCoordinator, vrfSubscriptionId, vrfInitialLinkJuels);
-        console.log(`Funded VRF subscription with ${vrfInitialLinkJuels.toString()} Juels LINK`);
+        console.log(`Funded VRF subscription ${vrfSubscriptionId.toString()} with ${vrfInitialLinkJuels.toString()} Juels LINK`);
     }
     const [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei] = vrfKeyHashTriple();
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_500_000n));
@@ -307,6 +316,7 @@ async function main() {
                 admin: deployer.account.address,
             },
             deployBrbReferral: true,
+            wireMockForwarder: false,
         },
     );
 
@@ -654,7 +664,9 @@ async function main() {
                 },
                 nextSteps: [
                     vrfSubscriptionCreatedByScript
-                        ? "VRF subscription was created on-chain; fund it with LINK if you did not set VRF_INITIAL_LINK_JUELS (or use vrf.chain.link to top up)."
+                        ? vrfInitialLinkJuels > 0n
+                            ? `VRF subscription was created and funded with ${vrfInitialLinkJuels.toString()} Juels LINK (override with VRF_INITIAL_LINK_JUELS).`
+                            : "VRF subscription was created on-chain; set VRF_INITIAL_LINK_JUELS or fund via vrf.chain.link."
                         : "VRF subscription id was taken from VRF_SUBSCRIPTION_ID; ensure it is funded and the deployer is the subscription owner (required for addConsumer).",
                     "Fund each bank vault with initial liquidity; configure min bets / vault params as needed",
                     seededPools

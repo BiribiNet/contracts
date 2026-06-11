@@ -1,6 +1,7 @@
 # Hardhat
 cache
 artifacts
+test/helpers/uniswapV2PairInitCodeHash.generated.json
 ignition/deployments/chain-31337
 coverage
 coverage.json

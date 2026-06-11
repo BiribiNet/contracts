@@ -101,6 +101,7 @@ async function main() {
                 mockRouter: router,
                 admin: deployer.account.address,
             },
+            wireMockForwarder: false,
         },
     );
 

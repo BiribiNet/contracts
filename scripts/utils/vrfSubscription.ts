@@ -42,6 +42,27 @@ const GAS_CREATE_SUBSCRIPTION = 450_000n;
 const GAS_ADD_CONSUMER = 350_000n;
 const GAS_LINK_TRANSFER_AND_CALL = 550_000n;
 
+const linkBalanceAbi = parseAbi(["function balanceOf(address account) external view returns (uint256)"]);
+
+/** Default Juels (18 decimals) when a deploy script creates a new VRF subscription. Override with `VRF_INITIAL_LINK_JUELS`. */
+export const DEFAULT_VRF_INITIAL_LINK_JUELS = 5n * 10n ** 18n;
+
+/**
+ * Resolves LINK to fund a VRF subscription during deploy.
+ * When the script creates the subscription and `VRF_INITIAL_LINK_JUELS` is unset, funds {@link DEFAULT_VRF_INITIAL_LINK_JUELS}.
+ * Set `VRF_INITIAL_LINK_JUELS=0` to skip funding even for a new subscription.
+ */
+export function resolveVrfInitialLinkJuels(
+    envValue: string | undefined,
+    subscriptionCreatedByScript: boolean,
+): bigint {
+    const raw = envValue?.trim();
+    if (raw !== undefined && raw !== "") {
+        return BigInt(raw);
+    }
+    return subscriptionCreatedByScript ? DEFAULT_VRF_INITIAL_LINK_JUELS : 0n;
+}
+
 async function coordinatorUsesUint64SubscriptionId(
     publicClient: PublicClient,
     coordinator: Address,
@@ -162,6 +183,18 @@ export async function vrfFundSubscriptionWithLink(
 ): Promise<void> {
     if (!walletClient.account) throw new Error("WalletClient must have an account");
     if (amountJuels <= 0n) return;
+
+    const linkBalance = await publicClient.readContract({
+        address: linkToken,
+        abi: linkBalanceAbi,
+        functionName: "balanceOf",
+        args: [walletClient.account.address],
+    });
+    if (linkBalance < amountJuels) {
+        throw new Error(
+            `Deployer LINK balance ${linkBalance.toString()} Juels is below VRF_INITIAL_LINK_JUELS ${amountJuels.toString()} — fund ${walletClient.account.address} with testnet LINK.`,
+        );
+    }
 
     const useU64 = await coordinatorUsesUint64SubscriptionId(publicClient, coordinator, subId);
     const data = encodeAbiParameters([{ type: useU64 ? "uint64" : "uint256" }], [subId]);

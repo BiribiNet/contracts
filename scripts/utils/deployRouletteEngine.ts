@@ -30,6 +30,11 @@ export type DeployRouletteEngineOptions = {
     deployBrbReferral?: boolean;
     sideBetMinMultiplierBps?: number;
     sideBetMaxMultiplierBps?: number;
+    /**
+     * When true (default), deploys `MockUpkeepForwarderAuthority` so tests can call `performUpkeep` directly.
+     * Production deploy scripts must pass `false` and wire `UpkeepManager` via `setForwarderAuthority` once.
+     */
+    wireMockForwarder?: boolean;
     /** When set, deploys treasury / funder / registry immediately before linked libraries using predicted proxy addresses. */
     protocolPrefix?: {
         brb: Address;
@@ -245,7 +250,9 @@ export async function deployRouletteEngine(
     const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
     await sideBet.write.grantRole([settlementRole, schedulerContract.address], { account });
 
-    await wireTestSchedulerForwarder(schedulerContract, account);
+    if (options.wireMockForwarder !== false) {
+        await wireTestSchedulerForwarder(schedulerContract, account);
+    }
 
     return {
         engine,

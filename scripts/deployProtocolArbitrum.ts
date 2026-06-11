@@ -176,6 +176,7 @@ async function main() {
             {
                 protocolPrefix: { brb, mockRouter: router, admin: protocolAdmin },
                 deployBrbReferral: envBool("DEPLOY_BRB_REFERRAL", true),
+                wireMockForwarder: false,
             },
         );
 

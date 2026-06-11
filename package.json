@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "compile": "hardhat compile && wagmi generate",
+    "sync:uniswap:pair-hash": "hardhat run scripts/syncUniswapV2PairInitCodeHash.ts",
+    "pretest": "hardhat run scripts/syncUniswapV2PairInitCodeHash.ts",
     "node": "hardhat node",
     "deploy:local": "hardhat ignition deploy ignition/modules/deployMultiAssetArchitecture.ts --network localhost",
     "deploy:multiasset:local": "hardhat ignition deploy ignition/modules/deployMultiAssetArchitecture.ts --network localhost",
