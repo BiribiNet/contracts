@@ -10,6 +10,7 @@ import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
+import { seedBrbAssetPool } from "./utils/seedUniswapV2BrbPools";
 import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
 import {
     encodeBankVaultProxyInitDataFromAsset,
@@ -46,6 +47,8 @@ import {
  * - VRF_KEY_HASH_2_GWEI, VRF_KEY_HASH_30_GWEI, VRF_KEY_HASH_150_GWEI (default: Arbitrum Sepolia 50 gwei lane for all three)
  * - USDC_TOKEN, DAI_TOKEN (omit DAI_TOKEN to deploy `MockDAI` for market 2)
  * - BRB_TOKEN, UNISWAP_V2_ROUTER, BRB_RATIO_MARKET_1, BRB_RATIO_MARKET_2
+ * - SKIP_UNISWAP_LIQUIDITY: set `true` to skip BRB/USDC and BRB/DAI pool seeding (default seeds 1000 BRB + 10 USDC / 10 DAI)
+ * - SEED_LIQUIDITY_BRB, SEED_LIQUIDITY_USDC, SEED_LIQUIDITY_DAI: human-readable seed amounts
  * - INFRA_RECIPIENT, VRF_CALLBACK_GAS_LIMIT, VRF_CONFIRMATIONS, ROUND_DURATION_SECONDS
  */
 
@@ -220,6 +223,51 @@ async function main() {
         console.log("Deployed MockDAI for market 2 (set DAI_TOKEN to use an existing Arbitrum Sepolia DAI).");
     }
 
+    let seededPools:
+        | {
+              usdcBrb: { pair: `0x${string}`; liquidity: bigint };
+              daiBrb: { pair: `0x${string}`; liquidity: bigint };
+          }
+        | undefined;
+
+    if (!envBool("SKIP_UNISWAP_LIQUIDITY", false)) {
+        const brbLiquidity = parseUnits(process.env.SEED_LIQUIDITY_BRB?.trim() || "1000", 18);
+        const usdcLiquidity = parseUnits(process.env.SEED_LIQUIDITY_USDC?.trim() || "10", 6);
+        const daiLiquidity = parseUnits(process.env.SEED_LIQUIDITY_DAI?.trim() || "10", 18);
+
+        console.log("Seeding Uniswap V2 BRB pools on router", router);
+        const usdcBrb = await seedBrbAssetPool(
+            deployer,
+            publicClient,
+            {
+                router,
+                brb,
+                asset: usdc,
+                assetAmount: usdcLiquidity,
+                brbAmount: brbLiquidity,
+                assetLabel: "USDC",
+            },
+            waitWrite,
+        );
+        const daiBrb = await seedBrbAssetPool(
+            deployer,
+            publicClient,
+            {
+                router,
+                brb,
+                asset: dai,
+                assetAmount: daiLiquidity,
+                brbAmount: brbLiquidity,
+                assetLabel: "DAI",
+                mintAssetToDeployer: deployedMockDai,
+            },
+            waitWrite,
+        );
+        seededPools = { usdcBrb, daiBrb };
+    } else {
+        console.log("SKIP_UNISWAP_LIQUIDITY=true — skipped BRB/USDC and BRB/DAI pool seeding.");
+    }
+
     const {
         engine,
         engineImplementation,
@@ -300,6 +348,7 @@ async function main() {
     );
 
     const minStable = parseUnits("1", 6);
+    const minDai = parseUnits("1", 18);
     const minBrb = parseUnits("1", 18);
 
     await waitWrite(
@@ -320,7 +369,7 @@ async function main() {
                 {
                     asset: dai,
                     bankAdmin: deployer.account.address,
-                    minBet: minStable,
+                    minBet: minDai,
                 },
             ],
             { account: deployer.account },
@@ -386,6 +435,8 @@ async function main() {
             roulette: deployBlock,
             stakedBRB: deployBlock,
             brbReferal: deployBlock,
+            sideBet: deployBlock,
+            jackpotFunder: deployBlock,
         },
         addresses: {
             brb,
@@ -489,7 +540,7 @@ async function main() {
                 marketId: 2,
                 engine: engine.address,
                 bankAdmin: deployer.account.address,
-                minBet: minStable,
+                minBet: minDai,
                 sideBetController: sideBet.address,
             }),
             encodeBankVaultProxyInitDataFromAsset(publicClient, {
@@ -557,6 +608,18 @@ async function main() {
                 uniswap: uniswapDeployed
                     ? { ...uniswapDeployed, deployedLocally: true }
                     : { deployedLocally: false, router },
+                uniswapPools: seededPools
+                    ? {
+                          usdcBrb: {
+                              pair: seededPools.usdcBrb.pair,
+                              lpBalance: seededPools.usdcBrb.liquidity.toString(),
+                          },
+                          daiBrb: {
+                              pair: seededPools.daiBrb.pair,
+                              lpBalance: seededPools.daiBrb.liquidity.toString(),
+                          },
+                      }
+                    : undefined,
                 registry: registry.address,
                 vaultImpl: vaultImpl.address,
                 vaultBeacon: beacon.address,
@@ -594,7 +657,9 @@ async function main() {
                         ? "VRF subscription was created on-chain; fund it with LINK if you did not set VRF_INITIAL_LINK_JUELS (or use vrf.chain.link to top up)."
                         : "VRF subscription id was taken from VRF_SUBSCRIPTION_ID; ensure it is funded and the deployer is the subscription owner (required for addConsumer).",
                     "Fund each bank vault with initial liquidity; configure min bets / vault params as needed",
-                    "Create BRB/USDC and BRB/DAI pools on your deployed Uniswap V2 router and tune BRB_RATIO_MARKET_1 / BRB_RATIO_MARKET_2 to match pool economics",
+                    seededPools
+                        ? "BRB/USDC and BRB/DAI Uniswap pools were seeded — tune BRB_RATIO_MARKET_1 / BRB_RATIO_MARKET_2 to match pool economics if needed"
+                        : "Create BRB/USDC and BRB/DAI pools on your Uniswap V2 router (or unset SKIP_UNISWAP_LIQUIDITY) and tune BRB_RATIO_MARKET_1 / BRB_RATIO_MARKET_2",
                 ],
             },
             null,

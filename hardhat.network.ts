@@ -127,9 +127,9 @@ if (vars.has('BRB_KEY')) {
     };
   }
 
-  if (vars.has('ARBITRUM_SEPOLIA_RPC_URL')) {
+  if (vars.has('ARBITRUM_SEPOLIA_RPC_URL') || process.env.ARBITRUM_SEPOLIA_RPC_URL) {
     networks.arbitrumsepolia = {
-      url: vars.get('ARBITRUM_SEPOLIA_RPC_URL'),
+      url: process.env.ARBITRUM_SEPOLIA_RPC_URL ?? vars.get('ARBITRUM_SEPOLIA_RPC_URL'),
       chainId: 421614,
       gasPrice: 'auto',
       accounts: [vars.get('BRB_KEY')],

@@ -121,22 +121,21 @@ async function main() {
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
     await registry.write.setVaultBeacon([beacon.address]);
 
-    const minAsset = parseUnits("1", 6);
+    const minAssetA = parseUnits("1", 6);
+    const minAssetB = parseUnits("1", 18);
 
     await registry.write.createMarket([
         {
             asset: assetA,
             bankAdmin: deployer.account.address,
-
-                                            minBet: minAsset,
+            minBet: minAssetA,
         },
     ]);
     await registry.write.createMarket([
         {
             asset: assetB,
             bankAdmin: deployer.account.address,
-
-                                            minBet: minAsset,
+            minBet: minAssetB,
         },
     ]);
 

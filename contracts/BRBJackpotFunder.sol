@@ -6,6 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
+import { IUniswapV2Factory } from "./vendor/uniswap-v2-core/interfaces/IUniswapV2Factory.sol";
 import { UniswapV2TwapLib } from "./libraries/UniswapV2TwapLib.sol";
 
 /// @dev BRB must implement burn-on-holder balance (e.g. OpenZeppelin `ERC20Burnable`).
@@ -230,8 +231,8 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
     /// @dev TWAP quote when `pairObservations` is older than `twapWindowSeconds`; otherwise spot. Applies warm or cold slippage on top.
     function _amountOutMin(address asset, uint256 swapIn, address[] memory path) internal view returns (uint256 amountOutMin) {
-        address pair = UniswapV2TwapLib.pairFor(router.factory(), asset, address(brb));
-        if (pair.code.length == 0) {
+        address pair = _assetBrbPair(asset);
+        if (pair == address(0)) {
             return _routerSpotMinOut(swapIn, path, coldSlippageBps);
         }
 
@@ -284,9 +285,15 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         }
     }
 
+    function _assetBrbPair(address asset) internal view returns (address pair) {
+        address factory = router.factory();
+        if (factory == address(0)) return address(0);
+        return IUniswapV2Factory(factory).getPair(asset, address(brb));
+    }
+
     function _snapshotPairObservation(address asset) internal {
-        address pair = UniswapV2TwapLib.pairFor(router.factory(), asset, address(brb));
-        if (pair.code.length == 0) return;
+        address pair = _assetBrbPair(asset);
+        if (pair == address(0)) return;
 
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 timestamp) =
             UniswapV2TwapLib.currentCumulativePrices(pair);

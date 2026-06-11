@@ -10,8 +10,8 @@ export type UniswapV2Deployed = {
 };
 
 /**
- * Deploy Uniswap V2 factory + WETH9 + Router02 from vendored sources under `contracts/vendor/`
- * (same bytecode layout as canonical Uniswap V2, compiled by this repo).
+ * Deploy Uniswap V2 factory + WETH9 + Router02 from vendored sources under `contracts/vendor/`.
+ * Intended for Arbitrum Sepolia test deploys only — mainnet uses existing Uniswap V2 routers.
  */
 export async function deployUniswapV2Local(deployer: WalletClient): Promise<UniswapV2Deployed> {
     if (!deployer.account) throw new Error("deployer has no account");

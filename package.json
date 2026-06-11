@@ -12,6 +12,7 @@
     "deploy:protocol:arbitrum-sepolia": "hardhat run scripts/deployProtocolArbitrumSepolia.ts --network arbitrumsepolia",
     "deploy:protocol:arbitrum": "hardhat run scripts/deployProtocolArbitrum.ts --network arbitrum",
     "verify:protocol:arbitrum-sepolia": "hardhat run scripts/verifyArbitrumSepoliaProtocol.ts --network arbitrumsepolia",
+    "sync:vercel:env": "hardhat run scripts/syncVercelEnvFromDeploy.ts",
     "coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
     "clean": "hardhat clean",
     "test": "hardhat test",

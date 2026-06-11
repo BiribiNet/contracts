@@ -19,4 +19,11 @@ contract MockUniswapV2Factory {
         (address t0, address t1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         return _pair[t0][t1];
     }
+
+    /// @dev Register an existing pair (e.g. CREATE2-seeded mock) for `getPair` lookups in tests.
+    function setPair(address tokenA, address tokenB, address pair) external {
+        (address t0, address t1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        _pair[t0][t1] = pair;
+        _pair[t1][t0] = pair;
+    }
 }

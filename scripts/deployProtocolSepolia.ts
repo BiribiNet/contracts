@@ -237,6 +237,7 @@ async function main() {
     );
 
     const minStable = parseUnits("1", 6);
+    const minDai = parseUnits("1", 18);
     const minBrb = parseUnits("1", 18);
 
     await waitWrite(
@@ -258,8 +259,7 @@ async function main() {
                 {
                     asset: dai,
                     bankAdmin: deployer.account.address,
-
-                                                    minBet: minStable,
+                    minBet: minDai,
                 },
             ],
             { account: deployer.account },

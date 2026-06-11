@@ -211,11 +211,12 @@ async function main() {
     );
 
     const minStable = parseUnits(process.env.MIN_BET_STABLE ?? "1", 6);
+    const minDai = parseUnits(process.env.MIN_BET_DAI ?? "1", 18);
     const minBrb = parseUnits(process.env.MIN_BET_BRB ?? "1", 18);
 
     for (const params of [
         { asset: usdc, minBet: minStable },
-        { asset: dai, minBet: minStable },
+        { asset: dai, minBet: minDai },
         { asset: brb, minBet: minBrb },
     ] as const) {
         await waitWrite(
@@ -349,7 +350,7 @@ async function main() {
                 marketId: 2,
                 engine: engine.address,
                 bankAdmin: protocolAdmin,
-                minBet: minStable,
+                minBet: minDai,
                 sideBetController: sideBet.address,
             }),
             encodeBankVaultProxyInitDataFromAsset(publicClient, {

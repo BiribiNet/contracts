@@ -125,7 +125,7 @@ contract BankVault4626 is
     event WithdrawalRequested(address owner, uint16 bps, address receiver);
     event WithdrawalProcessed(address owner, uint16 bps, address receiver, uint256 assetsPaid, uint256 sharesBurned);
     event SideBetControllerUpdated(address previousController, address newController);
-    event SideBetStakeLocked(address indexed player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
+    event SideBetStakeLocked(address player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
 
     modifier onlyEngine() {
         if (msg.sender != address(_s().ENGINE)) revert OnlyEngine();

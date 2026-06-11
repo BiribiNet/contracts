@@ -7,7 +7,8 @@ import { IUniswapV2Pair } from "../vendor/uniswap-v2-core/interfaces/IUniswapV2P
 library UniswapV2TwapLib {
     uint256 private constant Q112 = 1 << 112;
 
-    /// @dev Canonical Uniswap V2 pair init code hash (matches vendored `UniswapV2Factory` in this repo).
+    /// @dev Canonical Uniswap V2 pair init code hash (mainnet / production routers on Arbitrum One).
+    /// Vendored `UniswapV2Factory` deployed on Arbitrum Sepolia uses different bytecode — use `factory.getPair` there.
     bytes32 private constant PAIR_INIT_CODE_HASH =
         0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f;
 

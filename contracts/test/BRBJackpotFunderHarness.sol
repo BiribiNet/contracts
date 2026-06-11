@@ -40,11 +40,11 @@ contract BRBJackpotFunderHarness is BRBJackpotFunder {
     }
 
     function harnessPairFor(address asset) external view returns (address) {
-        return UniswapV2TwapLib.pairFor(router.factory(), asset, address(brb));
+        return _assetBrbPair(asset);
     }
 
     function harnessQuoteOut(address asset, uint256 swapIn) external view returns (uint256 quotedOut, bool usedTwap) {
-        address pair = UniswapV2TwapLib.pairFor(router.factory(), asset, address(brb));
+        address pair = _assetBrbPair(asset);
         return _quoteOut(pair, asset, swapIn);
     }
 }

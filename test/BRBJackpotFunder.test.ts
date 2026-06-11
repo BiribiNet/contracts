@@ -21,6 +21,8 @@ async function seedCanonicalPairAtTwapAddress(
     const impl = await viem.deployContract("MockUniswapV2Pair", [tokenA, tokenB]);
     const bytecode = await publicClient.getBytecode({ address: impl.address });
     await testClient.setCode({ address: pair, bytecode: bytecode! });
+    const factoryContract = await viem.getContractAt("MockUniswapV2Factory", factory);
+    await factoryContract.write.setPair([tokenA, tokenB, pair]);
     const pairContract = await viem.getContractAt("MockUniswapV2Pair", pair);
     await pairContract.write.setReserves([reserve0, reserve1]);
     return pair;

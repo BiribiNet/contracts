@@ -219,6 +219,11 @@ export type VerifyProtocolProxiesParams = {
  * Verify UUPS/transparent-style proxies after their implementations are verified.
  * Order: SideBet impl → RouletteEngine impl → ERC1967 proxies → BeaconProxy banks.
  */
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Arbiscan proxy linking needs extra spacing beyond per-contract verify delay. */
+const proxyLinkSpacingMs = Number(process.env.VERIFY_PROXY_LINK_DELAY_MS ?? 15_000);
+
 export async function verifyProtocolProxies(p: VerifyProtocolProxiesParams): Promise<void> {
     await verifySideBetImplementationWithDelay(p.sideBetImplementation, p.delayMs);
     await verifyRouletteEngineImplementation(
@@ -228,8 +233,10 @@ export async function verifyProtocolProxies(p: VerifyProtocolProxiesParams): Pro
         p.delayMs,
     );
     await verifyErc1967ProxyWithDelay(p.engineProxy, p.engineImplementation, p.engineInitData, p.delayMs);
+    if (proxyLinkSpacingMs > 0) await sleep(proxyLinkSpacingMs);
     await verifyErc1967ProxyWithDelay(p.sideBetProxy, p.sideBetImplementation, p.sideBetInitData, p.delayMs);
     for (const { bank, initData } of p.bankVaults) {
+        if (proxyLinkSpacingMs > 0) await sleep(proxyLinkSpacingMs);
         await verifyBeaconProxyWithDelay(bank, p.vaultBeacon, initData, p.delayMs);
     }
 }

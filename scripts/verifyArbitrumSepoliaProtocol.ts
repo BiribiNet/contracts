@@ -31,6 +31,8 @@ import {
  *            linkedLibraries? }
  * - `VERIFY_UNISWAP_JSON` — optional `{"factory":"0x…","weth":"0x…","router":"0x…"}` for locally deployed Uniswap V2.
  * - `VERIFY_DELAY_MS` — delay between Arbiscan calls (default 8000).
+ * - `VERIFY_PROXY_LINK_DELAY_MS` — extra pause between proxy verifications (default 15000).
+ * - `ARBITRUM_SEPOLIA_RPC_URL` — optional RPC override (use Tenderly fork URL if Infura rate-limits).
  */
 
 const FQ_UNISWAP_FACTORY = "contracts/vendor/uniswap-v2-core/UniswapV2Factory.sol:UniswapV2Factory" as const;
@@ -46,15 +48,28 @@ const DEFAULT_KEEPER_REGISTRAR = "0x881918E24290084409DaA91979A30e6f0dB52eBe" as
 /** Last full deploy from this repo session (override with VERIFY_DEPLOYMENT_JSON). */
 const DEFAULT_DEPLOYMENT = {
     deployer: "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
-    brb: "0x47e054bb133e75b1c2c7a9a52ba73e52e75a06a1",
-    dai: "0xb74d2094d55e5eedeb4dee743cbe17f38a20285d",
-    router: "0xc84202ebc1630f8aaaced74f0e07856e2f6f4570",
-    jackpotTreasury: "0xbbe4d51cf721277d52d916291f6de4fa972e5e22",
-    jackpotFunder: "0x60ce672feaf39f35a3f6e5b3e099f46b90aee9fc",
-    registry: "0x9a328b11c7189a8ba2af6186643f93204b516987",
-    engine: "0x60cd5a0f74f1644eaef997496e19e3737690ad1c",
-    scheduler: "0x40a7f6d4e902f13e2d9e4754dee37648f2fcdfda",
-    upkeepManager: "0xdbfab262996d221c72eeb9f2e6679c3d2c7bc95b",
+    brb: "0xf1e2dcbfb055ba9873d8b02d1c8b99b416d1d61b",
+    dai: "0x826f2374a718d8f6e1bd889ef28ffafc84549453",
+    router: "0xf89aca501fdc766b5f7b308bdb7d23f7c62ee4d8",
+    jackpotTreasury: "0xa1aba5cfb684838963f5491fa4b9079ef7346dd0",
+    jackpotFunder: "0x9c3f57c49ba23a0e79235368affc9936d37fede9",
+    registry: "0x06de2b57bc12cef9c6c16ea7915226b1259ffd11",
+    engine: "0x4cf6a900fcdd3a33b2bb1df22b8718dd24e897f8",
+    scheduler: "0xa3bb37368a407b5412f605c0291b73784a619379",
+    upkeepManager: "0x9d8756b67dd1c0465bd4e38595563b97ea903577",
+    sideBet: "0xA775ADA93B7B0DcF16F7233a128A91d1ACC93219",
+    brbReferral: "0xb80c7602af2d9288a1a0ae4c02944d9179d51439",
+    banks: [
+        "0x1B0370FcCeD7074B93709c82370d83513d2CBF3B",
+        "0x3Fd333FFA46FD4654eD290EDaE24d6AAf870dBDe",
+        "0xC707F6f51CeDFf3F06833B37C508E23d3B3A607F",
+    ],
+} as const;
+
+const DEFAULT_UNISWAP = {
+    factory: "0xb1a1f9958488233b339e73763232953837ce1e34",
+    weth: "0x904d9585b6a1d13a07794f2af102a025becbf911",
+    router: "0xf89aca501fdc766b5f7b308bdb7d23f7c62ee4d8",
 } as const;
 
 type Deployment = {
@@ -167,12 +182,17 @@ async function main() {
     const keeperRegistry = (process.env.KEEPER_REGISTRY as `0x${string}` | undefined) ?? DEFAULT_KEEPER_REGISTRY;
 
     const uniswapRaw = process.env.VERIFY_UNISWAP_JSON?.trim();
-    if (uniswapRaw) {
-        const u = JSON.parse(uniswapRaw) as { factory: `0x${string}`; weth: `0x${string}`; router: `0x${string}` };
+    const uniswap = uniswapRaw
+        ? (JSON.parse(uniswapRaw) as { factory: `0x${string}`; weth: `0x${string}`; router: `0x${string}` })
+        : DEFAULT_UNISWAP;
+    if (process.env.VERIFY_SKIP_UNISWAP !== "1") {
+        const u = uniswap;
         console.log("Verifying Uniswap V2 trio…");
         await verifyContractWithDelay(u.factory, [d.deployer], verifyDelayMs, FQ_UNISWAP_FACTORY);
         await verifyContractWithDelay(u.weth, [], verifyDelayMs, FQ_WETH9);
         await verifyContractWithDelay(u.router, [u.factory, u.weth], verifyDelayMs, FQ_UNISWAP_ROUTER);
+    } else {
+        console.log("VERIFY_SKIP_UNISWAP=1 — skipped Uniswap V2 trio.");
     }
 
     const engineProxyAbi = parseAbi([
