@@ -165,23 +165,13 @@ describe("Branch coverage — 100% targets", function () {
 
         it("performUpkeep ignores unknown work kind; forwarder gate enforced", async function () {
             const { scheduler, admin } = await deployProtocolStack();
-            const link = await viem.deployContract("MockLinkToken");
-            const registrar = await viem.deployContract("MockKeeperRegistry");
-            const mgr = await viem.deployContract("UpkeepManager", [
-                link.address,
-                registrar.address,
-                registrar.address,
-                scheduler.address,
-                admin,
-                admin,
-            ]);
-            await link.write.approve([mgr.address, parseUnits("10", 18)], { account: admin });
-            await mgr.write.registerLaneUpkeep([0n, 400_000, parseUnits("1", 18), admin], { account: admin });
-            await scheduler.write.setForwarderAuthority([mgr.address], { account: admin });
+            const authority = await viem.deployContract("CreExecutionAuthority", [admin]);
+            await authority.write.setExecutorApproved([admin, true], { account: admin });
+            await scheduler.write.setForwarderAuthority([authority.address], { account: admin });
 
             const invalidKind = encodeAbiParameters([{ type: "uint8" }], [2]) as Hex;
             await scheduler.write.performUpkeep([invalidKind], { account: admin });
-            expect(await mgr.read.isApprovedAutomationForwarder([admin])).to.equal(true);
+            expect(await authority.read.isApprovedAutomationForwarder([admin])).to.equal(true);
         });
 
         it.skip("falls through to SideBet when payout job has no lane work", async function () {
@@ -203,14 +193,13 @@ describe("Branch coverage — 100% targets", function () {
 
             await time.increase(550);
             await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
 
             while (true) {
                 const [needed, data] = await scheduler.read.checkUpkeep([laneCheckData(0n)]);
                 if (!needed) break;
                 const decoded = decodeRoulettePerformData(data);
-                if (decoded.jobKind === 3) await scheduler.write.performUpkeep([data]);
+                if (decoded.jobKind === 2) await scheduler.write.performUpkeep([data]);
                 else break;
             }
 
@@ -296,7 +285,6 @@ describe("Branch coverage — 100% targets", function () {
                 bank.write.deposit([parseUnits("20", 6), alice.account.address], { account: alice.account }),
             ).to.be.rejected;
 
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfill([engine.address, 1n, 7n]);
             expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(true);
         });
@@ -667,25 +655,6 @@ describe("Branch coverage — 100% targets", function () {
         });
     });
 
-    describe("UpkeepManager", function () {
-        it("registerLaneUpkeep reverts when linkAmount is zero", async function () {
-            const [admin] = await viem.getWalletClients();
-            const link = await viem.deployContract("MockLinkToken");
-            const registrar = await viem.deployContract("MockKeeperRegistry");
-            const manager = await viem.deployContract("UpkeepManager", [
-                link.address,
-                registrar.address,
-                registrar.address,
-                admin.account.address,
-                admin.account.address,
-                zeroAddress,
-            ]);
-            await expect(
-                manager.write.registerLaneUpkeep([0n, 400_000, 0n, admin.account.address], { account: admin.account }),
-            ).to.be.rejected;
-        });
-    });
-
     describe("RouletteEngine", function () {
         afterEach(async function () {
             const testClient = await viem.getTestClient();
@@ -717,10 +686,10 @@ describe("Branch coverage — 100% targets", function () {
                 );
 
                 await time.increase(550);
-                await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
+                // VRF is requested in the TriggerVrf tx, so set the gas tier before it.
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: gasPrice });
-                const [, vrfJob] = await scheduler.read.checkUpkeep(["0x"]);
-                await scheduler.write.performUpkeep([vrfJob]);
+                const [, triggerVrfJob] = await scheduler.read.checkUpkeep(["0x"]);
+                await scheduler.write.performUpkeep([triggerVrfJob]);
                 expect(await engine.read.hasPendingVrf()).to.equal(true);
                 const roundId = await engine.read.currentGlobalRound();
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: 0n });

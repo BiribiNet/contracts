@@ -329,7 +329,7 @@ describe("Branch coverage — final 100% gaps", function () {
             ).to.be.rejected;
 
             const payoutJobEmpty = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: 1n,
                 nextCursor: 0,
@@ -362,9 +362,8 @@ describe("Branch coverage — final 100% gaps", function () {
             await harness.write.harnessSetRoundLockAt([1n, lockAtPast]);
             expect((await engine.read.findNextJob([0, 25, 0, 0]))[0]).to.equal(true);
 
+            // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
             let [, data] = await scheduler.read.checkUpkeep(["0x"]);
-            await scheduler.write.performUpkeep([data]);
-            [, data] = await scheduler.read.checkUpkeep(["0x"]);
             await scheduler.write.performUpkeep([data]);
 
             expect(await engine.read.hasPendingVrf()).to.equal(true);
@@ -373,7 +372,7 @@ describe("Branch coverage — final 100% gaps", function () {
             expect(await engine.read.vrfActiveRound()).to.equal(0n);
 
             const payoutJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: 1n,
                 nextCursor: 0,
@@ -385,8 +384,13 @@ describe("Branch coverage — final 100% gaps", function () {
             expect(previewDuringSettle[0].length).to.be.lte(5);
 
             while (await engine.read.payoutLaneHasWork([payoutJob])) {
-                const preview = await engine.read.previewPayoutBundle([payoutJob, 1]);
-                await scheduler.write.performUpkeep([encodePerformData(payoutJob, preview[0], preview[1], preview[2])]);
+                // Apply validates nextCursor against the shard cursor, so refresh it each iteration.
+                const fresh = {
+                    ...payoutJob,
+                    nextCursor: Number(await engine.read.payoutShardCursor([payoutJob.roundId, payoutJob.marketId, payoutJob.payoutShardIndex])),
+                };
+                const preview = await engine.read.previewPayoutBundle([fresh, 1]);
+                await scheduler.write.performUpkeep([encodePerformData(fresh, preview[0], preview[1], preview[2])]);
             }
 
             await testClient.impersonateAccount({ address: scheduler.address });
@@ -398,22 +402,10 @@ describe("Branch coverage — final 100% gaps", function () {
                         account: admin.account,
                     });
                     await time.increase(550);
-                    [, data] = await scheduler.read.checkUpkeep(["0x"]);
-                    await scheduler.write.performUpkeep([data]);
-                    const tierRound = await engine.read.currentGlobalRound();
-                    const triggerJob = {
-                        kind: 2,
-                        marketId: 0,
-                        roundId: tierRound,
-                        nextCursor: 0,
-                        payoutShardIndex: 0,
-                        payoutShardWidth: 0,
-                    };
+                    // VRF is requested in the TriggerVrf tx, so set the gas tier before it.
                     await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: gasPrice });
-                    await engine.write.executeJob([triggerJob, [], [], []], {
-                        account: scheduler.address,
-                        gasPrice: gasPrice + 1n,
-                    });
+                    [, data] = await scheduler.read.checkUpkeep(["0x"]);
+                    await scheduler.write.performUpkeep([data], { gasPrice: gasPrice + 1n });
                     await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: 0n });
                     const reqId = (await vrf.read.nextRequestId()) - 1n;
                     await vrf.write.fulfill([engine.address, reqId, 3n]);
@@ -444,7 +436,7 @@ describe("Branch coverage — final 100% gaps", function () {
             await vrf.write.fulfillWithJackpot([engine.address, jackpotReqId, 7n, 7n]);
 
             const jackpotJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: jackpotRound,
                 nextCursor: 0,
@@ -460,8 +452,12 @@ describe("Branch coverage — final 100% gaps", function () {
             for (let lane = 0; lane < laneCount; lane++) {
                 const laneJob = { ...jackpotJob, payoutShardIndex: lane };
                 while (await engine.read.payoutLaneHasWork([laneJob])) {
-                    const p = await engine.read.previewPayoutBundle([laneJob, 5]);
-                    await scheduler.write.performUpkeep([encodePerformData(laneJob, p[0], p[1], p[2])]);
+                    const fresh = {
+                        ...laneJob,
+                        nextCursor: Number(await engine.read.payoutShardCursor([laneJob.roundId, laneJob.marketId, lane])),
+                    };
+                    const p = await engine.read.previewPayoutBundle([fresh, 5]);
+                    await scheduler.write.performUpkeep([encodePerformData(fresh, p[0], p[1], p[2])]);
                     batches++;
                 }
             }
@@ -486,7 +482,7 @@ describe("Branch coverage — final 100% gaps", function () {
             const noStraightReqId = (await vrf.read.nextRequestId()) - 1n;
             await vrf.write.fulfillWithJackpot([engine.address, noStraightReqId, 7n, 7n]);
             const noStraightJackpotJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: noStraightRound,
                 nextCursor: 0,
@@ -497,8 +493,14 @@ describe("Branch coverage — final 100% gaps", function () {
             expect(noStakePreview[1].length).to.equal(0);
 
             while (await engine.read.payoutLaneHasWork([noStraightJackpotJob])) {
-                const p = await engine.read.previewPayoutBundle([noStraightJackpotJob, 10]);
-                await scheduler.write.performUpkeep([encodePerformData(noStraightJackpotJob, p[0], p[1], p[2])]);
+                const fresh = {
+                    ...noStraightJackpotJob,
+                    nextCursor: Number(
+                        await engine.read.payoutShardCursor([noStraightJackpotJob.roundId, noStraightJackpotJob.marketId, 0]),
+                    ),
+                };
+                const p = await engine.read.previewPayoutBundle([fresh, 10]);
+                await scheduler.write.performUpkeep([encodePerformData(fresh, p[0], p[1], p[2])]);
             }
 
             const usdc2 = await viem.deployContract("MockUSDC");
@@ -525,7 +527,7 @@ describe("Branch coverage — final 100% gaps", function () {
             await vrf.write.fulfill([engine.address, market2ReqId, 3n]);
 
             const noJackpotJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 2,
                 roundId: market2Round,
                 nextCursor: 0,
@@ -635,7 +637,6 @@ async function deployEngineLibs() {
     const jackpotBatchLib = await viem.deployContract("JackpotBatchLib");
     const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib");
     const rouletteExposureLib = await viem.deployContract("RouletteExposureLib");
-    const rouletteUpkeepScanLib = await viem.deployContract("RouletteUpkeepScanLib");
     const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib");
     const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
         libraries: {
@@ -656,6 +657,5 @@ async function deployEngineLibs() {
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": roulettePayoutSweepLib.address,
         "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": rouletteJackpotCollectLib.address,
         "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": rouletteExposureLib.address,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": rouletteUpkeepScanLib.address,
     };
 }

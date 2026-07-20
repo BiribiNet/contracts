@@ -88,7 +88,6 @@ export type RouletteLinkedLibraries = {
     roulettePayoutSweepLib: `0x${string}`;
     rouletteJackpotCollectLib: `0x${string}`;
     rouletteExposureLib: `0x${string}`;
-    rouletteUpkeepScanLib: `0x${string}`;
 };
 
 /** Library map passed to `RouletteEngine` implementation verification. */
@@ -101,7 +100,6 @@ export function buildRouletteEngineLibraryMap(linked: RouletteLinkedLibraries): 
             linked.rouletteJackpotCollectLib,
         "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": linked.rouletteLiabilityMathLib,
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linked.roulettePayoutSweepLib,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linked.rouletteUpkeepScanLib,
     };
 }
 
@@ -112,7 +110,6 @@ export async function verifyRouletteLinkedLibraries(linked: RouletteLinkedLibrar
     await verifyContractWithDelay(linked.jackpotBatchLib, [], delayMs);
     await verifyContractWithDelay(linked.roulettePayoutMulLib, [], delayMs);
     await verifyContractWithDelay(linked.rouletteExposureLib, [], delayMs);
-    await verifyContractWithDelay(linked.rouletteUpkeepScanLib, [], delayMs);
     await verifyContractWithDelay(linked.rouletteJackpotCollectLib, [], delayMs);
     await verifyContractWithDelay(linked.rouletteLiabilityMathLib, [], delayMs, undefined, {
         [FQ_ROULETTE_LIB]: linked.rouletteLib,

@@ -152,7 +152,7 @@ describe("Ten-lane parallel payout upkeeps", function () {
             const decoded = decodeRoulettePerformData(performData);
             expect(decoded.workKind).to.equal(0);
             expect(decoded.lane).to.equal(lane);
-            expect(decoded.jobKind).to.equal(3);
+            expect(decoded.jobKind).to.equal(2);
             expect(decoded.marketId).to.equal(1);
             expect(decoded.shardIndex).to.equal(lane);
             expect(decoded.shardWidth).to.equal(Number(LANE_COUNT));

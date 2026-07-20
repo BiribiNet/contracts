@@ -165,22 +165,25 @@ describe("Multi-Asset architecture", function () {
         await scheduler.write.performUpkeep([performData]);
     });
 
-    it("allows bets while PreLock is eligible until upkeep locks the round", async function () {
+    it("rejects bets once lockAt elapsed, even before the TriggerVrf upkeep lands", async function () {
         const { scheduler, bankUsdc, bankAssetB, alice, bob, usdc, assetB, admin } = await deployStack();
         await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
         const amount = parseUnits("10", 6);
         const betData = encodeSingleBet(1n, 7n, amount);
 
         await bankUsdc.write.placeBet([amount, betData, zeroAddress], { account: alice.account });
+        // Other markets may still join the round before lockAt.
+        await bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account });
         await time.increase(550);
 
-        const [preLockNeeded] = await scheduler.read.checkUpkeep(["0x"]);
-        expect(preLockNeeded).to.equal(true);
+        const [triggerNeeded] = await scheduler.read.checkUpkeep(["0x"]);
+        expect(triggerNeeded).to.equal(true);
 
-        await bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account });
+        // lockAt enforced at bet time — no upkeep needed to close the window.
+        await expect(bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account })).to.be.rejected;
 
-        const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLockData]);
+        const [, triggerData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerData]);
 
         await expect(bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account })).to.be.rejected;
     });
@@ -193,11 +196,9 @@ describe("Multi-Asset architecture", function () {
         await bankUsdc.write.placeBet([amount, betData, zeroAddress], { account: alice.account });
         await time.increase(550);
 
-        const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLockData]);
-
-        const [, vrfData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([vrfData]);
+        // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
+        const [, triggerData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerData]);
 
         expect(await engine.read.hasPendingVrf()).to.equal(true);
         const [neededAfterPending] = await scheduler.read.checkUpkeep(["0x"]);

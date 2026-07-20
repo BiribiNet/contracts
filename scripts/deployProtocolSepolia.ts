@@ -1,9 +1,14 @@
 import "dotenv/config";
 
 import { viem } from "hardhat";
-import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
+import { isAddress, parseUnits, zeroAddress } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
+import {
+    CRE_KEYSTONE_FORWARDER_ETHEREUM_SEPOLIA,
+    deployCreAutomation,
+} from "./utils/deployCreAutomation";
+import { resolveCreLaneCounts, writeCreWorkflowConfigs } from "./utils/writeCreWorkflowConfigs";
 import {
     resolveVrfInitialLinkJuels,
     vrfAddConsumerIfNeeded,
@@ -13,12 +18,12 @@ import {
 
 /**
  * Full protocol deploy for Ethereum Sepolia (chain 11155111): RouletteEngine, registry,
- * three markets (USDC, DAI, BRB), jackpot stack, upkeep manager + one automation lane (lane 0).
+ * three markets (USDC, DAI, BRB), jackpot stack, CRE automation bridge.
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` and `hardhat vars set SEPOLIA_RPC_URL` (see hardhat.network.ts)
- * - LINK on the deployer for `registerLaneUpkeep` (manager uses `transferFrom` from deployer; script `approve`s the manager)
  * - Sufficient Sepolia ETH for gas
+ * - After deploy: register CRE workflow for lane 0 (see docs/CRE_MIGRATION.md)
  *
  * Run: `yarn deploy:protocol:sepolia`
  *
@@ -31,7 +36,7 @@ import {
  * Env (optional overrides — defaults follow Chainlink + common Sepolia test tokens):
  * - VRF_SUBSCRIPTION_ID: omit to auto-create a subscription on the coordinator
  * - VRF_INITIAL_LINK_JUELS: LINK Juels to fund (default 5 LINK when the script creates the subscription; `0` to skip)
- * - LINK_TOKEN, VRF_COORDINATOR, KEEPER_REGISTRAR, KEEPER_REGISTRY
+ * - LINK_TOKEN, VRF_COORDINATOR, CRE_KEYSTONE_FORWARDER (optional)
  * - VRF_KEY_HASH (optional legacy: used as default for all three lanes when lane-specific vars unset)
  * - VRF_KEY_HASH_2_GWEI, VRF_KEY_HASH_30_GWEI, VRF_KEY_HASH_150_GWEI (engine picks by `tx.gasprice`, same tiers as legacy roulette)
  * - USDC_TOKEN, DAI_TOKEN
@@ -49,9 +54,8 @@ const DEFAULT_VRF_COORDINATOR = "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B" as 
 /** Sepolia subscription 500 gwei lane — see Chainlink VRF supported networks; used as default for each tier when unset. */
 const DEFAULT_VRF_KEY_HASH =
     "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae" as const;
-/** Chainlink Automation v2.1 on Ethereum Sepolia */
-const DEFAULT_KEEPER_REGISTRY = "0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad" as const;
-const DEFAULT_KEEPER_REGISTRAR = "0xb0E49c5D0d05cbc241d68c05BC5BA1d1B7B72976" as const;
+/** CRE KeystoneForwarder on Ethereum Sepolia — override with CRE_KEYSTONE_FORWARDER. */
+const DEFAULT_CRE_KEYSTONE_FORWARDER = CRE_KEYSTONE_FORWARDER_ETHEREUM_SEPOLIA;
 
 /** Uniswap V2 SwapRouter on Ethereum Sepolia (user-supplied; override via UNISWAP_V2_ROUTER). */
 const DEFAULT_UNISWAP_V2_ROUTER = "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3" as const;
@@ -138,8 +142,7 @@ async function main() {
 
     const vrfCoordinator = envAddressOrDefault("VRF_COORDINATOR", DEFAULT_VRF_COORDINATOR);
     const linkToken = envAddressOrDefault("LINK_TOKEN", DEFAULT_LINK);
-    const keeperRegistrar = envAddressOrDefault("KEEPER_REGISTRAR", DEFAULT_KEEPER_REGISTRAR);
-    const keeperRegistry = envAddressOrDefault("KEEPER_REGISTRY", DEFAULT_KEEPER_REGISTRY);
+    const creKeystoneForwarder = envAddressOrDefault("CRE_KEYSTONE_FORWARDER", DEFAULT_CRE_KEYSTONE_FORWARDER);
     const usdc = envAddressOrDefault("USDC_TOKEN", DEFAULT_USDC);
     const dai = envAddressOrDefault("DAI_TOKEN", DEFAULT_DAI);
     const router = envAddressOrDefault("UNISWAP_V2_ROUTER", DEFAULT_UNISWAP_V2_ROUTER);
@@ -170,6 +173,11 @@ async function main() {
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_000_000n));
     const confirmations = Number(envBigIntOr("VRF_CONFIRMATIONS", 3n));
     const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 60n));
+    const { payoutLaneCount, creWorkflowLaneCount } = resolveCreLaneCounts({
+        payoutLaneCount: process.env.PAYOUT_LANE_COUNT,
+        upkeepLaneCount: process.env.UPKEEP_LANE_COUNT,
+    });
+    const creLaneMaxDrainIterations = Number(envBigIntOr("CRE_LANE_MAX_DRAIN_ITERATIONS", 5n));
 
     let brb: `0x${string}`;
     if (brbAddressEnv) {
@@ -220,30 +228,34 @@ async function main() {
 
     await vrfAddConsumerIfNeeded(deployer, publicClient, vrfCoordinator, vrfSubscriptionId, engine.address);
 
-    await waitWrite(engine.write.setPayoutLaneCount([1], { account: deployer.account }));
+    await waitWrite(engine.write.setPayoutLaneCount([payoutLaneCount], { account: deployer.account }));
+    console.log(`Payout parallel lanes: ${payoutLaneCount} on-chain, ${creWorkflowLaneCount} CRE workflow(s)`);
 
-    const upkeepManager = await viem.deployContract("UpkeepManager", [
-        linkToken,
-        keeperRegistrar,
-        keeperRegistry,
-        scheduler.address,
-        deployer.account.address,
-        deployer.account.address,
-    ]);
+    const creAutomation = await deployCreAutomation({
+        scheduler: scheduler.address,
+        admin: deployer.account.address,
+        keystoneForwarder: creKeystoneForwarder,
+        wallet: deployer,
+        publicClient,
+        waitWrite,
+    });
 
-    const schedulerForwarderAbi = parseAbi([
-        "function setForwarderAuthority(address forwarderAuthority) external",
-    ]);
-    await waitWrite(
-        deployer.writeContract({
-            address: scheduler.address,
-            abi: schedulerForwarderAbi,
-            functionName: "setForwarderAuthority",
-            args: [upkeepManager.address],
-            account: deployer.account,
-            chain: publicClient.chain,
-        }),
-    );
+    writeCreWorkflowConfigs({
+        network: "ethereum-sepolia",
+        scheduler: scheduler.address,
+        receiver: creAutomation.automationReceiver,
+        engine: engine.address,
+        laneCount: creWorkflowLaneCount,
+        writeGasLimit: process.env.CRE_WRITE_GAS_LIMIT?.trim() ?? "2500000",
+        laneMaxDrainIterations: creLaneMaxDrainIterations,
+        httpAuthorizedKeys: (() => {
+            const key = optionalAddressEnv(
+                "CRE_HTTP_AUTHORIZED_ADDRESS",
+                process.env.CRE_HTTP_AUTHORIZED_ADDRESS,
+            );
+            return key ? [key] : undefined;
+        })(),
+    });
 
     const minStable = parseUnits("1", 6);
     const minDai = parseUnits("1", 18);
@@ -293,22 +305,6 @@ async function main() {
     const marketDai = await registry.read.getMarket([2]);
     const marketBrb = await registry.read.getMarket([3]);
 
-    const erc20ApproveAbi = parseAbi(["function approve(address spender, uint256 amount) external returns (bool)"]);
-    await waitWrite(
-        deployer.writeContract({
-            address: linkToken,
-            abi: erc20ApproveAbi,
-            functionName: "approve",
-            args: [upkeepManager.address, maxUint256],
-            account: deployer.account,
-            chain: publicClient.chain,
-        }),
-    );
-
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]),
-    );
-
     console.log("Ethereum Sepolia protocol deployment complete");
     console.log(
         JSON.stringify(
@@ -317,7 +313,7 @@ async function main() {
                 registry: registry.address,
                 engine: engine.address,
                 scheduler: scheduler.address,
-                upkeepManager: upkeepManager.address,
+                creAutomation,
                 jackpotTreasury: jackpotTreasury.address,
                 brb,
                 jackpotFunder: funder.address,

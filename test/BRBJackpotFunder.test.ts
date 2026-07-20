@@ -7,13 +7,24 @@ import { getAddress, keccak256, parseUnits, toBytes, zeroAddress, type Address }
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { uniswapV2PairAddress } from "./helpers/uniswapV2PairAddress";
 
+/** Maps per-token reserves to Uniswap `reserve0` / `reserve1` (sorted by address). */
+function pairReservesForTokens(
+    tokenA: Address,
+    tokenB: Address,
+    reserveForTokenA: bigint,
+    reserveForTokenB: bigint,
+): readonly [bigint, bigint] {
+    const token0IsA = tokenA.toLowerCase() < tokenB.toLowerCase();
+    return token0IsA ? [reserveForTokenA, reserveForTokenB] : [reserveForTokenB, reserveForTokenA];
+}
+
 /** Places `MockUniswapV2Pair` bytecode at the CREATE2 address `pairFor(factory, tokenA, tokenB)` expects. */
 async function seedCanonicalPairAtTwapAddress(
     factory: Address,
     tokenA: Address,
     tokenB: Address,
-    reserve0: bigint,
-    reserve1: bigint,
+    reserveForTokenA: bigint,
+    reserveForTokenB: bigint,
 ) {
     const publicClient = await viem.getPublicClient();
     const testClient = await viem.getTestClient();
@@ -24,6 +35,7 @@ async function seedCanonicalPairAtTwapAddress(
     const factoryContract = await viem.getContractAt("MockUniswapV2Factory", factory);
     await factoryContract.write.setPair([tokenA, tokenB, pair]);
     const pairContract = await viem.getContractAt("MockUniswapV2Pair", pair);
+    const [reserve0, reserve1] = pairReservesForTokens(tokenA, tokenB, reserveForTokenA, reserveForTokenB);
     await pairContract.write.setReserves([reserve0, reserve1]);
     return pair;
 }
@@ -423,13 +435,12 @@ describe("BRBJackpotFunder", function () {
         const usdc = await viem.deployContract("MockUSDC");
         const usdcReserve = 1_000_000_000_000_000n;
         const brbReserve = usdcReserve * 1_000_000_000_000n;
-        const usdcIsToken0 = usdc.address.toLowerCase() < brb.address.toLowerCase();
         const pair = await seedCanonicalPairAtTwapAddress(
             factory.address,
             usdc.address,
             brb.address,
-            usdcIsToken0 ? usdcReserve : brbReserve,
-            usdcIsToken0 ? brbReserve : usdcReserve,
+            usdcReserve,
+            brbReserve,
         );
 
         const funder = await viem.deployContract("BRBJackpotFunderHarness", [
@@ -449,10 +460,8 @@ describe("BRBJackpotFunder", function () {
 
         const pairContract = await viem.getContractAt("MockUniswapV2Pair", pair);
         const pumpedBrb = brbReserve * 10n;
-        await pairContract.write.setReserves([
-            usdcIsToken0 ? usdcReserve : pumpedBrb,
-            usdcIsToken0 ? pumpedBrb : usdcReserve,
-        ]);
+        const [reserve0, reserve1] = pairReservesForTokens(usdc.address, brb.address, usdcReserve, pumpedBrb);
+        await pairContract.write.setReserves([reserve0, reserve1]);
 
         const swapIn = parseUnits("50", 6);
         const [twapQuote, usedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
@@ -478,13 +487,12 @@ describe("BRBJackpotFunder", function () {
         const usdc = await viem.deployContract("MockUSDC");
         const usdcReserve = 1_000_000_000_000_000n;
         const brbReserve = usdcReserve * 1_000_000_000_000n;
-        const usdcIsToken0 = usdc.address.toLowerCase() < brb.address.toLowerCase();
         const pair = await seedCanonicalPairAtTwapAddress(
             factory.address,
             usdc.address,
             brb.address,
-            usdcIsToken0 ? usdcReserve : brbReserve,
-            usdcIsToken0 ? brbReserve : usdcReserve,
+            usdcReserve,
+            brbReserve,
         );
 
         const funder = await viem.deployContract("BRBJackpotFunderHarness", [

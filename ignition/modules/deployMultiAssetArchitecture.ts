@@ -85,11 +85,11 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
         id: "UpkeepScheduler",
         after: [sideBet],
     });
-    const upkeepManager = m.contract("UpkeepManager", [mockLink, admin, admin, scheduler, admin, admin]);
-    m.call(scheduler, "setForwarderAuthority", [upkeepManager]);
+    const creAuthority = m.contract("CreExecutionAuthority", [admin], { after: [scheduler] });
+    m.call(scheduler, "setForwarderAuthority", [creAuthority]);
     m.call(sideBet, "grantRole", [SETTLEMENT_ROLE, scheduler], { after: [scheduler] });
 
-    const vaultImpl = m.contract("BankVault4626", [], { after: [upkeepManager] });
+    const vaultImpl = m.contract("BankVault4626", [], { after: [creAuthority] });
     const vaultBeacon = m.contract("UpgradeableBeacon", [vaultImpl, admin], { after: [vaultImpl] });
     m.call(registry, "setVaultBeacon", [vaultBeacon]);
 
@@ -119,7 +119,7 @@ const DeployMultiAssetArchitectureModule = buildModule("DeployMultiAssetArchitec
         engine,
         sideBet,
         scheduler,
-        upkeepManager,
+        creAuthority,
         vaultImpl,
         vaultBeacon,
     };

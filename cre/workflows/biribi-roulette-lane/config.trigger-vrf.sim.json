@@ -1,0 +1,11 @@
+{
+  "chainSelectorName": "ethereum-testnet-sepolia-arbitrum-1",
+  "receiverAddress": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+  "targetAddress": "0xad1f181ad88aee13a6643104941ecea2b963c2d7",
+  "migrationType": "HTTP",
+  "checkData": "0x",
+  "writeGasLimit": "2500000",
+  "maxDrainIterations": 1,
+  "authorizedKeys": [],
+  "allowUnauthenticatedSim": true
+}

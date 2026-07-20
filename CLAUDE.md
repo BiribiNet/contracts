@@ -49,7 +49,7 @@ Biribi uses a multi-market architecture where each market has:
 Core mechanics:
 - typed roulette bets (`betType`, `number`) with legacy multipliers
 - Chainlink VRF for randomness
-- Chainlink Automation via scheduler/manager
+- Chainlink CRE workflows via `UpkeepScheduler` + `AutomationReceiver`
 - global rounds that can include multiple markets
 - global jackpot pool funded by a bet fee share
 
@@ -60,8 +60,9 @@ Core mechanics:
 | `RouletteEngine.sol` | Core game logic: rounds, locking, VRF, payout batching, jackpot resolution |
 | `BankVault4626.sol` | Per-market vault for locked bets, payouts, ERC-4626 liquidity |
 | `MarketRegistry.sol` | Market registration/config |
-| `UpkeepScheduler.sol` | Finds/executes engine jobs |
-| `UpkeepManager.sol` | Upkeep lane registration/ops |
+| `UpkeepScheduler.sol` | Finds/executes engine jobs (`checkUpkeep` / `performUpkeep`) |
+| `AutomationReceiver.sol` | CRE bridge: forwards signed reports to `performUpkeep` |
+| `CreExecutionAuthority.sol` | Approves CRE receiver as upkeep executor |
 | `MockUSDC.sol` | Test/development ERC-20 market asset |
 
 Libraries:

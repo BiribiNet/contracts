@@ -6,9 +6,14 @@ import { join } from "node:path";
 
 import { vars } from "hardhat/config";
 import { viem } from "hardhat";
-import { maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
+import {
+    CRE_KEYSTONE_FORWARDER_ARBITRUM_ONE,
+    deployCreAutomation,
+} from "./utils/deployCreAutomation";
+import { resolveCreLaneCounts, writeCreWorkflowConfigs } from "./utils/writeCreWorkflowConfigs";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
 import {
     envAddressOrDefault,
@@ -38,7 +43,8 @@ import {
  * - `UNISWAP_V2_ROUTER` — production Uniswap V2 compatible router (required unless `DEPLOY_LOCAL_UNISWAP=true`)
  * - `USDC_TOKEN`, `DAI_TOKEN`, optional `BRB_TOKEN` (omit to deploy new BRBToken to `PROTOCOL_ADMIN`)
  * - `PROTOCOL_ADMIN` — multisig receiving AccessControl roles (defaults to deployer)
- * - Funded VRF subscription (`VRF_SUBSCRIPTION_ID`) + LINK for Automation registration
+ * - Funded VRF subscription (`VRF_SUBSCRIPTION_ID`)
+ * - After deploy: register CRE workflows per lane (see docs/CRE_MIGRATION.md)
  * - Verify Chainlink addresses on https://docs.chain.link before mainnet deploy
  *
  * Defaults (override via env): see Chainlink VRF v2.5 + Automation docs for Arbitrum One.
@@ -56,9 +62,8 @@ const DEFAULT_VRF_KEY_HASH_30_GWEI =
 const DEFAULT_VRF_KEY_HASH_150_GWEI =
     "0xe9f223d7d83ec85c4f78042a4845af3a1c8df7757b4997b815ce4b8d07aca68c" as const;
 
-/** Chainlink Automation v2.1 on Arbitrum One — confirm on docs before production. */
-const DEFAULT_KEEPER_REGISTRY = "0x87BD672Df456A85DE301FB87d477c8Bd39f76323" as const;
-const DEFAULT_KEEPER_REGISTRAR = "0x98FBC1Aede4d27f8dE433C6c72BEC289ff9B2b15" as const;
+/** CRE KeystoneForwarder on Arbitrum One — override with CRE_KEYSTONE_FORWARDER; verify in Chainlink Forwarder Directory. */
+const DEFAULT_CRE_KEYSTONE_FORWARDER = CRE_KEYSTONE_FORWARDER_ARBITRUM_ONE;
 
 const DEFAULT_USDC = "0xaf88d065e77c8cC2239327C2EDb1aB17869eD1BE" as const;
 const DEFAULT_DAI = "0xDA10009cBd5D07dd0Cecc66161FC93D7c9000da1" as const;
@@ -109,8 +114,7 @@ async function main() {
 
     const vrfCoordinator = envAddressOrDefault("VRF_COORDINATOR", DEFAULT_VRF_COORDINATOR);
     const linkToken = envAddressOrDefault("LINK_TOKEN", DEFAULT_LINK);
-    const keeperRegistrar = envAddressOrDefault("KEEPER_REGISTRAR", DEFAULT_KEEPER_REGISTRAR);
-    const keeperRegistry = envAddressOrDefault("KEEPER_REGISTRY", DEFAULT_KEEPER_REGISTRY);
+    const creKeystoneForwarder = envAddressOrDefault("CRE_KEYSTONE_FORWARDER", DEFAULT_CRE_KEYSTONE_FORWARDER);
     const usdc = envAddressOrDefault("USDC_TOKEN", DEFAULT_USDC);
     const dai = envAddressOrDefault("DAI_TOKEN", DEFAULT_DAI);
 
@@ -129,7 +133,11 @@ async function main() {
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_500_000n));
     const confirmations = Number(envBigIntOr("VRF_CONFIRMATIONS", 3n));
     const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 300n));
-    const payoutLaneCount = Number(envBigIntOr("PAYOUT_LANE_COUNT", 1n));
+    const { payoutLaneCount, creWorkflowLaneCount } = resolveCreLaneCounts({
+        payoutLaneCount: process.env.PAYOUT_LANE_COUNT,
+        upkeepLaneCount: process.env.UPKEEP_LANE_COUNT,
+    });
+    const creLaneMaxDrainIterations = Number(envBigIntOr("CRE_LANE_MAX_DRAIN_ITERATIONS", 5n));
 
     const brbAddressEnv = optionalAddressEnv("BRB_TOKEN", process.env.BRB_TOKEN);
     let brb: `0x${string}`;
@@ -186,30 +194,34 @@ async function main() {
 
     await vrfAddConsumerIfNeeded(deployer, publicClient, vrfCoordinator, vrfSubscriptionId, engine.address);
 
-    if (payoutLaneCount !== 1) {
-        await waitWrite(engine.write.setPayoutLaneCount([payoutLaneCount], { account: deployer.account }));
-    }
+    await waitWrite(engine.write.setPayoutLaneCount([payoutLaneCount], { account: deployer.account }));
+    console.log(`Payout parallel lanes: ${payoutLaneCount} on-chain, ${creWorkflowLaneCount} CRE workflow(s)`);
 
-    const upkeepManager = await viem.deployContract("UpkeepManager", [
-        linkToken,
-        keeperRegistrar,
-        keeperRegistry,
-        scheduler.address,
-        protocolAdmin,
-        deployer.account.address,
-    ]);
+    const creAutomation = await deployCreAutomation({
+        scheduler: scheduler.address,
+        admin: protocolAdmin,
+        keystoneForwarder: creKeystoneForwarder,
+        wallet: deployer,
+        publicClient,
+        waitWrite,
+    });
 
-    const schedulerForwarderAbi = parseAbi(["function setForwarderAuthority(address forwarderAuthority) external"]);
-    await waitWrite(
-        deployer.writeContract({
-            address: scheduler.address,
-            abi: schedulerForwarderAbi,
-            functionName: "setForwarderAuthority",
-            args: [upkeepManager.address],
-            account: deployer.account,
-            chain: publicClient.chain,
-        }),
-    );
+    writeCreWorkflowConfigs({
+        network: "arbitrum-one",
+        scheduler: scheduler.address,
+        receiver: creAutomation.automationReceiver,
+        engine: engine.address,
+        laneCount: creWorkflowLaneCount,
+        writeGasLimit: process.env.CRE_WRITE_GAS_LIMIT?.trim() ?? "2500000",
+        laneMaxDrainIterations: creLaneMaxDrainIterations,
+        httpAuthorizedKeys: (() => {
+            const key = optionalAddressEnv(
+                "CRE_HTTP_AUTHORIZED_ADDRESS",
+                process.env.CRE_HTTP_AUTHORIZED_ADDRESS,
+            );
+            return key ? [key] : undefined;
+        })(),
+    });
 
     const minStable = parseUnits(process.env.MIN_BET_STABLE ?? "1", 6);
     const minDai = parseUnits(process.env.MIN_BET_DAI ?? "1", 18);
@@ -232,31 +244,6 @@ async function main() {
     const marketDai = await registry.read.getMarket([2]);
     const marketBrb = await registry.read.getMarket([3]);
 
-    const erc20ApproveAbi = parseAbi(["function approve(address spender, uint256 amount) external returns (bool)"]);
-    await waitWrite(
-        deployer.writeContract({
-            address: linkToken,
-            abi: erc20ApproveAbi,
-            functionName: "approve",
-            args: [upkeepManager.address, maxUint256],
-            account: deployer.account,
-            chain: publicClient.chain,
-        }),
-    );
-
-    const upkeepGasLimit = Number(envBigIntOr("UPKEEP_GAS_LIMIT", 2_500_000n));
-    const upkeepFundAmount = envBigIntOr("UPKEEP_LINK_FUND_JUELS", parseUnits("25", 18));
-    const upkeepLaneCount = Number(envBigIntOr("UPKEEP_LANE_COUNT", BigInt(payoutLaneCount)));
-
-    for (let lane = 0; lane < upkeepLaneCount; lane++) {
-        await waitWrite(
-            upkeepManager.write.registerLaneUpkeep(
-                [BigInt(lane), upkeepGasLimit, upkeepFundAmount, protocolAdmin],
-                { account: deployer.account },
-            ),
-        );
-    }
-
     const deployBlock = Number(await publicClient.getBlockNumber());
     const deploymentManifest = {
         network: "arbitrum-one",
@@ -272,7 +259,10 @@ async function main() {
             engineImplementation: engineImplementation.address,
             sideBet: sideBet.address,
             scheduler: scheduler.address,
-            upkeepManager: upkeepManager.address,
+            automationReceiver: creAutomation.automationReceiver,
+            creExecutionAuthority: creAutomation.creExecutionAuthority,
+            creKeystoneForwarder: creAutomation.keystoneForwarder,
+            creWorkflowLaneCount,
             jackpotTreasury: jackpotTreasury.address,
             jackpotFunder: funder.address,
             vaultImpl: vaultImpl.address,
@@ -400,6 +390,13 @@ async function main() {
             ],
             verifyDelayMs,
         );
+        await verifyContractWithDelay(
+            creAutomation.automationReceiver,
+            [creKeystoneForwarder],
+            verifyDelayMs,
+            "contracts/chainlink/cre/AutomationReceiver.sol:AutomationReceiver",
+        );
+        await verifyContractWithDelay(creAutomation.creExecutionAuthority, [protocolAdmin], verifyDelayMs);
     }
 
     console.log(JSON.stringify(deploymentManifest, null, 2));

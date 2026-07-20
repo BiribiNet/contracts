@@ -61,7 +61,7 @@ These were **not** unreachable; they were **under-covered**. Keep the guards; co
 
 ### `RouletteEngine.executeJob` — lock / VRF / unknown kind (removed inner guards)
 
-**Previously:** `_lockGlobalRound` duplicated `_preLockUpkeepCandidate` (`InvalidRound`, `NoBets`); `_triggerVrf` duplicated `findNextJob` (`VrfAlreadyPending`, queue/phase checks); unknown `job.kind` reverted `InvalidJob()`.
+**Previously:** the separate `_lockGlobalRound` step duplicated its upkeep candidate checks (`InvalidRound`, `NoBets`); `_triggerVrf` duplicated `findNextJob` (`VrfAlreadyPending`, queue/phase checks); unknown `job.kind` reverted `InvalidJob()`. Lock + VRF request are now a single `TriggerVrf` job.
 
 **Decision:** **Removed duplicate guards.** `findNextJob` + `checkUpkeep` are the single gate; `executeJob` is `onlyScheduler`. Lock/VRF use early return for idempotent replay (wrong phase, pending VRF, empty queue). Unknown kinds return `false`. `InvalidJob` remains only for admin setter `setPayoutParallelLaneCount(0)`.
 

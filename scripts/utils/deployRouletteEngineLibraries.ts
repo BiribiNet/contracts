@@ -11,7 +11,6 @@ const ROULETTE_LIABILITY_MATH_LIB = "contracts/libraries/RouletteLiabilityMathLi
 const ROULETTE_PAYOUT_SWEEP_LIB = "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib" as const;
 const ROULETTE_JACKPOT_COLLECT_LIB = "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib" as const;
 const ROULETTE_EXPOSURE_LIB = "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib" as const;
-const ROULETTE_UPKEEP_SCAN_LIB = "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib" as const;
 
 export type RouletteEngineLibraryAddresses = {
     rouletteLib: Address;
@@ -23,12 +22,11 @@ export type RouletteEngineLibraryAddresses = {
     roulettePayoutSweepLib: Address;
     rouletteJackpotCollectLib: Address;
     rouletteExposureLib: Address;
-    rouletteUpkeepScanLib: Address;
 };
 
 export type RouletteEngineLibraryLinks = Record<string, Address>;
 
-/** Deploys the 10 linked libraries used by `RouletteEngine` (CREATE order matches deploy script). */
+/** Deploys the linked libraries used by `RouletteEngine` (CREATE order matches deploy script). */
 export async function deployRouletteEngineLibraries(account: Account): Promise<{
     addresses: RouletteEngineLibraryAddresses;
     engineLinks: RouletteEngineLibraryLinks;
@@ -38,7 +36,6 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
     const jackpotBatchLib = await viem.deployContract("JackpotBatchLib", [], { account });
     const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib", [], { account });
     const rouletteExposureLib = await viem.deployContract("RouletteExposureLib", [], { account });
-    const rouletteUpkeepScanLib = await viem.deployContract("RouletteUpkeepScanLib", [], { account });
     const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib", [], { account });
 
     const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
@@ -69,7 +66,6 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
         roulettePayoutSweepLib: roulettePayoutSweepLib.address,
         rouletteJackpotCollectLib: rouletteJackpotCollectLib.address,
         rouletteExposureLib: rouletteExposureLib.address,
-        rouletteUpkeepScanLib: rouletteUpkeepScanLib.address,
     };
 
     const engineLinks: RouletteEngineLibraryLinks = {
@@ -79,7 +75,6 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
         [ROULETTE_PAYOUT_SWEEP_LIB]: roulettePayoutSweepLib.address,
         [ROULETTE_JACKPOT_COLLECT_LIB]: rouletteJackpotCollectLib.address,
         [ROULETTE_EXPOSURE_LIB]: rouletteExposureLib.address,
-        [ROULETTE_UPKEEP_SCAN_LIB]: rouletteUpkeepScanLib.address,
     };
 
     return { addresses, engineLinks };

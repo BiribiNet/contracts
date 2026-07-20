@@ -86,33 +86,12 @@ describe("Branch coverage — registry & upkeep ops", function () {
         await expect(registry.write.setVaultBeacon([token.address], { account: stranger.account })).to.be.rejected;
     });
 
-    it("UpkeepManager: lane-0 checkData and non-zero initialRegistrant", async function () {
-        const [admin, registrant] = await viem.getWalletClients();
-        const link = await viem.deployContract("MockLinkToken");
-        const registrar = await viem.deployContract("MockKeeperRegistry");
+    it("CreExecutionAuthority: approves executors for scheduler gate", async function () {
+        const [admin, executor] = await viem.getWalletClients();
+        const authority = await viem.deployContract("CreExecutionAuthority", [admin.account.address]);
 
-        await viem.deployContract("UpkeepManager", [
-            link.address,
-            registrar.address,
-            registrar.address,
-            admin.account.address,
-            admin.account.address,
-            registrant.account.address,
-        ]);
-
-        const manager = await viem.deployContract("UpkeepManager", [
-            link.address,
-            registrar.address,
-            registrar.address,
-            admin.account.address,
-            admin.account.address,
-            zeroAddress,
-        ]);
-
-        await link.write.approve([manager.address, parseUnits("10", 18)]);
-        await manager.write.registerLaneUpkeep([0n, 400_000, parseUnits("1", 18), admin.account.address]);
-        await manager.write.registerLaneUpkeep([4n, 400_000, parseUnits("1", 18), admin.account.address]);
-        expect(await manager.read.isApprovedAutomationForwarder([admin.account.address])).to.equal(true);
+        await authority.write.setExecutorApproved([executor.account.address, true], { account: admin.account });
+        expect(await authority.read.isApprovedAutomationForwarder([executor.account.address])).to.equal(true);
     });
 });
 
@@ -335,9 +314,9 @@ describe("Branch coverage — UpkeepScheduler", function () {
 
     it("blocks performUpkeep when forwarder authority rejects caller", async function () {
         const stack = await deployMinimalSchedulerStack();
-        const { scheduler, admin, manager } = stack;
+        const { scheduler, admin, authority } = stack;
 
-        await scheduler.write.setForwarderAuthority([manager.address], { account: admin.account });
+        await scheduler.write.setForwarderAuthority([authority.address], { account: admin.account });
         const [alice] = await viem.getWalletClients();
         const [, data] = await scheduler.read.checkUpkeep(["0x"]);
         if (data !== "0x") {
@@ -496,24 +475,8 @@ describe("Branch coverage — SideBet config admin", function () {
 });
 
 describe("Branch coverage — §4 matrix (doc checklist)", function () {
-    it("UpkeepManager: each constructor zero-address param reverts", async function () {
-        const [admin] = await viem.getWalletClients();
-        const link = await viem.deployContract("MockLinkToken");
-        const registrar = await viem.deployContract("MockKeeperRegistry");
-        const zero = zeroAddress;
-        const valid = [link.address, registrar.address, registrar.address, admin.account.address, admin.account.address, zeroAddress];
-
-        const cases: { label: string; args: [Address, Address, Address, Address, Address, Address] }[] = [
-            { label: "linkToken", args: [zero, valid[1], valid[2], valid[3], valid[4], valid[5]] },
-            { label: "keeperRegistrar", args: [valid[0], zero, valid[2], valid[3], valid[4], valid[5]] },
-            { label: "keeperRegistry", args: [valid[0], valid[1], zero, valid[3], valid[4], valid[5]] },
-            { label: "upkeepTarget", args: [valid[0], valid[1], valid[2], zero, valid[4], valid[5]] },
-            { label: "admin", args: [valid[0], valid[1], valid[2], valid[3], zero, valid[5]] },
-        ];
-
-        for (const { args } of cases) {
-            await expect(viem.deployContract("UpkeepManager", args)).to.be.rejected;
-        }
+    it("CreExecutionAuthority: zero admin reverts on deploy", async function () {
+        await expect(viem.deployContract("CreExecutionAuthority", [zeroAddress])).to.be.rejected;
     });
 
     it("UpkeepScheduler: SideBet checkUpkeep when roulette findNextJob is empty", async function () {
@@ -564,12 +527,11 @@ describe("Branch coverage — §4 matrix (doc checklist)", function () {
         expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(false);
 
         await time.increase(550);
-        let [, data] = await scheduler.read.checkUpkeep(["0x"]);
+        // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
+        const [, data] = await scheduler.read.checkUpkeep(["0x"]);
         await scheduler.write.performUpkeep([data]);
         expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(true);
 
-        [, data] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([data]);
         await vrf.write.fulfill([engine.address, 1n, 7n]);
         expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(true);
 
@@ -810,16 +772,7 @@ async function deployMinimalSchedulerStack() {
         },
     );
 
-    const link = await viem.deployContract("MockLinkToken");
-    const registrar = await viem.deployContract("MockKeeperRegistry");
-    const manager = await viem.deployContract("UpkeepManager", [
-        link.address,
-        registrar.address,
-        registrar.address,
-        scheduler.address,
-        admin.account.address,
-        admin.account.address,
-    ]);
+    const authority = await viem.deployContract("CreExecutionAuthority", [admin.account.address]);
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
@@ -830,5 +783,5 @@ async function deployMinimalSchedulerStack() {
     );
     const bank = await viem.getContractAt("BankVault4626", (await registry.read.getMarket([1])).bank);
 
-    return { admin, alice, bob, scheduler, manager, sideBet, engine, registry, usdc, vrf, bank };
+    return { admin, alice, bob, scheduler, authority, sideBet, engine, registry, usdc, vrf, bank };
 }

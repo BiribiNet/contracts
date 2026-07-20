@@ -1,7 +1,7 @@
 import { getContractAddress, type Address } from "viem";
 
 /** Library CREATE count inside `deployRouletteEngine` before the engine implementation. */
-const ROULETTE_ENGINE_LIBRARY_COUNT = 10n;
+const ROULETTE_ENGINE_LIBRARY_COUNT = 9n;
 
 export type PredictRouletteStackOptions = {
     deployBrbReferral?: boolean;
@@ -12,7 +12,7 @@ export type PredictRouletteStackOptions = {
  *
  * Deployment order before `deployRouletteEngine` (typical test helper):
  * `BRBToken` → `MockVrfCoordinator` → `MockUniswapV2Router` → `JackpotTreasury` → `BRBJackpotFunder` → `MarketRegistry`,
- * then 10 linked libraries and the CREATE sequence inside `deployRouletteEngine`.
+ * then 9 linked libraries and the CREATE sequence inside `deployRouletteEngine`.
  */
 export function predictRouletteStackAddresses(
     from: Address,

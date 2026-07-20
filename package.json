@@ -2,6 +2,7 @@
   "name": "biribi",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "compile": "hardhat compile && wagmi generate",
     "sync:uniswap:pair-hash": "hardhat run scripts/syncUniswapV2PairInitCodeHash.ts",
@@ -12,6 +13,8 @@
     "deploy:multiasset": "hardhat run scripts/deployMultiAsset.ts",
     "deploy:protocol:sepolia": "hardhat run scripts/deployProtocolSepolia.ts --network sepolia",
     "deploy:protocol:arbitrum-sepolia": "hardhat run scripts/deployProtocolArbitrumSepolia.ts --network arbitrumsepolia",
+    "seed:banks:arbitrum-sepolia": "hardhat run scripts/seedBankVaultLiquidity.ts --network arbitrumsepolia",
+    "verify:deployment:arbitrum-sepolia": "hardhat run scripts/verifySepoliaDeployment.ts --network arbitrumsepolia",
     "upgrade:engine:arbitrum-sepolia": "hardhat run scripts/upgradeRouletteEngineArbitrumSepolia.ts --network arbitrumsepolia",
     "deploy:protocol:arbitrum": "hardhat run scripts/deployProtocolArbitrum.ts --network arbitrum",
     "verify:protocol:arbitrum-sepolia": "hardhat run scripts/verifyArbitrumSepoliaProtocol.ts --network arbitrumsepolia",
@@ -21,7 +24,9 @@
     "test": "hardhat test",
     "update:subgraph:abis": "node scripts/update-subgraph-abis.mjs",
     "sync:subgraph:arbitrum-sepolia": "cd ../subgraph && DEPLOY_JSON=./deployments/arbitrum-sepolia.json yarn sync:pipeline",
-    "distribute:brb": "hardhat run scripts/distributeBRB.ts --network arbitrumsepolia"
+    "distribute:brb": "hardhat run scripts/distributeBRB.ts --network arbitrumsepolia",
+    "generate:cre:configs": "hardhat run scripts/generateCreLaneConfigs.ts",
+    "generate:cre:http:configs": "hardhat run scripts/generateCreHttpConfigs.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

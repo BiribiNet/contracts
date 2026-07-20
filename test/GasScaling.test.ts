@@ -89,17 +89,17 @@ describe("Gas scaling guards", function () {
 
         await time.increase(550);
 
-        // PreLock should still be bounded.
-        const [preLockNeeded, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        expect(preLockNeeded).to.equal(true);
-        const preLockGas = await publicClient.estimateContractGas({
+        // TriggerVrf (lock + VRF request in one tx) should still be bounded.
+        const [triggerNeeded, triggerData] = await scheduler.read.checkUpkeep(["0x"]);
+        expect(triggerNeeded).to.equal(true);
+        const triggerGas = await publicClient.estimateContractGas({
             address: scheduler.address,
             abi: scheduler.abi,
             functionName: "performUpkeep",
-            args: [preLockData],
+            args: [triggerData],
             account: admin.account,
         });
-        expect(preLockGas).to.be.lt(2_500_000n);
+        expect(triggerGas).to.be.lt(2_500_000n);
     });
 });
 

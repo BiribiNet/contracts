@@ -1,0 +1,33 @@
+# CRE project settings for Biribi roulette upkeep (LOG payout lanes + HTTP pre-VRF).
+# RPC targets must match workflow.yaml target names (CRE does not inherit from test-settings).
+
+_shared_arbitrum_sepolia_rpcs: &arbitrum_sepolia_rpcs
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia-arbitrum-1
+      url: ${ARBITRUM_SEPOLIA_RPC_URL}
+
+test-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+staging-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+# HTTP pre-VRF + lane LOG targets (mirror workflow.yaml)
+trigger-vrf-test-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+trigger-vrf-production-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+lane0-test-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+lane0-production-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+production-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia-arbitrum-1
+      url: ${ARBITRUM_SEPOLIA_RPC_URL}
+    - chain-name: ethereum-mainnet-arbitrum-1
+      url: ${ARBITRUM_RPC_URL}

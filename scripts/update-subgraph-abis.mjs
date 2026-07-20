@@ -24,6 +24,13 @@ const destDir = process.env.SUBGRAPH_ABIS_DIR
 
 const artifactsRoot = path.join(repoRoot, "artifacts", "contracts");
 
+function artifactJsonPath(solName) {
+  if (solName === "AutomationReceiver") {
+    return path.join(artifactsRoot, "chainlink", "cre", `${solName}.sol`, `${solName}.json`);
+  }
+  return path.join(artifactsRoot, `${solName}.sol`, `${solName}.json`);
+}
+
 /** Subgraph data-source file names → Solidity artifact base name */
 const ABI_COPY_MAP = [
   ["AssetToken.json", "MockUSDC"],
@@ -33,10 +40,11 @@ const ABI_COPY_MAP = [
   ["BRBJackpotFunder.json", "BRBJackpotFunder"],
   ["SideBet.json", "SideBet"],
   ["UpkeepScheduler.json", "UpkeepScheduler"],
-  ["UpkeepManager.json", "UpkeepManager"],
+  ["CreExecutionAuthority.json", "CreExecutionAuthority"],
+  ["AutomationReceiver.json", "AutomationReceiver"],
 ];
 
-/** Contracts whose events are merged for Goldsky (deduped). UpkeepManager included for UpkeepRegistered etc. */
+/** Contracts whose events are merged for Goldsky (deduped). */
 /** Registry omitted: market catalog is RouletteEngine.MarketRegistered only (no MarketCreated). */
 const MERGE_EVENT_SOURCES = [
   "MockUSDC",
@@ -46,7 +54,8 @@ const MERGE_EVENT_SOURCES = [
   "BRBJackpotFunder",
   "SideBet",
   "UpkeepScheduler",
-  "UpkeepManager",
+  "CreExecutionAuthority",
+  "AutomationReceiver",
 ];
 
 /** Legacy registry event; market catalog uses RouletteEngine.MarketRegistered only. */
@@ -90,7 +99,7 @@ const seenEventKeys = new Set();
 const mergedEvents = [];
 
 for (const solName of MERGE_EVENT_SOURCES) {
-  const artifactPath = path.join(artifactsRoot, `${solName}.sol`, `${solName}.json`);
+  const artifactPath = artifactJsonPath(solName);
   if (!fs.existsSync(artifactPath)) {
     console.warn(`[update-subgraph-abis] skip merge ${solName}: missing ${artifactPath}`);
     continue;
@@ -116,7 +125,7 @@ for (const solName of MERGE_EVENT_SOURCES) {
 }
 
 for (const [outFile, solName] of ABI_COPY_MAP) {
-  const artifactPath = path.join(artifactsRoot, `${solName}.sol`, `${solName}.json`);
+  const artifactPath = artifactJsonPath(solName);
   if (!fs.existsSync(artifactPath)) {
     console.warn(`[update-subgraph-abis] skip copy ${outFile}: missing ${artifactPath}`);
     continue;

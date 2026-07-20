@@ -428,7 +428,6 @@ async function deployEngineLibs() {
     const jackpotBatchLib = await viem.deployContract("JackpotBatchLib");
     const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib");
     const rouletteExposureLib = await viem.deployContract("RouletteExposureLib");
-    const rouletteUpkeepScanLib = await viem.deployContract("RouletteUpkeepScanLib");
     const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib");
     const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
         libraries: {
@@ -449,7 +448,6 @@ async function deployEngineLibs() {
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": roulettePayoutSweepLib.address,
         "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": rouletteJackpotCollectLib.address,
         "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": rouletteExposureLib.address,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": rouletteUpkeepScanLib.address,
     };
 }
 

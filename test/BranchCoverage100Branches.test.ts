@@ -103,8 +103,8 @@ describe("Branch coverage — 100% branch targets", function () {
         );
 
         await time.increase(550);
-        const [, preLock] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLock]);
+        const [, triggerVrfData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerVrfData]);
         expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(true);
 
         const shares = await bank.read.convertToShares([parseUnits("100", 6)]);

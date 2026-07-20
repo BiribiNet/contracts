@@ -40,20 +40,9 @@ describe("Branch coverage — remaining 82 gaps", function () {
             await expect(scheduler.write.setScanLimit([0], { account: deployer.account })).to.be.rejected;
             await expect(scheduler.write.setMaxPayoutsPerCall([0], { account: deployer.account })).to.be.rejected;
 
-            const link = await viem.deployContract("MockLinkToken");
-            const registrar = await viem.deployContract("MockKeeperRegistry");
-            const manager = await viem.deployContract("UpkeepManager", [
-                link.address,
-                registrar.address,
-                registrar.address,
-                admin.account.address,
-                admin.account.address,
-                admin.account.address,
-            ]);
+            const authority = await viem.deployContract("CreExecutionAuthority", [admin.account.address]);
             await expect(
-                manager.write.registerLaneUpkeep([0n, 400_000, parseUnits("1", 18), admin.account.address], {
-                    account: stranger.account,
-                }),
+                authority.write.setExecutorApproved([admin.account.address, true], { account: stranger.account }),
             ).to.be.rejected;
 
             const lp = await viem.deployContract("MockUSDC");
@@ -184,26 +173,17 @@ describe("Branch coverage — remaining 82 gaps", function () {
             await testClient.impersonateAccount({ address: scheduler.address });
             await testClient.setBalance({ address: scheduler.address, value: parseUnits("10", 18) });
 
-            const preLock = {
-                kind: 1,
-                marketId: 0,
-                roundId: 1n,
-                nextCursor: 0,
-                payoutShardIndex: 0,
-                payoutShardWidth: 10,
-            };
+            // TriggerVrf locks the round and requests VRF in one job.
+            const trigger = { kind: 1, marketId: 0, roundId: 1n, nextCursor: 0, payoutShardIndex: 0, payoutShardWidth: 10 };
             await time.increase(550);
-            await engine.write.executeJob([preLock, [], [], []], { account: scheduler.address });
-            await engine.write.executeJob([preLock, [], [], []], { account: scheduler.address });
-
-            const trigger = { kind: 2, marketId: 0, roundId: 1n, nextCursor: 0, payoutShardIndex: 0, payoutShardWidth: 10 };
             await engine.write.executeJob([trigger, [], [], []], { account: scheduler.address });
-            await engine.write.executeJob([trigger, [], [], []], { account: scheduler.address });
+            // Duplicate VRF trigger reverts (raced-report guard).
+            await expect(engine.write.executeJob([trigger, [], [], []], { account: scheduler.address })).to.be.rejected;
 
             await testClient.stopImpersonatingAccount({ address: scheduler.address });
         });
 
-        it("findNextJob skips preLock until trigger market and lockAt", async function () {
+        it("findNextJob skips TriggerVrf until trigger market and lockAt", async function () {
             const [admin] = await viem.getWalletClients();
             const stack = await deployProtocolStack();
             const { engine, scheduler, registry, vrf, brb, router } = stack;
@@ -225,7 +205,6 @@ describe("Branch coverage — remaining 82 gaps", function () {
             await time.increase(550);
             expect((await engine.read.findNextJob([0, 25, 0, 0]))[0]).to.equal(true);
 
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfill([engine.address, 1n, 7n]);
         });
@@ -249,11 +228,10 @@ describe("Branch coverage — remaining 82 gaps", function () {
 
             await time.increase(550);
             await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
 
             const payoutJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: 1n,
                 nextCursor: 0,
@@ -266,9 +244,16 @@ describe("Branch coverage — remaining 82 gaps", function () {
             expect(await engine.read.payoutLaneHasWork([payoutJob])).to.equal(true);
 
             while (await engine.read.payoutLaneHasWork([payoutJob])) {
-                const preview = await engine.read.previewPayoutBundle([payoutJob, 1]);
+                // Apply validates nextCursor against the shard cursor, so refresh it each iteration.
+                const fresh = {
+                    ...payoutJob,
+                    nextCursor: Number(
+                        await engine.read.payoutShardCursor([payoutJob.roundId, payoutJob.marketId, payoutJob.payoutShardIndex]),
+                    ),
+                };
+                const preview = await engine.read.previewPayoutBundle([fresh, 1]);
                 await scheduler.write.performUpkeep([
-                    encodePerformData(payoutJob, preview[0], preview[1], preview[2]),
+                    encodePerformData(fresh, preview[0], preview[1], preview[2]),
                 ]);
             }
         });
@@ -347,7 +332,6 @@ describe("Branch coverage — remaining 82 gaps", function () {
             await expect(
                 bank.write.mint([USDC("10"), alice.account.address], { account: alice.account }),
             ).to.be.rejected;
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfill([engine.address, 1n, 7n]);
         });
     });
@@ -713,7 +697,6 @@ async function deployEngineLibs() {
     const jackpotBatchLib = await viem.deployContract("JackpotBatchLib");
     const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib");
     const rouletteExposureLib = await viem.deployContract("RouletteExposureLib");
-    const rouletteUpkeepScanLib = await viem.deployContract("RouletteUpkeepScanLib");
     const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib");
     const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
         libraries: {
@@ -734,6 +717,5 @@ async function deployEngineLibs() {
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": roulettePayoutSweepLib.address,
         "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": rouletteJackpotCollectLib.address,
         "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": rouletteExposureLib.address,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": rouletteUpkeepScanLib.address,
     };
 }

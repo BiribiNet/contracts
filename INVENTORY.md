@@ -109,7 +109,7 @@ mapping (`brbPerAssetUnitRatio`) for off-chain / engine jackpot parity.
 Core game engine. `Ownable + VRFConsumerBaseV2`. **NOT upgradeable.** Manages
 global rounds across all markets, per-market `BankVault4626` bookkeeping,
 VRF requests with three gas-tier key hashes (`tx.gasprice`-based selection),
-sequential `Job` lifecycle (`OpenRound → PreLock → TriggerVrf → Payout`) driven
+sequential `Job` lifecycle (`OpenRound → TriggerVrf (lock + VRF) → Payout`) driven
 by `UPKEEP_SCHEDULER`. Implements jackpot-eligible STRAIGHT-only proportional
 payouts based on stake share via `JackpotBatchLib`. Settles per-market fees
 (`INFRA_BPS = 250` to `INFRA_RECIPIENT`, `swapAssetTotalBps` to

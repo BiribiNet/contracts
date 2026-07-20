@@ -255,7 +255,6 @@ describe("Branch coverage — remainder matrix", function () {
             expect(await bank.read.maxWithdraw([admin.account.address])).to.be.lte(USDC("1000"));
             expect(await bank.read.maxRedeem([admin.account.address])).to.be.gt(0n);
 
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfill([engine.address, 1n, 7n]);
             while (true) {
                 const [needed, data] = await scheduler.read.checkUpkeep([laneCheckData(0n)]);

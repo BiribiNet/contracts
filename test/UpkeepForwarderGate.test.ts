@@ -17,24 +17,18 @@ async function deploySchedulerStack() {
     await brb.write.transfer([router.address, parseUnits("2000000", 18)], { account: admin.account });
     const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
 
-    const link = await viem.deployContract("MockLinkToken");
-    const registrar = await viem.deployContract("MockKeeperRegistry");
-    const manager = await viem.deployContract("UpkeepManager", [
-        link.address,
-        registrar.address,
-        registrar.address,
-        scheduler.address,
-        admin.account.address,
-        admin.account.address,
-    ]);
-    await scheduler.write.setForwarderAuthority([manager.address], { account: admin.account });
+    const authority = await viem.deployContract("CreExecutionAuthority", [admin.account.address]);
+    const mockForwarder = await viem.deployContract("MockCreForwarder");
+    const receiver = await viem.deployContract("AutomationReceiver", [mockForwarder.address]);
+    await authority.write.setExecutorApproved([receiver.address, true], { account: admin.account });
+    await scheduler.write.setForwarderAuthority([authority.address], { account: admin.account });
 
     const lpAmount = parseUnits("50000", 6);
     await usdc.write.mint([admin.account.address, lpAmount]);
     await usdc.write.approve([bank.address, lpAmount], { account: admin.account });
     await bank.write.deposit([lpAmount, admin.account.address], { account: admin.account });
 
-    return { admin, alice, bob, engine, scheduler, manager, bank, usdc };
+    return { admin, alice, bob, engine, scheduler, authority, bank, usdc };
 }
 
 describe("Upkeep forwarder gate", function () {

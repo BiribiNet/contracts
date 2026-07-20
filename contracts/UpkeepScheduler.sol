@@ -25,7 +25,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     mapping(uint256 lane => uint32 cursor) public laneCursor;
     mapping(uint256 lane => uint256 cursorBetId) public sideBetCursor;
 
-    /// @dev `UpkeepManager` (or test double) — only addresses it marks approved may call `performUpkeep`.
+    /// @dev `CreExecutionAuthority` (or test double) — only approved executors (e.g. CRE `AutomationReceiver`) may call `performUpkeep`.
     address public forwarderAuthority;
 
     error ZeroAddress();
@@ -38,6 +38,22 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     event LaneCursorAdvanced(uint256 lane, uint32 previousCursor, uint32 newCursor);
     event SideBetCursorAdvanced(uint256 lane, uint256 previousCursor, uint256 newCursor);
     event ForwarderAuthorityUpdated(address authority);
+
+    /// @dev CRE log-trigger ABI (`IAutomationCompatible.checkLog`).
+    struct Log {
+        uint256 index;
+        uint256 timestamp;
+        bytes32 txHash;
+        uint256 blockNumber;
+        bytes32 blockHash;
+        address source;
+        bytes32[] topics;
+        bytes data;
+    }
+
+    bytes32 private constant VRF_RESULT_TOPIC = keccak256("VRFResult(uint64,uint8,uint8)");
+    bytes32 private constant PAYOUT_PROGRESS_TOPIC =
+        keccak256("PayoutProgress(uint64,uint32,uint256,uint256,uint256)");
 
     constructor(
         address engine,
@@ -88,7 +104,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     /// Side bet: `abi.encode(UpkeepWorkKind.SideBet, lane, rows, nextCursorBetId, vaultApplies)`.
     function checkUpkeep(
         bytes calldata checkData
-    ) external view override returns (bool upkeepNeeded, bytes memory performData) {
+    ) public view override returns (bool upkeepNeeded, bytes memory performData) {
         uint256 lane = checkData.length == 0 ? 0 : abi.decode(checkData, (uint256));
         uint32 laneCount = ENGINE.payoutParallelLaneCount();
         if (laneCount == 0) laneCount = 1;
@@ -124,6 +140,23 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
 
         performData = abi.encode(UpkeepWorkKind.SideBet, lane, rows, nextCursorBetId, vaultApplies);
         return (true, performData);
+    }
+
+    /// @notice CRE log-trigger entrypoint: accept `VRFResult` / `PayoutProgress` from `ENGINE`, then run `checkUpkeep`.
+    function checkLog(
+        Log calldata log,
+        bytes calldata checkData
+    ) external view returns (bool upkeepNeeded, bytes memory performData) {
+        if (log.source != address(ENGINE) || log.topics.length == 0) {
+            return (false, bytes(""));
+        }
+
+        bytes32 topic0 = log.topics[0];
+        if (topic0 != VRF_RESULT_TOPIC && topic0 != PAYOUT_PROGRESS_TOPIC) {
+            return (false, bytes(""));
+        }
+
+        return checkUpkeep(checkData);
     }
 
     function performUpkeep(bytes calldata performData) external override onlyApprovedAutomationForwarder {

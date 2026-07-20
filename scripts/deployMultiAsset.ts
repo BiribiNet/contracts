@@ -1,9 +1,10 @@
 import "dotenv/config";
 
 import { viem } from "hardhat";
-import { isAddress, maxUint256, parseAbi, parseUnits } from "viem";
+import { isAddress, parseUnits } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
+import { deployLocalCreAutomation } from "./utils/deployCreAutomation";
 import { zeroAddress } from "viem";
 
 /** Treat unset, blank, literal "null" / "undefined" as no address → deploy mocks. */
@@ -21,18 +22,15 @@ async function main() {
     if (!deployer.account) throw new Error("Deployer wallet has no account");
 
     const vrfCoordinator = process.env.VRF_COORDINATOR as `0x${string}` | undefined;
-    const linkToken = process.env.LINK_TOKEN as `0x${string}` | undefined;
-    const keeperRegistrar = process.env.KEEPER_REGISTRAR as `0x${string}` | undefined;
-    const keeperRegistry = process.env.KEEPER_REGISTRY as `0x${string}` | undefined;
     const assetAAddress = optionalAddressEnv("ASSET_A_TOKEN", process.env.ASSET_A_TOKEN);
     const assetBAddress = optionalAddressEnv("ASSET_B_TOKEN", process.env.ASSET_B_TOKEN);
     const infraRecipient = (process.env.INFRA_RECIPIENT as `0x${string}` | undefined) ?? deployer.account.address;
     const brbAddressEnv = process.env.BRB_TOKEN as `0x${string}` | undefined;
     const routerAddressEnv = process.env.UNISWAP_V2_ROUTER as `0x${string}` | undefined;
 
-    if (!vrfCoordinator || !linkToken || !keeperRegistrar || !keeperRegistry) {
+    if (!vrfCoordinator) {
         throw new Error(
-            "Missing env vars. Required: VRF_COORDINATOR, LINK_TOKEN, KEEPER_REGISTRAR, KEEPER_REGISTRY. For assets: set both ASSET_A_TOKEN and ASSET_B_TOKEN to real addresses, or leave both unset / empty / null to deploy MockUSDC + MockDAI. Optional: INFRA_RECIPIENT (defaults to deployer), BRB_TOKEN (deployed if unset), UNISWAP_V2_ROUTER (required when using mock assets; otherwise optional and a mock router is deployed if unset).",
+            "Missing env vars. Required: VRF_COORDINATOR. For assets: set both ASSET_A_TOKEN and ASSET_B_TOKEN to real addresses, or leave both unset / empty / null to deploy MockUSDC + MockDAI. Optional: INFRA_RECIPIENT (defaults to deployer), BRB_TOKEN (deployed if unset), UNISWAP_V2_ROUTER (required when using mock assets; otherwise optional and a mock router is deployed if unset).",
         );
     }
 
@@ -107,16 +105,18 @@ async function main() {
 
     await engine.write.setPayoutLaneCount([1], { account: deployer.account });
 
-    const upkeepManager = await viem.deployContract("UpkeepManager", [
-        linkToken,
-        keeperRegistrar,
-        keeperRegistry,
-        scheduler.address,
-        deployer.account.address,
-        deployer.account.address,
-    ]);
+    const waitWrite = async (hashPromise: Promise<`0x${string}`>) => {
+        const hash = await hashPromise;
+        await publicClient.waitForTransactionReceipt({ hash });
+    };
 
-    await scheduler.write.setForwarderAuthority([upkeepManager.address]);
+    const creAutomation = await deployLocalCreAutomation({
+        scheduler: scheduler.address,
+        admin: deployer.account.address,
+        wallet: deployer,
+        publicClient,
+        waitWrite,
+    });
 
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, deployer.account.address]);
@@ -148,25 +148,12 @@ async function main() {
         await brbContract.write.transfer([router, parseUnits("1000000", 18)]);
     }
 
-    const erc20ApproveAbi = parseAbi(["function approve(address spender, uint256 amount) external returns (bool)"]);
-    const approveHash = await deployer.writeContract({
-        address: linkToken,
-        abi: erc20ApproveAbi,
-        functionName: "approve",
-        args: [upkeepManager.address, maxUint256],
-        account: deployer.account,
-        chain: publicClient.chain,
-    });
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
-
-    await upkeepManager.write.registerLaneUpkeep([0n, 1_800_000, parseUnits("1", 18), deployer.account.address]);
-
     console.log("Multi-asset deployment complete");
     console.log({
         registry: registry.address,
         engine: engine.address,
         scheduler: scheduler.address,
-        upkeepManager: upkeepManager.address,
+        creAutomation,
         jackpotTreasury: jackpotTreasury.address,
         brb,
         jackpotFunder: funder.address,

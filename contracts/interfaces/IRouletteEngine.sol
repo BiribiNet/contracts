@@ -4,9 +4,9 @@ pragma solidity ^0.8.27;
 import { IBankVault } from "./IBankVault.sol";
 
 interface IRouletteEngine {
+    /// @dev `TriggerVrf` locks the betting round and requests VRF in one job (single automation round-trip).
     enum JobKind {
         None,
-        PreLock,
         TriggerVrf,
         Payout
     }

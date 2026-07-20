@@ -22,7 +22,7 @@ export type DeployRouletteEngineOptions = {
     sideBetMaxMultiplierBps?: number;
     /**
      * When true (default), deploys `MockUpkeepForwarderAuthority` so tests can call `performUpkeep` directly.
-     * Production deploy scripts must pass `false` and wire `UpkeepManager` via `setForwarderAuthority` once.
+     * Production deploy scripts must pass `false` and wire `CreExecutionAuthority` via `setForwarderAuthority` once.
      */
     wireMockForwarder?: boolean;
     /** When set, deploys treasury / funder / registry immediately before linked libraries using predicted proxy addresses. */

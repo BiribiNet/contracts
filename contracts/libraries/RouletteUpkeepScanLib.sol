@@ -3,12 +3,12 @@ pragma solidity ^0.8.27;
 
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 
-/// @dev Linked library: payout-finder for `findNextJob` (offloads `RouletteEngine`).
+/// @dev Linked library: payout-finder helpers for `findNextJob` (offloads `RouletteEngine`).
 /// @notice At most one global round owes payout work: `_globalRound` only increments in
 ///         `_openNextRound` after `_isRoundDone`, so older round ids are always fully settled.
 library RouletteUpkeepScanLib {
-    /// @dev First unsettled market with bets on the active settling round.
-    ///      Every payout lane services the same `(roundId, marketId)`; winner sharding is per-lane.
+    /// @dev First unsettled market with bets on the active settling round (all lanes).
+    ///      Prefer per-lane assignment in `RouletteEngine._findPayoutJobForLane` for parallel multi-market payouts.
     function findFirstPayout(RouletteEngineStorageLib.Layout storage $, uint32 totalMarkets)
         external
         view

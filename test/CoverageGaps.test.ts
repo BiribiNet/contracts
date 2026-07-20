@@ -413,10 +413,9 @@ describe("Coverage gaps", function () {
         await bank.write.placeBet([betAmount, trio012, zeroAddress], { account: alice.account });
 
         await time.increase(550);
-        const [, preLockData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLockData]);
-        const [, vrfData] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([vrfData]);
+        // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
+        const [, triggerVrfData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerVrfData]);
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 1n, 2n]);
 
         // Payout

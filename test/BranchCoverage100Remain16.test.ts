@@ -294,7 +294,7 @@ describe("Branch coverage — last 16 arms", function () {
 
             const laneCount = 10;
             const jackpotJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: jackpotRound,
                 nextCursor: 0,
@@ -317,7 +317,7 @@ describe("Branch coverage — last 16 arms", function () {
             expect(validPreview[1].length).to.be.gt(0);
             await harness.write.harnessPayoutLaneHasWork([jackpotJob]);
 
-            const badJob = { ...jackpotJob, kind: 2 };
+            const badJob = { ...jackpotJob, kind: 1 };
             await harness.write.harnessPreviewPayoutBundle([badJob, 10]);
             expect((await engine.read.previewPayoutBundle([badJob, 10]))[0].length).to.equal(0);
             await harness.write.harnessPayoutLaneHasWork([badJob]);
@@ -329,11 +329,16 @@ describe("Branch coverage — last 16 arms", function () {
 
             let previewCalls = 0;
             while (await engine.read.payoutLaneHasWork([jackpotJob])) {
-                await harness.write.harnessPreviewPayoutBundle([jackpotJob, 1]);
-                const p = await engine.read.previewPayoutBundle([jackpotJob, 1]);
+                // Apply validates nextCursor against the shard cursor, so refresh it each iteration.
+                const freshJackpotJob = {
+                    ...jackpotJob,
+                    nextCursor: Number(await engine.read.payoutShardCursor([jackpotJob.roundId, jackpotJob.marketId, 0])),
+                };
+                await harness.write.harnessPreviewPayoutBundle([freshJackpotJob, 1]);
+                const p = await engine.read.previewPayoutBundle([freshJackpotJob, 1]);
                 previewCalls++;
                 if (p[1].length > 0) expect(p[1].length).to.equal(1);
-                await scheduler.write.performUpkeep([encodePerformData(jackpotJob, p[0], p[1], p[2])]);
+                await scheduler.write.performUpkeep([encodePerformData(freshJackpotJob, p[0], p[1], p[2])]);
                 if (previewCalls === 1) {
                     await harness.write.harnessPayoutLaneHasWork([jackpotJob]);
                     expect(await engine.read.payoutLaneHasWork([jackpotJob])).to.equal(true);
@@ -369,7 +374,7 @@ describe("Branch coverage — last 16 arms", function () {
             await vrf.write.fulfillWithJackpot([engine.address, noStraightReqId, 7n, 7n]);
 
             const noStraightJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: noStraightRound,
                 nextCursor: 0,
@@ -423,28 +428,12 @@ describe("Branch coverage — last 16 arms", function () {
                 });
 
                 await time.increase(550);
-                await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
-
-                const tierRound = await engine.read.currentGlobalRound();
-                const triggerJob = {
-                    kind: 2,
-                    marketId: 0,
-                    roundId: tierRound,
-                    nextCursor: 0,
-                    payoutShardIndex: 0,
-                    payoutShardWidth: 0,
-                };
-
-                await testClient.impersonateAccount({ address: scheduler.address });
-                await testClient.setBalance({ address: scheduler.address, value: parseUnits("1000", 18) });
+                // VRF is requested in the TriggerVrf tx, so set the gas tier before it.
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: gasPrice });
-                await engine.write.executeJob([triggerJob, [], [], []], {
-                    account: scheduler.address,
+                await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]], {
                     gasPrice: gasPrice + 1n,
-                    gas: 2_000_000n,
                 });
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: 0n });
-                await testClient.stopImpersonatingAccount({ address: scheduler.address });
 
                 expect(await engine.read.hasPendingVrf()).to.equal(true);
                 const reqId = (await vrf.read.nextRequestId()) - 1n;
@@ -519,7 +508,6 @@ async function deployEngineLibs() {
     const jackpotBatchLib = await viem.deployContract("JackpotBatchLib");
     const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib");
     const rouletteExposureLib = await viem.deployContract("RouletteExposureLib");
-    const rouletteUpkeepScanLib = await viem.deployContract("RouletteUpkeepScanLib");
     const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib");
     const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
         libraries: {
@@ -540,6 +528,5 @@ async function deployEngineLibs() {
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": roulettePayoutSweepLib.address,
         "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": rouletteJackpotCollectLib.address,
         "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": rouletteExposureLib.address,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": rouletteUpkeepScanLib.address,
     };
 }

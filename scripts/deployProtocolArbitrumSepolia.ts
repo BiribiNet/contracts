@@ -6,9 +6,14 @@ import { join } from "node:path";
 
 import { vars } from "hardhat/config";
 import { viem } from "hardhat";
-import { isAddress, maxUint256, parseAbi, parseUnits, zeroAddress } from "viem";
+import { isAddress, parseUnits, zeroAddress } from "viem";
 
 import { deployRouletteEngine } from "./utils/deployRouletteEngine";
+import {
+    CRE_KEYSTONE_FORWARDER_ARBITRUM_SEPOLIA,
+    deployCreAutomation,
+} from "./utils/deployCreAutomation";
+import { resolveCreLaneCounts, writeCreWorkflowConfigs } from "./utils/writeCreWorkflowConfigs";
 import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
 import { seedBrbAssetPool } from "./utils/seedUniswapV2BrbPools";
 import {
@@ -30,13 +35,13 @@ import {
 
 /**
  * Full protocol deploy for Arbitrum Sepolia (chain 421614): local Uniswap V2 (factory + WETH + router),
- * then RouletteEngine stack, three markets (USDC, DAI or mock DAI, BRB), jackpot, upkeep manager + one automation lane (lane 0).
+ * then RouletteEngine stack, three markets (USDC, DAI or mock DAI, BRB), jackpot, CRE automation bridge (lane 0 workflow).
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` and `hardhat vars set ARBITRUM_SEPOLIA_RPC_URL` (see hardhat.network.ts)
  * - `hardhat vars set ETHERSCAN_API_KEY` for Arbiscan verification (same key as Etherscan v2 API)
- * - LINK on deployer for `registerLaneUpkeep`
  * - Arbitrum Sepolia ETH for gas
+ * - After deploy: register CRE workflows per lane (see docs/CRE_MIGRATION.md)
  *
  * Run: `yarn deploy:protocol:arbitrum-sepolia`
  *
@@ -49,13 +54,15 @@ import {
  * Env (optional overrides):
  * - VERIFY_CONTRACTS: default true when `ETHERSCAN_API_KEY` is set; set `false` to skip
  * - VERIFY_DELAY_MS: delay between Arbiscan API calls (default 8000)
- * - VRF_SUBSCRIPTION_ID, VRF_INITIAL_LINK_JUELS, LINK_TOKEN, VRF_COORDINATOR, KEEPER_REGISTRAR, KEEPER_REGISTRY
+ * - VRF_SUBSCRIPTION_ID, VRF_INITIAL_LINK_JUELS, LINK_TOKEN, VRF_COORDINATOR, CRE_KEYSTONE_FORWARDER
  * - VRF_KEY_HASH_2_GWEI, VRF_KEY_HASH_30_GWEI, VRF_KEY_HASH_150_GWEI (default: Arbitrum Sepolia 50 gwei lane for all three)
  * - USDC_TOKEN, DAI_TOKEN (omit DAI_TOKEN to deploy `MockDAI` for market 2)
  * - BRB_TOKEN, UNISWAP_V2_ROUTER, BRB_RATIO_MARKET_1, BRB_RATIO_MARKET_2
  * - SKIP_UNISWAP_LIQUIDITY: set `true` to skip BRB/USDC and BRB/DAI pool seeding (default seeds 1000 BRB + 10 USDC / 10 DAI)
  * - SEED_LIQUIDITY_BRB, SEED_LIQUIDITY_USDC, SEED_LIQUIDITY_DAI: human-readable seed amounts
  * - INFRA_RECIPIENT, VRF_CALLBACK_GAS_LIMIT, VRF_CONFIRMATIONS, ROUND_DURATION_SECONDS
+ * - PAYOUT_LANE_COUNT (default 10), UPKEEP_LANE_COUNT (default = PAYOUT_LANE_COUNT)
+ * - UPKEEP_MAX_PAYOUTS_PER_CALL (default 60), CRE_LANE_MAX_DRAIN_ITERATIONS (default 5)
  */
 
 const ARBITRUM_SEPOLIA_CHAIN_ID = 421614n;
@@ -66,9 +73,8 @@ const DEFAULT_VRF_COORDINATOR = "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61" as 
 const DEFAULT_VRF_KEY_HASH =
     "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be" as const;
 
-/** Chainlink Automation on Arbitrum Sepolia (see docs.chain.link automation supported networks). */
-const DEFAULT_KEEPER_REGISTRY = "0x8194399B3f11fcA2E8cCEfc4c9A658c61B8Bf412" as const;
-const DEFAULT_KEEPER_REGISTRAR = "0x881918E24290084409DaA91979A30e6f0dB52eBe" as const;
+/** CRE KeystoneForwarder on Arbitrum Sepolia — override with CRE_KEYSTONE_FORWARDER; verify in Chainlink Forwarder Directory. */
+const DEFAULT_CRE_KEYSTONE_FORWARDER = CRE_KEYSTONE_FORWARDER_ARBITRUM_SEPOLIA;
 
 /** Circle USDC on Arbitrum Sepolia — override with USDC_TOKEN if needed */
 const DEFAULT_USDC = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d" as const;
@@ -163,8 +169,7 @@ async function main() {
 
     const vrfCoordinator = envAddressOrDefault("VRF_COORDINATOR", DEFAULT_VRF_COORDINATOR);
     const linkToken = envAddressOrDefault("LINK_TOKEN", DEFAULT_LINK);
-    const keeperRegistrar = envAddressOrDefault("KEEPER_REGISTRAR", DEFAULT_KEEPER_REGISTRAR);
-    const keeperRegistry = envAddressOrDefault("KEEPER_REGISTRY", DEFAULT_KEEPER_REGISTRY);
+    const creKeystoneForwarder = envAddressOrDefault("CRE_KEYSTONE_FORWARDER", DEFAULT_CRE_KEYSTONE_FORWARDER);
     const usdc = envAddressOrDefault("USDC_TOKEN", DEFAULT_USDC);
     const daiEnv = optionalAddressEnv("DAI_TOKEN", process.env.DAI_TOKEN);
 
@@ -209,7 +214,13 @@ async function main() {
     const [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei] = vrfKeyHashTriple();
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_500_000n));
     const confirmations = Number(envBigIntOr("VRF_CONFIRMATIONS", 1n));
-    const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 60n));
+    const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 30n));
+    const maxPayoutsPerCall = Number(envBigIntOr("UPKEEP_MAX_PAYOUTS_PER_CALL", 60n));
+    const { payoutLaneCount, creWorkflowLaneCount } = resolveCreLaneCounts({
+        payoutLaneCount: process.env.PAYOUT_LANE_COUNT,
+        upkeepLaneCount: process.env.UPKEEP_LANE_COUNT,
+    });
+    const creLaneMaxDrainIterations = Number(envBigIntOr("CRE_LANE_MAX_DRAIN_ITERATIONS", 5n));
 
     let brb: `0x${string}`;
     let deployedBrb = false;
@@ -307,7 +318,7 @@ async function main() {
         {
             admin: deployer.account.address,
             scanLimit: 25,
-            maxPayoutsPerCall: 60,
+            maxPayoutsPerCall,
         },
         {
             protocolPrefix: {
@@ -332,30 +343,34 @@ async function main() {
 
     await vrfAddConsumerIfNeeded(deployer, publicClient, vrfCoordinator, vrfSubscriptionId, engine.address);
 
-    await waitWrite(engine.write.setPayoutLaneCount([1], { account: deployer.account }));
+    await waitWrite(engine.write.setPayoutLaneCount([payoutLaneCount], { account: deployer.account }));
+    console.log(`Payout parallel lanes: ${payoutLaneCount} on-chain, ${creWorkflowLaneCount} CRE workflow(s)`);
 
-    const upkeepManager = await viem.deployContract("UpkeepManager", [
-        linkToken,
-        keeperRegistrar,
-        keeperRegistry,
-        scheduler.address,
-        deployer.account.address,
-        deployer.account.address,
-    ]);
+    const creAutomation = await deployCreAutomation({
+        scheduler: scheduler.address,
+        admin: deployer.account.address,
+        keystoneForwarder: creKeystoneForwarder,
+        wallet: deployer,
+        publicClient,
+        waitWrite,
+    });
 
-    const schedulerForwarderAbi = parseAbi([
-        "function setForwarderAuthority(address forwarderAuthority) external",
-    ]);
-    await waitWrite(
-        deployer.writeContract({
-            address: scheduler.address,
-            abi: schedulerForwarderAbi,
-            functionName: "setForwarderAuthority",
-            args: [upkeepManager.address],
-            account: deployer.account,
-            chain: publicClient.chain,
-        }),
-    );
+    writeCreWorkflowConfigs({
+        network: "arbitrum-sepolia",
+        scheduler: scheduler.address,
+        receiver: creAutomation.automationReceiver,
+        engine: engine.address,
+        laneCount: creWorkflowLaneCount,
+        writeGasLimit: process.env.CRE_WRITE_GAS_LIMIT?.trim() ?? "2500000",
+        laneMaxDrainIterations: creLaneMaxDrainIterations,
+        httpAuthorizedKeys: (() => {
+            const key = optionalAddressEnv(
+                "CRE_HTTP_AUTHORIZED_ADDRESS",
+                process.env.CRE_HTTP_AUTHORIZED_ADDRESS,
+            );
+            return key ? [key] : undefined;
+        })(),
+    });
 
     const minStable = parseUnits("1", 6);
     const minDai = parseUnits("1", 18);
@@ -415,24 +430,6 @@ async function main() {
     const marketDai = await registry.read.getMarket([2]);
     const marketBrb = await registry.read.getMarket([3]);
 
-    const erc20ApproveAbi = parseAbi(["function approve(address spender, uint256 amount) external returns (bool)"]);
-    await waitWrite(
-        deployer.writeContract({
-            address: linkToken,
-            abi: erc20ApproveAbi,
-            functionName: "approve",
-            args: [upkeepManager.address, maxUint256],
-            account: deployer.account,
-            chain: publicClient.chain,
-        }),
-    );
-
-    const upkeepGasLimit = 1_800_000;
-    const upkeepFundAmount = parseUnits("1", 18);
-    await waitWrite(
-        upkeepManager.write.registerLaneUpkeep([0n, upkeepGasLimit, upkeepFundAmount, deployer.account.address]),
-    );
-
     const deployBlock = Number(await publicClient.getBlockNumber());
     const brbReferal =
         optionalAddressEnv("BRB_REFERRAL_TOKEN", process.env.BRB_REFERRAL_TOKEN) ?? deployedBrbReferral;
@@ -451,13 +448,27 @@ async function main() {
         addresses: {
             brb,
             roulette: engine.address,
+            registry: registry.address,
+            scheduler: scheduler.address,
             stakedBRB: marketUsdc.bank,
             banks: [marketUsdc.bank, marketDai.bank, marketBrb.bank],
             brbReferal,
-            upkeepManager: upkeepManager.address,
+            automationReceiver: creAutomation.automationReceiver,
+            creExecutionAuthority: creAutomation.creExecutionAuthority,
             jackpotTreasury: jackpotTreasury.address,
             jackpotFunder: funder.address,
             sideBet: sideBetAddr,
+            uniswapRouter: router,
+        },
+        vrf: {
+            coordinator: vrfCoordinator,
+            linkToken,
+            subscriptionId: vrfSubscriptionId.toString(),
+        },
+        markets: {
+            usdc: { marketId: 1, asset: usdc, bank: marketUsdc.bank },
+            dai: { marketId: 2, asset: dai, bank: marketDai.bank, mockDai: deployedMockDai },
+            brb: { marketId: 3, asset: brb, bank: marketBrb.bank },
         },
     };
 
@@ -595,15 +606,14 @@ async function main() {
             verifyDelayMs,
         );
         await verifyContractWithDelay(
-            upkeepManager.address,
-            [
-                linkToken,
-                keeperRegistrar,
-                keeperRegistry,
-                scheduler.address,
-                deployer.account.address,
-                deployer.account.address,
-            ],
+            creAutomation.automationReceiver,
+            [creKeystoneForwarder],
+            verifyDelayMs,
+            "contracts/chainlink/cre/AutomationReceiver.sol:AutomationReceiver",
+        );
+        await verifyContractWithDelay(
+            creAutomation.creExecutionAuthority,
+            [deployer.account.address],
             verifyDelayMs,
         );
         console.log("Verification pass complete.");
@@ -643,7 +653,7 @@ async function main() {
                     rouletteLiabilityMathLib: linkedLibraries.rouletteLiabilityMathLib,
                     rouletteBetCodecLib: linkedLibraries.rouletteBetCodecLib,
                 },
-                upkeepManager: upkeepManager.address,
+                creAutomation,
                 jackpotTreasury: jackpotTreasury.address,
                 brb,
                 jackpotFunder: funder.address,
@@ -668,6 +678,7 @@ async function main() {
                             ? `VRF subscription was created and funded with ${vrfInitialLinkJuels.toString()} Juels LINK (override with VRF_INITIAL_LINK_JUELS).`
                             : "VRF subscription was created on-chain; set VRF_INITIAL_LINK_JUELS or fund via vrf.chain.link."
                         : "VRF subscription id was taken from VRF_SUBSCRIPTION_ID; ensure it is funded and the deployer is the subscription owner (required for addConsumer).",
+                    "Deploy CRE workflows (lane LOG + HTTP trigger-vrf; configs written under cre/workflows/)",
                     "Fund each bank vault with initial liquidity; configure min bets / vault params as needed",
                     seededPools
                         ? "BRB/USDC and BRB/DAI Uniswap pools were seeded — tune BRB_RATIO_MARKET_1 / BRB_RATIO_MARKET_2 to match pool economics if needed"

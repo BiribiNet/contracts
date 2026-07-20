@@ -257,28 +257,20 @@ describe("Branch coverage — push to 100%", function () {
                 account: alice.account,
             });
 
-            const preLock = {
-                kind: 1,
-                marketId: 0,
-                roundId: 1n,
-                nextCursor: 0,
-                payoutShardIndex: 0,
-                payoutShardWidth: 10,
-            };
             const [foundBeforeLock] = await engine.read.findNextJob([0, 25, 0, 0]);
             expect(foundBeforeLock).to.equal(false);
 
             await time.increase(550);
             await testClient.impersonateAccount({ address: scheduler.address });
             await testClient.setBalance({ address: scheduler.address, value: parseUnits("10", 18) });
-            await engine.write.executeJob([preLock, [], [], []], { account: scheduler.address });
-
-            const trigger = { kind: 2, marketId: 0, roundId: 1n, nextCursor: 0, payoutShardIndex: 0, payoutShardWidth: 10 };
+            // TriggerVrf locks the round and requests VRF in one job.
+            const trigger = { kind: 1, marketId: 0, roundId: 1n, nextCursor: 0, payoutShardIndex: 0, payoutShardWidth: 10 };
             await engine.write.executeJob([trigger, [], [], []], { account: scheduler.address });
-            await engine.write.executeJob([trigger, [], [], []], { account: scheduler.address });
+            // Duplicate VRF trigger reverts (raced-report guard).
+            await expect(engine.write.executeJob([trigger, [], [], []], { account: scheduler.address })).to.be.rejected;
 
             const payoutJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: 1n,
                 nextCursor: 0,
@@ -294,8 +286,13 @@ describe("Branch coverage — push to 100%", function () {
             expect(await engine.read.payoutLaneHasWork([payoutJob])).to.equal(true);
 
             while (await engine.read.payoutLaneHasWork([payoutJob])) {
-                const preview = await engine.read.previewPayoutBundle([payoutJob, 1]);
-                await engine.write.executeJob([payoutJob, preview[0], preview[1], preview[2]], {
+                // Apply validates nextCursor against the shard cursor, so refresh it each iteration.
+                const fresh = {
+                    ...payoutJob,
+                    nextCursor: Number(await engine.read.payoutShardCursor([payoutJob.roundId, payoutJob.marketId, payoutJob.payoutShardIndex])),
+                };
+                const preview = await engine.read.previewPayoutBundle([fresh, 1]);
+                await engine.write.executeJob([fresh, preview[0], preview[1], preview[2]], {
                     account: scheduler.address,
                 });
             }
@@ -322,11 +319,10 @@ describe("Branch coverage — push to 100%", function () {
 
             await time.increase(550);
             await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
 
             const payoutJob = {
-                kind: 3,
+                kind: 2,
                 marketId: 1,
                 roundId: 1n,
                 nextCursor: 0,
@@ -337,8 +333,13 @@ describe("Branch coverage — push to 100%", function () {
             expect(previewJackpot[1].length).to.equal(0);
 
             while (await engine.read.payoutLaneHasWork([payoutJob])) {
-                const p = await engine.read.previewPayoutBundle([payoutJob, 1]);
-                await scheduler.write.performUpkeep([encodePerformData(payoutJob, p[0], p[1], p[2])]);
+                // Apply validates nextCursor against the shard cursor, so refresh it each iteration.
+                const fresh = {
+                    ...payoutJob,
+                    nextCursor: Number(await engine.read.payoutShardCursor([payoutJob.roundId, payoutJob.marketId, payoutJob.payoutShardIndex])),
+                };
+                const p = await engine.read.previewPayoutBundle([fresh, 1]);
+                await scheduler.write.performUpkeep([encodePerformData(fresh, p[0], p[1], p[2])]);
             }
 
             await testClient.impersonateAccount({ address: scheduler.address });
@@ -375,7 +376,7 @@ describe("Branch coverage — push to 100%", function () {
                     account: alice.account,
                 });
                 await time.increase(550);
-                await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
+                // VRF is requested in the TriggerVrf tx, so set the gas tier before it.
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: gasPrice });
                 await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
                 await testClient.setNextBlockBaseFeePerGas({ baseFeePerGas: 0n });
@@ -462,7 +463,6 @@ describe("Branch coverage — push to 100%", function () {
             await expect(
                 bank.write.redeemBps([100, admin.account.address, admin.account.address], { account: admin.account }),
             ).to.be.rejected;
-            await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
             await vrf.write.fulfill([engine.address, 1n, 7n]);
         });
     });
@@ -822,7 +822,6 @@ async function deployEngineLibs() {
     const jackpotBatchLib = await viem.deployContract("JackpotBatchLib");
     const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib");
     const rouletteExposureLib = await viem.deployContract("RouletteExposureLib");
-    const rouletteUpkeepScanLib = await viem.deployContract("RouletteUpkeepScanLib");
     const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib");
     const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
         libraries: {
@@ -843,6 +842,5 @@ async function deployEngineLibs() {
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": roulettePayoutSweepLib.address,
         "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": rouletteJackpotCollectLib.address,
         "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": rouletteExposureLib.address,
-        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": rouletteUpkeepScanLib.address,
     };
 }

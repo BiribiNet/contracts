@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    // Generated bindings under cre/contracts/ sit outside this package, so map the SDK
+    // (and its /test subpath used by *_mock.ts) back to this workflow's node_modules.
+    "paths": {
+      "@chainlink/cre-sdk": ["./node_modules/@chainlink/cre-sdk"],
+      "@chainlink/cre-sdk/*": ["./node_modules/@chainlink/cre-sdk/*"]
+    }
+  },
+  // Only main.ts and its transitive imports; *_mock.ts helpers are not part of the workflow build.
+  "include": ["main.ts"]
+}

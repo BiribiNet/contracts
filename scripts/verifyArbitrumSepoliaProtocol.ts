@@ -19,6 +19,7 @@ import {
     verifyRouletteLinkedLibraries,
     verifyUpgradeableBeaconWithDelay,
 } from "./utils/verifyWithEtherscan";
+import { CRE_KEYSTONE_FORWARDER_ARBITRUM_SEPOLIA } from "./utils/deployCreAutomation";
 
 /**
  * Re-verify a protocol deployment on Arbitrum Sepolia (421614) on Arbiscan.
@@ -27,8 +28,8 @@ import {
  *
  * Configuration:
  * - `VERIFY_DEPLOYMENT_JSON` — optional JSON string; defaults to the last known session deploy if unset.
- *   Shape: { deployer, brb, dai, router, jackpotTreasury, jackpotFunder, registry, engine, scheduler, upkeepManager,
- *            linkedLibraries? }
+ *   Shape: { deployer, brb, dai, router, jackpotTreasury, jackpotFunder, registry, engine, scheduler,
+ *            automationReceiver, creExecutionAuthority, linkedLibraries? }
  * - `VERIFY_UNISWAP_JSON` — optional `{"factory":"0x…","weth":"0x…","router":"0x…"}` for locally deployed Uniswap V2.
  * - `VERIFY_DELAY_MS` — delay between Arbiscan calls (default 8000).
  * - `VERIFY_PROXY_LINK_DELAY_MS` — extra pause between proxy verifications (default 15000).
@@ -39,11 +40,8 @@ const FQ_UNISWAP_FACTORY = "contracts/vendor/uniswap-v2-core/UniswapV2Factory.so
 const FQ_WETH9 = "contracts/vendor/uniswap-v2-periphery/test/WETH9.sol:WETH9" as const;
 const FQ_UNISWAP_ROUTER = "contracts/vendor/uniswap-v2-periphery/UniswapV2Router02.sol:UniswapV2Router02" as const;
 
-const DEFAULT_LINK = "0xb1D4538B4571d411F07960EF2838Ce337FE1E80E" as const;
-/** Matches `deployProtocolArbitrumSepolia.ts` default. */
 const DEFAULT_VRF_COORDINATOR = "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61" as const;
-const DEFAULT_KEEPER_REGISTRY = "0x8194399B3f11fcA2E8cCEfc4c9A658c61B8Bf412" as const;
-const DEFAULT_KEEPER_REGISTRAR = "0x881918E24290084409DaA91979A30e6f0dB52eBe" as const;
+const DEFAULT_CRE_KEYSTONE_FORWARDER = CRE_KEYSTONE_FORWARDER_ARBITRUM_SEPOLIA;
 
 /** Last full deploy from this repo session (override with VERIFY_DEPLOYMENT_JSON). */
 const DEFAULT_DEPLOYMENT = {
@@ -56,7 +54,8 @@ const DEFAULT_DEPLOYMENT = {
     registry: "0x06de2b57bc12cef9c6c16ea7915226b1259ffd11",
     engine: "0x4cf6a900fcdd3a33b2bb1df22b8718dd24e897f8",
     scheduler: "0xa3bb37368a407b5412f605c0291b73784a619379",
-    upkeepManager: "0x9d8756b67dd1c0465bd4e38595563b97ea903577",
+    automationReceiver: "0x0000000000000000000000000000000000000000",
+    creExecutionAuthority: "0x0000000000000000000000000000000000000000",
     sideBet: "0xA775ADA93B7B0DcF16F7233a128A91d1ACC93219",
     brbReferral: "0xb80c7602af2d9288a1a0ae4c02944d9179d51439",
     banks: [
@@ -82,7 +81,10 @@ type Deployment = {
     registry: `0x${string}`;
     engine: `0x${string}`;
     scheduler: `0x${string}`;
-    upkeepManager: `0x${string}`;
+    automationReceiver: `0x${string}`;
+    creExecutionAuthority: `0x${string}`;
+    /** Used when verifying AutomationReceiver; defaults to Arbitrum Sepolia KeystoneForwarder. */
+    creKeystoneForwarder?: `0x${string}`;
     /** Omit to read `SIDE_BET()` from registry. */
     sideBet?: `0x${string}`;
     /** Omit to read `BRB_REFERRAL()` from engine implementation. */
@@ -155,12 +157,11 @@ async function discoverLibrariesFromExplorer(
         rouletteLiabilityMathLib: pick(libBase + 1),
         roulettePayoutSweepLib: pick(libBase + 2),
         rouletteJackpotCollectLib: pick(libBase + 3),
-        rouletteUpkeepScanLib: pick(libBase + 4),
-        rouletteExposureLib: pick(libBase + 5),
-        roulettePayoutMulLib: pick(libBase + 6),
-        jackpotBatchLib: pick(libBase + 7),
-        rouletteBetLib: pick(libBase + 8),
-        rouletteLib: pick(libBase + 9),
+        rouletteExposureLib: pick(libBase + 4),
+        roulettePayoutMulLib: pick(libBase + 5),
+        jackpotBatchLib: pick(libBase + 6),
+        rouletteBetLib: pick(libBase + 7),
+        rouletteLib: pick(libBase + 8),
     };
 }
 
@@ -177,9 +178,10 @@ async function main() {
 
     const d = loadDeployment();
     const verifyDelayMs = Number(envBigIntOr("VERIFY_DELAY_MS", 8000n));
-    const linkToken = (process.env.LINK_TOKEN as `0x${string}` | undefined) ?? DEFAULT_LINK;
-    const keeperRegistrar = (process.env.KEEPER_REGISTRAR as `0x${string}` | undefined) ?? DEFAULT_KEEPER_REGISTRAR;
-    const keeperRegistry = (process.env.KEEPER_REGISTRY as `0x${string}` | undefined) ?? DEFAULT_KEEPER_REGISTRY;
+    const creKeystoneForwarder =
+        (process.env.CRE_KEYSTONE_FORWARDER as `0x${string}` | undefined) ??
+        d.creKeystoneForwarder ??
+        DEFAULT_CRE_KEYSTONE_FORWARDER;
 
     const uniswapRaw = process.env.VERIFY_UNISWAP_JSON?.trim();
     const uniswap = uniswapRaw
@@ -417,11 +419,23 @@ async function main() {
         [d.engine, sideBetAddr, d.deployer, scanLimit, maxPayoutsPerCall],
         verifyDelayMs,
     );
-    await verifyContractWithDelay(
-        d.upkeepManager,
-        [linkToken, keeperRegistrar, keeperRegistry, d.scheduler, d.deployer, d.deployer],
-        verifyDelayMs,
-    );
+    if (
+        d.automationReceiver &&
+        d.automationReceiver !== "0x0000000000000000000000000000000000000000"
+    ) {
+        await verifyContractWithDelay(
+            d.automationReceiver,
+            [creKeystoneForwarder],
+            verifyDelayMs,
+            "contracts/chainlink/cre/AutomationReceiver.sol:AutomationReceiver",
+        );
+    }
+    if (
+        d.creExecutionAuthority &&
+        d.creExecutionAuthority !== "0x0000000000000000000000000000000000000000"
+    ) {
+        await verifyContractWithDelay(d.creExecutionAuthority, [d.deployer], verifyDelayMs);
+    }
 
     console.log("Verification finished.");
     console.log(

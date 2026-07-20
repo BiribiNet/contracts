@@ -1,4 +1,5 @@
 import { viem } from "hardhat";
+import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 import { expect } from "chai";
 import { encodeFunctionData, parseUnits, zeroAddress, type Address, type Hex } from "viem";
@@ -227,7 +228,8 @@ describe("BankVault4626", function () {
         const chainId = await publicClient.getChainId();
         const nonce = await token.read.nonces([pkAccount.address]);
         const name = await token.read.name();
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        // Use chain time, not wall-clock: earlier suites advance the chain with time.increase.
+        const deadline = BigInt(await time.latest()) + 3600n;
         const domain = {
             name,
             version: "1",

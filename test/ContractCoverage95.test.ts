@@ -222,8 +222,8 @@ describe("Contract coverage — 95% targets", function () {
 
         expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(false);
         await time.increase(550);
-        const [, preLock] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLock]);
+        const [, triggerVrfData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerVrfData]);
         expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(true);
         await expect(
             bank.write.deposit([parseUnits("20", 6), alice.account.address], { account: alice.account }),
@@ -237,7 +237,7 @@ describe("Contract coverage — 95% targets", function () {
         expect(foundShard).to.equal(false);
 
         const badJob = {
-            kind: 3,
+            kind: 2,
             marketId: 1,
             roundId: 1n,
             nextCursor: 0,
@@ -285,9 +285,8 @@ describe("Contract coverage — 95% targets", function () {
         });
 
         await time.increase(550);
-        let [, data] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([data]);
-        [, data] = await scheduler.read.checkUpkeep(["0x"]);
+        // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
+        const [, data] = await scheduler.read.checkUpkeep(["0x"]);
         await scheduler.write.performUpkeep([data]);
         await vrf.write.fulfill([engine.address, 1n, 7n]);
 
@@ -298,7 +297,7 @@ describe("Contract coverage — 95% targets", function () {
         }
 
         const settledJob = {
-            kind: 3,
+            kind: 2,
             marketId: 1,
             roundId: 1n,
             nextCursor: 0,
@@ -334,26 +333,15 @@ describe("Contract coverage — 95% targets", function () {
         await expect(scheduler.write.performUpkeep(["0x02"])).to.be.rejected;
     });
 
-    it("covers UpkeepManager forwarder approval view", async function () {
-        const [admin] = await viem.getWalletClients();
-        const link = await viem.deployContract("MockLinkToken");
-        const registrar = await viem.deployContract("MockKeeperRegistry");
-        const manager = await viem.deployContract("UpkeepManager", [
-            link.address,
-            registrar.address,
-            registrar.address,
-            admin.account.address,
-            admin.account.address,
-            admin.account.address,
-        ]);
+    it("covers CreExecutionAuthority forwarder approval view", async function () {
+        const [admin, executor] = await viem.getWalletClients();
+        const authority = await viem.deployContract("CreExecutionAuthority", [admin.account.address]);
 
         const stranger = "0x0000000000000000000000000000000000000001";
-        expect(await manager.read.isApprovedAutomationForwarder([stranger])).to.equal(false);
+        expect(await authority.read.isApprovedAutomationForwarder([stranger])).to.equal(false);
 
-        await link.write.approve([manager.address, parseUnits("10", 18)]);
-        await manager.write.registerLaneUpkeep([3n, 500_000, parseUnits("1", 18), admin.account.address]);
-        const forwarder = await registrar.read.getForwarder([2n]);
-        expect(await manager.read.isApprovedAutomationForwarder([forwarder])).to.equal(true);
+        await authority.write.setExecutorApproved([executor.account.address, true], { account: admin.account });
+        expect(await authority.read.isApprovedAutomationForwarder([executor.account.address])).to.equal(true);
     });
 
     it("covers BankVault4626 views, side-bet controller, minBet, and partial redeem bps", async function () {
@@ -470,10 +458,9 @@ describe("Contract coverage — 95% targets", function () {
         }
 
         await time.increase(550);
-        const [, preLock] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([preLock]);
-        const [, vrfJob] = await scheduler.read.checkUpkeep(["0x"]);
-        await scheduler.write.performUpkeep([vrfJob]);
+        // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
+        const [, triggerVrfData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerVrfData]);
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
 
         const gr = await engine.read.globalRoundState([1n]);
@@ -482,7 +469,7 @@ describe("Contract coverage — 95% targets", function () {
 
         const [, payoutData] = await scheduler.read.checkUpkeep([laneCheckData(0n)]);
         const decoded = decodeRoulettePerformData(payoutData);
-        expect(decoded.jobKind).to.equal(3);
+        expect(decoded.jobKind).to.equal(2);
         await scheduler.write.performUpkeep([payoutData]);
 
         const payoutJob = {
@@ -550,11 +537,10 @@ describe("Contract coverage — 95% targets", function () {
 
         await time.increase(550);
         await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
-        await scheduler.write.performUpkeep([(await scheduler.read.checkUpkeep(["0x"]))[1]]);
         await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
 
         const payoutJob = {
-            kind: 3,
+            kind: 2,
             marketId: 1,
             roundId: 1n,
             nextCursor: 0,
