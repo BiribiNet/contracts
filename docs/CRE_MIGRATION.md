@@ -100,17 +100,23 @@ Env: `PAYOUT_LANE_COUNT` (on-chain shards, default `10`), `UPKEEP_LANE_COUNT` (C
 > LANE_COUNT=<deployed lane workflows> npx hardhat run scripts/setPayoutLaneCount.ts --network arbitrumsepolia
 > ```
 
-## Current Arbitrum Sepolia deployment (2026-07-20)
+## Current Arbitrum Sepolia deployment (2026-07-21)
 
 Registered in the Chainlink-hosted **private registry** (`deployment-registry: "private"` in `workflow.yaml`).
 HTTP triggers go to the standard gateway `https://01.gateway.zone-a.cre.chain.link` with a JWT using
 `alg: "ETH"` and the workflow ID **without** `0x` prefix.
 
+Binary includes the LATEST-block patch in `contracts/evm/ts/generated/IAutomationCompatible.ts`
+(`checkUpkeep`/`checkLog` read at `LATEST_BLOCK_NUMBER` instead of `LAST_FINALIZED_BLOCK_NUMBER`;
+Arbitrum Sepolia finality lags head by ~15-20 min, which made workflows act on stale jobs).
+
 | Workflow | Workflow ID |
 |----------|-------------|
-| `biribi-trigger-vrf-production` | `0041bb512aeaaa9ed02097e8755add6f6823887390ebd3eb590b2b268c4c8145` |
-| `biribi-roulette-lane-0-production` | `005381a753e5fbace1d0cdda719639ac63bce1f41df97a62e292189938895dc3` |
-| `biribi-roulette-lane-1-production` | `0086066cce0ed0ac855168a2a5da2d8c65be67c105fedb6221f03233cc204319` |
+| `biribi-trigger-vrf-production` | `006c4256a95bae56e37f285b6a183726051caf70c1fa99508265cc4c7d3c3dc6` |
+| `biribi-roulette-lane-0-production` | `002f826035fe4e433d82b07937f1dde88738928d81ac16e9f054677626142501` |
+| `biribi-roulette-lane-1-production` | `004c59931534004730376973ab19f16f88499077df6e0b5d472e1d484a3c2bcb` |
+
+Round-watcher env `CRE_WORKFLOW_ID_TRIGGER_VRF` (Railway) must match the trigger-vrf ID above.
 
 On-chain `payoutParallelLaneCount` set to **2** to match the two deployed payout lanes
 (tx `0x5deaa591dddb37bdf65c4a0eb5e0b159124713e30cc23a935daba8808ee1fe9d`).
@@ -135,7 +141,7 @@ On-chain `payoutParallelLaneCount` set to **2** to match the two deployed payout
 | `PAYOUT_LANE_COUNT` / `UPKEEP_LANE_COUNT` | `10` | 10 parallel CRE workflows; shards winners and can settle multiple markets concurrently |
 | `CRE_LANE_MAX_DRAIN_ITERATIONS` | `5` | Each lane drains multiple batches per wake |
 | TriggerVrf `maxDrainIterations` | `1` | Lock + VRF request is a single job/tx |
-| `ROUND_DURATION_SECONDS` | `30` | Shorter betting window |
+| `ROUND_DURATION_SECONDS` | `60` | Betting window (matches on-chain `ROUND_DURATION`) |
 | `VRF_CONFIRMATIONS` | `1` | ~250ms on Arbitrum (oracle latency dominates) |
 | `UPKEEP_MAX_PAYOUTS_PER_CALL` | `60` | More winners per tx → fewer batches |
 

@@ -35800,7 +35800,7 @@ class IAutomationCompatible {
     });
     const result = this.client.callContract(runtime3, {
       call: encodeCallMsg({ from: zeroAddress2, to: this.address, data: callData }),
-      blockNumber: LAST_FINALIZED_BLOCK_NUMBER2
+      blockNumber: LATEST_BLOCK_NUMBER2
     }).result();
     return decodeFunctionResult2({
       abi: IAutomationCompatibleABI,
@@ -35816,7 +35816,7 @@ class IAutomationCompatible {
     });
     const result = this.client.callContract(runtime3, {
       call: encodeCallMsg({ from: zeroAddress2, to: this.address, data: callData }),
-      blockNumber: LAST_FINALIZED_BLOCK_NUMBER2
+      blockNumber: LATEST_BLOCK_NUMBER2
     }).result();
     return decodeFunctionResult2({
       abi: IAutomationCompatibleABI,

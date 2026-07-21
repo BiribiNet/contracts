@@ -214,7 +214,7 @@ async function main() {
     const [vrfKeyHash2Gwei, vrfKeyHash30Gwei, vrfKeyHash150Gwei] = vrfKeyHashTriple();
     const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_500_000n));
     const confirmations = Number(envBigIntOr("VRF_CONFIRMATIONS", 1n));
-    const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 30n));
+    const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 60n));
     const maxPayoutsPerCall = Number(envBigIntOr("UPKEEP_MAX_PAYOUTS_PER_CALL", 60n));
     const { payoutLaneCount, creWorkflowLaneCount } = resolveCreLaneCounts({
         payoutLaneCount: process.env.PAYOUT_LANE_COUNT,

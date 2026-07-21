@@ -12,11 +12,16 @@ import {
   encodeCallMsg,
   EVMClient,
   hexToBase64,
-  LAST_FINALIZED_BLOCK_NUMBER,
+  LATEST_BLOCK_NUMBER,
   prepareReportRequest,
   type EVMLog,
   type Runtime,
 } from '@chainlink/cre-sdk'
+
+// Manual patch over codegen: checkLog/checkUpkeep read at LATEST instead of
+// LAST_FINALIZED. Arbitrum Sepolia finality lags head by ~15-20 min, so finalized
+// reads made the workflow act on stale jobs (StalePayoutChunk reverts) and miss
+// fresh ones. Safe: performUpkeep/executeJob fully re-validate state on-chain.
 
 export interface DecodedLog<T> extends Omit<EVMLog, 'data'> { data: T }
 
@@ -52,7 +57,7 @@ export class IAutomationCompatible {
     const result = this.client
       .callContract(runtime, {
         call: encodeCallMsg({ from: zeroAddress, to: this.address, data: callData }),
-        blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+        blockNumber: LATEST_BLOCK_NUMBER,
       })
       .result()
 
@@ -76,7 +81,7 @@ export class IAutomationCompatible {
     const result = this.client
       .callContract(runtime, {
         call: encodeCallMsg({ from: zeroAddress, to: this.address, data: callData }),
-        blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+        blockNumber: LATEST_BLOCK_NUMBER,
       })
       .result()
 
