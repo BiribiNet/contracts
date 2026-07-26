@@ -1,26 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { defineConfig } from '@wagmi/cli/config';
 import { hardhat } from '@wagmi/cli/plugins';
-import type { Abi } from 'viem';
-
-const automationRegistryAbi = JSON.parse(
-  readFileSync(
-    join(process.cwd(), 'node_modules/@chainlink/contracts/abi/v0.8/AutomationRegistryBaseInterface.json'),
-    'utf8',
-  ),
-) as Abi;
 
 /** Typed ABIs for the frontend (viem / wagmi). Run after `hardhat compile`. */
 export default defineConfig({
   out: '../frontend/lib/abi/generated.ts',
-  contracts: [
-    {
-      name: 'AutomationRegistry',
-      abi: automationRegistryAbi,
-    },
-  ],
   plugins: [
     hardhat({
       project: '.',
@@ -38,6 +21,7 @@ export default defineConfig({
         'JackpotTreasury.sol/JackpotTreasury.json',
         'MarketRegistry.sol/MarketRegistry.json',
         'RouletteEngine.sol/RouletteEngine.json',
+        'SideBet.sol/SideBet.json',
         'UpkeepScheduler.sol/UpkeepScheduler.json',
         'CreExecutionAuthority.sol/CreExecutionAuthority.json',
         'chainlink/cre/AutomationReceiver.sol/AutomationReceiver.json',
