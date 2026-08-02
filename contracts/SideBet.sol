@@ -234,6 +234,10 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         ISideBetVault vault = ISideBetVault(m.bank);
 
         uint64 startGlobalRound = ENGINE.currentGlobalRound();
+        // Reject placement once the start round's VRF is fulfilled: its winning number and jackpot flag
+        // are already public storage, so an attacker could otherwise place a risk-free, guaranteed-win bet.
+        (bool startRoundFulfilled, ) = ENGINE.roundOutcome(startGlobalRound);
+        if (startRoundFulfilled) revert RoundOutcomeAlreadyKnown();
         betId = $.betCount;
         $.betCount = betId + 1;
         $.bets[betId] = Bet({

@@ -193,6 +193,24 @@ describe("SideBet", function () {
         expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultBalBefore + USDC("10"));
     });
 
+    it("rejects placeBet once the start round's VRF is already fulfilled (C-1)", async function () {
+        const { sideBet, admin, alice, roundEngine } = await deployFixture();
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 1 }),
+            admin.account,
+        );
+
+        // Positive control: while the start round is still open, the bet is accepted.
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
+
+        // Reproduce the settling window: the current round's outcome is public but the
+        // global-round pointer has not advanced yet. Placing now would be risk-free.
+        await roundEngine.write.markCurrentRoundFulfilled([7], { account: admin.account });
+        await expect(sideBet.write.placeBet([0n, USDC("10")], { account: alice.account })).to.be.rejected;
+    });
+
     it("wins COLOR_COUNT early and loses on a fully-observed window", async function () {
         const { sideBet, scheduler, admin, alice, roundEngine } = await deployFixture();
         await registerConfig(

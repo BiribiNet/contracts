@@ -390,6 +390,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         uint256 betTypeRaw,
         uint256 numberRaw
     ) private {
+        if (amount == 0) revert IRouletteBetErrors.ZeroBetAmount();
         if (betTypeRaw == 0 || betTypeRaw > BET_TRIO_023) revert IRouletteBetErrors.InvalidBetType();
         RouletteBetCodecLib.validateBetNumber(betTypeRaw, numberRaw);
         RouletteEngineStorageLib.BetEntry memory bet =
@@ -873,6 +874,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         if (pool0 == 0) pool0 = $.JACKPOT_TREASURY.jackpotPool();
         uint256 denom = gr.jackpotTotalStake;
         if (denom == 0) denom = totalStake;
+        // Defence in depth: with no eligible stake weight the proportional share is undefined.
+        // Skip distribution rather than divide by zero (mirrors `_payoutLaneHasWork`'s totalStake > 0 gate).
+        if (denom == 0) return (jackpotWinners, jackpotAmounts);
 
         uint256 start = uint256(gr.jackpotCursor);
         if (start >= n) return (jackpotWinners, jackpotAmounts);

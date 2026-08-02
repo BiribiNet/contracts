@@ -93,6 +93,15 @@ contract MockRoundEngine {
         return (vrfFulfilled[roundId], jackpotTriggered[roundId]);
     }
 
+    /// @dev Marks the current global round as VRF-fulfilled WITHOUT advancing the pointer,
+    /// reproducing the real engine's window where `currentGlobalRound` is settling and its
+    /// outcome is already public. Used to exercise the {SideBet} post-VRF placement guard.
+    function markCurrentRoundFulfilled(uint8 number) external {
+        uint64 rid = currentGlobalRound;
+        vrfFulfilled[rid] = true;
+        winningNumber[rid] = number;
+    }
+
     /// @notice Records `number` for the current round and opens the next global round.
     function fulfillRound(uint8 number) external {
         fulfillRoundWithJackpot(number, false);
