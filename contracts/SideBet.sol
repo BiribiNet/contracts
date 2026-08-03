@@ -277,7 +277,9 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         uint256 total = $.betCount;
         uint256 id = cursorBetId;
         if (id % laneCount != lane) {
-            id += (lane - (id % laneCount)) % laneCount;
+            // Add `laneCount` before subtracting so the offset stays non-negative in unsigned math
+            // when `id % laneCount > lane` (reachable after the engine's payout lane count changes).
+            id += (lane + laneCount - (id % laneCount)) % laneCount;
         }
 
         SettleRow[] memory found = new SettleRow[](maxBets);

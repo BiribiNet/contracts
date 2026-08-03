@@ -19,6 +19,10 @@ contract RouletteEngineHarness is RouletteEngine {
         RouletteEngineStorageLib.layout().payoutLaneCount = laneCount;
     }
 
+    function harnessSetRoundPhase(RouletteEngineStorageLib.RoundPhase phase) external {
+        RouletteEngineStorageLib.layout()._roundPhase = phase;
+    }
+
     function harnessIsRoundDone(uint64 roundId) external view returns (bool) {
         return _isRoundDone(RouletteEngineStorageLib.layout(), roundId);
     }

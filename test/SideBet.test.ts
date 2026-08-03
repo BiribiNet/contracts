@@ -599,6 +599,16 @@ describe("SideBet", function () {
         expect(await sideBet.read.reservedOf([2])).to.equal(0n);
     });
 
+    it("realigns the lane cursor without unsigned underflow when id % laneCount > lane (NEW-3)", async function () {
+        const { sideBet } = await deployFixture();
+        // cursorBetId=3, lane=1, laneCount=5 → id % laneCount (3) > lane (1). Pre-fix, the realignment
+        // `lane - (id % laneCount)` underflowed in unsigned math and reverted; it must now return cleanly,
+        // advancing to the next id ≡ lane (mod laneCount) at or after the cursor (3 → 6).
+        const preview = await sideBet.read.previewSettleBundle([3n, 10, 1, 5]);
+        expect(preview[0].length).to.equal(0); // rows
+        expect(preview[1]).to.equal(6n); // nextCursorBetId
+    });
+
     it("supports UUPS upgrade by admin", async function () {
         const { sideBet, admin } = await deployFixture();
         const v2 = await viem.deployContract("SideBet");
