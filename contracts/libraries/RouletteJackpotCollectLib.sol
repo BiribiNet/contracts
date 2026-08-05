@@ -3,6 +3,8 @@ pragma solidity ^0.8.27;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
+import { IMarketRegistry } from "../interfaces/IMarketRegistry.sol";
+import { IBankVault } from "../interfaces/IBankVault.sol";
 
 /// @dev Linked library: cross-market jackpot-eligible straight stake collection (offloads `RouletteEngine`).
 library RouletteJackpotCollectLib {
@@ -75,7 +77,11 @@ library RouletteJackpotCollectLib {
         uint8 winningNumber,
         CollectState memory st
     ) private view returns (CollectState memory) {
-        uint8 dec = IERC20Metadata($.REGISTRY.getMarket(marketId).asset).decimals();
+        IMarketRegistry.MarketConfig memory mc = $.REGISTRY.getMarket(marketId);
+        uint8 dec = IERC20Metadata(mc.asset).decimals();
+        // Jackpot eligibility requires the straight stake to meet the market minimum; this excludes
+        // dust legs (e.g. 1 wei on every number) that would otherwise buy a free jackpot ticket.
+        uint256 minBet = IBankVault(mc.bank).minBet();
         RouletteEngineStorageLib.BetEntry[] storage bucket = $.roundNumberedBets[roundId][marketId][uint8(
             RouletteEngineStorageLib.NumberedBetBucket.Straight
         )][winningNumber];
@@ -84,12 +90,16 @@ library RouletteJackpotCollectLib {
         uint256 stake;
         for (uint256 j; j < len; ) {
             a = uint256(bucket[j].amount);
-            st.winners[st.out] = bucket[j].player;
-            stake = normalizeStakeWeight(a, dec);
-            st.stakes[st.out] = stake;
-            st.totalStake += stake;
+            if (a >= minBet) {
+                st.winners[st.out] = bucket[j].player;
+                stake = normalizeStakeWeight(a, dec);
+                st.stakes[st.out] = stake;
+                st.totalStake += stake;
+                unchecked {
+                    ++st.out;
+                }
+            }
             unchecked {
-                ++st.out;
                 ++j;
             }
         }

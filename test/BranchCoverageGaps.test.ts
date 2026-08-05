@@ -125,6 +125,35 @@ describe("Branch coverage — remaining 82 gaps", function () {
     });
 
     describe("RouletteEngine storage and lock/VRF revert paths", function () {
+        it("blocks setPayoutLaneCount while a round is settling and emits on success (NEW-2)", async function () {
+            const [admin] = await viem.getWalletClients();
+            const stack = await deployProtocolStack();
+            const { engine, vrf, deployer } = stack;
+
+            const harnessImpl = await viem.deployContract(
+                "RouletteEngineHarness",
+                [vrf.address, laneKey(), laneKey(), laneKey(), 1, zeroAddress],
+                { libraries: await deployEngineLibs() },
+            );
+            await engine.write.upgradeToAndCall([harnessImpl.address, "0x"], { account: deployer.account });
+            const harness = await viem.getContractAt("RouletteEngineHarness", engine.address);
+
+            // Open phase (round 1): the change is allowed.
+            await harness.write.setPayoutLaneCount([3], { account: admin.account });
+            expect(await harness.read.payoutParallelLaneCount()).to.equal(3n);
+
+            // Settling phase: the change is rejected — it would desync the winning-shard snapshot
+            // (partitioned with the old count) from the payout sweep and permanently stall the round.
+            await harness.write.harnessSetRoundPhase([3]); // RoundPhase.Settling
+            await expect(harness.write.setPayoutLaneCount([5], { account: admin.account })).to.be.rejected;
+            expect(await harness.read.payoutParallelLaneCount()).to.equal(3n);
+
+            // Back to Open: allowed again.
+            await harness.write.harnessSetRoundPhase([1]); // RoundPhase.Open
+            await harness.write.setPayoutLaneCount([5], { account: admin.account });
+            expect(await harness.read.payoutParallelLaneCount()).to.equal(5n);
+        });
+
         it("covers zero lane count, invalid bet sum, and scheduler lock guards", async function () {
             const [admin, alice] = await viem.getWalletClients();
             const stack = await deployProtocolStack({ deployBrbReferral: true });

@@ -149,6 +149,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     error OnlyRegistry();
     error InsufficientBankForMaxPayout();
     error InvalidReferrer();
+    error PayoutLaneCountLockedWhileSettling();
 
     event MarketRegistered(uint32 marketId, address asset, address bank);
 
@@ -171,6 +172,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     event WithdrawalQueueBatchSizeUpdated(uint256 newBatchSize);
     event MaxWithdrawalQueueLengthUpdated(uint256 newMaxLength);
     event RoundDurationUpdated(uint32 newRoundDuration);
+    event PayoutLaneCountUpdated(uint32 newLaneCount);
     event ReferralSet(address player, address referrer);
     event JackpotFunderUpdated(address previousFunder, address newFunder);
     event JackpotTreasuryUpdated(address previousTreasury, address newTreasury);
@@ -258,7 +260,16 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
 
     function setPayoutLaneCount(uint32 newLaneCount) external onlyRole(ENGINE_PAYOUT_ROLE) {
         if (newLaneCount == 0) revert InvalidJob();
-        _s().payoutLaneCount = newLaneCount;
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        // Reject changes during Settling: the winning-shard partitioning is snapshotted with the
+        // current lane count at VRF resolution and the payout sweep re-reads it while the round is
+        // Settling. Changing it mid-settlement desyncs the two and permanently stalls the round.
+        // Open/Locked/Completed are safe — the next round's snapshot uses the new count consistently.
+        if ($._roundPhase == RouletteEngineStorageLib.RoundPhase.Settling) {
+            revert PayoutLaneCountLockedWhileSettling();
+        }
+        $.payoutLaneCount = newLaneCount;
+        emit PayoutLaneCountUpdated(newLaneCount);
     }
 
     /// @inheritdoc IRouletteEngine
@@ -390,6 +401,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         uint256 betTypeRaw,
         uint256 numberRaw
     ) private {
+        if (amount == 0) revert IRouletteBetErrors.ZeroBetAmount();
         if (betTypeRaw == 0 || betTypeRaw > BET_TRIO_023) revert IRouletteBetErrors.InvalidBetType();
         RouletteBetCodecLib.validateBetNumber(betTypeRaw, numberRaw);
         RouletteEngineStorageLib.BetEntry memory bet =
@@ -873,6 +885,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         if (pool0 == 0) pool0 = $.JACKPOT_TREASURY.jackpotPool();
         uint256 denom = gr.jackpotTotalStake;
         if (denom == 0) denom = totalStake;
+        // Defence in depth: with no eligible stake weight the proportional share is undefined.
+        // Skip distribution rather than divide by zero (mirrors `_payoutLaneHasWork`'s totalStake > 0 gate).
+        if (denom == 0) return (jackpotWinners, jackpotAmounts);
 
         uint256 start = uint256(gr.jackpotCursor);
         if (start >= n) return (jackpotWinners, jackpotAmounts);

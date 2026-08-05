@@ -193,6 +193,24 @@ describe("SideBet", function () {
         expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultBalBefore + USDC("10"));
     });
 
+    it("rejects placeBet once the start round's VRF is already fulfilled (C-1)", async function () {
+        const { sideBet, admin, alice, roundEngine } = await deployFixture();
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 1 }),
+            admin.account,
+        );
+
+        // Positive control: while the start round is still open, the bet is accepted.
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
+
+        // Reproduce the settling window: the current round's outcome is public but the
+        // global-round pointer has not advanced yet. Placing now would be risk-free.
+        await roundEngine.write.markCurrentRoundFulfilled([7], { account: admin.account });
+        await expect(sideBet.write.placeBet([0n, USDC("10")], { account: alice.account })).to.be.rejected;
+    });
+
     it("wins COLOR_COUNT early and loses on a fully-observed window", async function () {
         const { sideBet, scheduler, admin, alice, roundEngine } = await deployFixture();
         await registerConfig(
@@ -527,6 +545,68 @@ describe("SideBet", function () {
         expect((await sideBet.read.getBet([1n])).status).to.equal(Status.WON);
         expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
         expect(await sideBet.read.reservedOf([2])).to.equal(0n);
+    });
+
+    it("pays every winner when two markets have interleaved winners in one batch (NEW-1)", async function () {
+        const { sideBet, scheduler, usdc, registry, admin, alice, roundEngine } = await deployFixture();
+
+        // Second market (vault index 1). Market 1 (usdc) is vault index 0.
+        const usdc2 = await viem.deployContract("MockUSDC");
+        await registry.write.createMarket(
+            [{ asset: usdc2.address, bankAdmin: admin.account.address, minBet: USDC("1") }],
+            { account: admin.account },
+        );
+        const market2 = await registry.read.getMarket([2]);
+        const vault2 = await viem.getContractAt("BankVault4626", market2.bank);
+        await usdc2.write.mint([admin.account.address, USDC("10000")]);
+        await usdc2.write.mint([alice.account.address, USDC("1000")]);
+        await usdc2.write.approve([vault2.address, USDC("1000")], { account: alice.account });
+        await usdc2.write.approve([vault2.address, USDC("5000")], { account: admin.account });
+        await vault2.write.deposit([USDC("5000"), admin.account.address], { account: admin.account });
+
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 1 }),
+            admin.account,
+        ); // configId 0 → market 1
+        await registerConfig(
+            sideBet,
+            config({ marketId: 2, betType: BetType.NUMBER_HIT, targetNumber: 5, targetCount: 1, windowSpins: 1 }),
+            admin.account,
+        ); // configId 1 → market 2
+
+        // betId order across vaults must be [market1, market2, market1] → vault indices [0, 1, 0].
+        // Pre-fix, the third winner (market1) overwrote the second winner's (market2) payout slot,
+        // so vault 2 paid address(0)/0 and its winner was never paid.
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account }); // betId 0, market 1
+        await fulfillRounds(roundEngine, [7]);
+        await sideBet.write.placeBet([1n, USDC("10")], { account: alice.account }); // betId 1, market 2
+        await fulfillRounds(roundEngine, [5]);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account }); // betId 2, market 1
+        await fulfillRounds(roundEngine, [7]);
+
+        await settleViaScheduler(scheduler);
+
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
+        expect((await sideBet.read.getBet([1n])).status).to.equal(Status.WON);
+        expect((await sideBet.read.getBet([2n])).status).to.equal(Status.WON);
+
+        // Market 2 winner (betId 1) must actually be paid: 10 staked → 990, +100 payout → 1090.
+        expect(await usdc2.read.balanceOf([alice.account.address])).to.equal(USDC("1090"));
+        // Market 1 winners (betId 0 & 2): 1000 − 20 staked + 200 payout → 1180.
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(USDC("1180"));
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+        expect(await sideBet.read.reservedOf([2])).to.equal(0n);
+    });
+
+    it("realigns the lane cursor without unsigned underflow when id % laneCount > lane (NEW-3)", async function () {
+        const { sideBet } = await deployFixture();
+        // cursorBetId=3, lane=1, laneCount=5 → id % laneCount (3) > lane (1). Pre-fix, the realignment
+        // `lane - (id % laneCount)` underflowed in unsigned math and reverted; it must now return cleanly,
+        // advancing to the next id ≡ lane (mod laneCount) at or after the cursor (3 → 6).
+        const preview = await sideBet.read.previewSettleBundle([3n, 10, 1, 5]);
+        expect(preview[0].length).to.equal(0); // rows
+        expect(preview[1]).to.equal(6n); // nextCursorBetId
     });
 
     it("supports UUPS upgrade by admin", async function () {

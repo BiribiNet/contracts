@@ -234,6 +234,10 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         ISideBetVault vault = ISideBetVault(m.bank);
 
         uint64 startGlobalRound = ENGINE.currentGlobalRound();
+        // Reject placement once the start round's VRF is fulfilled: its winning number and jackpot flag
+        // are already public storage, so an attacker could otherwise place a risk-free, guaranteed-win bet.
+        (bool startRoundFulfilled, ) = ENGINE.roundOutcome(startGlobalRound);
+        if (startRoundFulfilled) revert RoundOutcomeAlreadyKnown();
         betId = $.betCount;
         $.betCount = betId + 1;
         $.bets[betId] = Bet({
@@ -273,7 +277,9 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         uint256 total = $.betCount;
         uint256 id = cursorBetId;
         if (id % laneCount != lane) {
-            id += (lane - (id % laneCount)) % laneCount;
+            // Add `laneCount` before subtracting so the offset stays non-negative in unsigned math
+            // when `id % laneCount > lane` (reachable after the engine's payout lane count changes).
+            id += (lane + laneCount - (id % laneCount)) % laneCount;
         }
 
         SettleRow[] memory found = new SettleRow[](maxBets);
@@ -387,8 +393,13 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         Bet storage bet;
         address bank;
         uint256 vaultIdx;
-        uint256 payoutIdx;
 
+        // Pass 1 — register vaults, accumulate per-vault totals, and COUNT winners per vault.
+        // Winner payout slots are written in pass 2: their flat-array position depends on the
+        // FINAL per-vault counts (which `_buildPreviewVaultApplies` uses to slice the array back),
+        // so they cannot be computed while counts are still growing. `rowVaultIdx` caches each
+        // row's vault so pass 2 need not re-derive the bank via `_marketOrRevert`.
+        uint256[] memory rowVaultIdx = new uint256[](batchLen);
         for (uint256 i; i < batchLen; ) {
             row = rows[i];
             bet = $.bets[row.betId];
@@ -403,21 +414,43 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
                     ++s.vaultCount;
                 }
             }
+            rowVaultIdx[i] = vaultIdx;
 
             s.releaseTotals[vaultIdx] += bet.payout;
             s.totalStakes[vaultIdx] += bet.stake;
             if (row.won) {
                 s.totalPaid[vaultIdx] += row.payoutAmount;
-                payoutIdx = s.winnerCounts[vaultIdx];
-                for (uint256 u; u < vaultIdx; ) {
-                    payoutIdx += s.winnerCounts[u];
-                    unchecked {
-                        ++u;
-                    }
-                }
-                s.winnerPayouts[payoutIdx] = IBankVault.Payout({ player: bet.player, amount: row.payoutAmount });
                 unchecked {
                     ++s.winnerCounts[vaultIdx];
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Base offset of each vault's contiguous winner block, from the final counts.
+        uint256[] memory base = new uint256[](s.vaultCount);
+        uint256[] memory written = new uint256[](s.vaultCount);
+        uint256 acc;
+        for (uint256 v; v < s.vaultCount; ) {
+            base[v] = acc;
+            acc += s.winnerCounts[v];
+            unchecked {
+                ++v;
+            }
+        }
+
+        // Pass 2 — place each winner into `[base[vault], base[vault] + count[vault])`, in row order.
+        for (uint256 i; i < batchLen; ) {
+            row = rows[i];
+            if (row.won) {
+                vaultIdx = rowVaultIdx[i];
+                bet = $.bets[row.betId];
+                uint256 pos = base[vaultIdx] + written[vaultIdx];
+                s.winnerPayouts[pos] = IBankVault.Payout({ player: bet.player, amount: row.payoutAmount });
+                unchecked {
+                    ++written[vaultIdx];
                 }
             }
             unchecked {
