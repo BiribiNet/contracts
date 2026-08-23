@@ -9,6 +9,7 @@ import { VRFConsumerBaseV2 } from "./external/VRFConsumerBaseV2.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IBankVault } from "./interfaces/IBankVault.sol";
+import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IJackpotTreasury } from "./interfaces/IJackpotTreasury.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
@@ -238,6 +239,17 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     /// @inheritdoc IRouletteEngine
+    function marketRouletteLiquidityNeed(uint32 marketId) external view returns (uint256) {
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        uint64 roundId = $._globalRound;
+        uint256 liability = _bufferedMarketMaxLiability($, roundId, marketId);
+        // Stakes are already inside `lockedBetLiquidity`, so they are not part of the free liquidity
+        // the vault would otherwise hand to a side bet — only the shortfall above them counts.
+        uint256 stakes = $.marketRoundStateByRound[roundId][marketId].totals.totalAmount;
+        return liability > stakes ? liability - stakes : 0;
+    }
+
+    /// @inheritdoc IRouletteEngine
     function isBankLiquidityRestricted(uint32 marketId) public view returns (bool) {
         RouletteEngineStorageLib.Layout storage $ = _s();
         uint64 r = $._globalRound;
@@ -349,9 +361,14 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         mr.totals.addBet(amount);
         emit BetRecorded(marketId, roundId, player, amount, betData);
 
-        // Bets are recorded before the vault pulls tokens; solvency is checked against balance after this transfer.
-        uint256 bankBal = IERC20(cfg.asset).balanceOf(cfg.bank);
-        if (bankBal + amount < _bufferedMarketMaxLiability($, roundId, marketId)) {
+        // Bets are recorded before the vault pulls tokens, so `amount` is not in the vault balance yet.
+        // Measure genuinely free liquidity instead of the raw balance: `availableForSideBet()` nets out
+        // `lockedBetLiquidity`, which holds side-bet payout reserves as well as this round's roulette
+        // stakes. Those stakes do back this market's own liability, so they are added back; the
+        // side-bet reserves do not, and counting them let both systems commit the same tokens — the
+        // one that settled second could not be paid, reverting its lane and stalling the round.
+        uint256 freeLiquidity = ISideBetVault(cfg.bank).availableForSideBet() + mr.totals.totalAmount + amount;
+        if (freeLiquidity < _bufferedMarketMaxLiability($, roundId, marketId)) {
             revert InsufficientBankForMaxPayout();
         }
     }

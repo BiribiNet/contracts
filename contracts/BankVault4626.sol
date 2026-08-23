@@ -183,6 +183,12 @@ contract BankVault4626 is
         if (player == address(0) || stake == 0) revert ZeroAmount();
         BankVaultStorage storage $ = _s();
         uint256 free = availableForSideBet();
+        // `lockedBetLiquidity` holds roulette stakes but never the worst case they can pay out, so
+        // free liquidity alone overstates what a side bet may reserve. The engine's solvency check
+        // is not re-run after the last bet, so without this a side bet placed late could quietly
+        // take liquidity the round still owes its winners.
+        uint256 rouletteNeed = $.ENGINE.marketRouletteLiquidityNeed($.marketId);
+        free = free > rouletteNeed ? free - rouletteNeed : 0;
         if (free + stake < payoutReserve) revert InsufficientSideBetLiquidity();
         IERC20(asset()).safeTransferFrom(player, address(this), stake);
         $.lockedBetLiquidity += payoutReserve;

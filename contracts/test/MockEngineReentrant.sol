@@ -30,6 +30,10 @@ contract MockEngineReentrant {
         return false;
     }
 
+    function marketRouletteLiquidityNeed(uint32) external pure returns (uint256) {
+        return 0;
+    }
+
     function maxWithdrawalQueueLength() external pure returns (uint256) {
         return 1000;
     }
