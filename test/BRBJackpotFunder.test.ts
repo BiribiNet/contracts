@@ -421,7 +421,7 @@ describe("BRBJackpotFunder", function () {
         expect(warmMinOut).to.be.gt(0n);
     });
 
-    it("uses warm TWAP with slippageBps when spot is pumped above TWAP", async function () {
+    it("keeps spot as the floor reference when spot sits above TWAP (H-5)", async function () {
         const [admin] = await viem.getWalletClients();
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
         const treasury = await viem.deployContract("JackpotTreasury", [
@@ -464,13 +464,83 @@ describe("BRBJackpotFunder", function () {
         await pairContract.write.setReserves([reserve0, reserve1]);
 
         const swapIn = parseUnits("50", 6);
-        const [twapQuote, usedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
-        expect(usedTwap).to.equal(true);
-        expect(twapQuote).to.be.gt(0n);
+        // Pumping BRB reserves raises spot output, so the TWAP sits BELOW spot. A protective floor
+        // only binds from above (a spot pushed DOWN is the theft case), so the TWAP is not selected
+        // here and spot keeps its stricter cold-slippage tier.
+        const [quote, usedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
+        expect(usedTwap).to.equal(false);
+        expect(quote).to.be.gt(0n);
 
         const minOut = await funder.read.harnessAmountOutMin([usdc.address, swapIn]);
-        expect(minOut).to.equal((twapQuote * 9800n) / 10000n);
-        expect(minOut).to.be.gt((twapQuote * 6000n) / 10000n);
+        expect(minOut).to.equal((quote * 6000n) / 10000n);
+    });
+
+    it("raises the floor to the TWAP when spot is pushed below it (H-5)", async function () {
+        const [admin] = await viem.getWalletClients();
+        const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+        const treasury = await viem.deployContract("JackpotTreasury", [
+            brb.address,
+            admin.account.address,
+            admin.account.address,
+        ]);
+        const router = await viem.deployContract("MockUniswapV2Router");
+        const factory = await viem.deployContract("MockUniswapV2Factory");
+        await router.write.setFactory([factory.address]);
+        const usdc = await viem.deployContract("MockUSDC");
+        const usdcReserve = 1_000_000_000_000_000n;
+        const brbReserve = usdcReserve * 1_000_000_000_000n;
+        const pair = await seedCanonicalPairAtTwapAddress(
+            factory.address,
+            usdc.address,
+            brb.address,
+            usdcReserve,
+            brbReserve,
+        );
+
+        const funder = await viem.deployContract("BRBJackpotFunderHarness", [
+            admin.account.address,
+            brb.address,
+            router.address,
+            treasury.address,
+            admin.account.address,
+            admin.account.address,
+        ]);
+        await funder.write.setTwapWindowSeconds([600], { account: admin.account });
+        await funder.write.setSlippageBps([100n], { account: admin.account });
+        await funder.write.setColdSlippageBps([300n], { account: admin.account });
+
+        await funder.write.harnessSnapshotPairObservation([usdc.address], { account: admin.account });
+        await time.increase(601);
+
+        const swapIn = parseUnits("50", 6);
+        // Honest state: the TWAP is the reference (it prices without the 0.3% pool fee, so it sits
+        // just above spot) and the floor it sets is comfortably satisfiable.
+        const [honestQuote, honestUsedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
+        expect(honestUsedTwap).to.equal(true);
+        const honestSpot = await funder.read.harnessSpotAmountOut([usdc.address, swapIn]);
+        const honestMinOut = await funder.read.harnessAmountOutMin([usdc.address, swapIn]);
+        expect(honestMinOut).to.be.lte(honestSpot);
+
+        // Sandwich: drain BRB from the pool so the pool now returns far less BRB per USDC.
+        const pairContract = await viem.getContractAt("MockUniswapV2Pair", pair);
+        const crushedBrb = brbReserve / 10n;
+        const [reserve0, reserve1] = pairReservesForTokens(usdc.address, brb.address, usdcReserve, crushedBrb);
+        await pairContract.write.setReserves([reserve0, reserve1]);
+
+        // The TWAP still reflects the pre-manipulation average, so it is now ABOVE spot and becomes
+        // the binding floor. Pre-fix the quote followed the crushed spot and the swap went through
+        // at the attacker's price.
+        const [floorQuote, usedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
+        expect(usedTwap).to.equal(true);
+        // The floor still reflects the pre-manipulation average, not the crushed pool.
+        expect(floorQuote).to.equal(honestQuote);
+
+        const minOut = await funder.read.harnessAmountOutMin([usdc.address, swapIn]);
+        expect(minOut).to.equal((floorQuote * 9900n) / 10000n);
+
+        // The manipulated pool cannot satisfy that floor, so the swap is refused rather than executed.
+        const crushedSpot = await funder.read.harnessSpotAmountOut([usdc.address, swapIn]);
+        expect(minOut).to.be.gt(crushedSpot);
     });
 
     it("records pair observation and uses TWAP after the window elapses", async function () {
@@ -516,8 +586,14 @@ describe("BRBJackpotFunder", function () {
         await funder.write.fundFromMarket([1n, usdc.address], { account: admin.account });
         expect(await usdc.read.balanceOf([funder.address])).to.equal(0n);
 
-        const obsAfter = await funder.read.pairObservations([pair]);
-        expect(Number(obsAfter[0])).to.be.gt(Number(obs[0]));
+        // Sampling still happens after every successful swap...
+        const pendingAfter = await funder.read.pendingPairObservations([pair]);
+        expect(Number(pendingAfter[0])).to.be.gt(Number(obs[0]));
+
+        // ...but the anchor holds its lookback until the window elapses. Resetting it on every swap
+        // is what kept the TWAP permanently cold under normal round cadence (H-5).
+        const anchorAfter = await funder.read.pairObservations([pair]);
+        expect(Number(anchorAfter[0])).to.equal(Number(obs[0]));
     });
 
     it("engine setJackpotTreasury points jackpot payouts at a new treasury", async function () {
