@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { parseUnits, zeroAddress } from "viem";
+import { getAddress, parseUnits, zeroAddress } from "viem";
 
 import { createMarketWithBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
@@ -32,6 +32,22 @@ async function deploySchedulerStack() {
 }
 
 describe("Upkeep forwarder gate", function () {
+    it("refuses to unset the forwarder authority (H-7)", async function () {
+        const { admin, scheduler, authority } = await deploySchedulerStack();
+
+        // Zeroing it made every performUpkeep revert with no timeout path: automation halts, and a
+        // round stuck in Settling keeps vault deposits and withdrawals frozen.
+        await expect(
+            scheduler.write.setForwarderAuthority([zeroAddress], { account: admin.account }),
+        ).to.be.rejected;
+        expect(getAddress(await scheduler.read.forwarderAuthority())).to.equal(getAddress(authority.address));
+
+        // Rotating to another authority stays allowed.
+        const replacement = await viem.deployContract("CreExecutionAuthority", [admin.account.address]);
+        await scheduler.write.setForwarderAuthority([replacement.address], { account: admin.account });
+        expect(getAddress(await scheduler.read.forwarderAuthority())).to.equal(getAddress(replacement.address));
+    });
+
     it("rejects performUpkeep from non-forwarder when forwarder authority is set", async function () {
         const { scheduler, alice, bank, usdc } = await deploySchedulerStack();
 
