@@ -431,9 +431,13 @@ describe("Branch coverage — push to 100%", function () {
             expect(balBefore - balAfter).to.be.gt(0n);
             expect(balBefore - balAfter).to.be.lt(USDC("100"));
 
-            await vault.write.redeemBps([100, alice.account.address, alice.account.address], {
-                account: alice.account,
-            });
+            // The 100% redemption above burned the whole position, so a further request could never
+            // pay out. Queuing it used to be allowed and wasted a bounded queue slot (H-2).
+            await expect(
+                vault.write.redeemBps([100, alice.account.address, alice.account.address], {
+                    account: alice.account,
+                }),
+            ).to.be.rejected;
             await mockEngine.write.processWithdrawals([vault.address, 1n]);
 
             await expect(

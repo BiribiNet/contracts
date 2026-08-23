@@ -137,14 +137,17 @@ describe("Branch coverage — final 100% gaps", function () {
                 account: stranger.account,
             });
 
+            await usdc.write.mint([alice.account.address, USDC("100")]);
+            await usdc.write.approve([capVault.address, USDC("100")], { account: alice.account });
+            await capVault.write.deposit([USDC("50"), alice.account.address], { account: alice.account });
+
+            // Zero-bps entry from a real holder: still queues a row that resolves to zero shares, so
+            // the queue's zero-share arm stays covered. An address with no position at all is now
+            // rejected upstream (H-2).
             await capVault.write.harnessEnqueueWithdrawal([alice.account.address, 0, alice.account.address], {
                 account: alice.account,
             });
             await capEngine.write.processWithdrawals([capVault.address, 1n]);
-
-            await usdc.write.mint([alice.account.address, USDC("100")]);
-            await usdc.write.approve([capVault.address, USDC("100")], { account: alice.account });
-            await capVault.write.deposit([USDC("50"), alice.account.address], { account: alice.account });
             await capVault.write.withdraw([USDC("999"), alice.account.address, alice.account.address], { account: alice.account });
 
             await probe.write.tryWithdraw([capVault.address, USDC("1"), zeroAddress, alice.account.address], {

@@ -341,6 +341,12 @@ contract BankVault4626 is
     function _enqueueWithdrawal(address owner, uint16 bps, address receiver) internal {
         if (receiver == address(0)) revert InvalidReceiver();
         if (owner != msg.sender) revert UnauthorizedCaller();
+        // An address with no position can never be paid out, but its request still consumes one of
+        // the queue's bounded slots. `withdraw`/`redeem` already reject empty positions upstream;
+        // without this, `redeemBps` let sybils fill the queue faster than settlement drains it and
+        // lock genuine LPs out behind `QueueFull`. Holders are unaffected: shares are not escrowed,
+        // so a queued request whose position empties later is still absorbed by the queue.
+        if (balanceOf(owner) == 0) revert ZeroAmount();
         _assertCanEnqueue(owner);
 
         BankVaultStorage storage $ = _s();
