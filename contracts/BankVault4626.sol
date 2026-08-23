@@ -290,6 +290,29 @@ contract BankVault4626 is
     }
 
     function processWithdrawalQueue(uint256 maxCount) external override onlyEngine returns (uint256 processed) {
+        return _processQueue(maxCount);
+    }
+
+    /// @notice Drain the withdrawal queue without waiting for a settlement.
+    /// @dev The engine only drains the queue from `_finalizeMarketSettlement`, which is reached only
+    /// for a market that had bets in the round. A market with no betting activity — or a protocol
+    /// with none at all — therefore never drains, and a queued LP cannot even re-request
+    /// (`_assertCanEnqueue` reverts while one is pending). This is the escape hatch. It is
+    /// permissionless because the queue pays its own owners at their own NAV, but it must not run
+    /// while the round is resolving: `releaseBets` zeroes `lockedBetLiquidity` before winners are
+    /// paid, so LPs could otherwise exit ahead of them. Refusing at zero NAV matters too — the queue
+    /// burns shares whether or not it can pay, so draining a fully-locked vault would burn for
+    /// nothing. Deliberately NOT requiring `lockedBetLiquidity == 0`: one open dust side bet would
+    /// then be enough to block the hatch for everyone.
+    function drainWithdrawalQueue(uint256 maxCount) external nonReentrant returns (uint256 processed) {
+        BankVaultStorage storage $ = _s();
+        if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
+        if (totalAssets() == 0) revert ZeroAmount();
+        uint256 cap = $.ENGINE.withdrawalQueueBatchSize();
+        return _processQueue(maxCount > cap ? cap : maxCount);
+    }
+
+    function _processQueue(uint256 maxCount) private returns (uint256 processed) {
         BankVaultStorage storage $ = _s();
         uint256 head = $._queueHead;
         uint256 len = $._withdrawalQueue.length;
