@@ -48,8 +48,15 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// @notice Minimum elapsed time since the last stored pair observation before TWAP is used (default 30 minutes).
     uint32 public twapWindowSeconds;
 
-    /// @dev Last cumulative prices per Uniswap V2 pair (asset/BRB), updated after each successful swap.
+    /// @dev Anchor observation per Uniswap V2 pair (asset/BRB): the start of the TWAP window. Once
+    /// seeded it is always at least `twapWindowSeconds` old, so the TWAP branch is actually reachable.
+    /// It is NOT overwritten by every swap — that kept the window permanently cold under normal round
+    /// cadence, leaving `amountOutMin` derived from spot alone.
     mapping(address pair => UniswapV2TwapLib.Observation) public pairObservations;
+
+    /// @dev Most recent sample per pair (still taken after every successful swap). Promoted to the
+    /// anchor once it has aged past `twapWindowSeconds`.
+    mapping(address pair => UniswapV2TwapLib.Observation) public pendingPairObservations;
 
     uint256 public constant BPS_DENOM = 10_000;
     uint32 public constant DEFAULT_TWAP_WINDOW_SECONDS = 30 minutes;
@@ -261,8 +268,12 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
         if (window > 0 && obs.timestamp != 0 && nowTs > obs.timestamp && nowTs - obs.timestamp >= window) {
             uint256 twapOut = UniswapV2TwapLib.quoteTwapAmountOut(pair, asset, swapIn, obs, nowTs);
-            // Ignore dust TWAP (likely truncation / stale cumulatives); keep spot for cold-tier slippage.
-            if (twapOut > 0 && twapOut < spotOut && twapOut * BPS_DENOM / spotOut >= 100) {
+            // Protective floor: only a TWAP ABOVE spot carries information — it means spot has been
+            // pushed down (sandwich, thin liquidity), which is exactly when the floor must bite.
+            // Taking the lower of the two, as this did before, made `amountOutMin` follow the
+            // manipulated spot and removed the protection in the one case it exists for.
+            // A TWAP at or below spot adds nothing, so keep spot under its stricter cold slippage.
+            if (twapOut > spotOut) {
                 return (twapOut, true);
             }
         }
@@ -297,11 +308,29 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
         (uint256 price0Cumulative, uint256 price1Cumulative, uint32 timestamp) =
             UniswapV2TwapLib.currentCumulativePrices(pair);
-        pairObservations[pair] = UniswapV2TwapLib.Observation({
+        UniswapV2TwapLib.Observation memory sample = UniswapV2TwapLib.Observation({
             timestamp: timestamp,
             price0Cumulative: price0Cumulative,
             price1Cumulative: price1Cumulative
         });
-        emit PairObservationUpdated(pair, timestamp);
+
+        UniswapV2TwapLib.Observation memory pending = pendingPairObservations[pair];
+        if (pending.timestamp == 0) {
+            // First sample for this pair: seed both slots and let the anchor start ageing.
+            pairObservations[pair] = sample;
+            pendingPairObservations[pair] = sample;
+            emit PairObservationUpdated(pair, timestamp);
+            return;
+        }
+
+        pendingPairObservations[pair] = sample;
+
+        // Roll the anchor forward only once the previous sample has aged past the window, so the
+        // anchor keeps a >= `twapWindowSeconds` lookback instead of being reset by every swap.
+        uint32 window = twapWindowSeconds;
+        if (window > 0 && timestamp > pending.timestamp && timestamp - pending.timestamp >= window) {
+            pairObservations[pair] = pending;
+            emit PairObservationUpdated(pair, pending.timestamp);
+        }
     }
 }

@@ -47,4 +47,10 @@ contract BRBJackpotFunderHarness is BRBJackpotFunder {
         address pair = _assetBrbPair(asset);
         return _quoteOut(pair, asset, swapIn);
     }
+
+    /// @dev Raw constant-product output at current reserves, to assert a TWAP floor sits above a
+    /// manipulated spot price.
+    function harnessSpotAmountOut(address asset, uint256 swapIn) external view returns (uint256) {
+        return UniswapV2TwapLib.spotAmountOut(_assetBrbPair(asset), asset, swapIn);
+    }
 }

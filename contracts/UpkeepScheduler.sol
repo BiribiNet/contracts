@@ -76,13 +76,20 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     }
 
     modifier onlyApprovedAutomationForwarder() {
+        // Explicit check before the external call: an unset authority has no code, so the call would
+        // revert on the compiler's extcodesize probe with an opaque error instead of naming the cause.
+        if (forwarderAuthority == address(0)) revert UnauthorizedAutomationForwarder();
         if (!IUpkeepForwarderAuthority(forwarderAuthority).isApprovedAutomationForwarder(msg.sender)) {
             revert UnauthorizedAutomationForwarder();
         }
         _;
     }
 
+    /// @dev Zero is rejected: it would make every `performUpkeep` revert, halting automation with no
+    /// timeout path — and while a round sits in `Settling` that also freezes vault deposits and
+    /// withdrawals. To disable an executor, revoke it on the authority instead.
     function setForwarderAuthority(address newAuthority) external onlyRole(SCHEDULER_ADMIN_ROLE) {
+        if (newAuthority == address(0)) revert ZeroAddress();
         forwarderAuthority = newAuthority;
         emit ForwarderAuthorityUpdated(newAuthority);
     }

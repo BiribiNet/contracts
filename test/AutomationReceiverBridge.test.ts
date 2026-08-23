@@ -2,7 +2,7 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { encodeAbiParameters, encodeFunctionData, parseUnits, toFunctionSelector, zeroAddress } from "viem";
+import { encodeAbiParameters, encodeFunctionData, getAddress, parseUnits, toFunctionSelector, zeroAddress } from "viem";
 
 import { createMarketWithBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
@@ -107,6 +107,50 @@ describe("AutomationReceiver bridge", function () {
         const [, performData] = await scheduler.read.checkUpkeep(["0x"]);
         const report = buildPerformUpkeepReport(scheduler.address, performData);
 
+        await expect(mockForwarder.write.deliverReport([receiver.address, report])).to.be.rejected;
+    });
+
+    it("refuses to unset the forwarder, keeping onReport permissioned (C-4)", async function () {
+        const { admin, receiver, mockForwarder } = await deployBridgeStack();
+
+        // Zeroing the forwarder used to only emit a warning; onReport's sender check is skipped when
+        // the forwarder is zero, so anyone could then drive any allowlisted (target, selector).
+        await expect(
+            receiver.write.setForwarderAddress([zeroAddress], { account: admin.account }),
+        ).to.be.rejected;
+        expect(getAddress(await receiver.read.getForwarderAddress())).to.equal(getAddress(mockForwarder.address));
+
+        // Rotating to a real forwarder stays allowed.
+        const replacement = await viem.deployContract("MockCreForwarder");
+        await receiver.write.setForwarderAddress([replacement.address], { account: admin.account });
+        expect(getAddress(await receiver.read.getForwarderAddress())).to.equal(getAddress(replacement.address));
+    });
+
+    it("refuses to clear workflow expectations once hardened (C-4)", async function () {
+        const { admin, receiver } = await deployBridgeStack();
+        const author = admin.account.address;
+        const workflowId = `0x${"11".repeat(32)}` as const;
+
+        await receiver.write.setExpectedAuthor([author], { account: admin.account });
+        await receiver.write.setExpectedWorkflowId([workflowId], { account: admin.account });
+
+        await expect(receiver.write.setExpectedAuthor([zeroAddress], { account: admin.account })).to.be.rejected;
+        await expect(
+            receiver.write.setExpectedWorkflowId([`0x${"00".repeat(32)}`], { account: admin.account }),
+        ).to.be.rejected;
+
+        expect(getAddress(await receiver.read.getExpectedAuthor())).to.equal(getAddress(author));
+        expect(await receiver.read.getExpectedWorkflowId()).to.equal(workflowId);
+    });
+
+    it("rejects a report whose metadata is too short to decode (C-4)", async function () {
+        const { admin, receiver, mockForwarder, scheduler } = await deployBridgeStack();
+
+        // Any expectation turns on metadata decoding, which reads 62 bytes via raw mload.
+        await receiver.write.setExpectedAuthor([admin.account.address], { account: admin.account });
+
+        const report = buildPerformUpkeepReport(scheduler.address, "0x");
+        // MockCreForwarder delivers empty metadata: previously decoded out of bounds from adjacent memory.
         await expect(mockForwarder.write.deliverReport([receiver.address, report])).to.be.rejected;
     });
 });

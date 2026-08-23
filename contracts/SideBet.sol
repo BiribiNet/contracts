@@ -314,7 +314,12 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         vaultApplies = _previewVaultApplies($, rows);
     }
 
-    function settleBatch(SettleRow[] calldata rows, SettleVaultApply[] calldata vaultApplies)
+    /// @dev The `vaultApplies` argument is accepted for calldata compatibility with
+    /// `previewSettleBundle` / `UpkeepScheduler` but is deliberately NOT trusted: banks, amounts and
+    /// recipients are recomputed here from the rows this call actually finalized. Applying a
+    /// caller-supplied bundle let a re-delivered CRE report re-run `payoutBatch` / `releaseBets` /
+    /// fee collection against already-settled bets, and let `bundle.bank` name any vault.
+    function settleBatch(SettleRow[] calldata rows, SettleVaultApply[] calldata)
         external
         override
         nonReentrant
@@ -322,8 +327,14 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         returns (uint256 settled)
     {
         SideBetData storage $ = _s();
-        for (uint256 i; i < rows.length; ) {
+
+        // Pass 1 — finalize rows. `_finalizeSettleRow` is idempotent: a bet that is no longer
+        // ACTIVE returns false, so a replayed report finalizes nothing and `settled` stays 0.
+        uint256 rowCount = rows.length;
+        SettleRow[] memory finalized = new SettleRow[](rowCount);
+        for (uint256 i; i < rowCount; ) {
             if (_finalizeSettleRow($, rows[i])) {
+                finalized[settled] = rows[i];
                 unchecked {
                     ++settled;
                 }
@@ -333,8 +344,28 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
             }
         }
 
-        for (uint256 v; v < vaultApplies.length; ) {
-            SettleVaultApply calldata bundle = vaultApplies[v];
+        // Nothing newly settled (re-delivered report, or a lane that raced us): touching the vaults
+        // would double-pay winners, double-release liquidity and double-collect market fees.
+        if (settled == 0) return 0;
+
+        if (settled != rowCount) {
+            SettleRow[] memory trimmed = new SettleRow[](settled);
+            for (uint256 i; i < settled; ) {
+                trimmed[i] = finalized[i];
+                unchecked {
+                    ++i;
+                }
+            }
+            finalized = trimmed;
+        }
+
+        // Pass 2 — derive vault effects from the finalized rows only. `_previewVaultApplies` reads
+        // stake/payout/player from storage (untouched by finalization) and resolves each bank from
+        // the registry, so no field of the report can redirect funds.
+        SettleVaultApply[] memory applies = _previewVaultApplies($, finalized);
+
+        for (uint256 v; v < applies.length; ) {
+            SettleVaultApply memory bundle = applies[v];
             IBankVault bank = IBankVault(bundle.bank);
             bank.releaseBets(bundle.releaseTotal);
             if (bundle.winnerPayouts.length != 0) {

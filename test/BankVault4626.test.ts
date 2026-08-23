@@ -208,6 +208,67 @@ describe("BankVault4626", function () {
         expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
     });
 
+    it("rejects zero-share withdrawal requests so sybils cannot fill the queue (H-2)", async function () {
+        const [admin, alice, sybil] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
+
+        // A holder-less address could queue a request that can never pay out, consuming one of the
+        // queue's bounded slots. All three entrypoints must reject it consistently.
+        expect(await vault.read.balanceOf([sybil.account.address])).to.equal(0n);
+        await expect(
+            vault.write.redeemBps([10_000, sybil.account.address, sybil.account.address], { account: sybil.account }),
+        ).to.be.rejected;
+        await expect(
+            vault.write.redeem([0n, sybil.account.address, sybil.account.address], { account: sybil.account }),
+        ).to.be.rejected;
+        await expect(
+            vault.write.withdraw([0n, sybil.account.address, sybil.account.address], { account: sybil.account }),
+        ).to.be.rejected;
+
+        // A real holder is unaffected.
+        await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
+    });
+
+    it("processes a queued request whose shares were transferred away after enqueueing", async function () {
+        const [admin, alice, bob] = await viem.getWalletClients();
+        const usdc = await viem.deployContract("MockUSDC");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(usdc.address, "Bank USDC", "bUSDC", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await usdc.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
+
+        await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
+
+        // Shares are not escrowed at enqueue time, so the position can still empty before processing.
+        // The queue must absorb that (zero shares -> no payout) rather than revert.
+        const shares = await vault.read.balanceOf([alice.account.address]);
+        await vault.write.transfer([bob.account.address, shares], { account: alice.account });
+
+        const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
+        await mockEngine.write.processWithdrawals([vault.address, 10n]);
+
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore);
+        expect(await vault.read.balanceOf([bob.account.address])).to.equal(shares);
+    });
+
     it("placeBetWithPermit succeeds even if permit is stale (try/catch)", async function () {
         const [admin] = await viem.getWalletClients();
         const pk =

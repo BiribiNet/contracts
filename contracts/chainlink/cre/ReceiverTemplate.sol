@@ -21,12 +21,15 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
     error InvalidWorkflowName(bytes10 received, bytes10 expected);
     error InvalidWorkflowId(bytes32 received, bytes32 expected);
     error WorkflowNameRequiresAuthorValidation();
+    error InvalidMetadataLength(uint256 received, uint256 expected);
+
+    /// @dev CRE report metadata layout: 32-byte workflow id + 10-byte workflow name + 20-byte owner.
+    uint256 private constant METADATA_MIN_LENGTH = 62;
 
     event ForwarderAddressUpdated(address indexed previousForwarder, address indexed newForwarder);
     event ExpectedAuthorUpdated(address indexed previousAuthor, address indexed newAuthor);
     event ExpectedWorkflowNameUpdated(bytes10 indexed previousName, bytes10 indexed newName);
     event ExpectedWorkflowIdUpdated(bytes32 indexed previousId, bytes32 indexed newId);
-    event SecurityWarning(string message);
 
     constructor(address _forwarderAddress) Ownable(msg.sender) {
         if (_forwarderAddress == address(0)) revert InvalidForwarderAddress();
@@ -76,16 +79,19 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
         _processReport(report);
     }
 
+    /// @dev Zero is rejected, matching the constructor: with no forwarder the sender check at the top
+    /// of `onReport` is skipped, which would make the receiver callable by anyone.
     function setForwarderAddress(address _forwarder) external onlyOwner {
+        if (_forwarder == address(0)) revert InvalidForwarderAddress();
         address previousForwarder = s_forwarderAddress;
-        if (_forwarder == address(0)) {
-            emit SecurityWarning("Forwarder address set to zero - contract is now INSECURE");
-        }
         s_forwarderAddress = _forwarder;
         emit ForwarderAddressUpdated(previousForwarder, _forwarder);
     }
 
+    /// @dev Zero is rejected so hardening cannot be silently undone; rotating to another author is
+    /// still allowed. Same rationale for `setExpectedWorkflowId`.
     function setExpectedAuthor(address _author) external onlyOwner {
+        if (_author == address(0)) revert InvalidAuthor(_author, s_expectedAuthor);
         address previousAuthor = s_expectedAuthor;
         s_expectedAuthor = _author;
         emit ExpectedAuthorUpdated(previousAuthor, _author);
@@ -111,6 +117,7 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
     }
 
     function setExpectedWorkflowId(bytes32 _id) external onlyOwner {
+        if (_id == bytes32(0)) revert InvalidWorkflowId(_id, s_expectedWorkflowId);
         bytes32 previousId = s_expectedWorkflowId;
         s_expectedWorkflowId = _id;
         emit ExpectedWorkflowIdUpdated(previousId, _id);
@@ -125,11 +132,16 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
         return hexString;
     }
 
+    /// @dev Bounds-checked before the raw `mload`s below: on short metadata they would otherwise read
+    /// adjacent memory and validate the report against whatever happened to sit there.
     function _decodeMetadata(bytes memory metadata)
         internal
         pure
         returns (bytes32 workflowId, bytes10 workflowName, address workflowOwner)
     {
+        if (metadata.length < METADATA_MIN_LENGTH) {
+            revert InvalidMetadataLength(metadata.length, METADATA_MIN_LENGTH);
+        }
         assembly {
             workflowId := mload(add(metadata, 32))
             workflowName := mload(add(metadata, 64))
