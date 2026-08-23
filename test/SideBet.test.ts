@@ -609,6 +609,43 @@ describe("SideBet", function () {
         expect(preview[1]).to.equal(6n); // nextCursorBetId
     });
 
+    it("ignores a replayed settle report instead of paying winners twice (C-2)", async function () {
+        const { sideBet, vault, usdc, admin, alice, roundEngine } = await deployFixture();
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 3 }),
+            admin.account,
+        );
+
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await fulfillRounds(roundEngine, [2, 7, 4]);
+
+        // Capture the exact (rows, vaultApplies) blob a CRE report carries, then deliver it twice.
+        const bundle = await sideBet.read.previewSettleBundle([0n, 10, 0, 1]);
+        expect(bundle[0].length).to.be.gt(0);
+        expect(bundle[2].length).to.be.gt(0);
+
+        const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
+        await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
+
+        await sideBet.write.settleBatch([bundle[0], bundle[2]], { account: admin.account });
+
+        const playerAfterFirst = await usdc.read.balanceOf([alice.account.address]);
+        const vaultAfterFirst = await usdc.read.balanceOf([vault.address]);
+        const lockedAfterFirst = await vault.read.lockedBetLiquidity();
+        expect(playerAfterFirst).to.equal(USDC("1090"));
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+
+        // Replay the identical report. Pre-fix this re-ran payoutBatch/releaseBets/fee collection,
+        // paying the winner a second time out of LP liquidity.
+        await sideBet.write.settleBatch([bundle[0], bundle[2]], { account: admin.account });
+
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(playerAfterFirst);
+        expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultAfterFirst);
+        expect(await vault.read.lockedBetLiquidity()).to.equal(lockedAfterFirst);
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+    });
+
     it("supports UUPS upgrade by admin", async function () {
         const { sideBet, admin } = await deployFixture();
         const v2 = await viem.deployContract("SideBet");
