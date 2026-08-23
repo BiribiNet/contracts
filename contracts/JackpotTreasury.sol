@@ -5,6 +5,7 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IJackpotTreasury } from "./interfaces/IJackpotTreasury.sol";
+import { PayoutMathLib } from "./libraries/PayoutMathLib.sol";
 
 /// @notice BRB-only jackpot treasury. Engine distributes pool among winners by stake share.
 contract JackpotTreasury is AccessControl, IJackpotTreasury {
@@ -49,7 +50,10 @@ contract JackpotTreasury is AccessControl, IJackpotTreasury {
         uint256 amt;
         for (uint256 i; i < n; ) {
             w = winners[i];
-            amt = amounts[i];
+            // Bound each row by what the pool still holds: the treasury is the last line of defence
+            // for amounts it did not compute itself, and a partial payout beats a reverting batch
+            // that would stall settlement.
+            amt = PayoutMathLib.capPayoutByPool(amounts[i], jackpotPool());
             if (amt > 0) {
                 brb.safeTransfer(w, amt);
                 paid += amt;

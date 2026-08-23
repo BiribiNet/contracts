@@ -776,16 +776,26 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
         address bank = $.REGISTRY.getMarket(marketId).bank;
 
+        uint32 lane = job.payoutShardIndex;
+        uint32 laneCount = job.payoutShardWidth;
+
+        // Defence in depth: the job is rebuilt off-chain and delivered through the CRE report, so
+        // re-assert the round context `previewPayoutBundle` relied on before moving any funds.
+        // A stale job (old round, VRF not in yet, market already settled) is treated as a no-op
+        // rather than a revert, matching how repeated lane executions already behave — the point is
+        // that it must not pay anything, not that it must fail loudly.
+        if (roundId != $._globalRound || !gr.vrfFulfilled || mr.settled) return;
+        // A malformed job is a different matter: `laneCount == 0` made `_allPayoutShardsComplete`
+        // vacuously true, finalizing a market whose winners were never paid.
+        if (laneCount == 0 || lane >= laneCount) revert InvalidJob();
+
         if (!mr.betsReleased) {
             IBankVault(bank).releaseBets(mr.totals.totalAmount);
             mr.betsReleased = true;
         }
 
-        uint32 lane = job.payoutShardIndex;
-        uint32 laneCount = job.payoutShardWidth;
-
         if (lane == 0 && jackpotWinners.length != 0) {
-            _applyJackpotChunkPrepared($, roundId, gr.winningNumber, gr, jackpotWinners, jackpotAmounts);
+            _applyJackpotChunkPrepared($, roundId, marketId, gr.winningNumber, gr, jackpotWinners, jackpotAmounts);
         }
 
         uint256 n = winnerPayoutRows.length;
@@ -910,11 +920,16 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     function _applyJackpotChunkPrepared(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
+        uint32 marketId,
         uint8 winningNumber,
         RouletteEngineStorageLib.GlobalRoundState storage gr,
         address[] memory winners,
         uint256[] memory amounts
     ) private {
+        // The preview gates the jackpot on both of these; the apply path gated on neither, so a
+        // payload carrying jackpot rows reached the treasury on rounds where no jackpot ever fired.
+        if (!gr.jackpotTriggered) revert StaleJackpotChunk();
+        if (marketId != $._roundTriggerMarket[roundId]) revert StaleJackpotChunk();
         if (gr.jackpotDistributed) revert StaleJackpotChunk();
         if (gr.jackpotPoolSnapshot == 0) {
             (address[] memory allWinners,, uint256 totalStake) =
@@ -925,6 +940,18 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         }
         // A raced duplicate of an already-applied chunk would overrun the winner count.
         if (uint256(gr.jackpotCursor) + winners.length > gr.jackpotWinnerCount) revert StaleJackpotChunk();
+
+        // The winner count bounds how many rows may be paid, but not how much: bound the chunk by
+        // what is left of this round's snapshotted pool so a single row cannot drain the treasury.
+        uint256 requested;
+        for (uint256 i; i < amounts.length; ) {
+            requested += amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+        uint256 remainingPool = gr.jackpotPoolSnapshot > gr.jackpotPaid ? gr.jackpotPoolSnapshot - gr.jackpotPaid : 0;
+        if (requested > remainingPool) revert StaleJackpotChunk();
 
         uint256 paid = $.JACKPOT_TREASURY.payBatch(winners, amounts);
         gr.jackpotPaid += paid;
