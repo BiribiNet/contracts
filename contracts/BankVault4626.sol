@@ -297,16 +297,26 @@ contract BankVault4626 is
     /// @dev The engine only drains the queue from `_finalizeMarketSettlement`, which is reached only
     /// for a market that had bets in the round. A market with no betting activity — or a protocol
     /// with none at all — therefore never drains, and a queued LP cannot even re-request
-    /// (`_assertCanEnqueue` reverts while one is pending). This is the escape hatch. It is
-    /// permissionless because the queue pays its own owners at their own NAV, but it must not run
-    /// while the round is resolving: `releaseBets` zeroes `lockedBetLiquidity` before winners are
-    /// paid, so LPs could otherwise exit ahead of them. Refusing at zero NAV matters too — the queue
-    /// burns shares whether or not it can pay, so draining a fully-locked vault would burn for
-    /// nothing. Deliberately NOT requiring `lockedBetLiquidity == 0`: one open dust side bet would
-    /// then be enough to block the hatch for everyone.
+    /// (`_assertCanEnqueue` reverts while one is pending). This is the escape hatch, and it is
+    /// permissionless because the queue pays its own owners at their own NAV.
+    ///
+    /// It must not run while the market owes anything, and that is TWO windows, not one.
+    /// `isBankLiquidityRestricted` only covers `Settling`, where `releaseBets` zeroes
+    /// `lockedBetLiquidity` before winners are paid. The `Open` window needs its own guard:
+    /// `_recordBetInternal` checks solvency once, when the bet lands, and never reserves the
+    /// shortfall above the stake — so between that check and resolution the payout is backed by
+    /// liquidity nothing is holding down, and draining it strands the round in `Settling` when
+    /// `payoutBatch` runs out of balance. `marketRouletteLiquidityNeed` is exactly that shortfall.
+    ///
+    /// Refusing at zero NAV matters too — the queue burns shares whether or not it can pay, so
+    /// draining a fully-locked vault would burn for nothing. Still deliberately NOT requiring
+    /// `lockedBetLiquidity == 0`: that counts side-bet reserves, and one open dust side bet would
+    /// be enough to block the hatch for everyone. The roulette shortfall is zero for exactly the
+    /// quiet markets this hatch exists to unstick.
     function drainWithdrawalQueue(uint256 maxCount) external nonReentrant returns (uint256 processed) {
         BankVaultStorage storage $ = _s();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
+        if ($.ENGINE.marketRouletteLiquidityNeed($.marketId) != 0) revert WithdrawalBlockedDuringResolution();
         if (totalAssets() == 0) revert ZeroAmount();
         uint256 cap = $.ENGINE.withdrawalQueueBatchSize();
         return _processQueue(maxCount > cap ? cap : maxCount);
