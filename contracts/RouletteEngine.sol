@@ -149,6 +149,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     error InvalidMaxWithdrawalQueueLength();
     error OnlyRegistry();
     error InsufficientBankForMaxPayout();
+    error PayoutExceedsMarketLiability();
     error InvalidReferrer();
     error PayoutLaneCountLockedWhileSettling();
 
@@ -828,6 +829,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         // execution of the same lane may have advanced the cursor since — applying stale rows would
         // double-pay one chunk and skip another.
         if (start != uint256(job.nextCursor)) revert StalePayoutChunk();
+
+        _assertPayoutWithinLiability(roundId, marketId, winnerPayoutRows);
+
         uint256 bankPaid = IBankVault(bank).payoutBatch(winnerPayoutRows);
         uint256 end = start + n;
         $.payoutCursorByShard[roundId][marketId][lane] = end;
@@ -980,6 +984,31 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         uint32 n = $._roundMarketParticipantCount[roundId];
         if (n == 0) return false;
         return $._roundMarketsSettledCount[roundId] == n;
+    }
+
+    /// @dev The row amounts come from the CRE report and are never recomputed here, so bound what a
+    /// whole round can hand out. Recomputing each row on-chain would mean re-walking the bet buckets
+    /// on every chunk, forever, to defend against a compromised DON — the same trust the protocol
+    /// already extends to VRF. This is cheap instead, and caps the blast radius of a bad report at
+    /// what the round could legitimately owe rather than at the vault's entire balance. It reverts
+    /// rather than clamping: clamping would silently underpay a real winner.
+    function _assertPayoutWithinLiability(
+        uint64 roundId,
+        uint32 marketId,
+        IBankVault.Payout[] memory rows
+    ) private view {
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        uint256 requested;
+        for (uint256 i; i < rows.length; ) {
+            requested += rows[i].amount;
+            unchecked {
+                ++i;
+            }
+        }
+        uint256 paidSoFar = $.marketRoundStateByRound[roundId][marketId].bankPaidRunning;
+        if (paidSoFar + requested > _bufferedMarketMaxLiability($, roundId, marketId)) {
+            revert PayoutExceedsMarketLiability();
+        }
     }
 
     function _bufferedMarketMaxLiability(RouletteEngineStorageLib.Layout storage $, uint64 rid, uint32 mid)
