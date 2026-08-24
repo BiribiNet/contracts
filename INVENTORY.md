@@ -1,19 +1,28 @@
-# Contracts INVENTORY — `markets` branch
+# Contracts INVENTORY — historical snapshot
+
+> ⚠️ **This is a snapshot of `markets @ 045b14c9`, not a description of `master`.**
+> It is kept for the architectural notes. **Do not use the address table below** —
+> every address in it is stale, and `UpkeepManager` no longer exists at all.
+>
+> **Authoritative addresses live in `../subgraph/deployments/*.json`**, which
+> `sync-pipeline` maintains and `check-constants` guards in CI. This repository
+> keeps no deployment record of its own.
+>
+> For current security status see `AUDIT.md`, which has been re-verified against
+> `master`. Sections below carry inline corrections where they state something
+> that is now false.
 
 This document inventories every contract introduced or materially changed on
-the `markets` branch (Bastien's multi-asset refactor) and maps them to the
-addresses deployed on Arbitrum.
+the `markets` branch (the multi-asset refactor) and mapped them to the addresses
+deployed at that time.
 
-Snapshot: `markets @ 045b14c9` (5 commits ahead of `master @ 43820243`).
-
-## Deployed contracts (Arbitrum)
+## Deployed contracts — STALE, superseded (do not use)
 
 | Contract          | Address                                         | Source file                          |
 |-------------------|-------------------------------------------------|--------------------------------------|
 | MarketRegistry    | `0x9a328b11c7189a8ba2af6186643f93204b516987`    | `contracts/MarketRegistry.sol`       |
 | RouletteEngine    | `0x60cd5a0f74f1644eaef997496e19e3737690ad1c`    | `contracts/RouletteEngine.sol`       |
 | Scheduler         | `0x40a7f6d4e902f13e2d9e4754dee37648f2fcdfda`    | `contracts/UpkeepScheduler.sol`      |
-| UpkeepManager     | `0xdbfab262996d221c72eeb9f2e6679c3d2c7bc95b`    | `contracts/UpkeepManager.sol`        |
 | JackpotTreasury   | `0xbbe4d51cf721277d52d916291f6de4fa972e5e22`    | `contracts/JackpotTreasury.sol`      |
 | BRB               | `0x47e054bb133e75b1c2c7a9a52ba73e52e75a06a1`    | `contracts/BRBToken.sol`             |
 | Jackpot funder    | `0x60ce672feaf39f35a3f6e5b3e099f46b90aee9fc`    | `contracts/BRBJackpotFunder.sol`     |
@@ -27,6 +36,11 @@ are deployed per-market / per-pair via the registry and deployment scripts; see
 The protocol moved from a **single-asset monolith** (`RouletteClean.sol`,
 `StakedBRB.sol`, `JackpotContract.sol`, `BRBReferal.sol`) to a **multi-asset
 hub-and-spoke** design:
+
+> **The diagram is as of the snapshot.** On `master`, `UpkeepManager` is gone —
+> the automation path is `CreExecutionAuthority` → `AutomationReceiver` →
+> `UpkeepScheduler` — `RouletteEngine` is UUPS with scoped roles rather than
+> `Ownable`, and `SideBet` (not shown) also drives the vaults.
 
 ```
                        ┌──────────────────────┐
@@ -117,16 +131,22 @@ payouts based on stake share via `JackpotBatchLib`. Settles per-market fees
 
 ### `contracts/UpkeepScheduler.sol` (4,818 bytes)
 `AccessControl + AutomationCompatibleInterface`. Role `SCHEDULER_ADMIN_ROLE`.
-Single-lane upkeep (parallel lanes were removed). Restricts `performUpkeep`
-to approved Automation forwarders via `IUpkeepForwarderAuthority` (when set);
-**`address(0)` allows any caller for tests / tooling — must be configured for
-production.**
+> **CORRECTED.** Both claims below were true at the snapshot and are false on `master`.
+> Parallel lanes are the *primary* architecture now (`DEFAULT_PAYOUT_LANE_COUNT = 10`),
+> and a zero forwarder authority no longer "allows any caller" — that was AUDIT.md's
+> H-3 auth bypass. `performUpkeep` reverts on a zero authority
+> (`UpkeepScheduler.sol:79-87`) and zero is no longer settable (`:92-96`).
 
-### `contracts/UpkeepManager.sol` (3,442 bytes)
-`AccessControl + IUpkeepForwarderAuthority`. Role `REGISTRANT_ROLE`. Registers
-each lane upkeep with Chainlink `AutomationRegistrar2.1`, captures the
-forwarder address, exposes `isApprovedAutomationForwarder`. Pre-approves
-LINK spending via `IERC20.approve(registrar, type(uint256).max)` at construction.
+~~Single-lane upkeep (parallel lanes were removed). Restricts `performUpkeep`
+to approved Automation forwarders via `IUpkeepForwarderAuthority` (when set);
+`address(0)` allows any caller for tests / tooling — must be configured for
+production.~~
+
+### `contracts/UpkeepManager.sol` — DELETED
+Removed in the CRE migration. Chainlink Automation self-registration was replaced
+by `AutomationReceiver` + `CreExecutionAuthority` + `cre/workflows/`; there is no
+LINK token, registrar or `approve` call left in `contracts/`. AUDIT.md's M-10
+described this contract's constructor and is marked obsolete for that reason.
 
 ### `contracts/ProtocolTimelock.sol` (3,090 bytes)
 `AccessControl`. 24 h fixed `DELAY`. Roles `PROPOSER_ROLE` / `EXECUTOR_ROLE`.
@@ -168,7 +188,7 @@ Linked library. `SAFETY_BUFFER_BPS = 11000` (110%). `max` / `max3` /
 - `contracts/StakedBRB.sol`       → replaced by `BankVault4626.sol`
 - `contracts/JackpotContract.sol` → replaced by `JackpotTreasury.sol`
 - `contracts/BRBReferal.sol`      → removed (no referral contract in `markets`)
-- `contracts/BRBUpkeepManager.sol`→ replaced by `UpkeepManager.sol`
+- `contracts/BRBUpkeepManager.sol`→ replaced by `UpkeepManager.sol`, itself since deleted (CRE migration)
 - `contracts/StakedBRBFeeMath.sol`, `StakedBRBLiquidityEscrow.sol` → removed
 
 ## Tests on `markets`
@@ -179,10 +199,14 @@ Linked library. `SAFETY_BUFFER_BPS = 11000` (110%). `max` / `max3` /
 `JackpotBatchingStress`, `JackpotTreasury`, `LPVestingLock`,
 `MultiAssetArchitecture`, `MultiMarketCrowdParallelLanes`, `PayoutMathLib`,
 `PayoutParallelLanes`, `ProtocolTimelock`, `UpkeepForwarderGate`,
-`UpkeepManager`. Note: `PayoutParallelLanes` and
-`MultiMarketCrowdParallelLanes` reference parallel lane behavior that the
-production code comments mark as **removed**; verify these tests still
-match the implementation.
+`UpkeepManager`.
+
+> **CORRECTED.** The note here said `PayoutParallelLanes` and
+> `MultiMarketCrowdParallelLanes` referenced behaviour marked removed. The premise
+> has since inverted: parallel lanes are the production architecture, both tests are
+> current, and `TenLaneParallelPayouts`, `MultiMarketParallelLanes` and
+> `HundredPlayerTwoMarketLanes` were added alongside them. The `UpkeepManager` suite
+> is gone with its contract.
 
 ## Configuration / scripts
 
