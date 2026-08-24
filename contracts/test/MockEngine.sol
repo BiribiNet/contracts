@@ -16,6 +16,10 @@ contract MockEngine {
         return false;
     }
 
+    function marketRouletteLiquidityNeed(uint32) external pure returns (uint256) {
+        return 0;
+    }
+
     /// @dev Stub matching default engine cap for queue-length checks in unit tests.
     function maxWithdrawalQueueLength() external pure returns (uint256) {
         return 1000;

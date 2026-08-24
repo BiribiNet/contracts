@@ -84,6 +84,11 @@ interface IRouletteEngine {
     /// @notice True while this market's global round is locked but not yet settled for that market (deposits / enqueue-withdraw blocked).
     function isBankLiquidityRestricted(uint32 marketId) external view returns (bool);
 
+    /// @notice Free vault liquidity the market's open-round roulette liability still needs, beyond the
+    /// stakes already locked. The vault deducts it before reserving liquidity for a side bet, so the
+    /// two systems cannot commit the same tokens.
+    function marketRouletteLiquidityNeed(uint32 marketId) external view returns (uint256);
+
     /// @notice Max withdrawal queue entries to finalize per settlement step for any bank (shared across markets).
     function withdrawalQueueBatchSize() external view returns (uint256);
 
