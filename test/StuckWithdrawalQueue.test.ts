@@ -97,6 +97,37 @@ describe("Stuck withdrawal queue escape hatch (H-1)", function () {
         await expect(bank.write.drainWithdrawalQueue([5n], { account: bob.account })).to.be.rejected;
     });
 
+    it("refuses to drain while the round is still open and bets are live", async function () {
+        const [admin, alice, bob] = await viem.getWalletClients();
+        const { engine, registry } = await deployProtocolStack();
+
+        const usdc = await viem.deployContract("MockUSDC");
+        const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+
+        await usdc.write.mint([admin.account.address, USDC("5000")]);
+        await usdc.write.approve([bank.address, USDC("5000")], { account: admin.account });
+        await bank.write.deposit([USDC("5000"), admin.account.address], { account: admin.account });
+
+        await bank.write.redeemBps([5_000, bob.account.address, admin.account.address], {
+            account: admin.account,
+        });
+
+        await usdc.write.mint([alice.account.address, USDC("100")]);
+        await usdc.write.approve([bank.address, USDC("100")], { account: alice.account });
+        await bank.write.placeBet([USDC("10"), encodeSingleBet(1n, 7n, USDC("10")), zeroAddress], {
+            account: alice.account,
+        });
+
+        // The round is Open, not Settling: `isBankLiquidityRestricted` is false here by design, so
+        // the hatch's original guard does not fire. But a straight bet owes up to 36x its stake and
+        // `_recordBetInternal` only checked solvency once, at bet time — draining now walks off with
+        // liquidity that check counted as backing the payout.
+        expect(await engine.read.isBankLiquidityRestricted([1])).to.equal(false);
+        expect(await engine.read.marketRouletteLiquidityNeed([1])).to.be.gt(0n);
+
+        await expect(bank.write.drainWithdrawalQueue([5n], { account: bob.account })).to.be.rejected;
+    });
+
     it("refuses to burn shares when the vault has no free assets", async function () {
         const [admin, alice, sideBetOperator] = await viem.getWalletClients();
         const { registry } = await deployProtocolStack();
