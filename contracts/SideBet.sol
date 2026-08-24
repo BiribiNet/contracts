@@ -26,6 +26,8 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     bytes32 public constant SETTLEMENT_ROLE = keccak256("SETTLEMENT_ROLE");
 
     uint256 private constant BPS_DENOMINATOR = 10_000;
+    /// @dev Seeded on fresh deploys only; an upgrade leaves `settleTimeout` at 0 (expiry off).
+    uint64 private constant DEFAULT_SETTLE_TIMEOUT = 30 days;
     uint8 private constant MAX_ROULETTE_NUMBER = 36;
 
     IRouletteEngine public ENGINE;
@@ -42,6 +44,10 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         uint32 maxMultiplierBps;
         IBRBJackpotFunder jackpotFunder;
         address infraRecipient;
+        /// @dev Appended (ERC-7201 layout stays valid). Seconds after `placedAt` before an
+        /// undecided bet may be settled as EXPIRED with a stake refund. 0 disables expiry, which is
+        /// what an upgraded proxy sees until an admin calls `setSettleTimeout`.
+        uint64 settleTimeout;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.SideBet")) - 1)) & ~bytes32(uint256(0xff));
@@ -96,8 +102,10 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         $.infraRecipient = feeCfg.INFRA_RECIPIENT();
         $.minMultiplierBps = minMultiplierBps_;
         $.maxMultiplierBps = maxMultiplierBps_;
+        $.settleTimeout = DEFAULT_SETTLE_TIMEOUT;
 
         emit MultiplierBandUpdated(minMultiplierBps_, maxMultiplierBps_);
+        emit SettleTimeoutUpdated(DEFAULT_SETTLE_TIMEOUT);
     }
 
     // --- Config management ---------------------------------------------------
@@ -164,6 +172,19 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         stored.minStake = minStake;
         stored.maxStake = maxStake;
         emit ConfigStakeLimitsUpdated(configId, minStake, maxStake);
+    }
+
+    /// @notice Seconds after `placedAt` before an undecided bet may be settled as EXPIRED and its
+    /// stake refunded. 0 disables expiry.
+    /// @dev Without this, a bet in a market whose roulette activity stops is undecidable forever —
+    /// its lane's cursor can never move past it (see `previewSettleBundle`).
+    function setSettleTimeout(uint64 newSettleTimeout) external onlyRole(SIDE_BET_CONFIG_ROLE) {
+        _s().settleTimeout = newSettleTimeout;
+        emit SettleTimeoutUpdated(newSettleTimeout);
+    }
+
+    function settleTimeout() external view returns (uint64) {
+        return _s().settleTimeout;
     }
 
     function setMultiplierBand(uint32 minMultiplierBps_, uint32 maxMultiplierBps_) external onlyRole(SIDE_BET_CONFIG_ROLE) {
@@ -284,21 +305,40 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
 
         SettleRow[] memory found = new SettleRow[](maxBets);
         uint256 n;
+        // Lowest id in this lane that is still ACTIVE and undecided. The scan pointer runs ahead of
+        // it, but the cursor must not: persisting the scan pointer skipped every pending bet in the
+        // lane, and since the scan almost always ends on `id >= total`, one decided bet was enough to
+        // strand all of them. A skipped bet is unreachable forever — its stake is never returned and
+        // its payout reserve never leaves `lockedBetLiquidity`.
+        uint256 firstPending = type(uint256).max;
         while (n < maxBets && id < total) {
             Bet storage bet = $.bets[id];
             if (bet.status == SideBetStatus.ACTIVE) {
                 (bool decided, bool won) = _evaluate(bet);
                 if (decided) {
-                    found[n] = SettleRow({ betId: id, won: won, payoutAmount: won ? bet.payout : 0 });
+                    found[n] = SettleRow({
+                        betId: id,
+                        won: won,
+                        payoutAmount: won ? bet.payout : 0,
+                        expired: false
+                    });
                     unchecked {
                         ++n;
                     }
+                } else if (_isExpired($, bet)) {
+                    // Undecidable for too long: refund rather than let it hold the cursor forever.
+                    found[n] = SettleRow({ betId: id, won: false, payoutAmount: 0, expired: true });
+                    unchecked {
+                        ++n;
+                    }
+                } else if (id < firstPending) {
+                    firstPending = id;
                 }
             }
             id += laneCount;
         }
 
-        nextCursorBetId = id;
+        nextCursorBetId = firstPending < id ? firstPending : id;
         if (n != maxBets) {
             rows = new SettleRow[](n);
             for (uint256 i; i < n; ) {
@@ -454,6 +494,14 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
                 unchecked {
                     ++s.winnerCounts[vaultIdx];
                 }
+            } else if (row.expired) {
+                // The refund rides the existing payout machinery, and counting it as paid keeps
+                // `marketWin = totalStakes - totalPaid` at zero so no fee is taken on a bet that
+                // never resolved.
+                s.totalPaid[vaultIdx] += bet.stake;
+                unchecked {
+                    ++s.winnerCounts[vaultIdx];
+                }
             }
             unchecked {
                 ++i;
@@ -475,11 +523,14 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         // Pass 2 — place each winner into `[base[vault], base[vault] + count[vault])`, in row order.
         for (uint256 i; i < batchLen; ) {
             row = rows[i];
-            if (row.won) {
+            if (row.won || row.expired) {
                 vaultIdx = rowVaultIdx[i];
                 bet = $.bets[row.betId];
                 uint256 pos = base[vaultIdx] + written[vaultIdx];
-                s.winnerPayouts[pos] = IBankVault.Payout({ player: bet.player, amount: row.payoutAmount });
+                s.winnerPayouts[pos] = IBankVault.Payout({
+                    player: bet.player,
+                    amount: row.won ? row.payoutAmount : bet.stake
+                });
                 unchecked {
                     ++written[vaultIdx];
                 }
@@ -537,13 +588,18 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         if (bet.status != SideBetStatus.ACTIVE) return false;
 
         uint256 reserved = bet.payout;
-        if (row.won) {
+        if (row.expired) {
+            // Re-derive expiry from storage: the report may claim it, it does not get to decide it.
+            if (row.won || row.payoutAmount != 0 || !_isExpired($, bet)) return false;
+            bet.status = SideBetStatus.EXPIRED;
+        } else if (row.won) {
             if (row.payoutAmount != reserved) return false;
-        } else if (row.payoutAmount != 0) {
-            return false;
+            bet.status = SideBetStatus.WON;
+        } else {
+            if (row.payoutAmount != 0) return false;
+            bet.status = SideBetStatus.LOST;
         }
 
-        bet.status = row.won ? SideBetStatus.WON : SideBetStatus.LOST;
         bet.resolvedAt = uint64(block.timestamp);
         emit SideBetSettled(row.betId, bet.player, bet.status, row.payoutAmount);
         return true;
@@ -582,6 +638,14 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         (uint8[] memory observed, ) = SideBetRoundLib.loadWindow(ENGINE, start, obsLen);
         bool windowComplete = obsLen == windowN && SideBetRoundLib.windowFulfilled(ENGINE, start, windowN);
         return SideBetOutcomeLib.evaluate(observed, windowComplete, _betMemory(bet));
+    }
+
+    /// @dev True once an undecided bet has outlived `settleTimeout`. Checked against storage, never
+    /// taken from the report.
+    function _isExpired(SideBetData storage $, Bet storage bet) private view returns (bool) {
+        uint64 timeout = $.settleTimeout;
+        if (timeout == 0) return false;
+        return block.timestamp > uint256(bet.placedAt) + uint256(timeout);
     }
 
     function _betMemory(Bet storage bet) private view returns (Bet memory) {

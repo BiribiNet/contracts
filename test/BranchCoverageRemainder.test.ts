@@ -187,7 +187,7 @@ describe("Branch coverage — remainder matrix", function () {
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
             await sideBet.write.settleBatch(
-                [[{ betId: 0n, won: false, payoutAmount: 0n }], []],
+                [[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []],
                 { account: admin.account },
             );
 

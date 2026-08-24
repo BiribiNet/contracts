@@ -665,12 +665,12 @@ describe("Contract coverage — 95% targets", function () {
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
         await sideBet.write.settleBatch(
-            [[{ betId: 0n, won: false, payoutAmount: parseUnits("1", 6) }], []],
+            [[{ betId: 0n, won: false, payoutAmount: parseUnits("1", 6), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(0);
 
-        await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n }], []], { account: admin.account });
+        await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], { account: admin.account });
         expect((await sideBet.read.getBet([0n])).status).to.equal(2);
     });
 

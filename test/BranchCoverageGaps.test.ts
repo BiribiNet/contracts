@@ -105,7 +105,7 @@ describe("Branch coverage — remaining 82 gaps", function () {
 
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
             await expect(
-                sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n }], []], {
+                sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], {
                     account: stranger.account,
                 }),
             ).to.be.rejected;
@@ -434,7 +434,7 @@ describe("Branch coverage — remaining 82 gaps", function () {
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
             const before = await sideBet.read.getBet([0n]);
-            await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 1n }], []], {
+            await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 1n, expired: false }], []], {
                 account: admin.account,
             });
             expect((await sideBet.read.getBet([0n])).status).to.equal(before.status);

@@ -285,17 +285,17 @@ describe("Branch coverage — final 100% gaps", function () {
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
             await sideBet.write.grantRole([settlementRole, bank.address], { account: admin.account });
             await bank.write.configureSettleReenter([sideBet.address]);
-            await probe.write.trySettleBatch([sideBet.address, [{ betId: 0n, won: true, payoutAmount: USDC("50") }], []], {
+            await probe.write.trySettleBatch([sideBet.address, [{ betId: 0n, won: true, payoutAmount: USDC("50"), expired: false }], []], {
                 account: admin.account,
             });
             await bank.write.configureSettleReenter([zeroAddress]);
 
-            await sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("50") }], []], {
+            await sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("50"), expired: false }], []], {
                 account: admin.account,
             });
 
             await sideBet.write.grantRole([settlementRole, probe.address], { account: admin.account });
-            await probe.write.trySettleBatch([sideBet.address, [{ betId: 0n, won: true, payoutAmount: 1n }], []], {
+            await probe.write.trySettleBatch([sideBet.address, [{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []], {
                 account: admin.account,
             });
 

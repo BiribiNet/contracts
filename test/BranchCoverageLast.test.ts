@@ -471,15 +471,15 @@ describe("Branch coverage — last 102 branches", function () {
 
             const settlementRole = await sb.read.SETTLEMENT_ROLE();
             await sb.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
-            await sb.write.settleBatch([[{ betId: 999n, won: true, payoutAmount: 1n }], []], {
+            await sb.write.settleBatch([[{ betId: 999n, won: true, payoutAmount: 1n, expired: false }], []], {
                 account: admin.account,
             });
             const betBefore = await sb.read.getBet([0n]);
-            await sb.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: 1n }], []], { account: admin.account });
+            await sb.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []], { account: admin.account });
             expect((await sb.read.getBet([0n])).status).to.equal(betBefore.status); // still ACTIVE — wrong payout
 
             await re.write.fulfillRounds([[8]]);
-            await sb.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n }], []], { account: admin.account });
+            await sb.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], { account: admin.account });
             expect(await sb.read.isResolvable([0n])).to.equal(false);
 
             const v2 = await viem.deployContract("SideBet");

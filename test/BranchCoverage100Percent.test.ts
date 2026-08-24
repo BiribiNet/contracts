@@ -406,7 +406,7 @@ describe("Branch coverage — 100% target", function () {
 
             await sideBet.write.grantRole([settlementRole, probe.address], { account: admin.account });
             await probe.write.trySettleBatch(
-                [sideBet.address, [{ betId: 0n, won: true, payoutAmount: 1n }], []],
+                [sideBet.address, [{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []],
                 { account: admin.account },
             );
 
