@@ -32,6 +32,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
     error InvalidScanLimit();
     error InvalidMaxPayoutsPerCall();
     error UnauthorizedAutomationForwarder();
+    error InvalidSideBetCursor();
 
     event ScanLimitUpdated(uint32 newScanLimit);
     event MaxPayoutsPerCallUpdated(uint32 newMaxPayoutsPerCall);
@@ -198,6 +199,12 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
             ) = abi.decode(performData, (uint8, uint256, ISideBet.SettleRow[], uint256, ISideBet.SettleVaultApply[]));
 
             uint256 previousCursor = sideBetCursor[lane];
+            // The cursor is the one report field still written verbatim, and it decides which bets
+            // are ever revisited. Rewinding it would re-settle, and overshooting `betCount` would
+            // skip bets that do not exist yet — both silently strand or double-handle stakes.
+            if (nextCursorBetId < previousCursor || nextCursorBetId > SIDE_BET.betCount()) {
+                revert InvalidSideBetCursor();
+            }
             sideBetCursor[lane] = nextCursorBetId;
             emit SideBetCursorAdvanced(lane, previousCursor, nextCursorBetId);
 

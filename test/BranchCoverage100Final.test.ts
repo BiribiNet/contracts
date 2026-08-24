@@ -132,7 +132,7 @@ describe("Branch coverage — push to 100%", function () {
             const fixture = await deploySideBetStack(admin);
             const settlementRole = await fixture.sideBet.read.SETTLEMENT_ROLE();
             await fixture.sideBet.write.grantRole([settlementRole, probe.address], { account: admin.account });
-            await probe.write.trySettleBatch([fixture.sideBet.address, [{ betId: 0n, won: true, payoutAmount: 1n }], []], {
+            await probe.write.trySettleBatch([fixture.sideBet.address, [{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []], {
                 account: admin.account,
             });
         });
@@ -527,17 +527,17 @@ describe("Branch coverage — push to 100%", function () {
 
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
-            await sideBet.write.settleBatch([[{ betId: 999n, won: true, payoutAmount: 1n }], []], {
+            await sideBet.write.settleBatch([[{ betId: 999n, won: true, payoutAmount: 1n, expired: false }], []], {
                 account: admin.account,
             });
             await expect(
-                sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: 1n }], []], {
+                sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []], {
                     account: alice.account,
                 }),
             ).to.be.rejected;
 
             await roundEngine.write.fulfillRounds([[8]]);
-            await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n }], []], {
+            await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], {
                 account: admin.account,
             });
         });

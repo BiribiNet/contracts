@@ -68,6 +68,11 @@ interface ISideBet {
         uint256 betId;
         bool won;
         uint256 payoutAmount;
+        /// @dev Settled as `EXPIRED` (stake refunded) rather than won/lost. A side bet can only be
+        /// decided once enough global rounds have been fulfilled, and rounds only advance when
+        /// someone places a *roulette* bet — so in a quiet market a bet is otherwise undecidable
+        /// forever, which would block its lane's cursor permanently.
+        bool expired;
     }
 
     /// @dev Per-vault apply bundle built in `previewSettleBundle`; passed through Automation `performData`.
@@ -85,6 +90,7 @@ interface ISideBet {
     event ConfigRemoved(uint256 configId);
     event ConfigStakeLimitsUpdated(uint256 configId, uint256 minStake, uint256 maxStake);
     event MultiplierBandUpdated(uint32 minMultiplierBps, uint32 maxMultiplierBps);
+    event SettleTimeoutUpdated(uint64 settleTimeout);
     event SideBetPlaced(
         uint256 betId,
         address player,

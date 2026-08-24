@@ -1,7 +1,8 @@
 import { viem } from "hardhat";
 
+import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { getAddress, parseUnits } from "viem";
+import { encodeAbiParameters, getAddress, parseUnits } from "viem";
 
 import { predictSideBetProxyAddress } from "../scripts/utils/predictDeployAddresses";
 
@@ -306,7 +307,7 @@ describe("SideBet", function () {
         await registerConfig(sideBet, config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 3 }), admin.account);
         await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
         await expect(
-            sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("100") }], []], { account: alice.account }),
+            sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []], { account: alice.account }),
         ).to.be.rejected;
 
         const [, performDataBefore] = await scheduler.read.checkUpkeep(["0x"]);
@@ -315,7 +316,7 @@ describe("SideBet", function () {
         await fulfillRounds(roundEngine, [7, 1, 2]);
         await settleViaScheduler(scheduler);
         await expect(
-            sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("100") }], []], { account: admin.account }),
+            sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []], { account: admin.account }),
         ).to.be.rejected;
     });
 
@@ -490,19 +491,19 @@ describe("SideBet", function () {
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
         await sideBet.write.settleBatch(
-            [[{ betId: 0n, won: true, payoutAmount: USDC("1") }], []],
+            [[{ betId: 0n, won: true, payoutAmount: USDC("1"), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
 
         await sideBet.write.settleBatch(
-            [[{ betId: 0n, won: false, payoutAmount: USDC("1") }], []],
+            [[{ betId: 0n, won: false, payoutAmount: USDC("1"), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
 
         await sideBet.write.settleBatch(
-            [[{ betId: 0n, won: true, payoutAmount: USDC("100") }], []],
+            [[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
@@ -644,6 +645,153 @@ describe("SideBet", function () {
         expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultAfterFirst);
         expect(await vault.read.lockedBetLiquidity()).to.equal(lockedAfterFirst);
         expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+    });
+
+    it("does not strand a still-undecided bet behind a settled one (H-3)", async function () {
+        const { sideBet, scheduler, vault, usdc, admin, alice, bob, roundEngine } = await deployFixture();
+
+        // Two configs in the same lane (MockRoundEngine reports laneCount == 1): A resolves after one
+        // spin, B needs five.
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 1 }),
+            admin.account,
+        );
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 13, targetCount: 1, windowSpins: 5 }),
+            admin.account,
+        );
+
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await usdc.write.mint([bob.account.address, USDC("1000")], { account: admin.account });
+        await usdc.write.approve([vault.address, USDC("1000")], { account: bob.account });
+        await sideBet.write.placeBet([1n, USDC("10")], { account: bob.account });
+
+        // One spin decides A but leaves B's window open.
+        await fulfillRounds(roundEngine, [7]);
+        await settleViaScheduler(scheduler);
+
+        // The scan pointer runs to the end of the bet list, but the cursor must stop at the first
+        // still-undecided bet. Persisting the scan pointer skipped B forever: its stake was never
+        // returned and its payout reserve never released.
+        expect(await scheduler.read.sideBetCursor([0n])).to.equal(1n);
+
+        // B must still be reachable once its window fills.
+        await fulfillRounds(roundEngine, [13, 1, 2, 3]);
+        await settleViaScheduler(scheduler);
+
+        expect(await vault.read.lockedBetLiquidity()).to.equal(0n);
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+    });
+
+    it("expires an undecidable bet and refunds the stake (H-3)", async function () {
+        const { sideBet, scheduler, vault, usdc, admin, alice } = await deployFixture();
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 5 }),
+            admin.account,
+        );
+
+        const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(USDC("100"));
+
+        // No rounds are ever fulfilled. Rounds only advance when someone places a *roulette* bet, so
+        // in a quiet market this bet can never be decided — and would hold its lane's cursor forever.
+        await expect(settleViaScheduler(scheduler)).to.be.rejected;
+
+        await time.increase(Number(await sideBet.read.settleTimeout()) + 1);
+        await settleViaScheduler(scheduler);
+
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.EXPIRED);
+        // Stake returned in full, reserve released, and no fee taken on a bet that never resolved.
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore);
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+        expect(await vault.read.lockedBetLiquidity()).to.equal(0n);
+    });
+
+    it("rejects a forged expiry before the timeout elapses (H-3)", async function () {
+        const { sideBet, admin, alice } = await deployFixture();
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 5 }),
+            admin.account,
+        );
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+
+        const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
+        await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
+
+        // The report claims expiry; the contract re-derives it from storage and refuses.
+        await sideBet.write.settleBatch(
+            [[{ betId: 0n, won: false, payoutAmount: 0n, expired: true }], []],
+            { account: admin.account },
+        );
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
+    });
+
+    it("rejects a rewound or out-of-range settle cursor (H-3)", async function () {
+        const { sideBet, scheduler, admin, alice, roundEngine } = await deployFixture();
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 1 }),
+            admin.account,
+        );
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await fulfillRounds(roundEngine, [7]);
+
+        const SIDE_BET_KIND = 1;
+        const encodeSideBetPerformData = (cursor: bigint) =>
+            encodeAbiParameters(
+                [
+                    { type: "uint8" },
+                    { type: "uint256" },
+                    {
+                        type: "tuple[]",
+                        components: [
+                            { name: "betId", type: "uint256" },
+                            { name: "won", type: "bool" },
+                            { name: "payoutAmount", type: "uint256" },
+                            { name: "expired", type: "bool" },
+                        ],
+                    },
+                    { type: "uint256" },
+                    {
+                        type: "tuple[]",
+                        components: [
+                            { name: "bank", type: "address" },
+                            { name: "marketId", type: "uint32" },
+                            { name: "releaseTotal", type: "uint256" },
+                            { name: "totalStakes", type: "uint256" },
+                            { name: "totalPaid", type: "uint256" },
+                            {
+                                name: "winnerPayouts",
+                                type: "tuple[]",
+                                components: [
+                                    { name: "player", type: "address" },
+                                    { name: "amount", type: "uint256" },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                [SIDE_BET_KIND, 0n, [], cursor, []],
+            );
+
+        // The cursor decides which bets are ever revisited, and it is the one report field written
+        // verbatim. Overshooting betCount would skip bets that do not exist yet.
+        const betCount = await sideBet.read.betCount();
+        await expect(
+            scheduler.write.performUpkeep([encodeSideBetPerformData(betCount + 100n)]),
+        ).to.be.rejected;
+
+        // Advance it legitimately, then try to rewind — that would re-settle already-handled bets.
+        await settleViaScheduler(scheduler);
+        const advanced = await scheduler.read.sideBetCursor([0n]);
+        expect(advanced).to.be.gt(0n);
+        await expect(scheduler.write.performUpkeep([encodeSideBetPerformData(0n)])).to.be.rejected;
+        expect(await scheduler.read.sideBetCursor([0n])).to.equal(advanced);
     });
 
     it("supports UUPS upgrade by admin", async function () {
