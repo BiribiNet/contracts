@@ -2,7 +2,7 @@
   "chainSelectorName": "ethereum-testnet-sepolia-arbitrum-1",
   "receiverAddress": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
   "targetAddress": "0xad1f181ad88aee13a6643104941ecea2b963c2d7",
-  "migrationType": "LOG",
+  "migrationType": "BOTH",
   "logTriggerAddress": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
   "logTriggerEventSignatures": [
     "VRFResult(uint64,uint8,uint8)",
@@ -11,5 +11,8 @@
   "checkData": "0x0000000000000000000000000000000000000000000000000000000000000009",
   "writeGasLimit": "2500000",
   "maxDrainIterations": 5,
+  "authorizedKeys": [
+    "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4"
+  ],
   "logTriggerConfidence": "CONFIDENCE_LEVEL_SAFE"
 }

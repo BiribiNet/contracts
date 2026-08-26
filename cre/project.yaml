@@ -25,6 +25,12 @@ lane0-test-settings:
 lane0-production-settings:
   <<: *arbitrum_sepolia_rpcs
 
+lane1-test-settings:
+  <<: *arbitrum_sepolia_rpcs
+
+lane1-production-settings:
+  <<: *arbitrum_sepolia_rpcs
+
 production-settings:
   rpcs:
     - chain-name: ethereum-testnet-sepolia-arbitrum-1

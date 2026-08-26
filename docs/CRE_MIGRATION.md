@@ -76,8 +76,11 @@ RECEIVER=0xYourAutomationReceiver \
 ENGINE=0xYourRouletteEngine \
 LANE_COUNT=10 \
 NETWORK=arbitrum-sepolia \
+CRE_HTTP_AUTHORIZED_ADDRESS=0xYourRoundWatcherSigner \
 yarn generate:cre:configs
 ```
+
+Omit `CRE_HTTP_AUTHORIZED_ADDRESS` for LOG-only lane configs. When set, lanes use `migrationType: "BOTH"` (LOG + HTTP recovery in the same workflow — no extra quota slot).
 
 Deploy **one workflow per lane** (example: 10 parallel payout workflows on testnet):
 
@@ -113,8 +116,8 @@ Arbitrum Sepolia finality lags head by ~15-20 min, which made workflows act on s
 | Workflow | Workflow ID |
 |----------|-------------|
 | `biribi-trigger-vrf-production` | `006c4256a95bae56e37f285b6a183726051caf70c1fa99508265cc4c7d3c3dc6` |
-| `biribi-roulette-lane-0-production` | `002f826035fe4e433d82b07937f1dde88738928d81ac16e9f054677626142501` |
-| `biribi-roulette-lane-1-production` | `004c59931534004730376973ab19f16f88499077df6e0b5d472e1d484a3c2bcb` |
+| `biribi-roulette-lane-0-production` | `0080e7288d55578edea7a27d385761376fb958c9b9ad5e3e5ef3a9ecac3eb179` |
+| `biribi-roulette-lane-1-production` | `00ce9386a3f27127e0c655c39e1ac12696cea9a9e462d575dab8f963c4ebc3d1` |
 
 Round-watcher env `CRE_WORKFLOW_ID_TRIGGER_VRF` (Railway) must match the trigger-vrf ID above.
 
@@ -132,6 +135,34 @@ On-chain `payoutParallelLaneCount` set to **2** to match the two deployed payout
 |------|-------------|------|
 | 0 | `0x` | TriggerVrf (lock + VRF request), payout shard 0 |
 | N > 0 | ABI-encoded `uint256(N)` | Payout shard N only |
+
+## Payout-lane HTTP recovery (stuck after `VRFResult`)
+
+Payout lanes are primarily **LOG**-triggered (`VRFResult` / `PayoutProgress`). CRE does **not** retry a failed LOG execution, so an RPC blip after `VRFResult` can leave unpaid shards with `checkUpkeep` still true and no wake.
+
+**Fix without a new CRE workflow slot:** set `migrationType: "BOTH"` on each lane config (LOG + HTTP handlers in the same registered workflow). Pass the round-watcher signer when generating:
+
+```bash
+SCHEDULER=0x... RECEIVER=0x... ENGINE=0x... LANE_COUNT=2 NETWORK=arbitrum-sepolia \
+CRE_HTTP_AUTHORIZED_ADDRESS=0xYourRoundWatcherSigner \
+yarn generate:cre:configs
+```
+
+Then **update** the existing lane workflows in place (still counts as 2 of 3 quota slots):
+
+```bash
+cre workflow deploy biribi-roulette-lane --target=lane0-production-settings
+cre workflow deploy biribi-roulette-lane --target=lane1-production-settings
+```
+
+Handler order: `--trigger-index=0` = LOG, `--trigger-index=1` = HTTP.
+
+Round-watcher should poll `checkUpkeep(lane)` while the round is settling; if it stays true with no progress, HTTP-trigger **that** lane’s workflow ID (same gateway/JWT pattern as TriggerVrf). HTTP wakes call `checkUpkeep` only (no log) and no-op when there is no work.
+
+| Workflow | Triggers | Purpose |
+|----------|----------|---------|
+| `biribi-trigger-vrf` | HTTP | Lock + request VRF |
+| `biribi-roulette-lane-N` | LOG + HTTP (`BOTH`) | Payout shard N (LOG fast path; HTTP unstick) |
 
 ## Latency tuning (testnet)
 
@@ -163,4 +194,6 @@ On-chain `payoutParallelLaneCount` set to **2** to match the two deployed payout
 
 **Wrong forwarder** — `AutomationReceiver` constructor must use the network's production `KeystoneForwarder`.
 
-**HTTP trigger rejected** — verify `CRE_HTTP_AUTHORIZED_ADDRESS` matches the private key used by round-watcher.
+**HTTP trigger rejected** — verify `CRE_HTTP_AUTHORIZED_ADDRESS` matches the private key used by round-watcher (TriggerVrf and lane recovery BOTH configs share the same authorized key list).
+
+**Stuck after VRFResult (no payouts)** — CRE does not retry failed LOG runs. With `migrationType: "BOTH"`, HTTP-trigger the stuck lane workflow, or simulate with `--trigger-index=1` (HTTP) / `--trigger-index=0 --evm-tx-hash=…` (LOG replay). See [Payout-lane HTTP recovery](#payout-lane-http-recovery-stuck-after-vrfresult).

@@ -2514,11 +2514,11 @@ var init_hash_to_curve = __esm(() => {
 });
 var exports_secp256k1 = {};
 __export(exports_secp256k1, {
-  secp256k1_hasher: () => secp256k1_hasher,
-  secp256k1: () => secp256k1,
-  schnorr: () => schnorr,
+  encodeToCurve: () => encodeToCurve,
   hashToCurve: () => hashToCurve,
-  encodeToCurve: () => encodeToCurve
+  schnorr: () => schnorr,
+  secp256k1: () => secp256k1,
+  secp256k1_hasher: () => secp256k1_hasher
 });
 function sqrtMod(y) {
   const P = secp256k1_CURVE.p;
@@ -10366,9 +10366,9 @@ var hostEndingChars = ["/", "?", "#"];
 var hostnameMaxLen = 255;
 var hostnamePartPattern = /^[+a-z0-9A-Z_-]{0,63}$/;
 var hostnamePartStart = /^([+a-z0-9A-Z_-]{0,63})(.*)$/;
-var unsafeProtocol = { javascript: true, "javascript:": true };
-var hostlessProtocol = { javascript: true, "javascript:": true };
-var slashedProtocol = { http: true, https: true, ftp: true, gopher: true, file: true, "http:": true, "https:": true, "ftp:": true, "gopher:": true, "file:": true };
+var unsafeProtocol = { __proto__: null, javascript: true, "javascript:": true };
+var hostlessProtocol = { __proto__: null, javascript: true, "javascript:": true };
+var slashedProtocol = { __proto__: null, http: true, https: true, ftp: true, gopher: true, file: true, "http:": true, "https:": true, "ftp:": true, "gopher:": true, "file:": true };
 var querystring = { parse(str) {
   var decode = decodeURIComponent;
   return (str + "").replace(/\+/g, " ").split("&").filter(Boolean).reduce(function(obj, item, index) {
@@ -10416,10 +10416,10 @@ Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
   }
   if (slashesDenoteHost || proto || rest.match(/^\/\/[^@\/]+@[^@\/]+/)) {
     var slashes = rest.substr(0, 2) === "//";
-    if (slashes && !(proto && hostlessProtocol[proto]))
+    if (slashes && !(proto && hostlessProtocol[lowerProto]))
       rest = rest.substr(2), this.slashes = true;
   }
-  if (!hostlessProtocol[proto] && (slashes || proto && !slashedProtocol[proto])) {
+  if (!hostlessProtocol[lowerProto] && (slashes || lowerProto && !slashedProtocol[lowerProto])) {
     var hostEnd = -1;
     for (var i2 = 0;i2 < hostEndingChars.length; i2++) {
       var hec = rest.indexOf(hostEndingChars[i2]);
@@ -16141,113 +16141,113 @@ var configHandler = async (request, { configParser, configSchema } = {}) => {
 };
 var exports_external = {};
 __export(exports_external, {
-  void: () => voidType,
-  util: () => util,
-  unknown: () => unknownType,
-  union: () => unionType,
-  undefined: () => undefinedType,
-  tuple: () => tupleType,
-  transformer: () => effectsType,
-  symbol: () => symbolType,
-  string: () => stringType,
-  strictObject: () => strictObjectType,
-  setErrorMap: () => setErrorMap,
-  set: () => setType,
-  record: () => recordType,
-  quotelessJson: () => quotelessJson,
-  promise: () => promiseType,
-  preprocess: () => preprocessType,
-  pipeline: () => pipelineType,
-  ostring: () => ostring,
-  optional: () => optionalType,
-  onumber: () => onumber,
-  oboolean: () => oboolean,
-  objectUtil: () => objectUtil,
-  object: () => objectType,
-  number: () => numberType,
-  nullable: () => nullableType,
-  null: () => nullType,
-  never: () => neverType,
-  nativeEnum: () => nativeEnumType,
-  nan: () => nanType,
-  map: () => mapType,
-  makeIssue: () => makeIssue,
-  literal: () => literalType,
-  lazy: () => lazyType,
-  late: () => late,
-  isValid: () => isValid,
-  isDirty: () => isDirty,
-  isAsync: () => isAsync,
-  isAborted: () => isAborted,
-  intersection: () => intersectionType,
-  instanceof: () => instanceOfType,
-  getParsedType: () => getParsedType,
-  getErrorMap: () => getErrorMap,
-  function: () => functionType,
-  enum: () => enumType,
-  effect: () => effectsType,
-  discriminatedUnion: () => discriminatedUnionType,
-  defaultErrorMap: () => en_default,
-  datetimeRegex: () => datetimeRegex,
-  date: () => dateType,
-  custom: () => custom2,
-  coerce: () => coerce,
-  boolean: () => booleanType,
-  bigint: () => bigIntType,
-  array: () => arrayType,
-  any: () => anyType,
-  addIssueToContext: () => addIssueToContext,
-  ZodVoid: () => ZodVoid,
-  ZodUnknown: () => ZodUnknown,
-  ZodUnion: () => ZodUnion,
-  ZodUndefined: () => ZodUndefined,
-  ZodType: () => ZodType,
-  ZodTuple: () => ZodTuple,
-  ZodTransformer: () => ZodEffects,
-  ZodSymbol: () => ZodSymbol,
-  ZodString: () => ZodString,
-  ZodSet: () => ZodSet,
-  ZodSchema: () => ZodType,
-  ZodRecord: () => ZodRecord,
-  ZodReadonly: () => ZodReadonly,
-  ZodPromise: () => ZodPromise,
-  ZodPipeline: () => ZodPipeline,
-  ZodParsedType: () => ZodParsedType,
-  ZodOptional: () => ZodOptional,
-  ZodObject: () => ZodObject,
-  ZodNumber: () => ZodNumber,
-  ZodNullable: () => ZodNullable,
-  ZodNull: () => ZodNull,
-  ZodNever: () => ZodNever,
-  ZodNativeEnum: () => ZodNativeEnum,
-  ZodNaN: () => ZodNaN,
-  ZodMap: () => ZodMap,
-  ZodLiteral: () => ZodLiteral,
-  ZodLazy: () => ZodLazy,
-  ZodIssueCode: () => ZodIssueCode,
-  ZodIntersection: () => ZodIntersection,
-  ZodFunction: () => ZodFunction,
-  ZodFirstPartyTypeKind: () => ZodFirstPartyTypeKind,
-  ZodError: () => ZodError,
-  ZodEnum: () => ZodEnum,
-  ZodEffects: () => ZodEffects,
-  ZodDiscriminatedUnion: () => ZodDiscriminatedUnion,
-  ZodDefault: () => ZodDefault,
-  ZodDate: () => ZodDate,
-  ZodCatch: () => ZodCatch,
-  ZodBranded: () => ZodBranded,
-  ZodBoolean: () => ZodBoolean,
-  ZodBigInt: () => ZodBigInt,
-  ZodArray: () => ZodArray,
-  ZodAny: () => ZodAny,
-  Schema: () => ZodType,
-  ParseStatus: () => ParseStatus,
-  OK: () => OK,
-  NEVER: () => NEVER,
-  INVALID: () => INVALID,
-  EMPTY_PATH: () => EMPTY_PATH,
+  BRAND: () => BRAND,
   DIRTY: () => DIRTY,
-  BRAND: () => BRAND
+  EMPTY_PATH: () => EMPTY_PATH,
+  INVALID: () => INVALID,
+  NEVER: () => NEVER,
+  OK: () => OK,
+  ParseStatus: () => ParseStatus,
+  Schema: () => ZodType,
+  ZodAny: () => ZodAny,
+  ZodArray: () => ZodArray,
+  ZodBigInt: () => ZodBigInt,
+  ZodBoolean: () => ZodBoolean,
+  ZodBranded: () => ZodBranded,
+  ZodCatch: () => ZodCatch,
+  ZodDate: () => ZodDate,
+  ZodDefault: () => ZodDefault,
+  ZodDiscriminatedUnion: () => ZodDiscriminatedUnion,
+  ZodEffects: () => ZodEffects,
+  ZodEnum: () => ZodEnum,
+  ZodError: () => ZodError,
+  ZodFirstPartyTypeKind: () => ZodFirstPartyTypeKind,
+  ZodFunction: () => ZodFunction,
+  ZodIntersection: () => ZodIntersection,
+  ZodIssueCode: () => ZodIssueCode,
+  ZodLazy: () => ZodLazy,
+  ZodLiteral: () => ZodLiteral,
+  ZodMap: () => ZodMap,
+  ZodNaN: () => ZodNaN,
+  ZodNativeEnum: () => ZodNativeEnum,
+  ZodNever: () => ZodNever,
+  ZodNull: () => ZodNull,
+  ZodNullable: () => ZodNullable,
+  ZodNumber: () => ZodNumber,
+  ZodObject: () => ZodObject,
+  ZodOptional: () => ZodOptional,
+  ZodParsedType: () => ZodParsedType,
+  ZodPipeline: () => ZodPipeline,
+  ZodPromise: () => ZodPromise,
+  ZodReadonly: () => ZodReadonly,
+  ZodRecord: () => ZodRecord,
+  ZodSchema: () => ZodType,
+  ZodSet: () => ZodSet,
+  ZodString: () => ZodString,
+  ZodSymbol: () => ZodSymbol,
+  ZodTransformer: () => ZodEffects,
+  ZodTuple: () => ZodTuple,
+  ZodType: () => ZodType,
+  ZodUndefined: () => ZodUndefined,
+  ZodUnion: () => ZodUnion,
+  ZodUnknown: () => ZodUnknown,
+  ZodVoid: () => ZodVoid,
+  addIssueToContext: () => addIssueToContext,
+  any: () => anyType,
+  array: () => arrayType,
+  bigint: () => bigIntType,
+  boolean: () => booleanType,
+  coerce: () => coerce,
+  custom: () => custom2,
+  date: () => dateType,
+  datetimeRegex: () => datetimeRegex,
+  defaultErrorMap: () => en_default,
+  discriminatedUnion: () => discriminatedUnionType,
+  effect: () => effectsType,
+  enum: () => enumType,
+  function: () => functionType,
+  getErrorMap: () => getErrorMap,
+  getParsedType: () => getParsedType,
+  instanceof: () => instanceOfType,
+  intersection: () => intersectionType,
+  isAborted: () => isAborted,
+  isAsync: () => isAsync,
+  isDirty: () => isDirty,
+  isValid: () => isValid,
+  late: () => late,
+  lazy: () => lazyType,
+  literal: () => literalType,
+  makeIssue: () => makeIssue,
+  map: () => mapType,
+  nan: () => nanType,
+  nativeEnum: () => nativeEnumType,
+  never: () => neverType,
+  null: () => nullType,
+  nullable: () => nullableType,
+  number: () => numberType,
+  object: () => objectType,
+  objectUtil: () => objectUtil,
+  oboolean: () => oboolean,
+  onumber: () => onumber,
+  optional: () => optionalType,
+  ostring: () => ostring,
+  pipeline: () => pipelineType,
+  preprocess: () => preprocessType,
+  promise: () => promiseType,
+  quotelessJson: () => quotelessJson,
+  record: () => recordType,
+  set: () => setType,
+  setErrorMap: () => setErrorMap,
+  strictObject: () => strictObjectType,
+  string: () => stringType,
+  symbol: () => symbolType,
+  transformer: () => effectsType,
+  tuple: () => tupleType,
+  undefined: () => undefinedType,
+  union: () => unionType,
+  unknown: () => unknownType,
+  util: () => util,
+  void: () => voidType
 });
 var util;
 (function(util2) {
@@ -31792,113 +31792,113 @@ class UInt642 {
 }
 var exports_external2 = {};
 __export(exports_external2, {
-  void: () => voidType2,
-  util: () => util3,
-  unknown: () => unknownType2,
-  union: () => unionType2,
-  undefined: () => undefinedType2,
-  tuple: () => tupleType2,
-  transformer: () => effectsType2,
-  symbol: () => symbolType2,
-  string: () => stringType2,
-  strictObject: () => strictObjectType2,
-  setErrorMap: () => setErrorMap2,
-  set: () => setType2,
-  record: () => recordType2,
-  quotelessJson: () => quotelessJson2,
-  promise: () => promiseType2,
-  preprocess: () => preprocessType2,
-  pipeline: () => pipelineType2,
-  ostring: () => ostring2,
-  optional: () => optionalType2,
-  onumber: () => onumber2,
-  oboolean: () => oboolean2,
-  objectUtil: () => objectUtil2,
-  object: () => objectType2,
-  number: () => numberType2,
-  nullable: () => nullableType2,
-  null: () => nullType2,
-  never: () => neverType2,
-  nativeEnum: () => nativeEnumType2,
-  nan: () => nanType2,
-  map: () => mapType2,
-  makeIssue: () => makeIssue2,
-  literal: () => literalType2,
-  lazy: () => lazyType2,
-  late: () => late2,
-  isValid: () => isValid2,
-  isDirty: () => isDirty2,
-  isAsync: () => isAsync2,
-  isAborted: () => isAborted2,
-  intersection: () => intersectionType2,
-  instanceof: () => instanceOfType2,
-  getParsedType: () => getParsedType2,
-  getErrorMap: () => getErrorMap2,
-  function: () => functionType2,
-  enum: () => enumType2,
-  effect: () => effectsType2,
-  discriminatedUnion: () => discriminatedUnionType2,
-  defaultErrorMap: () => en_default2,
-  datetimeRegex: () => datetimeRegex2,
-  date: () => dateType2,
-  custom: () => custom4,
-  coerce: () => coerce2,
-  boolean: () => booleanType2,
-  bigint: () => bigIntType2,
-  array: () => arrayType2,
-  any: () => anyType2,
-  addIssueToContext: () => addIssueToContext2,
-  ZodVoid: () => ZodVoid2,
-  ZodUnknown: () => ZodUnknown2,
-  ZodUnion: () => ZodUnion2,
-  ZodUndefined: () => ZodUndefined2,
-  ZodType: () => ZodType2,
-  ZodTuple: () => ZodTuple2,
-  ZodTransformer: () => ZodEffects2,
-  ZodSymbol: () => ZodSymbol2,
-  ZodString: () => ZodString2,
-  ZodSet: () => ZodSet2,
-  ZodSchema: () => ZodType2,
-  ZodRecord: () => ZodRecord2,
-  ZodReadonly: () => ZodReadonly2,
-  ZodPromise: () => ZodPromise2,
-  ZodPipeline: () => ZodPipeline2,
-  ZodParsedType: () => ZodParsedType2,
-  ZodOptional: () => ZodOptional2,
-  ZodObject: () => ZodObject2,
-  ZodNumber: () => ZodNumber2,
-  ZodNullable: () => ZodNullable2,
-  ZodNull: () => ZodNull2,
-  ZodNever: () => ZodNever2,
-  ZodNativeEnum: () => ZodNativeEnum2,
-  ZodNaN: () => ZodNaN2,
-  ZodMap: () => ZodMap2,
-  ZodLiteral: () => ZodLiteral2,
-  ZodLazy: () => ZodLazy2,
-  ZodIssueCode: () => ZodIssueCode2,
-  ZodIntersection: () => ZodIntersection2,
-  ZodFunction: () => ZodFunction2,
-  ZodFirstPartyTypeKind: () => ZodFirstPartyTypeKind2,
-  ZodError: () => ZodError3,
-  ZodEnum: () => ZodEnum2,
-  ZodEffects: () => ZodEffects2,
-  ZodDiscriminatedUnion: () => ZodDiscriminatedUnion2,
-  ZodDefault: () => ZodDefault2,
-  ZodDate: () => ZodDate2,
-  ZodCatch: () => ZodCatch2,
-  ZodBranded: () => ZodBranded2,
-  ZodBoolean: () => ZodBoolean2,
-  ZodBigInt: () => ZodBigInt2,
-  ZodArray: () => ZodArray2,
-  ZodAny: () => ZodAny2,
-  Schema: () => ZodType2,
-  ParseStatus: () => ParseStatus2,
-  OK: () => OK2,
-  NEVER: () => NEVER2,
-  INVALID: () => INVALID2,
-  EMPTY_PATH: () => EMPTY_PATH2,
+  BRAND: () => BRAND2,
   DIRTY: () => DIRTY2,
-  BRAND: () => BRAND2
+  EMPTY_PATH: () => EMPTY_PATH2,
+  INVALID: () => INVALID2,
+  NEVER: () => NEVER2,
+  OK: () => OK2,
+  ParseStatus: () => ParseStatus2,
+  Schema: () => ZodType2,
+  ZodAny: () => ZodAny2,
+  ZodArray: () => ZodArray2,
+  ZodBigInt: () => ZodBigInt2,
+  ZodBoolean: () => ZodBoolean2,
+  ZodBranded: () => ZodBranded2,
+  ZodCatch: () => ZodCatch2,
+  ZodDate: () => ZodDate2,
+  ZodDefault: () => ZodDefault2,
+  ZodDiscriminatedUnion: () => ZodDiscriminatedUnion2,
+  ZodEffects: () => ZodEffects2,
+  ZodEnum: () => ZodEnum2,
+  ZodError: () => ZodError3,
+  ZodFirstPartyTypeKind: () => ZodFirstPartyTypeKind2,
+  ZodFunction: () => ZodFunction2,
+  ZodIntersection: () => ZodIntersection2,
+  ZodIssueCode: () => ZodIssueCode2,
+  ZodLazy: () => ZodLazy2,
+  ZodLiteral: () => ZodLiteral2,
+  ZodMap: () => ZodMap2,
+  ZodNaN: () => ZodNaN2,
+  ZodNativeEnum: () => ZodNativeEnum2,
+  ZodNever: () => ZodNever2,
+  ZodNull: () => ZodNull2,
+  ZodNullable: () => ZodNullable2,
+  ZodNumber: () => ZodNumber2,
+  ZodObject: () => ZodObject2,
+  ZodOptional: () => ZodOptional2,
+  ZodParsedType: () => ZodParsedType2,
+  ZodPipeline: () => ZodPipeline2,
+  ZodPromise: () => ZodPromise2,
+  ZodReadonly: () => ZodReadonly2,
+  ZodRecord: () => ZodRecord2,
+  ZodSchema: () => ZodType2,
+  ZodSet: () => ZodSet2,
+  ZodString: () => ZodString2,
+  ZodSymbol: () => ZodSymbol2,
+  ZodTransformer: () => ZodEffects2,
+  ZodTuple: () => ZodTuple2,
+  ZodType: () => ZodType2,
+  ZodUndefined: () => ZodUndefined2,
+  ZodUnion: () => ZodUnion2,
+  ZodUnknown: () => ZodUnknown2,
+  ZodVoid: () => ZodVoid2,
+  addIssueToContext: () => addIssueToContext2,
+  any: () => anyType2,
+  array: () => arrayType2,
+  bigint: () => bigIntType2,
+  boolean: () => booleanType2,
+  coerce: () => coerce2,
+  custom: () => custom4,
+  date: () => dateType2,
+  datetimeRegex: () => datetimeRegex2,
+  defaultErrorMap: () => en_default2,
+  discriminatedUnion: () => discriminatedUnionType2,
+  effect: () => effectsType2,
+  enum: () => enumType2,
+  function: () => functionType2,
+  getErrorMap: () => getErrorMap2,
+  getParsedType: () => getParsedType2,
+  instanceof: () => instanceOfType2,
+  intersection: () => intersectionType2,
+  isAborted: () => isAborted2,
+  isAsync: () => isAsync2,
+  isDirty: () => isDirty2,
+  isValid: () => isValid2,
+  late: () => late2,
+  lazy: () => lazyType2,
+  literal: () => literalType2,
+  makeIssue: () => makeIssue2,
+  map: () => mapType2,
+  nan: () => nanType2,
+  nativeEnum: () => nativeEnumType2,
+  never: () => neverType2,
+  null: () => nullType2,
+  nullable: () => nullableType2,
+  number: () => numberType2,
+  object: () => objectType2,
+  objectUtil: () => objectUtil2,
+  oboolean: () => oboolean2,
+  onumber: () => onumber2,
+  optional: () => optionalType2,
+  ostring: () => ostring2,
+  pipeline: () => pipelineType2,
+  preprocess: () => preprocessType2,
+  promise: () => promiseType2,
+  quotelessJson: () => quotelessJson2,
+  record: () => recordType2,
+  set: () => setType2,
+  setErrorMap: () => setErrorMap2,
+  strictObject: () => strictObjectType2,
+  string: () => stringType2,
+  symbol: () => symbolType2,
+  transformer: () => effectsType2,
+  tuple: () => tupleType2,
+  undefined: () => undefinedType2,
+  union: () => unionType2,
+  unknown: () => unknownType2,
+  util: () => util3,
+  void: () => voidType2
 });
 var util3;
 (function(util4) {
@@ -36542,7 +36542,7 @@ var configSchema = exports_external.object({
   chainSelectorName: exports_external.string(),
   receiverAddress: evmAddress,
   targetAddress: evmAddress,
-  migrationType: exports_external.enum(["LOG", "HTTP"]),
+  migrationType: exports_external.enum(["LOG", "HTTP", "BOTH"]),
   checkData: exports_external.string().optional(),
   writeGasLimit: exports_external.string().optional(),
   maxDrainIterations: exports_external.number().int().positive().optional(),
@@ -36611,9 +36611,7 @@ var runMigration = (runtime3, triggerLog) => {
   for (let i2 = 0;i2 < maxDrainIterations; i2++) {
     let upkeepNeeded;
     let performData;
-    if (config.migrationType === "LOG" && i2 === 0) {
-      if (!triggerLog)
-        throw new Error("Log data missing for LOG migration");
+    if (triggerLog && i2 === 0) {
       [upkeepNeeded, performData] = target.checkLog(runtime3, mapLogToAutomation(triggerLog), checkData);
     } else {
       [upkeepNeeded, performData] = target.checkUpkeep(runtime3, checkData);
@@ -36625,38 +36623,43 @@ var runMigration = (runtime3, triggerLog) => {
   }
   return lastTxHash;
 };
+function buildLogHandler(config, evmClient) {
+  assertConfiguredAddress(config.logTriggerAddress, "logTriggerAddress");
+  const signatures = config.logTriggerEventSignatures;
+  if (!signatures?.length) {
+    throw new Error("logTriggerEventSignatures is required for LOG / BOTH migration");
+  }
+  return handler(evmClient.logTrigger({
+    addresses: [hexToBase64(config.logTriggerAddress)],
+    topics: buildTopicsFilter(signatures),
+    confidence: config.logTriggerConfidence ?? "CONFIDENCE_LEVEL_SAFE"
+  }), (runtime3, triggerLog) => runMigration(runtime3, triggerLog));
+}
+function buildHttpHandler(config) {
+  const authorizedKeys = config.authorizedKeys ?? [];
+  if (authorizedKeys.length === 0 && !config.allowUnauthenticatedSim) {
+    throw new Error("authorizedKeys is required for HTTP / BOTH migration (or set allowUnauthenticatedSim for local simulate only)");
+  }
+  return handler(new HTTPCapability().trigger({
+    authorizedKeys: authorizedKeys.map((publicKey) => ({
+      type: "KEY_TYPE_ECDSA_EVM",
+      publicKey
+    }))
+  }), (runtime3, _payload) => runMigration(runtime3));
+}
 function initWorkflow(config) {
   const network581 = getNetwork({ chainFamily: "evm", chainSelectorName: config.chainSelectorName });
   if (!network581)
     throw new Error(`Network not found: ${config.chainSelectorName}`);
   const evmClient = new ClientCapability(network581.chainSelector.selector);
+  if (config.migrationType === "BOTH") {
+    return [buildLogHandler(config, evmClient), buildHttpHandler(config)];
+  }
   if (config.migrationType === "LOG") {
-    assertConfiguredAddress(config.logTriggerAddress, "logTriggerAddress");
-    const signatures = config.logTriggerEventSignatures;
-    if (!signatures?.length) {
-      throw new Error("logTriggerEventSignatures is required for LOG migration");
-    }
-    return [
-      handler(evmClient.logTrigger({
-        addresses: [hexToBase64(config.logTriggerAddress)],
-        topics: buildTopicsFilter(signatures),
-        confidence: config.logTriggerConfidence ?? "CONFIDENCE_LEVEL_SAFE"
-      }), (runtime3, triggerLog) => runMigration(runtime3, triggerLog))
-    ];
+    return [buildLogHandler(config, evmClient)];
   }
   if (config.migrationType === "HTTP") {
-    const authorizedKeys = config.authorizedKeys ?? [];
-    if (authorizedKeys.length === 0 && !config.allowUnauthenticatedSim) {
-      throw new Error("authorizedKeys is required for HTTP migration (or set allowUnauthenticatedSim for local simulate only)");
-    }
-    return [
-      handler(new HTTPCapability().trigger({
-        authorizedKeys: authorizedKeys.map((publicKey) => ({
-          type: "KEY_TYPE_ECDSA_EVM",
-          publicKey
-        }))
-      }), (runtime3, _payload) => runMigration(runtime3))
-    ];
+    return [buildHttpHandler(config)];
   }
   throw new Error(`Unsupported migrationType: ${config.migrationType}`);
 }

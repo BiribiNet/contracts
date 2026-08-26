@@ -1,5 +1,5 @@
 # Auto-generated lane targets — run deploy / yarn generate:cre:configs to refresh.
-# Deploy one CRE workflow per lane target below (lanes run payout shards in parallel).
+# Deploy one CRE workflow per lane (LOG payout + optional HTTP recovery when authorizedKeys set).
 # HTTP pre-VRF: trigger-vrf (round-watcher) — locks the round and requests VRF in one tx.
 
 lane0-test-settings:

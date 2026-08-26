@@ -96,7 +96,7 @@ function httpWorkflowTargetYaml(kind: HttpWorkflowKind, env: "test" | "productio
     secrets-path: ""`;
 }
 
-/** Regenerates `workflow.yaml` with one deploy target per payout lane (parallel LOG workflows). */
+/** Regenerates `workflow.yaml` with one deploy target per payout lane (parallel LOG[+HTTP] workflows). */
 export function writeCreWorkflowYaml(laneCount: number): void {
     if (!Number.isInteger(laneCount) || laneCount < 1) {
         throw new Error(`laneCount must be a positive integer (got ${laneCount})`);
@@ -106,7 +106,7 @@ export function writeCreWorkflowYaml(laneCount: number): void {
 
     const sections: string[] = [
         "# Auto-generated lane targets — run deploy / yarn generate:cre:configs to refresh.",
-        "# Deploy one CRE workflow per lane target below (lanes run payout shards in parallel).",
+        "# Deploy one CRE workflow per lane (LOG payout + optional HTTP recovery when authorizedKeys set).",
         "# HTTP pre-VRF: trigger-vrf (round-watcher) — locks the round and requests VRF in one tx.",
         "",
     ];
@@ -151,7 +151,7 @@ export function writeCreWorkflowYaml(laneCount: number): void {
 }
 
 export function logCrePayoutWorkflowDeployCommands(laneCount: number, env: "test" | "production"): void {
-    console.log(`\nDeploy ${laneCount} parallel payout LOG workflow(s) (${env}):`);
+    console.log(`\nDeploy/update ${laneCount} parallel payout lane workflow(s) (${env}):`);
     for (let lane = 0; lane < laneCount; lane++) {
         console.log(`  cre workflow deploy biribi-roulette-lane --target=lane${lane}-${env}-settings`);
     }
@@ -170,6 +170,11 @@ export type WriteCreLaneConfigsParams = {
     laneCount: number;
     writeGasLimit?: string;
     laneMaxDrainIterations?: number;
+    /**
+     * When set, lane configs use migrationType BOTH (LOG + HTTP handlers in one workflow)
+     * so round-watcher can HTTP-wake a stuck payout shard without a new CRE registration.
+     */
+    httpAuthorizedKeys?: Address[];
 };
 
 export type WriteCreHttpConfigsParams = {
@@ -199,6 +204,7 @@ export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
         laneCount,
         writeGasLimit = "2500000",
         laneMaxDrainIterations = DEFAULT_CRE_LANE_MAX_DRAIN_ITERATIONS,
+        httpAuthorizedKeys,
     } = params;
     if (!(network in CRE_NETWORKS)) {
         throw new Error(`Unsupported CRE network: ${network}`);
@@ -209,6 +215,14 @@ export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
 
     const { chainSelectorName } = CRE_NETWORKS[network];
     mkdirSync(WORKFLOW_DIR, { recursive: true });
+
+    const recoveryKeys = (httpAuthorizedKeys ?? []).filter((key) => isAddress(key));
+    const useHttpRecovery = recoveryKeys.length > 0;
+    if (useHttpRecovery) {
+        console.log(
+            `Lane configs: migrationType BOTH (LOG + HTTP recovery) for ${recoveryKeys.length} authorized key(s)`,
+        );
+    }
 
     // Arbitrum L2: SAFE fires in seconds; FINALIZED waits for L1 finality (~10–20 min) and would
     // stall payout lanes. Sequencer-feed reorg risk is negligible for this use case, so SAFE everywhere.
@@ -222,12 +236,13 @@ export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
             chainSelectorName,
             receiverAddress: receiver,
             targetAddress: scheduler,
-            migrationType: "LOG" as const,
+            migrationType: (useHttpRecovery ? "BOTH" : "LOG") as "BOTH" | "LOG",
             logTriggerAddress: engine,
             logTriggerEventSignatures: [...CRE_PAYOUT_LOG_EVENT_SIGNATURES],
             checkData: laneCheckDataHex(lane),
             writeGasLimit,
             maxDrainIterations: laneMaxDrainIterations,
+            ...(useHttpRecovery ? { authorizedKeys: recoveryKeys } : {}),
         };
 
         for (const env of ["test", "production"] as const) {
@@ -287,7 +302,7 @@ export function writeCreHttpConfigs(params: WriteCreHttpConfigsParams): void {
 
 export function writeCreWorkflowConfigs(params: WriteCreWorkflowConfigsParams): void {
     const { httpAuthorizedKeys, ...laneParams } = params;
-    writeCreLaneConfigs(laneParams);
+    writeCreLaneConfigs({ ...laneParams, httpAuthorizedKeys });
     writeCreWorkflowYaml(laneParams.laneCount);
     writeCreHttpConfigs({
         network: params.network,
