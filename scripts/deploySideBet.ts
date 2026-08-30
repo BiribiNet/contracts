@@ -2,17 +2,6 @@ import { viem } from "hardhat";
 
 import { encodeFunctionData, isAddress, type Address } from "viem";
 
-/** High-odds (>100x) demo templates for a registered market id. */
-export function highOddsSeedTemplates(marketId: number) {
-    const minStake = 1_000_000n;
-    const maxStake = 1_000_000_000n;
-    return [
-        { marketId, betType: 4, color: 0, targetNumber: 37, targetCount: 2, redRatioBps: 0, windowSpins: 6, multiplierBps: 1_500_000, minStake, maxStake },
-        { marketId, betType: 5, color: 0, targetNumber: 0, targetCount: 0, redRatioBps: 0, windowSpins: 8, multiplierBps: 1_500_000, minStake, maxStake },
-        { marketId, betType: 6, color: 0, targetNumber: 1, targetCount: 5, redRatioBps: 0, windowSpins: 5, multiplierBps: 2_500_000, minStake, maxStake },
-    ] as const;
-}
-
 export type SideBetDeployConfig = {
     admin: Address;
     engine: Address;
@@ -62,10 +51,15 @@ async function main(): Promise<void> {
         maxMultiplierBps: 5_000_000,
     });
 
-     
+
     console.log("SideBet implementation:", implementation.address);
-     
+
     console.log("SideBet proxy:", sideBet.address);
+
+    console.log(
+        "Next: seed the bet catalogue with `yarn seed:side-bets:arbitrum-sepolia` — a SideBet with " +
+            "no config offers nothing and every placeBet reverts UnknownConfig.",
+    );
 }
 
 if (require.main === module) {
