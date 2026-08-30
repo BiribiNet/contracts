@@ -1,3 +1,18 @@
+# ⚠️ SUPERSEDED — DO NOT USE AS-IS.
+#
+# This file targets `RouletteClean`, a contract that no longer exists, still carries
+# YOUR_CONTRACT_ADDRESS / YOUR_ABI_GIST_RAW_URL placeholders, and its companion
+# roulette-events-abi.json declares ComputedPayouts and JackpotResultEvent — two
+# events that NO contract on master emits.
+#
+# The live mirror pipelines are maintained in the subgraph repository:
+#   ../subgraph/turbo.yaml      -> biribi-roulette-events -> /api/mirror
+#   ../subgraph/turbo-cre.yaml  -> biribi-cre-countdown
+# Both are patched from ../subgraph/deployments/*.json by `yarn sync:pipeline`,
+# and the addresses are guarded in CI by that repo's check-constants.
+#
+# Nothing in this repository reads this directory. Kept only for reference.
+
 # Biribi Roulette Events Pipeline
 # Tracks: VrfRequested, VRFResult, ComputedPayouts, JackpotResultEvent, RoundResolved (use on-chain PayoutProgress for batch slices)
 #

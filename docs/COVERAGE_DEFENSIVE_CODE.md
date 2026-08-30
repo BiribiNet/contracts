@@ -1,5 +1,9 @@
 # Coverage & defensive code report
 
+> ⚠️ Historical measurement. `UpkeepManager` rows are removed — the contract was
+> deleted in the CRE migration — and `SideBet` plus the CRE contracts are absent
+> because they postdate this document. Re-run `yarn coverage` for current figures.
+
 How to read this doc:
 
 | Label | Meaning |
@@ -22,7 +26,6 @@ Branch coverage is **not** 100% for the whole suite without a large test matrix.
 | BRBToken | 100% | 100% | 100% | Done |
 | BRBReferal | 100% | 100% | 100% | Done |
 | RouletteLib | 100% | 100% | 100% | Done |
-| UpkeepManager | 100% | **94.4%** | 100% | §4 constructor matrix |
 | SideBet | 98.4% | **75.9%** | 100% | Config / outcome branches |
 | UpkeepScheduler | 100% | 78.3% | 98.3% | Line 172 still red in some runs |
 | MarketRegistry | 100% | **78.1%** | 100% | Setter reverts |
@@ -113,7 +116,6 @@ Same story: **test gap**, not **dead branch**.
 
 | Area | Tests | Status |
 |------|-------|--------|
-| **UpkeepManager** | Per-param constructor `ZeroAddress` (5 deploys) | `BranchCoverage.test.ts` §4 |
 | **UpkeepScheduler** | SideBet `checkUpkeep` when `MockRoundEngine.findNextJob` returns empty | `BranchCoverage.test.ts` §4 |
 | **RouletteEngine** | `isBankLiquidityRestricted` through Locked + Settling until settled | `BranchCoverage.test.ts` §4 |
 | **BankVault4626** | `QueueFull`, `OnlySideBet`, queue drain / re-enqueue | `BranchCoverage.test.ts` §4; permit in `BankVault4626.test.ts` |
