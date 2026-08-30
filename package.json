@@ -25,6 +25,7 @@
     "clean": "hardhat clean",
     "test": "hardhat test",
     "update:subgraph:abis": "node scripts/update-subgraph-abis.mjs",
+    "update:frontend:abis": "node scripts/update-frontend-abis.mjs",
     "sync:subgraph:arbitrum-sepolia": "cd ../subgraph && DEPLOY_JSON=./deployments/arbitrum-sepolia.json yarn sync:pipeline",
     "distribute:brb": "hardhat run scripts/distributeBRB.ts --network arbitrumsepolia",
     "generate:cre:configs": "hardhat run scripts/generateCreLaneConfigs.ts",
