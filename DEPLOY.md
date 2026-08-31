@@ -50,7 +50,15 @@ yarn upgrade:side-bet:arbitrum-sepolia
 ```
 
 Requires `DEFAULT_ADMIN_ROLE` on the proxy. The script deploys the current implementation, calls
-`upgradeToAndCall`, then sets `settleTimeout`.
+`upgradeToAndCall` with `initializeReservedAccounting()` as its payload, then sets `settleTimeout`.
+
+**Upgrade before seeding, never after.** The payload adopts the incremental accounting behind
+`reservedOf`, which counts only the bets placed after it exists. On a proxy that already holds bets
+it would under-report the payout at risk in each market forever, and nothing on-chain would show the
+gap — so the call reverts (`ReservedAccountingMigrationUnsafe`) and takes the upgrade with it. The
+script also refuses up front, before paying for an implementation deploy, when `betCount != 0`.
+Reaching that state means the catalogue was seeded and played on the old implementation: migrating
+then needs a deliberate backfill, not this script.
 
 **Why the timeout write is mandatory:** `DEFAULT_SETTLE_TIMEOUT` is applied only inside
 `initialize`, so an upgraded proxy reads `settleTimeout == 0` and expiry stays disabled. A bet that

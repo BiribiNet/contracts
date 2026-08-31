@@ -802,6 +802,114 @@ describe("SideBet", function () {
     });
 });
 
+describe("SideBet reserved-liquidity accounting", function () {
+    it("keeps reservedOf constant-gas as the bet history grows", async function () {
+        const { sideBet, admin, alice, publicClient } = await deployFixture();
+        await registerConfig(sideBet, config({ multiplierBps: 100_000 }), admin.account);
+
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        const gasWithOneBet = await publicClient.estimateContractGas({
+            address: sideBet.address,
+            abi: sideBet.abi,
+            functionName: "reservedOf",
+            args: [MARKET_ID],
+            account: alice.account,
+        });
+
+        for (let placed = 1; placed < 12; placed += 1) {
+            await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        }
+
+        const gasWithTwelveBets = await publicClient.estimateContractGas({
+            address: sideBet.address,
+            abi: sideBet.abi,
+            functionName: "reservedOf",
+            args: [MARKET_ID],
+            account: alice.account,
+        });
+
+        // The old implementation scanned every bet ever placed: measured against it, this same
+        // assertion reads 35_938 gas at one bet and 111_705 at twelve — about 6.9k per extra bet,
+        // which walks into the RPC gas cap a few thousand bets in. Equality, not "close enough",
+        // is what proves the scan is gone.
+        expect(gasWithTwelveBets).to.equal(gasWithOneBet);
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(USDC("1200"));
+    });
+
+    it("drops a bet's reserve on settlement and leaves other markets untouched", async function () {
+        const { sideBet, scheduler, registry, admin, alice, roundEngine } = await deployFixture();
+        const secondMarketId = 2;
+        const secondAsset = await viem.deployContract("MockUSDC");
+        await registry.write.createMarket(
+            [{ asset: secondAsset.address, bankAdmin: admin.account.address, minBet: USDC("1") }],
+            { account: admin.account },
+        );
+        const secondMarket = await registry.read.getMarket([secondMarketId]);
+        const secondVault = await viem.getContractAt("BankVault4626", secondMarket.bank);
+        await secondAsset.write.mint([admin.account.address, USDC("10000")]);
+        await secondAsset.write.approve([secondVault.address, USDC("10000")], { account: admin.account });
+        await secondVault.write.deposit([USDC("10000"), admin.account.address], { account: admin.account });
+        await secondAsset.write.mint([alice.account.address, USDC("1000")]);
+        await secondAsset.write.approve([secondVault.address, USDC("1000")], { account: alice.account });
+
+        await registerConfig(
+            sideBet,
+            config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 3 }),
+            admin.account,
+        );
+        await registerConfig(
+            sideBet,
+            config({ marketId: secondMarketId, betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 3 }),
+            admin.account,
+        );
+
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await sideBet.write.placeBet([1n, USDC("20")], { account: alice.account });
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(USDC("100"));
+        expect(await sideBet.read.reservedOf([secondMarketId])).to.equal(USDC("200"));
+
+        await fulfillRounds(roundEngine, [2, 4, 6]);
+        await settleViaScheduler(scheduler);
+
+        expect(await sideBet.read.getBet([0n])).to.include({ status: Status.LOST });
+        expect(await sideBet.read.getBet([1n])).to.include({ status: Status.LOST });
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+        expect(await sideBet.read.reservedOf([secondMarketId])).to.equal(0n);
+    });
+
+    it("releases the reserve when an undecidable bet expires", async function () {
+        const { sideBet, scheduler, admin, alice } = await deployFixture();
+        await registerConfig(sideBet, config({ windowSpins: 5, multiplierBps: 100_000 }), admin.account);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(USDC("100"));
+
+        // No round ever advances, so the bet never becomes decidable — expiry is its only exit.
+        await time.increase(31 * 24 * 60 * 60);
+        await settleViaScheduler(scheduler);
+
+        expect(await sideBet.read.getBet([0n])).to.include({ status: Status.EXPIRED });
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+    });
+
+    it("refuses the reserved-accounting migration on a proxy that already holds bets", async function () {
+        const { sideBet, admin, alice } = await deployFixture();
+        await registerConfig(sideBet, config(), admin.account);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+
+        await expect(
+            sideBet.write.initializeReservedAccounting({ account: admin.account }),
+        ).to.be.rejectedWith("ReservedAccountingMigrationUnsafe");
+    });
+
+    it("accepts the reserved-accounting migration once on an empty proxy", async function () {
+        const { sideBet, admin } = await deployFixture();
+        await sideBet.write.initializeReservedAccounting({ account: admin.account });
+        await expect(
+            sideBet.write.initializeReservedAccounting({ account: admin.account }),
+        ).to.be.rejectedWith("InvalidInitialization");
+    });
+});
+
 describe("SideBet fees", function () {
     async function deployFeeFixture(marketAsset: "usdc" | "brb") {
         const [admin, alice, infra] = await viem.getWalletClients();

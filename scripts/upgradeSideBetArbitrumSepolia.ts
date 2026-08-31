@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { viem } from "hardhat";
 
-import { getAddress, isAddress, parseAbi, zeroHash } from "viem";
+import { encodeFunctionData, getAddress, isAddress, parseAbi, zeroHash } from "viem";
 
 /**
  * UUPS-upgrade the live Arbitrum Sepolia `SideBet` proxy to the current local implementation.
@@ -12,6 +12,12 @@ import { getAddress, isAddress, parseAbi, zeroHash } from "viem";
  * payouts, lane realignment, post-VRF placement guard, undecided-bet expiry). Its bytecode is
  * missing `settleTimeout()`, `setSettleTimeout(uint64)` and the current `settleBatch` signature,
  * so settlement through `UpkeepScheduler` cannot work against the current ABI.
+ *
+ * THE UPGRADE PAYLOAD IS NOT OPTIONAL EITHER: it calls `initializeReservedAccounting`, which adopts
+ * the incremental `reservedOf` accounting. That accounting only counts bets placed after it exists,
+ * so a proxy holding bets must not adopt it — the call reverts in that case and takes the whole
+ * upgrade with it, which is the intended outcome: a loud abort instead of a `reservedOf` that
+ * silently under-reports the payout at risk. Upgrade before seeding the catalogue, not after.
  *
  * THE POST-UPGRADE CALL IS NOT OPTIONAL: `DEFAULT_SETTLE_TIMEOUT` is applied only inside
  * `initialize`, so an upgraded proxy reads `settleTimeout == 0` and expiry stays disabled. A bet
@@ -53,6 +59,8 @@ const proxyAbi = parseAbi([
     "function setSettleTimeout(uint64 newSettleTimeout)",
     "function configCount() view returns (uint256)",
     "function betCount() view returns (uint256)",
+    "function reservedOf(uint32 marketId) view returns (uint256)",
+    "function initializeReservedAccounting()",
 ]);
 
 function envAddress(name: string, fallback: `0x${string}`): `0x${string}` {
@@ -119,12 +127,31 @@ async function main(): Promise<void> {
     const newImplementation = await viem.deployContract("SideBet", [], { account: deployer.account });
     console.log("New implementation:", newImplementation.address);
 
+    // Adopting the incremental reserved accounting is only sound while the proxy holds no bets.
+    // The call below enforces that on-chain; check it here too so the failure names its cause
+    // before a deployment is paid for.
+    const betCountBefore = await publicClient.readContract({
+        address: sideBetProxy,
+        abi: proxyAbi,
+        functionName: "betCount",
+    });
+    if (betCountBefore !== 0n) {
+        throw new Error(
+            `SideBet already holds ${betCountBefore} bet(s). \`initializeReservedAccounting\` would leave ` +
+                "`reservedOf` under-reporting every one of them, so this upgrade is refused. Migrating a " +
+                "populated proxy needs a deliberate backfill, not this script.",
+        );
+    }
+
     console.log("Calling upgradeToAndCall on proxy…");
     const upgradeHash = await deployer.writeContract({
         address: sideBetProxy,
         abi: proxyAbi,
         functionName: "upgradeToAndCall",
-        args: [newImplementation.address, "0x"],
+        args: [
+            newImplementation.address,
+            encodeFunctionData({ abi: proxyAbi, functionName: "initializeReservedAccounting" }),
+        ],
         account: deployer.account,
         chain: publicClient.chain,
     });

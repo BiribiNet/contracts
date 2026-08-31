@@ -120,6 +120,9 @@ interface ISideBet {
     error MultiplierOutOfBand();
     /// @dev The start round's VRF is already fulfilled, so its outcome is public — betting on it is closed.
     error RoundOutcomeAlreadyKnown();
+    /// @dev Reserved-liquidity accounting is incremental, so it can only be adopted by a proxy that
+    ///      holds no bets yet. Adopting it later would under-report `reservedOf` forever, silently.
+    error ReservedAccountingMigrationUnsafe();
 
     function addConfig(SideBetConfig calldata cfg) external returns (uint256 configId);
     function updateConfig(uint256 configId, SideBetConfig calldata cfg) external;
