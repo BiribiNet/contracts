@@ -48,6 +48,11 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         /// undecided bet may be settled as EXPIRED with a stake refund. 0 disables expiry, which is
         /// what an upgraded proxy sees until an admin calls `setSettleTimeout`.
         uint64 settleTimeout;
+        /// @dev Appended. Running sum of the payout reserved by the ACTIVE bets of each market —
+        /// what `reservedOf` used to recompute by scanning every bet ever placed. Maintained
+        /// incrementally, so it is only valid from a proxy that adopted it while empty
+        /// (`initializeReservedAccounting`).
+        mapping(uint32 => uint256) reservedByMarket;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.SideBet")) - 1)) & ~bytes32(uint256(0xff));
@@ -106,6 +111,18 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
 
         emit MultiplierBandUpdated(minMultiplierBps_, maxMultiplierBps_);
         emit SettleTimeoutUpdated(DEFAULT_SETTLE_TIMEOUT);
+    }
+
+    /// @notice Adopts the incremental reserved-liquidity accounting behind `reservedOf`.
+    /// @dev Must be passed as the `upgradeToAndCall` payload when upgrading a proxy that predates
+    ///      `reservedByMarket`. It carries no state to migrate — `reservedByMarket` starts empty and
+    ///      only ever sees the bets placed after it exists — which is exactly why a proxy that
+    ///      already holds bets must not adopt it: `reservedOf` would silently under-report the
+    ///      payout at risk in each market, with nothing on-chain to reveal the gap. Reverting is the
+    ///      loud failure that replaces that silent one. A fresh deploy runs `initialize`, which
+    ///      leaves the mapping empty and consistent, so it never needs this call.
+    function initializeReservedAccounting() external reinitializer(2) {
+        if (_s().betCount != 0) revert ReservedAccountingMigrationUnsafe();
     }
 
     // --- Config management ---------------------------------------------------
@@ -278,6 +295,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
             resolvedAt: 0
         });
         $.playerBets[msg.sender].push(betId);
+        $.reservedByMarket[cfg.marketId] += payout;
 
         vault.lockSideBetStake(msg.sender, stake, payout);
 
@@ -600,6 +618,11 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
             bet.status = SideBetStatus.LOST;
         }
 
+        // The bet just left ACTIVE, so its reserve leaves the market total. Every ACTIVE bet added
+        // exactly `payout` in `placeBet` and the guard above lets each one through here once, so
+        // this cannot underflow; leaving it checked keeps that invariant enforced rather than assumed.
+        $.reservedByMarket[bet.marketId] -= reserved;
+
         bet.resolvedAt = uint64(block.timestamp);
         emit SideBetSettled(row.betId, bet.player, bet.status, row.payoutAmount);
         return true;
@@ -695,18 +718,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     }
 
     function reservedOf(uint32 marketId) external view override returns (uint256) {
-        SideBetData storage $ = _s();
-        uint256 sum;
-        for (uint256 id; id < $.betCount; ) {
-            Bet storage bet = $.bets[id];
-            if (bet.marketId == marketId && bet.status == SideBetStatus.ACTIVE) {
-                sum += bet.payout;
-            }
-            unchecked {
-                ++id;
-            }
-        }
-        return sum;
+        return _s().reservedByMarket[marketId];
     }
 
     function availableVaultLiquidity(uint32 marketId) external view override returns (uint256) {
