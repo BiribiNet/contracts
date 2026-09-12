@@ -17,6 +17,7 @@
     "verify:deployment:arbitrum-sepolia": "hardhat run scripts/verifySepoliaDeployment.ts --network arbitrumsepolia",
     "upgrade:engine:arbitrum-sepolia": "hardhat run scripts/upgradeRouletteEngineArbitrumSepolia.ts --network arbitrumsepolia",
     "upgrade:side-bet:arbitrum-sepolia": "hardhat run scripts/upgradeSideBetArbitrumSepolia.ts --network arbitrumsepolia",
+    "upgrade:vault:arbitrum-sepolia": "hardhat run scripts/upgradeBankVaultArbitrumSepolia.ts --network arbitrumsepolia",
     "seed:side-bets:arbitrum-sepolia": "hardhat run scripts/seedSideBetConfigs.ts --network arbitrumsepolia",
     "deploy:protocol:arbitrum": "hardhat run scripts/deployProtocolArbitrum.ts --network arbitrum",
     "verify:protocol:arbitrum-sepolia": "hardhat run scripts/verifyArbitrumSepoliaProtocol.ts --network arbitrumsepolia",

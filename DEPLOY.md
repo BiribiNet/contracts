@@ -10,6 +10,7 @@
 | Re-verify Sepolia | `yarn verify:protocol:arbitrum-sepolia` |
 | Generate CRE lane configs | `yarn generate:cre:configs` |
 | Upgrade SideBet (Sepolia) | `yarn upgrade:side-bet:arbitrum-sepolia` |
+| Upgrade BankVault beacon (Sepolia) | `yarn upgrade:vault:arbitrum-sepolia` |
 | Seed side-bet catalogue (Sepolia) | `yarn seed:side-bets:arbitrum-sepolia` |
 
 ## Hardhat vars (required)
