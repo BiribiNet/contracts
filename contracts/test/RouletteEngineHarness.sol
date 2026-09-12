@@ -39,6 +39,10 @@ contract RouletteEngineHarness is RouletteEngine {
         RouletteEngineStorageLib.layout()._roundLockAt[roundId] = lockAt;
     }
 
+    function harnessSetVrfRequestedAt(uint64 roundId, uint256 requestedAt) external {
+        RouletteEngineStorageLib.layout().globalRoundState[roundId].vrfRequestedAt = requestedAt;
+    }
+
     function harnessSetJackpotCursor(uint64 roundId, uint32 cursor) external {
         RouletteEngineStorageLib.layout().globalRoundState[roundId].jackpotCursor = cursor;
     }
@@ -50,11 +54,11 @@ contract RouletteEngineHarness is RouletteEngine {
         gr.jackpotCursor = cursor;
     }
 
-    function harnessPreviewPayoutBundle(Job memory job, uint32 maxPayoutsPerCall) external {
-        _previewPayoutBundle(job, maxPayoutsPerCall);
+    function harnessPreviewPayoutBundle(Job memory job, uint32 maxPayoutsPerCall) external view {
+        this.previewPayoutBundle(job, maxPayoutsPerCall);
     }
 
-    function harnessPayoutLaneHasWork(Job memory job) external {
-        _payoutLaneHasWork(job);
+    function harnessPayoutLaneHasWork(Job memory job) external view {
+        this.payoutLaneHasWork(job);
     }
 }

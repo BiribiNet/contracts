@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { viem } from "hardhat";
+import hre, { viem } from "hardhat";
 import { getAddress, isAddress, keccak256, parseAbi, toBytes, zeroHash } from "viem";
 
 import { deployRouletteEngineLibraries } from "./utils/deployRouletteEngineLibraries";
@@ -11,18 +11,21 @@ import {
 } from "./utils/verifyWithEtherscan";
 
 /**
- * UUPS-upgrade the live Arbitrum Sepolia `RouletteEngine` proxy to the current local implementation.
+ * UUPS-upgrade the live Arbitrum Sepolia `RouletteEngine` proxy to the current local implementation
+ * (including admin-only `retryVrf` for stuck VRF rounds).
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` (must hold `DEFAULT_ADMIN_ROLE` on the engine proxy)
  * - `hardhat vars set ARBITRUM_SEPOLIA_RPC_URL`
  * - `yarn compile` on the revision you want on-chain
+ * - VRF subscription funded with LINK *before* calling `retryVrf` on a stuck round
  *
  * Env:
- * - ENGINE_PROXY — default `0x4cf6a900fcdd3a33b2bb1df22b8718dd24e897f8`
+ * - ENGINE_PROXY — default `0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1`
  * - VRF_COORDINATOR — default Arbitrum Sepolia coordinator (must match original deploy)
  * - VERIFY_CONTRACTS — default true when `ETHERSCAN_API_KEY` is set
  * - VERIFY_DELAY_MS — default 8000
+ * - CALL_RETRY_VRF — default false; set true to call admin `retryVrf()` after upgrade
  *
  * Run: `yarn upgrade:engine:arbitrum-sepolia`
  */
@@ -31,7 +34,7 @@ const ARBITRUM_SEPOLIA_CHAIN_ID = 421614n;
 const ERC1967_IMPLEMENTATION_SLOT =
     "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc" as const;
 
-const DEFAULT_ENGINE_PROXY = "0x4cf6a900fcdd3a33b2bb1df22b8718dd24e897f8" as const;
+const DEFAULT_ENGINE_PROXY = "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1" as const;
 const DEFAULT_VRF_COORDINATOR = "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61" as const;
 
 const FQ_ROULETTE_ENGINE = "contracts/RouletteEngine.sol:RouletteEngine" as const;
@@ -50,6 +53,9 @@ const implReadAbi = parseAbi([
     "function BRB_REFERRAL() view returns (address)",
     "function hasRole(bytes32 role, address account) view returns (bool)",
     "function upgradeToAndCall(address newImplementation, bytes data) payable",
+    "function retryVrf()",
+    "function hasPendingVrf() view returns (bool)",
+    "function currentGlobalRound() view returns (uint64)",
 ]);
 
 function envAddress(name: string, fallback: `0x${string}`): `0x${string}` {
@@ -97,12 +103,6 @@ async function main() {
     console.log("Engine proxy:", engineProxy);
     console.log("Current implementation:", previousImplementation);
 
-    const alreadyVrfV25 = await implementationUsesVrfV25(publicClient, previousImplementation);
-    if (alreadyVrfV25) {
-        console.log("Current implementation already uses VRF v2.5 RandomWordsRequest — no upgrade needed.");
-        return;
-    }
-
     const [key2, key30, key150, confirmations, brbReferral] = await Promise.all([
         publicClient.readContract({ address: previousImplementation, abi: implReadAbi, functionName: "VRF_KEY_HASH_2_GWEI" }),
         publicClient.readContract({ address: previousImplementation, abi: implReadAbi, functionName: "VRF_KEY_HASH_30_GWEI" }),
@@ -124,13 +124,16 @@ async function main() {
     }
 
     console.log("Deploying linked libraries…");
+    if (hre.network.name !== "hardhat") {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
     const { addresses: linkedLibraries, engineLinks } = await deployRouletteEngineLibraries(deployer.account);
 
     console.log("Deploying new RouletteEngine implementation…");
     const newImplementation = await viem.deployContract(
         "RouletteEngine",
         [vrfCoordinator, key2, key30, key150, confirmations, brbReferral],
-        { account: deployer.account, libraries: engineLinks },
+        { account: deployer.account, libraries: engineLinks, gas: 8_000_000n },
     );
     console.log("New implementation:", newImplementation.address);
 
@@ -147,6 +150,7 @@ async function main() {
         args: [newImplementation.address, "0x"],
         account: deployer.account,
         chain: publicClient.chain,
+        gas: 500_000n,
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash: upgradeHash });
     if (receipt.status !== "success") {
@@ -176,6 +180,29 @@ async function main() {
             2,
         ),
     );
+
+    if (envBool("CALL_RETRY_VRF", false)) {
+        console.log("Calling retryVrf…");
+        const retryHash = await deployer.writeContract({
+            address: engineProxy,
+            abi: implReadAbi,
+            functionName: "retryVrf",
+            account: deployer.account,
+            chain: publicClient.chain,
+            gas: 1_000_000n,
+        });
+        const retryReceipt = await publicClient.waitForTransactionReceipt({ hash: retryHash });
+        if (retryReceipt.status !== "success") {
+            throw new Error(`retryVrf reverted (tx ${retryHash})`);
+        }
+        const [pending, roundId] = await Promise.all([
+            publicClient.readContract({ address: engineProxy, abi: implReadAbi, functionName: "hasPendingVrf" }),
+            publicClient.readContract({ address: engineProxy, abi: implReadAbi, functionName: "currentGlobalRound" }),
+        ]);
+        console.log(
+            JSON.stringify({ retryTx: retryHash, currentGlobalRound: roundId.toString(), hasPendingVrf: pending }, null, 2),
+        );
+    }
 
     const wantVerify = envBool("VERIFY_CONTRACTS", true);
     if (wantVerify) {

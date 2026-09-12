@@ -5,6 +5,8 @@ import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 
 /// @dev Linked library: per-bet worst-case exposure accumulators (offloads `recordBet` bytecode).
 library RouletteExposureLib {
+    error InvalidRound();
+
     uint8 private constant BET_STRAIGHT = 1;
     uint8 private constant BET_STREET = 3;
     uint8 private constant BET_SPLIT = 2;
@@ -94,5 +96,24 @@ library RouletteExposureLib {
                 $.roundOtherBetsWeightedPayout[rid][mid] += amount * 12;
             }
         }
+    }
+
+    /// @dev Bytecode offload for admin `retryVrf`: validates delay and unlinks the stale request.
+    function prepareVrfRetry(RouletteEngineStorageLib.Layout storage $, uint256 delay)
+        external
+        returns (uint64 roundId)
+    {
+        roundId = $._globalRound;
+        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if (
+            $._roundPhase != RouletteEngineStorageLib.RoundPhase.Settling || !gr.vrfRequested || gr.vrfFulfilled
+        ) {
+            revert InvalidRound();
+        }
+        uint256 startedAt = gr.vrfRequestedAt;
+        if (startedAt == 0) startedAt = $._roundLockAt[roundId];
+        if (block.timestamp < startedAt + delay) revert InvalidRound();
+        uint256 oldReq = $._pendingRequestId;
+        if (oldReq != 0) delete $.requestIdToGlobalRound[oldReq];
     }
 }

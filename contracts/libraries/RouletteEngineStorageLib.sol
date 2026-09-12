@@ -27,6 +27,8 @@ library RouletteEngineStorageLib {
         uint256 jackpotPoolSnapshot;
         uint256 jackpotTotalStake;
         uint32 jackpotWinnerCount;
+        /// @dev `block.timestamp` of the latest `requestRandomWords` for this round (0 on pre-upgrade rounds).
+        uint256 vrfRequestedAt;
     }
 
     struct MarketRoundState {

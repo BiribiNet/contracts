@@ -11,19 +11,18 @@ import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IBankVault } from "./interfaces/IBankVault.sol";
 import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IJackpotTreasury } from "./interfaces/IJackpotTreasury.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 import { IBRBReferal } from "./interfaces/IBRBReferal.sol";
 import { IRouletteBetErrors } from "./interfaces/IRouletteBetErrors.sol";
 import { BetStorageLib } from "./libraries/BetStorageLib.sol";
 import { RouletteBetCodecLib } from "./libraries/RouletteBetCodecLib.sol";
-import { JackpotBatchLib } from "./libraries/JackpotBatchLib.sol";
 import { RouletteLiabilityMathLib } from "./libraries/RouletteLiabilityMathLib.sol";
 import { RouletteEngineStorageLib } from "./libraries/RouletteEngineStorageLib.sol";
 import { RouletteExposureLib } from "./libraries/RouletteExposureLib.sol";
 import { RoulettePayoutSweepLib } from "./libraries/RoulettePayoutSweepLib.sol";
 import { RouletteJackpotCollectLib } from "./libraries/RouletteJackpotCollectLib.sol";
 import { MarketFeeLib } from "./libraries/MarketFeeLib.sol";
+import { RouletteUpkeepScanLib } from "./libraries/RouletteUpkeepScanLib.sol";
 
 /// @notice UUPS proxy implementation. Deploy implementation with `vrfCoordinator`, then `ERC1967Proxy` + `initialize`.
 contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradeable, VRFConsumerBaseV2, IRouletteEngine {
@@ -50,6 +49,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     uint8 private constant BET_TRIO_023 = 15;
 
     uint32 public constant DEFAULT_PAYOUT_LANE_COUNT = 10;
+    /// @dev Matches Chainlink VRF request expiry: fund LINK inside this window and the original request fulfills.
+    uint256 internal constant VRF_RETRY_DELAY = 24 hours;
 
     IBRBReferal public immutable BRB_REFERRAL;
     bytes32 public immutable VRF_KEY_HASH_2_GWEI;
@@ -243,7 +244,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     function marketRouletteLiquidityNeed(uint32 marketId) external view returns (uint256) {
         RouletteEngineStorageLib.Layout storage $ = _s();
         uint64 roundId = $._globalRound;
-        uint256 liability = _bufferedMarketMaxLiability($, roundId, marketId);
+        uint256 liability = RouletteLiabilityMathLib.bufferedMarketMaxLiabilityFromRound($, roundId, marketId);
         // Stakes are already inside `lockedBetLiquidity`, so they are not part of the free liquidity
         // the vault would otherwise hand to a side bet — only the shortfall above them counts.
         uint256 stakes = $.marketRoundStateByRound[roundId][marketId].totals.totalAmount;
@@ -369,7 +370,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         // side-bet reserves do not, and counting them let both systems commit the same tokens — the
         // one that settled second could not be paid, reverting its lane and stalling the round.
         uint256 freeLiquidity = ISideBetVault(cfg.bank).availableForSideBet() + mr.totals.totalAmount + amount;
-        if (freeLiquidity < _bufferedMarketMaxLiability($, roundId, marketId)) {
+        if (freeLiquidity < RouletteLiabilityMathLib.bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
             revert InsufficientBankForMaxPayout();
         }
     }
@@ -448,104 +449,12 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     /// @inheritdoc IRouletteEngine
     function findNextJob(
         uint32 startCursor,
-        uint32 scanLimit,
+        uint32,
         uint32 payoutLane,
         uint32 payoutShardWidth
     ) external view returns (bool found, Job memory job) {
         if (payoutShardWidth != 0) return (false, job);
-        return _findNextJob(startCursor, scanLimit, payoutLane);
-    }
-
-    /// @notice Per-lane payout scan: each lane picks the first unsettled market where *that lane* still has work.
-    ///         Markets can therefore settle in parallel across lanes (separate vaults per market).
-    function _findPayoutJobForLane(
-        uint32 payoutLane,
-        uint32 laneCount
-    ) private view returns (bool found, Job memory job) {
-        RouletteEngineStorageLib.Layout storage $ = _s();
-        if ($._roundPhase != RouletteEngineStorageLib.RoundPhase.Settling) return (false, job);
-
-        uint64 roundId = $._globalRound;
-        if (!$.globalRoundState[roundId].vrfFulfilled) return (false, job);
-
-        uint32 totalMarkets = $.REGISTRY.marketCount();
-        for (uint32 marketId = 1; marketId <= totalMarkets; ) {
-            RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
-            if (!mr.settled && mr.totals.betCount > 0) {
-                // nextCursor carries the shard's current payout cursor so apply can reject stale (raced) chunks.
-                Job memory candidate = _payoutJob(
-                    roundId,
-                    marketId,
-                    uint32($.payoutCursorByShard[roundId][marketId][payoutLane]),
-                    payoutLane,
-                    laneCount
-                );
-                if (_payoutLaneHasWork(candidate)) return (true, candidate);
-            }
-            unchecked {
-                ++marketId;
-            }
-        }
-        return (false, job);
-    }
-
-    /// @notice Global payout scan; lanes may service different markets when a lane has no shard work left on earlier ids.
-    function _findNextJob(uint32 startCursor, uint32, uint32 payoutLane) private view returns (bool found, Job memory job) {
-        RouletteEngineStorageLib.Layout storage $ = _s();
-        uint32 totalMarkets = $.REGISTRY.marketCount();
-        if (totalMarkets == 0) return (false, job);
-
-        uint32 laneCount = $.payoutLaneCount;
-        if (laneCount == 0) laneCount = 1;
-        if (payoutLane >= laneCount) return (false, job);
-
-        (bool foundPayout, Job memory payoutJob) = _findPayoutJobForLane(payoutLane, laneCount);
-        if (foundPayout) return (true, payoutJob);
-
-        if (payoutLane != 0) return (false, job);
-
-        uint64 roundId = $._globalRound;
-        if (_vrfTriggerUpkeepCandidate($, roundId)) {
-            return (true, Job({
-                kind: JobKind.TriggerVrf,
-                marketId: 0,
-                roundId: roundId,
-                nextCursor: startCursor,
-                payoutShardIndex: 0,
-                payoutShardWidth: 0
-            }));
-        }
-        return (false, job);
-    }
-
-    /// @dev Predicate for `JobKind.TriggerVrf`: round countdown elapsed with at least one bet and VRF not yet requested.
-    function _vrfTriggerUpkeepCandidate(RouletteEngineStorageLib.Layout storage $, uint64 roundId) private view returns (bool) {
-        if ($._pendingRequestId != 0) return false;
-        if ($._roundPhase != RouletteEngineStorageLib.RoundPhase.Open) return false;
-        if ($.globalRoundState[roundId].vrfRequested) return false;
-        uint32 triggerMarketId = $._roundTriggerMarket[roundId];
-        if (triggerMarketId == 0) return false;
-        uint256 lockAt = $._roundLockAt[roundId];
-        if (lockAt == 0 || block.timestamp < lockAt) return false;
-        return $.marketRoundStateByRound[roundId][triggerMarketId].totals.betCount > 0;
-    }
-
-    /// @dev Dedicated stack frame for `JobKind.Payout` literals (non-IR solc stack limits).
-    function _payoutJob(
-        uint64 roundId_,
-        uint32 marketId_,
-        uint32 nextCursor_,
-        uint32 payoutShardIndex_,
-        uint32 payoutShardWidth_
-    ) private pure returns (Job memory j) {
-        j = Job({
-            kind: JobKind.Payout,
-            marketId: marketId_,
-            roundId: roundId_,
-            nextCursor: nextCursor_,
-            payoutShardIndex: payoutShardIndex_,
-            payoutShardWidth: payoutShardWidth_
-        });
+        return RouletteUpkeepScanLib.findNextJob(_s(), startCursor, payoutLane);
     }
 
     /// @inheritdoc IRouletteEngine
@@ -558,109 +467,12 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
             uint256[] memory jackpotAmounts
         )
     {
-        return _previewPayoutBundle(job, maxPayoutsPerCall);
-    }
-
-    function _previewPayoutBundle(Job memory job, uint32 maxPayoutsPerCall)
-        internal
-        view
-        returns (
-            IBankVault.Payout[] memory winnerPayoutRows,
-            address[] memory jackpotWinners,
-            uint256[] memory jackpotAmounts
-        )
-    {
-        if (job.kind != JobKind.Payout || maxPayoutsPerCall == 0 || job.payoutShardWidth == 0) {
-            return (winnerPayoutRows, jackpotWinners, jackpotAmounts);
-        }
-        return _previewPayoutBundleShard(
-            job.roundId, job.marketId, job.payoutShardIndex, job.payoutShardWidth, maxPayoutsPerCall
-        );
-    }
-
-    function _previewPayoutBundleShard(
-        uint64 roundId,
-        uint32 marketId,
-        uint32 lane,
-        uint32 laneCount,
-        uint32 maxPayoutsPerCall
-    ) private view returns (
-        IBankVault.Payout[] memory winnerPayoutRows,
-        address[] memory jackpotWinners,
-        uint256[] memory jackpotAmounts
-    ) {
-        if (lane >= laneCount) return (winnerPayoutRows, jackpotWinners, jackpotAmounts);
-
-        RouletteEngineStorageLib.Layout storage $ = _s();
-        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
-        if (!gr.vrfFulfilled) return (winnerPayoutRows, jackpotWinners, jackpotAmounts);
-
-        if ($.marketRoundStateByRound[roundId][marketId].settled) {
-            return (winnerPayoutRows, jackpotWinners, jackpotAmounts);
-        }
-
-        if (lane == 0 && gr.jackpotTriggered && !gr.jackpotDistributed && marketId == $._roundTriggerMarket[roundId]) {
-            (jackpotWinners, jackpotAmounts) = _previewJackpotPayouts($, roundId, gr.winningNumber, maxPayoutsPerCall);
-        }
-
-        winnerPayoutRows = _previewVaultShardPayouts($, roundId, marketId, gr.winningNumber, lane, laneCount, maxPayoutsPerCall);
+        return RouletteUpkeepScanLib.previewPayoutBundle(_s(), job, maxPayoutsPerCall);
     }
 
     /// @inheritdoc IRouletteEngine
     function payoutLaneHasWork(Job memory job) external view returns (bool) {
-        return _payoutLaneHasWork(job);
-    }
-
-    function _payoutLaneHasWork(Job memory job) internal view returns (bool) {
-        if (job.kind != JobKind.Payout || job.payoutShardWidth == 0) return false;
-        uint32 lane = job.payoutShardIndex;
-        uint32 laneCount = job.payoutShardWidth;
-        if (lane >= laneCount) return false;
-
-        RouletteEngineStorageLib.Layout storage $ = _s();
-        uint64 roundId = job.roundId;
-        uint32 marketId = job.marketId;
-        RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
-        if (mr.settled) return false;
-
-        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
-        if (!gr.vrfFulfilled) return false;
-
-        if ($.payoutCursorByShard[roundId][marketId][lane] < $.winningBetCountByShard[roundId][marketId][lane]) {
-            return true;
-        }
-
-        if (lane == 0 && gr.jackpotTriggered && !gr.jackpotDistributed && marketId == $._roundTriggerMarket[roundId]) {
-            (address[] memory winners,, uint256 totalStake) =
-                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, gr.winningNumber);
-            if (totalStake > 0 && uint256(gr.jackpotCursor) < winners.length) return true;
-        }
-
-        return lane == 0 && mr.winningBetCount == 0 && _allPayoutShardsComplete($, roundId, marketId, laneCount);
-    }
-
-    function _previewVaultShardPayouts(
-        RouletteEngineStorageLib.Layout storage $,
-        uint64 roundId,
-        uint32 marketId,
-        uint8 winningNumber,
-        uint32 lane,
-        uint32 laneCount,
-        uint32 maxPayoutsPerCall
-    ) private view returns (IBankVault.Payout[] memory rows) {
-        uint256 shardTotal = $.winningBetCountByShard[roundId][marketId][lane];
-        if (shardTotal == 0) return rows;
-
-        uint256 start = $.payoutCursorByShard[roundId][marketId][lane];
-        if (start >= shardTotal) return rows;
-
-        uint256 chunk = shardTotal - start > uint256(maxPayoutsPerCall)
-            ? uint256(maxPayoutsPerCall)
-            : shardTotal - start;
-
-        (rows,,,) = RoulettePayoutSweepLib.previewWinningPayoutsSlice(
-            $, roundId, marketId, winningNumber, start, chunk, chunk, lane, laneCount
-        );
+        return RouletteUpkeepScanLib.payoutLaneHasWork(_s(), job);
     }
 
     function executeJob(
@@ -705,6 +517,12 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         return $._pendingRequestId != 0 ? $._globalRound : 0;
     }
 
+    /// @inheritdoc IRouletteEngine
+    function retryVrf() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        _requestVrf($, RouletteExposureLib.prepareVrfRetry($, VRF_RETRY_DELAY));
+    }
+
     function _resolveOpenRound(RouletteEngineStorageLib.Layout storage $, uint32 marketId) private returns (uint64 roundId) {
         roundId = $._globalRound;
         if ($._roundPhase != RouletteEngineStorageLib.RoundPhase.Open) revert RoundIsLocked();
@@ -739,7 +557,11 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
 
         $.globalRoundState[roundId].vrfRequested = true;
         $._roundPhase = RouletteEngineStorageLib.RoundPhase.Settling;
+        _requestVrf($, roundId);
+    }
 
+    /// @dev Shared by TriggerVrf and admin `retryVrf`. Unlinked stale request ids cannot fulfill.
+    function _requestVrf(RouletteEngineStorageLib.Layout storage $, uint64 roundId) private {
         uint256 req = vrfCoordinator().requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: tx.gasprice < 2 gwei
@@ -754,6 +576,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         );
         $._pendingRequestId = req;
         $.requestIdToGlobalRound[req] = roundId;
+        $.globalRoundState[roundId].vrfRequestedAt = block.timestamp;
         emit VrfRequested(roundId, req, block.timestamp);
     }
 
@@ -763,6 +586,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         if (roundId == 0) revert InvalidRound();
 
         RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if (gr.vrfFulfilled) revert InvalidRound();
         gr.vrfFulfilled = true;
         gr.randomWord = randomWords[0];
         uint256 modWin = randomWords[0] % 37;
@@ -818,7 +642,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
 
         uint256 n = winnerPayoutRows.length;
         if (n == 0) {
-            if (mr.winningBetCount == 0 && _allPayoutShardsComplete($, roundId, marketId, laneCount)) {
+            if (mr.winningBetCount == 0 && RouletteUpkeepScanLib.allPayoutShardsComplete($, roundId, marketId, laneCount)) {
                 _finalizeMarketSettlement($, roundId, marketId, bank, mr);
             }
             return;
@@ -838,26 +662,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         mr.bankPaidRunning += bankPaid;
         emit PayoutProgress(roundId, marketId, start, end, bankPaid);
 
-        if (end >= $.winningBetCountByShard[roundId][marketId][lane] && _allPayoutShardsComplete($, roundId, marketId, laneCount)) {
+        if (end >= $.winningBetCountByShard[roundId][marketId][lane] && RouletteUpkeepScanLib.allPayoutShardsComplete($, roundId, marketId, laneCount)) {
             _finalizeMarketSettlement($, roundId, marketId, bank, mr);
         }
-    }
-
-    function _allPayoutShardsComplete(
-        RouletteEngineStorageLib.Layout storage $,
-        uint64 roundId,
-        uint32 marketId,
-        uint32 laneCount
-    ) private view returns (bool) {
-        for (uint32 lane; lane < laneCount; ) {
-            if ($.payoutCursorByShard[roundId][marketId][lane] < $.winningBetCountByShard[roundId][marketId][lane]) {
-                return false;
-            }
-            unchecked {
-                ++lane;
-            }
-        }
-        return true;
     }
 
     function _finalizeMarketSettlement(
@@ -898,43 +705,6 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         );
         if (fees.swapIn > 0) emit JackpotFunded(roundId, marketId, fees.swapIn);
         if (fees.infraFee > 0) emit InfrastructureFeePaid(roundId, marketId, fees.infraFee);
-    }
-
-    function _previewJackpotPayouts(
-        RouletteEngineStorageLib.Layout storage $,
-        uint64 roundId,
-        uint8 winningNumber,
-        uint32 maxPayoutsPerCall
-    ) private view returns (address[] memory jackpotWinners, uint256[] memory jackpotAmounts) {
-        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
-        (address[] memory winners, uint256[] memory stakes, uint256 totalStake) =
-            RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, winningNumber);
-        uint256 n = winners.length;
-        if (n == 0) return (jackpotWinners, jackpotAmounts);
-
-        uint256 pool0 = gr.jackpotPoolSnapshot;
-        if (pool0 == 0) pool0 = $.JACKPOT_TREASURY.jackpotPool();
-        uint256 denom = gr.jackpotTotalStake;
-        if (denom == 0) denom = totalStake;
-        // Defence in depth: with no eligible stake weight the proportional share is undefined.
-        // Skip distribution rather than divide by zero (mirrors `_payoutLaneHasWork`'s totalStake > 0 gate).
-        if (denom == 0) return (jackpotWinners, jackpotAmounts);
-
-        uint256 start = uint256(gr.jackpotCursor);
-        if (start >= n) return (jackpotWinners, jackpotAmounts);
-
-        uint256 chunk = n - start > uint256(maxPayoutsPerCall) ? uint256(maxPayoutsPerCall) : n - start;
-        JackpotBatchLib.JackpotComputeArgs memory args = JackpotBatchLib.JackpotComputeArgs({
-            winners: winners,
-            stakes: stakes,
-            n: n,
-            start: start,
-            chunk: chunk,
-            pool0: pool0,
-            denom: denom,
-            paidBefore: gr.jackpotPaid
-        });
-        (jackpotWinners, jackpotAmounts,,) = JackpotBatchLib.computeBatch(args);
     }
 
     /// @dev Pays the jackpot chunk from `previewPayoutBundle`; snapshots pool/stake counts on the first chunk only.
@@ -1006,33 +776,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
             }
         }
         uint256 paidSoFar = $.marketRoundStateByRound[roundId][marketId].bankPaidRunning;
-        if (paidSoFar + requested > _bufferedMarketMaxLiability($, roundId, marketId)) {
+        if (paidSoFar + requested > RouletteLiabilityMathLib.bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
             revert PayoutExceedsMarketLiability();
         }
     }
-
-    function _bufferedMarketMaxLiability(RouletteEngineStorageLib.Layout storage $, uint64 rid, uint32 mid)
-        private
-        view
-        returns (uint256)
-    {
-        RouletteLiabilityMathLib.Inputs memory liab;
-        liab.maxStraightBet = $.roundMaxStraightBet[rid][mid];
-        liab.maxStreetBet = $.roundMaxStreetBet[rid][mid];
-        liab.redSum = $.roundRedBetsSum[rid][mid];
-        liab.blackSum = $.roundBlackBetsSum[rid][mid];
-        liab.oddSum = $.roundOddBetsSum[rid][mid];
-        liab.evenSum = $.roundEvenBetsSum[rid][mid];
-        liab.lowSum = $.roundLowBetsSum[rid][mid];
-        liab.highSum = $.roundHighBetsSum[rid][mid];
-        liab.dozen1 = $.roundDozenBetsSum[rid][mid][1];
-        liab.dozen2 = $.roundDozenBetsSum[rid][mid][2];
-        liab.dozen3 = $.roundDozenBetsSum[rid][mid][3];
-        liab.col1 = $.roundColumnBetsSum[rid][mid][1];
-        liab.col2 = $.roundColumnBetsSum[rid][mid][2];
-        liab.col3 = $.roundColumnBetsSum[rid][mid][3];
-        liab.otherBetsWeightedPayout = $.roundOtherBetsWeightedPayout[rid][mid];
-        return RouletteLiabilityMathLib.bufferedMarketMaxLiability(liab);
-    }
-
 }

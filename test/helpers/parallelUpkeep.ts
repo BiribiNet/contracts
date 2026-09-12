@@ -166,7 +166,8 @@ export async function fulfillVrfForGlobalRound(
         eventName: "VrfRequested",
         strict: true,
     });
-    const hit = events.find((e) => e.args.newRoundId === globalRoundId);
+    const hits = events.filter((e) => e.args.newRoundId === globalRoundId);
+    const hit = hits[hits.length - 1];
     if (hit?.args.requestId === undefined) {
         throw new Error(`VrfRequested not found for global round ${globalRoundId}`);
     }

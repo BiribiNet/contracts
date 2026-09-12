@@ -81,6 +81,10 @@ interface IRouletteEngine {
 
     function vrfActiveRound() external view returns (uint64);
 
+    /// @notice Admin-only: request a new VRF for the current Settling round if the previous
+    ///         request has been unanswered for 24 hours (Chainlink expiry). Fund the VRF subscription first.
+    function retryVrf() external;
+
     /// @notice True while this market's global round is locked but not yet settled for that market (deposits / enqueue-withdraw blocked).
     function isBankLiquidityRestricted(uint32 marketId) external view returns (bool);
 

@@ -18,21 +18,31 @@ export async function verifyContract(
     contract?: string,
     libraries?: Record<string, string>,
 ): Promise<void> {
-    try {
-        await hre.run("verify:verify", {
-            address,
-            constructorArguments,
-            ...(contract !== undefined ? { contract } : {}),
-            ...(libraries !== undefined && Object.keys(libraries).length > 0 ? { libraries } : {}),
-        });
-        console.log(`Verified ${address}`);
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        if (isAlreadyVerifiedMessage(msg)) {
-            console.log(`Skip verify (already verified): ${address}`);
+    const attempts = 5;
+    for (let attempt = 0; attempt < attempts; attempt++) {
+        try {
+            await hre.run("verify:verify", {
+                address,
+                constructorArguments,
+                ...(contract !== undefined ? { contract } : {}),
+                ...(libraries !== undefined && Object.keys(libraries).length > 0 ? { libraries } : {}),
+            });
+            console.log(`Verified ${address}`);
             return;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (isAlreadyVerifiedMessage(msg)) {
+                console.log(`Skip verify (already verified): ${address}`);
+                return;
+            }
+            if (/Internal error|rate limit|429|timeout/i.test(msg) && attempt < attempts - 1) {
+                const waitMs = 4000 * (attempt + 1);
+                console.warn(`Verify retry ${address} (${attempt + 1}/${attempts}): ${msg.split("\n")[0]}`);
+                await sleep(waitMs);
+                continue;
+            }
+            throw e;
         }
-        throw e;
     }
 }
 
@@ -77,6 +87,10 @@ const FQ_ROULETTE_ENGINE = "contracts/RouletteEngine.sol:RouletteEngine" as cons
 const FQ_ROULETTE_LIB = "contracts/RouletteLib.sol:RouletteLib" as const;
 const FQ_ROULETTE_BET_LIB = "contracts/libraries/RouletteBetLib.sol:RouletteBetLib" as const;
 const FQ_ROULETTE_PAYOUT_MUL_LIB = "contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib" as const;
+const FQ_JACKPOT_BATCH_LIB = "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib" as const;
+const FQ_ROULETTE_JACKPOT_COLLECT_LIB =
+    "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib" as const;
+const FQ_ROULETTE_PAYOUT_SWEEP_LIB = "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib" as const;
 
 export type RouletteLinkedLibraries = {
     rouletteLib: `0x${string}`;
@@ -88,18 +102,19 @@ export type RouletteLinkedLibraries = {
     roulettePayoutSweepLib: `0x${string}`;
     rouletteJackpotCollectLib: `0x${string}`;
     rouletteExposureLib: `0x${string}`;
+    rouletteUpkeepScanLib: `0x${string}`;
 };
 
 /** Library map passed to `RouletteEngine` implementation verification. */
 export function buildRouletteEngineLibraryMap(linked: RouletteLinkedLibraries): Record<string, string> {
     return {
-        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": linked.jackpotBatchLib,
         "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": linked.rouletteBetCodecLib,
         "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": linked.rouletteExposureLib,
         "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib":
             linked.rouletteJackpotCollectLib,
         "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": linked.rouletteLiabilityMathLib,
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linked.roulettePayoutSweepLib,
+        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linked.rouletteUpkeepScanLib,
     };
 }
 
@@ -120,6 +135,11 @@ export async function verifyRouletteLinkedLibraries(linked: RouletteLinkedLibrar
     await verifyContractWithDelay(linked.roulettePayoutSweepLib, [], delayMs, undefined, {
         [FQ_ROULETTE_BET_LIB]: linked.rouletteBetLib,
         [FQ_ROULETTE_PAYOUT_MUL_LIB]: linked.roulettePayoutMulLib,
+    });
+    await verifyContractWithDelay(linked.rouletteUpkeepScanLib, [], delayMs, undefined, {
+        [FQ_JACKPOT_BATCH_LIB]: linked.jackpotBatchLib,
+        [FQ_ROULETTE_JACKPOT_COLLECT_LIB]: linked.rouletteJackpotCollectLib,
+        [FQ_ROULETTE_PAYOUT_SWEEP_LIB]: linked.roulettePayoutSweepLib,
     });
 }
 

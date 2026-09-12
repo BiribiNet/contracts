@@ -10,6 +10,7 @@ import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploy
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
 import { vaultInitMinBetUsdc6 } from "./helpers/marketLimits";
+import { deployEngineLibs } from "./helpers/deployEngineLibs";
 
 const USDC = (v: string) => parseUnits(v, 6);
 const GWEI = 1_000_000_000n;
@@ -634,31 +635,3 @@ function encodePerformData(
     );
 }
 
-async function deployEngineLibs() {
-    const rouletteBetLib = await viem.deployContract("RouletteBetLib");
-    const rouletteLib = await viem.deployContract("RouletteLib");
-    const jackpotBatchLib = await viem.deployContract("JackpotBatchLib");
-    const roulettePayoutMulLib = await viem.deployContract("RoulettePayoutMulLib");
-    const rouletteExposureLib = await viem.deployContract("RouletteExposureLib");
-    const rouletteJackpotCollectLib = await viem.deployContract("RouletteJackpotCollectLib");
-    const roulettePayoutSweepLib = await viem.deployContract("RoulettePayoutSweepLib", [], {
-        libraries: {
-            "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": rouletteBetLib.address,
-            "contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib": roulettePayoutMulLib.address,
-        },
-    });
-    const rouletteLiabilityMathLib = await viem.deployContract("RouletteLiabilityMathLib", [], {
-        libraries: { "contracts/RouletteLib.sol:RouletteLib": rouletteLib.address },
-    });
-    const rouletteBetCodecLib = await viem.deployContract("RouletteBetCodecLib", [], {
-        libraries: { "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": rouletteBetLib.address },
-    });
-    return {
-        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": jackpotBatchLib.address,
-        "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": rouletteBetCodecLib.address,
-        "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": rouletteLiabilityMathLib.address,
-        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": roulettePayoutSweepLib.address,
-        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": rouletteJackpotCollectLib.address,
-        "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": rouletteExposureLib.address,
-    };
-}

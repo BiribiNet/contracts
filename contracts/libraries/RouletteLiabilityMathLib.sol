@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import { RouletteLib } from "../RouletteLib.sol";
+import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 
 /// @dev Linked library: worst-case liability aggregation + safety buffer (moves bytecode off `RouletteEngine`).
 library RouletteLiabilityMathLib {
@@ -23,7 +24,7 @@ library RouletteLiabilityMathLib {
         uint256 otherBetsWeightedPayout;
     }
 
-    function bufferedMarketMaxLiability(Inputs memory i) external pure returns (uint256) {
+    function bufferedMarketMaxLiability(Inputs memory i) internal pure returns (uint256) {
         unchecked {
             uint256 ss = i.maxStraightBet * 36 + i.maxStreetBet * 12;
             uint256 rb = RouletteLib.max(i.redSum, i.blackSum) * 2;
@@ -34,5 +35,29 @@ library RouletteLiabilityMathLib {
             uint256 raw = ss + rb + oe + lh + dc + i.otherBetsWeightedPayout;
             return RouletteLib.applySafetyBuffer(raw);
         }
+    }
+
+    function bufferedMarketMaxLiabilityFromRound(
+        RouletteEngineStorageLib.Layout storage $,
+        uint64 rid,
+        uint32 mid
+    ) external view returns (uint256) {
+        Inputs memory i;
+        i.maxStraightBet = $.roundMaxStraightBet[rid][mid];
+        i.maxStreetBet = $.roundMaxStreetBet[rid][mid];
+        i.redSum = $.roundRedBetsSum[rid][mid];
+        i.blackSum = $.roundBlackBetsSum[rid][mid];
+        i.oddSum = $.roundOddBetsSum[rid][mid];
+        i.evenSum = $.roundEvenBetsSum[rid][mid];
+        i.lowSum = $.roundLowBetsSum[rid][mid];
+        i.highSum = $.roundHighBetsSum[rid][mid];
+        i.dozen1 = $.roundDozenBetsSum[rid][mid][1];
+        i.dozen2 = $.roundDozenBetsSum[rid][mid][2];
+        i.dozen3 = $.roundDozenBetsSum[rid][mid][3];
+        i.col1 = $.roundColumnBetsSum[rid][mid][1];
+        i.col2 = $.roundColumnBetsSum[rid][mid][2];
+        i.col3 = $.roundColumnBetsSum[rid][mid][3];
+        i.otherBetsWeightedPayout = $.roundOtherBetsWeightedPayout[rid][mid];
+        return bufferedMarketMaxLiability(i);
     }
 }
