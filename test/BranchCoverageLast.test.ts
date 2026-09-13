@@ -460,9 +460,9 @@ describe("Branch coverage — last 102 branches", function () {
             await sb.write.setConfigStakeLimits([configId, USDC("1"), USDC("100")], { account: admin.account });
             await sb.write.setMultiplierBand([60_000, 4_000_000], { account: admin.account });
 
-            const empty = await sb.read.previewSettleBundle([0n, 0, 0, 1]);
+            const empty = await sb.read.previewSettleBundleV2([0n, 0, 0, 1]);
             expect(empty[0].length).to.equal(0);
-            const badLane = await sb.read.previewSettleBundle([0n, 10, 99, 1]);
+            const badLane = await sb.read.previewSettleBundleV2([0n, 10, 99, 1]);
             expect(badLane[0].length).to.equal(0);
 
             await usdc.write.mint([alice.account.address, USDC("50")]);
@@ -472,15 +472,15 @@ describe("Branch coverage — last 102 branches", function () {
 
             const settlementRole = await sb.read.SETTLEMENT_ROLE();
             await sb.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
-            await sb.write.settleBatch([[{ betId: 999n, won: true, payoutAmount: 1n, expired: false }], []], {
+            await sb.write.settleBatchV2([[{ betId: 999n, won: true, payoutAmount: 1n, expired: false }], []], {
                 account: admin.account,
             });
             const betBefore = await sb.read.getBet([0n]);
-            await sb.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []], { account: admin.account });
+            await sb.write.settleBatchV2([[{ betId: 0n, won: true, payoutAmount: 1n, expired: false }], []], { account: admin.account });
             expect((await sb.read.getBet([0n])).status).to.equal(betBefore.status); // still ACTIVE — wrong payout
 
             await re.write.fulfillRounds([[8]]);
-            await sb.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], { account: admin.account });
+            await sb.write.settleBatchV2([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], { account: admin.account });
             expect(await sb.read.isResolvable([0n])).to.equal(false);
 
             const v2 = await viem.deployContract("SideBet");

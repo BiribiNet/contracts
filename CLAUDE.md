@@ -55,6 +55,19 @@ Core mechanics:
 
 ## Current Contract Architecture
 
+### BRBGAME settlement compatibility
+
+The Arbitrum Sepolia scheduler at `0xad1f181ad88aee13a6643104941ecea2b963c2d7`
+is immutable and uses three-field settlement rows. `previewSettleBundle` and `settleBatch`
+preserve that wire format. The four-field format with `expired` uses explicit `V2` endpoints.
+Legacy settlement recomputes outcomes/expiry from chain state and ignores supplied vault effects.
+The new scheduler source calls V2. Preserve both ABIs and regenerate frontend/subgraph SideBet
+ABIs after interface changes. SideBet alone uses viaIR to fit EIP-170; its runtime size is checked
+before deployment. Run `SideBetSepoliaUpgrade.fork.test.ts` against a local fork for migration,
+multi-lane expiry/refund, winner/loser payment and report replay. Its simulated VRF is never sent
+to a public network. Upgrade is allowed only with zero existing bets, then configure the expiry
+timeout. Catalogue activation must remain blocked while the public VRF is stalled.
+
 | Contract | Purpose |
 |----------|---------|
 | `RouletteEngine.sol` | Core game logic: rounds, locking, VRF, payout batching, jackpot resolution |

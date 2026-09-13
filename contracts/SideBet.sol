@@ -19,7 +19,7 @@ import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 
 /// @title SideBet — BRBGAME single-player side bets (UUPS upgradeable).
 /// @notice Players stake against a per-market vault on outcomes resolved over global roulette rounds.
-///         Settlement is automation-only: `previewSettleBundle` in `checkUpkeep`, apply-only `settleBatch` in `performUpkeep`.
+///         Settlement is automation-only: `previewSettleBundleV2` in `checkUpkeep`, apply-only `settleBatchV2` in `performUpkeep`.
 contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, ISideBet {
     bytes32 public constant SIDE_BET_CONFIG_ROLE = keccak256("SIDE_BET_CONFIG_ROLE");
     bytes32 public constant SIDE_BET_LIMITS_ROLE = keccak256("SIDE_BET_LIMITS_ROLE");
@@ -194,7 +194,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     /// @notice Seconds after `placedAt` before an undecided bet may be settled as EXPIRED and its
     /// stake refunded. 0 disables expiry.
     /// @dev Without this, a bet in a market whose roulette activity stops is undecidable forever —
-    /// its lane's cursor can never move past it (see `previewSettleBundle`).
+    /// its lane's cursor can never move past it (see `previewSettleBundleV2`).
     function setSettleTimeout(uint64 newSettleTimeout) external onlyRole(SIDE_BET_CONFIG_ROLE) {
         _s().settleTimeout = newSettleTimeout;
         emit SettleTimeoutUpdated(newSettleTimeout);
@@ -302,8 +302,22 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         emit SideBetPlaced(betId, msg.sender, configId, cfg.marketId, stake, payout, startGlobalRound, cfg.windowSpins);
     }
 
+    /// @notice Preserve the deployed scheduler's ABI. Expiry is re-derived during settlement;
+    /// it must never be appended to the legacy return tuple (return types do not change selectors).
     function previewSettleBundle(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
-        external
+        external view override
+        returns (LegacySettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies)
+    {
+        SettleRow[] memory current;
+        (current, nextCursorBetId, vaultApplies) = previewSettleBundleV2(cursorBetId, maxBets, lane, laneCount);
+        rows = new LegacySettleRow[](current.length);
+        for (uint256 i; i < current.length; ++i) {
+            rows[i] = LegacySettleRow(current[i].betId, current[i].won, current[i].payoutAmount);
+        }
+    }
+
+    function previewSettleBundleV2(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
+        public
         view
         override
         returns (SettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies)
@@ -357,6 +371,9 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         }
 
         nextCursorBetId = firstPending < id ? firstPending : id;
+        // A lane stride can end beyond betCount. Persist at most the current end so a
+        // scheduler validating the cursor accepts a partially populated final lane.
+        if (n > 0 && nextCursorBetId > total) nextCursorBetId = total;
         if (n != maxBets) {
             rows = new SettleRow[](n);
             for (uint256 i; i < n; ) {
@@ -373,16 +390,43 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     }
 
     /// @dev The `vaultApplies` argument is accepted for calldata compatibility with
-    /// `previewSettleBundle` / `UpkeepScheduler` but is deliberately NOT trusted: banks, amounts and
+    /// `previewSettleBundleV2` / `UpkeepScheduler` but is deliberately NOT trusted: banks, amounts and
     /// recipients are recomputed here from the rows this call actually finalized. Applying a
     /// caller-supplied bundle let a re-delivered CRE report re-run `payoutBatch` / `releaseBets` /
     /// fee collection against already-settled bets, and let `bundle.bank` name any vault.
-    function settleBatch(SettleRow[] calldata rows, SettleVaultApply[] calldata)
+    function settleBatch(LegacySettleRow[] calldata rows, SettleVaultApply[] calldata)
+        external override nonReentrant onlyRole(SETTLEMENT_ROLE) returns (uint256 settled)
+    {
+        SideBetData storage $ = _s();
+        SettleRow[] memory candidates = new SettleRow[](rows.length);
+        uint256 count;
+        for (uint256 i; i < rows.length; ++i) {
+            uint256 id = rows[i].betId;
+            if (id >= $.betCount || $.bets[id].status != SideBetStatus.ACTIVE) continue;
+            Bet storage bet = $.bets[id];
+            (bool decided, bool won) = _evaluate(bet);
+            bool expired = !decided && _isExpired($, bet);
+            if (!decided && !expired) continue;
+            // A stale or forged legacy report cannot pick a winner, turn an expiry into a
+            // loss, or redirect a payout. Only bet IDs are used from the old wire format.
+            candidates[count++] = SettleRow(id, won, won ? bet.payout : 0, expired);
+        }
+        SettleRow[] memory resolved = new SettleRow[](count);
+        for (uint256 i; i < count; ++i) resolved[i] = candidates[i];
+        return _settleBatch(resolved);
+    }
+
+    function settleBatchV2(SettleRow[] calldata rows, SettleVaultApply[] calldata)
         external
         override
         nonReentrant
         onlyRole(SETTLEMENT_ROLE)
         returns (uint256 settled)
+    {
+        return _settleBatch(rows);
+    }
+
+    function _settleBatch(SettleRow[] memory rows) private returns (uint256 settled)
     {
         SideBetData storage $ = _s();
 
@@ -450,7 +494,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         if (fees.infraFee > 0) emit SideBetInfrastructureFeePaid(marketId, fees.infraFee);
     }
 
-    /// @dev Simulation-only grouping for `previewSettleBundle` (mirrors roulette `previewPayoutBundle`).
+    /// @dev Simulation-only grouping for `previewSettleBundleV2` (mirrors roulette `previewPayoutBundle`).
     function _previewVaultApplies(SideBetData storage $, SettleRow[] memory rows)
         private
         view
@@ -599,8 +643,8 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         }
     }
 
-    /// @dev Marks bet resolved and emits; no vault I/O (batched in `settleBatch`).
-    function _finalizeSettleRow(SideBetData storage $, SettleRow calldata row) private returns (bool applied) {
+    /// @dev Marks bet resolved and emits; no vault I/O (batched in `settleBatchV2`).
+    function _finalizeSettleRow(SideBetData storage $, SettleRow memory row) private returns (bool applied) {
         if (row.betId >= $.betCount) return false;
         Bet storage bet = $.bets[row.betId];
         if (bet.status != SideBetStatus.ACTIVE) return false;

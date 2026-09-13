@@ -135,7 +135,7 @@ describe("Branch coverage — last 16 arms", function () {
     });
 
     describe("SideBet", function () {
-        it("covers initialize multiplier, dozen OR arm, and settleBatch reentrancy", async function () {
+        it("covers initialize multiplier, dozen OR arm, and settleBatchV2 reentrancy", async function () {
             const [admin, alice] = await viem.getWalletClients();
             const probe = await viem.deployContract("CoverageProbe");
             const usdc = await viem.deployContract("MockUSDC");
@@ -238,15 +238,15 @@ describe("Branch coverage — last 16 arms", function () {
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
             await sideBet.write.grantRole([settlementRole, bank.address], { account: admin.account });
 
-            const bundle = await sideBet.read.previewSettleBundle([0n, 10, 0, 1]);
+            const bundle = await sideBet.read.previewSettleBundleV2([0n, 10, 0, 1]);
             expect(bundle[2].length).to.be.gt(0);
             await bank.write.configureSettleReenter([sideBet.address]);
             await expect(
-                sideBet.write.settleBatch([bundle[0], bundle[2]], { account: admin.account }),
+                sideBet.write.settleBatchV2([bundle[0], bundle[2]], { account: admin.account }),
             ).to.be.rejected;
             await bank.write.configureSettleReenter([zeroAddress]);
 
-            await sideBet.write.settleBatch([bundle[0], bundle[2]], { account: admin.account });
+            await sideBet.write.settleBatchV2([bundle[0], bundle[2]], { account: admin.account });
         });
     });
 

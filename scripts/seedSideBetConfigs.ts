@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { viem } from "hardhat";
 
-import { formatUnits, isAddress, parseAbi, parseUnits } from "viem";
+import { formatUnits, isAddress, parseAbi, parseEventLogs, parseUnits } from "viem";
 
 /**
  * Seed the BRBGAME side-bet catalogue onto the live `SideBet` contract.
@@ -34,8 +34,6 @@ import "dotenv/config";
 import {
     BPS_DENOMINATOR,
     DEFAULT_LIQUIDITY_SAFETY_BPS,
-    MAX_MULTIPLIER_BPS,
-    MIN_MULTIPLIER_BPS,
     buildCatalogueForMarket,
     computeMaxStake,
     matchesConfig,
@@ -202,13 +200,13 @@ function planActions(
     return plan;
 }
 
-function assertCatalogueInBand(plan: PlannedAction[]): void {
+function assertCatalogueInBand(plan: PlannedAction[], minimum: number, maximum: number): void {
     for (const action of plan) {
         const { multiplierBps, key } = action.entry;
-        if (multiplierBps < MIN_MULTIPLIER_BPS || multiplierBps > MAX_MULTIPLIER_BPS) {
+        if (multiplierBps < minimum || multiplierBps > maximum) {
             throw new Error(
                 `Template ${key} has multiplier ${multiplierBps} bps, outside the contract band ` +
-                    `[${MIN_MULTIPLIER_BPS}, ${MAX_MULTIPLIER_BPS}] — addConfig would revert MultiplierOutOfBand.`,
+                    `[${minimum}, ${maximum}] — addConfig would revert MultiplierOutOfBand.`,
             );
         }
     }
@@ -216,30 +214,56 @@ function assertCatalogueInBand(plan: PlannedAction[]): void {
 
 async function main(): Promise<void> {
     const publicClient = await viem.getPublicClient();
-    const [signer] = await viem.getWalletClients();
-    if (!signer.account) throw new Error("Signer wallet has no account");
+    if (await publicClient.getChainId() !== 421614) throw new Error("This activation script requires Arbitrum Sepolia (421614)");
 
     const apply = process.env.SEED_APPLY?.trim().toLowerCase() === "true";
     const minStakeWholeUnits = process.env.SEED_MIN_STAKE_UNITS?.trim() || DEFAULT_MIN_STAKE_WHOLE_UNITS;
     const safetyBps = envBigInt("SEED_SAFETY_BPS", DEFAULT_LIQUIDITY_SAFETY_BPS);
+    if (safetyBps > BPS_DENOMINATOR) throw new Error("SEED_SAFETY_BPS cannot exceed 10000");
 
     const sideBetAddress = readSideBetAddress();
     const sideBet = await getSideBetContract(sideBetAddress);
 
     console.log("SideBet proxy:", sideBetAddress);
-    console.log("Signer:", signer.account.address);
     console.log(apply ? "Mode: APPLY (transactions will be broadcast)" : "Mode: DRY RUN (no transactions)");
+
+    // A catalogue must never be activated on the pre-fix implementation or while the
+    // roulette is stalled. The dry run still prints the plan to make recovery reviewable.
+    let timeout: bigint | undefined;
+    try { timeout = await sideBet.read.settleTimeout(); } catch { /* legacy implementation */ }
+    const engine = await viem.getContractAt("RouletteEngine", await sideBet.read.ENGINE());
+    const pendingVrf = await engine.read.hasPendingVrf();
+    const scheduler = await engine.read.UPKEEP_SCHEDULER();
+    let compatible = false;
+    try {
+        await sideBet.read.previewSettleBundleV2([0n, 0, 0, 1]);
+        await sideBet.read.previewSettleBundle([0n, 0, 0, 1]);
+        compatible = true;
+    } catch { /* the old proxy has not been upgraded yet */ }
+    if (!compatible) {
+        const reason = `Activation blocked: SideBet at ${sideBetAddress} does not expose both settlement formats for scheduler ${scheduler}. Upgrade the compatible implementation first.`;
+        if (apply) throw new Error(reason);
+        console.warn(reason);
+    }
+    if (timeout === undefined || timeout === 0n || pendingVrf) {
+        const reason = `Activation blocked: compatible timeout=${timeout?.toString() ?? "missing"}, pending VRF=${pendingVrf}`;
+        if (apply) throw new Error(reason);
+        console.warn(reason);
+    }
+
+    const signer = apply ? (await viem.getWalletClients())[0] : undefined;
+    if (apply && !signer?.account) throw new Error("Signer wallet has no account");
 
     // Fail before touching anything if the signer cannot complete both halves of the seed.
     const [configRole, limitsRole] = await Promise.all([
         sideBet.read.SIDE_BET_CONFIG_ROLE(),
         sideBet.read.SIDE_BET_LIMITS_ROLE(),
     ]);
-    const [hasConfigRole, hasLimitsRole] = await Promise.all([
+    const [hasConfigRole, hasLimitsRole] = signer?.account ? await Promise.all([
         sideBet.read.hasRole([configRole, signer.account.address]),
         sideBet.read.hasRole([limitsRole, signer.account.address]),
-    ]);
-    if (!hasConfigRole || !hasLimitsRole) {
+    ]) : [false, false];
+    if (signer?.account && (!hasConfigRole || !hasLimitsRole)) {
         throw new Error(
             `Signer ${signer.account.address} needs both SIDE_BET_CONFIG_ROLE (has: ${hasConfigRole}) and ` +
                 `SIDE_BET_LIMITS_ROLE (has: ${hasLimitsRole}) — seeding aborted before any transaction.`,
@@ -251,7 +275,8 @@ async function main(): Promise<void> {
 
     const existing = await loadExistingConfigs(sideBet);
     const plan = planActions(markets, existing, minStakeWholeUnits, safetyBps);
-    assertCatalogueInBand(plan);
+    const [minimum, maximum] = await Promise.all([sideBet.read.minMultiplierBps(), sideBet.read.maxMultiplierBps()]);
+    assertCatalogueInBand(plan, minimum, maximum);
 
     console.log(`\nMarkets: ${markets.length}, templates per market: ${plan.length / markets.length}`);
     for (const market of markets) {
@@ -264,6 +289,7 @@ async function main(): Promise<void> {
     const waitFor = async (hash: `0x${string}`, label: string) => {
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") throw new Error(`${label} reverted (tx ${hash})`);
+        return receipt;
     };
 
     let created = 0;
@@ -284,10 +310,12 @@ async function main(): Promise<void> {
                 console.log(`  [dry-run] addConfig            ${label}`);
                 created += 1;
             } else {
+                if (!signer?.account) throw new Error("Missing signer");
                 const hash = await sideBet.write.addConfig([toConfigStruct(entry)], { account: signer.account });
-                await waitFor(hash, `addConfig(${label})`);
-                // configCount is the id just consumed, so the new config is at count - 1.
-                configId = Number(await sideBet.read.configCount()) - 1;
+                const receipt = await waitFor(hash, `addConfig(${label})`);
+                const [added] = parseEventLogs({ abi: sideBet.abi, eventName: "ConfigAdded", logs: receipt.logs.filter(log => log.address.toLowerCase() === sideBetAddress.toLowerCase()) });
+                if (!added) throw new Error(`Missing ConfigAdded event for ${label}`);
+                configId = Number(added.args.configId);
                 console.log(`  created config ${configId}       ${label}`);
                 created += 1;
             }
@@ -316,6 +344,7 @@ async function main(): Promise<void> {
         }
 
         if (configId === undefined) throw new Error(`Internal error: no config id for ${label}`);
+        if (!signer?.account) throw new Error("Missing signer");
         const hash = await sideBet.write.setConfigStakeLimits([BigInt(configId), minStake, maxStake], {
             account: signer.account,
         });

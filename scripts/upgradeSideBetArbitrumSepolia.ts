@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { viem } from "hardhat";
+import { artifacts, viem } from "hardhat";
+import { assertSideBetCompatibility } from "./utils/assertSideBetCompatibility";
 
 import { encodeFunctionData, getAddress, isAddress, parseAbi, zeroHash } from "viem";
 
@@ -10,8 +11,8 @@ import { encodeFunctionData, getAddress, isAddress, parseAbi, zeroHash } from "v
  *
  * WHY: the deployed implementation predates the side-bet security fixes (multi-market winner
  * payouts, lane realignment, post-VRF placement guard, undecided-bet expiry). Its bytecode is
- * missing `settleTimeout()`, `setSettleTimeout(uint64)` and the current `settleBatch` signature,
- * so settlement through `UpkeepScheduler` cannot work against the current ABI.
+ * missing `settleTimeout()` and `setSettleTimeout(uint64)`. The candidate preserves the deployed
+ * three-field settlement ABI and exposes the four-field format under explicit V2 endpoints.
  *
  * THE UPGRADE PAYLOAD IS NOT OPTIONAL EITHER: it calls `initializeReservedAccounting`, which adopts
  * the incremental `reservedOf` accounting. That accounting only counts bets placed after it exists,
@@ -123,10 +124,6 @@ async function main(): Promise<void> {
         );
     }
 
-    console.log("Deploying new SideBet implementation…");
-    const newImplementation = await viem.deployContract("SideBet", [], { account: deployer.account });
-    console.log("New implementation:", newImplementation.address);
-
     // Adopting the incremental reserved accounting is only sound while the proxy holds no bets.
     // The call below enforces that on-chain; check it here too so the failure names its cause
     // before a deployment is paid for.
@@ -142,6 +139,20 @@ async function main(): Promise<void> {
                 "populated proxy needs a deliberate backfill, not this script.",
         );
     }
+
+    // The compatibility endpoints retain the deployed scheduler's three-field format.
+    // Validate the exact compiled candidate before paying for deployment.
+    assertSideBetCompatibility(await artifacts.readArtifact("SideBet"));
+    const sideBetReadAbi = parseAbi(["function ENGINE() view returns (address)"]);
+    const engine = await publicClient.readContract({ address: sideBetProxy, abi: sideBetReadAbi, functionName: "ENGINE" });
+    const scheduler = await publicClient.readContract({ address: engine, abi: parseAbi(["function UPKEEP_SCHEDULER() view returns (address)"]), functionName: "UPKEEP_SCHEDULER" });
+    const schedulerSideBet = await publicClient.readContract({ address: scheduler,
+        abi: parseAbi(["function SIDE_BET() view returns (address)"]), functionName: "SIDE_BET" });
+    if (schedulerSideBet.toLowerCase() !== sideBetProxy.toLowerCase()) throw new Error("Scheduler targets another SideBet proxy");
+
+    console.log("Deploying new SideBet implementation…");
+    const newImplementation = await viem.deployContract("SideBet", [], { account: deployer.account });
+    console.log("New implementation:", newImplementation.address);
 
     console.log("Calling upgradeToAndCall on proxy…");
     const upgradeHash = await deployer.writeContract({

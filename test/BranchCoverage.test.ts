@@ -211,10 +211,10 @@ describe("Branch coverage — SideBet config validation", function () {
         });
     }
 
-    it("previewSettleBundle early exits (maxBets, lane)", async function () {
+    it("previewSettleBundleV2 early exits (maxBets, lane)", async function () {
         const { sideBet } = await sideBetFixture();
-        expect((await sideBet.read.previewSettleBundle([0n, 0, 0, 1]))[0].length).to.equal(0);
-        expect((await sideBet.read.previewSettleBundle([0n, 1, 1, 1]))[0].length).to.equal(0);
+        expect((await sideBet.read.previewSettleBundleV2([0n, 0, 0, 1]))[0].length).to.equal(0);
+        expect((await sideBet.read.previewSettleBundleV2([0n, 1, 1, 1]))[0].length).to.equal(0);
     });
 });
 

@@ -69,6 +69,11 @@ const config: HardhatUserConfig = {
       { version: '0.5.16', settings: uniswap05Settings },
       { version: '0.6.6', settings: uniswap06Settings },
     ],
+    // The versioned SideBet compatibility endpoints must fit EIP-170 on Sepolia too.
+    // Limit IR compilation to this implementation; unrelated deployment bytecode stays stable.
+    overrides: {
+      'contracts/SideBet.sol': { version: '0.8.27', settings: { ...defaultSettings, viaIR: true } },
+    },
   },
   networks,
   // comment this below to verify on Tenderly

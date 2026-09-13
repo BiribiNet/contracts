@@ -67,7 +67,7 @@ contract BankVault4626Harness is BankVault4626 {
     function releaseBets(uint256 amount) public override onlyEngineOrSideBet {
         super.releaseBets(amount);
         if (reenterSettleBatch && sideBetSettleTarget != address(0)) {
-            ISideBet(sideBetSettleTarget).settleBatch(
+            ISideBet(sideBetSettleTarget).settleBatchV2(
                 new ISideBet.SettleRow[](0),
                 new ISideBet.SettleVaultApply[](0)
             );
