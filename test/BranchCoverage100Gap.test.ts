@@ -262,9 +262,9 @@ describe("Branch coverage — final 100% gaps", function () {
             const configId = (await sideBet.read.configCount()) - 1n;
             await sideBet.write.setConfigStakeLimits([configId, USDC("1"), USDC("100")], { account: admin.account });
 
-            expect((await sideBet.read.previewSettleBundle([0n, 0, 0, 0]))[0].length).to.equal(0);
-            expect((await sideBet.read.previewSettleBundle([0n, 5, 0, 0]))[0].length).to.equal(0);
-            expect((await sideBet.read.previewSettleBundle([0n, 5, 2, 1]))[0].length).to.equal(0);
+            expect((await sideBet.read.previewSettleBundleV2([0n, 0, 0, 0]))[0].length).to.equal(0);
+            expect((await sideBet.read.previewSettleBundleV2([0n, 5, 0, 0]))[0].length).to.equal(0);
+            expect((await sideBet.read.previewSettleBundleV2([0n, 5, 2, 1]))[0].length).to.equal(0);
 
             await usdc.write.mint([admin.account.address, USDC("5000")]);
             await usdc.write.approve([bank.address, USDC("5000")], { account: admin.account });
@@ -291,7 +291,7 @@ describe("Branch coverage — final 100% gaps", function () {
             });
             await bank.write.configureSettleReenter([zeroAddress]);
 
-            await sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("50"), expired: false }], []], {
+            await sideBet.write.settleBatchV2([[{ betId: 0n, won: true, payoutAmount: USDC("50"), expired: false }], []], {
                 account: admin.account,
             });
 
@@ -300,7 +300,7 @@ describe("Branch coverage — final 100% gaps", function () {
                 account: admin.account,
             });
 
-            const settledPreview = await sideBet.read.previewSettleBundle([0n, 10, 0, 1]);
+            const settledPreview = await sideBet.read.previewSettleBundleV2([0n, 10, 0, 1]);
             expect(settledPreview[0].length).to.equal(0);
         });
     });

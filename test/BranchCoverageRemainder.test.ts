@@ -178,15 +178,15 @@ describe("Branch coverage — remainder matrix", function () {
             await sideBet.write.placeBet([configId, USDC("10")], { account: alice.account });
             expect(await sideBet.read.isResolvable([0n])).to.equal(false);
 
-            const emptyPreview = await sideBet.read.previewSettleBundle([0n, 0, 0, 1]);
+            const emptyPreview = await sideBet.read.previewSettleBundleV2([0n, 0, 0, 1]);
             expect(emptyPreview[0].length).to.equal(0);
-            const badLane = await sideBet.read.previewSettleBundle([0n, 10, 99, 1]);
+            const badLane = await sideBet.read.previewSettleBundleV2([0n, 10, 99, 1]);
             expect(badLane[0].length).to.equal(0);
 
             await roundEngine.write.fulfillRounds([[8]]);
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
-            await sideBet.write.settleBatch(
+            await sideBet.write.settleBatchV2(
                 [[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []],
                 { account: admin.account },
             );

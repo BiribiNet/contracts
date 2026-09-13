@@ -62,8 +62,15 @@ interface ISideBet {
         uint64 resolvedAt;
     }
 
-    /// @dev Outcome row built in `previewSettleBundle` during Automation `checkUpkeep`; applied in `settleBatch`.
+    /// @dev Outcome row built in `previewSettleBundleV2` during Automation `checkUpkeep`; applied in `settleBatchV2`.
     /// @param payoutAmount Player payout when `won`; zero when lost.
+    /// @dev Original deployed scheduler wire format. Never append fields to this tuple.
+    struct LegacySettleRow {
+        uint256 betId;
+        bool won;
+        uint256 payoutAmount;
+    }
+
     struct SettleRow {
         uint256 betId;
         bool won;
@@ -75,7 +82,7 @@ interface ISideBet {
         bool expired;
     }
 
-    /// @dev Per-vault apply bundle built in `previewSettleBundle`; passed through Automation `performData`.
+    /// @dev Per-vault apply bundle built in `previewSettleBundleV2`; passed through Automation `performData`.
     struct SettleVaultApply {
         address bank;
         uint32 marketId;
@@ -130,13 +137,19 @@ interface ISideBet {
     function setConfigStakeLimits(uint256 configId, uint256 minStake, uint256 maxStake) external;
     function isConfigActive(uint256 configId) external view returns (bool active);
     function placeBet(uint256 configId, uint256 stake) external returns (uint256 betId);
-    /// @notice Simulation-only bundle for one automation lane (`betId % laneCount == lane`).
+    /// @notice Compatibility endpoint for the deployed three-field scheduler.
     function previewSettleBundle(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
+        external view returns (LegacySettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies);
+    /// @notice Resolve the original report format using current on-chain outcomes and expiry.
+    function settleBatch(LegacySettleRow[] calldata rows, SettleVaultApply[] calldata vaultApplies)
+        external returns (uint256 settled);
+    /// @notice Simulation-only bundle for one automation lane (`betId % laneCount == lane`).
+    function previewSettleBundleV2(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
         external
         view
         returns (SettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies);
-    /// @notice Apply-only: bet rows + pre-built vault bundles from `previewSettleBundle` (trusted scheduler + DON).
-    function settleBatch(SettleRow[] calldata rows, SettleVaultApply[] calldata vaultApplies) external returns (uint256 settled);
+    /// @notice Apply-only: bet rows + pre-built vault bundles from `previewSettleBundleV2` (trusted scheduler + DON).
+    function settleBatchV2(SettleRow[] calldata rows, SettleVaultApply[] calldata vaultApplies) external returns (uint256 settled);
 
     function getBet(uint256 betId) external view returns (Bet memory);
     function getConfig(uint256 configId) external view returns (SideBetConfig memory);

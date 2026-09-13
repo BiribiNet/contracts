@@ -318,7 +318,7 @@ describe("Branch coverage — final gaps", function () {
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
             await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
             await roundEngine.write.fulfillRounds([[8]]);
-            await sideBet.write.settleBatch(
+            await sideBet.write.settleBatchV2(
                 [[{ betId: 0n, won: true, payoutAmount: (await sideBet.read.getBet([0n])).payout, expired: false }], []],
                 { account: admin.account },
             );

@@ -116,7 +116,7 @@ contract CoverageProbe {
         external
         returns (bool ok)
     {
-        try sideBet.settleBatch(rows, vaultApplies) {
+        try sideBet.settleBatchV2(rows, vaultApplies) {
             ok = true;
         } catch {
             ok = false;

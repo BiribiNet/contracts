@@ -19,6 +19,7 @@ import {
 } from "../scripts/utils/sideBetCatalogue";
 
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
+import { customErrorPattern } from "./helpers/customErrorPattern";
 
 const MARKET_ID = 1;
 const USDC = (value: string): bigint => parseUnits(value, 6);
@@ -152,7 +153,7 @@ describe("SideBet catalogue", () => {
 
         await expect(
             sideBet.write.placeBet([configId, USDC("1")], { account: player.account }),
-        ).to.be.rejectedWith("StakeLimitsNotSet");
+        ).to.be.rejectedWith(customErrorPattern("StakeLimitsNotSet()"));
     });
 
     it("should recognise an already-seeded template so a re-run creates nothing", async () => {
@@ -202,7 +203,7 @@ describe("SideBet catalogue", () => {
         expect(await sideBet.read.isConfigActive([configId])).to.equal(false);
         // Consumers must gate on isConfigActive: getConfig reverts rather than reporting
         // marketId == 0, so any scan that calls it blindly dies on the first removed id.
-        await expect(sideBet.read.getConfig([configId])).to.be.rejectedWith("ConfigInactive");
+        await expect(sideBet.read.getConfig([configId])).to.be.rejectedWith(customErrorPattern("ConfigInactive()"));
     });
 });
 
@@ -266,6 +267,6 @@ describe("SideBet catalogue stake sizing", () => {
         const configId = (await sideBet.read.configCount()) - 1n;
         await expect(
             sideBet.write.setConfigStakeLimits([configId, USDC("1"), maxStake], { account: admin.account }),
-        ).to.be.rejectedWith("InvalidConfig");
+        ).to.be.rejectedWith(customErrorPattern("InvalidConfig()"));
     });
 });

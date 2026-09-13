@@ -641,14 +641,14 @@ describe("Contract coverage — 95% targets", function () {
         }
         await roundEngine.write.fulfillRounds([[8]]);
 
-        const aligned = await sideBet.read.previewSettleBundle([0n, 2, 2, 3]);
+        const aligned = await sideBet.read.previewSettleBundleV2([0n, 2, 2, 3]);
         expect(aligned[0].length).to.equal(0);
 
-        const fullBatch = await sideBet.read.previewSettleBundle([0n, 2, 0, 1]);
+        const fullBatch = await sideBet.read.previewSettleBundleV2([0n, 2, 0, 1]);
         expect(fullBatch[0].length).to.equal(2);
     });
 
-    it("covers SideBet settleBatch rejecting loser rows with nonzero payout", async function () {
+    it("covers SideBet settleBatchV2 rejecting loser rows with nonzero payout", async function () {
         const [admin, alice] = await viem.getWalletClients();
         const { usdc, roundEngine, sideBet, bank } = await deployMockSideBetMarketStack(admin);
 
@@ -664,13 +664,13 @@ describe("Contract coverage — 95% targets", function () {
 
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
-        await sideBet.write.settleBatch(
+        await sideBet.write.settleBatchV2(
             [[{ betId: 0n, won: false, payoutAmount: parseUnits("1", 6), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(0);
 
-        await sideBet.write.settleBatch([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], { account: admin.account });
+        await sideBet.write.settleBatchV2([[{ betId: 0n, won: false, payoutAmount: 0n, expired: false }], []], { account: admin.account });
         expect((await sideBet.read.getBet([0n])).status).to.equal(2);
     });
 

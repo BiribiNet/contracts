@@ -370,7 +370,7 @@ describe("Branch coverage — 100% target", function () {
 
             await probe.write.trySideBetPlaceBet([sideBet.address, 999n, USDC("10")], { account: admin.account });
 
-            const emptyPreview = await sideBet.read.previewSettleBundle([0n, 0, 0, 1]);
+            const emptyPreview = await sideBet.read.previewSettleBundleV2([0n, 0, 0, 1]);
             expect(emptyPreview[0].length).to.equal(0);
 
             await usdc.write.mint([admin.account.address, USDC("5000")]);
@@ -382,9 +382,9 @@ describe("Branch coverage — 100% target", function () {
             await sideBet.write.placeBet([configId, USDC("10")], { account: alice.account });
             expect(await sideBet.read.betCount()).to.equal(1n);
             await roundEngine.write.fulfillRounds([[7]]);
-            const decided = await sideBet.read.previewSettleBundle([0n, 1, 0, 1]);
+            const decided = await sideBet.read.previewSettleBundleV2([0n, 1, 0, 1]);
             expect(decided[0].length).to.equal(1);
-            const partial = await sideBet.read.previewSettleBundle([0n, 3, 0, 1]);
+            const partial = await sideBet.read.previewSettleBundleV2([0n, 3, 0, 1]);
             expect(partial[0].length).to.equal(1);
 
             const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
@@ -401,7 +401,7 @@ describe("Branch coverage — 100% target", function () {
             expect(neededSettle).to.equal(true);
             await scheduler.write.performUpkeep([settleData]);
 
-            const afterSettle = await sideBet.read.previewSettleBundle([1n, 5, 0, 1]);
+            const afterSettle = await sideBet.read.previewSettleBundleV2([1n, 5, 0, 1]);
             expect(afterSettle[0].length).to.equal(0);
 
             await sideBet.write.grantRole([settlementRole, probe.address], { account: admin.account });

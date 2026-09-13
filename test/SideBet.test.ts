@@ -6,6 +6,7 @@ import { encodeAbiParameters, getAddress, parseUnits } from "viem";
 
 import { predictSideBetProxyAddress } from "../scripts/utils/predictDeployAddresses";
 
+import { customErrorPattern } from "./helpers/customErrorPattern";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
@@ -155,6 +156,63 @@ async function fulfillRoundsWithJackpot(
 }
 
 describe("SideBet", function () {
+    it("keeps the legacy preview tuple stable and refunds multiple expired bets exactly once", async function () {
+        const { sideBet, vault, usdc, admin, alice } = await deployFixture();
+        await registerConfig(sideBet, config({ targetNumber: 7, windowSpins: 5 }), admin.account);
+        const before = await usdc.read.balanceOf([alice.account.address]);
+        for (let i = 0; i < 3; i++) await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        const role = await sideBet.read.SETTLEMENT_ROLE();
+        await sideBet.write.grantRole([role, admin.account.address], { account: admin.account });
+        await time.increase(Number(await sideBet.read.settleTimeout()) + 1);
+        const [rows, cursor, bundles] = await sideBet.read.previewSettleBundle([0n, 10, 0, 1]);
+        expect(rows.map(row => row.betId)).to.deep.equal([0n, 1n, 2n]);
+        expect(Object.keys(rows[0])).to.deep.equal(["betId", "won", "payoutAmount"]);
+        expect(cursor).to.equal(3n);
+        await sideBet.write.settleBatch([rows, bundles], { account: admin.account });
+        for (const id of [0n, 1n, 2n]) expect((await sideBet.read.getBet([id])).status).to.equal(Status.EXPIRED);
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(before);
+        await sideBet.write.settleBatch([rows, bundles], { account: admin.account });
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(before);
+        expect(await vault.read.lockedBetLiquidity()).to.equal(0n);
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+    });
+
+    it("rejects unauthorized legacy settlement and leaves undecidable bets active despite forged rows", async function () {
+        const { sideBet, admin, alice } = await deployFixture();
+        await registerConfig(sideBet, config({ targetNumber: 7 }), admin.account);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        const forged = [{ betId: 0n, won: true, payoutAmount: USDC("100") }];
+        await expect(sideBet.write.settleBatch([forged, []], { account: alice.account })).to.be.rejected;
+        await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(), admin.account.address], { account: admin.account });
+        await sideBet.write.settleBatch([forged, []], { account: admin.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(USDC("100"));
+    });
+
+    it("rechecks a legacy expiry report when a winning round arrives before settlement", async function () {
+        const { sideBet, usdc, admin, alice, roundEngine } = await deployFixture();
+        await registerConfig(sideBet, config({ targetNumber: 7, windowSpins: 1 }), admin.account);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(), admin.account.address], { account: admin.account });
+        await time.increase(Number(await sideBet.read.settleTimeout()) + 1);
+        const [rows, , bundles] = await sideBet.read.previewSettleBundle([0n, 10, 0, 1]);
+        await fulfillRounds(roundEngine, [7]);
+        // The old report described an expiry. Current chain evidence now decides a win.
+        await sideBet.write.settleBatch([[...rows, ...rows, {betId: 999n, won: true, payoutAmount: 1n}], bundles], { account: admin.account });
+        expect((await sideBet.read.getBet([0n])).status).to.equal(Status.WON);
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(USDC("1090"));
+        expect(await sideBet.read.reservedOf([MARKET_ID])).to.equal(0n);
+    });
+
+    it("clamps a populated final lane cursor to the bet count", async function () {
+        const { sideBet, admin, alice, roundEngine } = await deployFixture();
+        await registerConfig(sideBet, config({ targetNumber: 7, windowSpins: 1 }), admin.account);
+        await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
+        await fulfillRounds(roundEngine, [7]);
+        const preview = await sideBet.read.previewSettleBundleV2([0n, 10, 0, 2]);
+        expect(preview[0]).to.have.length(1);
+        expect(preview[1]).to.equal(1n);
+    });
     it("initializes the multiplier band", async function () {
         const { sideBet } = await deployFixture();
         expect(await sideBet.read.minMultiplierBps()).to.equal(MIN_MULTIPLIER_BPS);
@@ -307,7 +365,7 @@ describe("SideBet", function () {
         await registerConfig(sideBet, config({ betType: BetType.NUMBER_HIT, targetNumber: 7, targetCount: 1, windowSpins: 3 }), admin.account);
         await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
         await expect(
-            sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []], { account: alice.account }),
+            sideBet.write.settleBatchV2([[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []], { account: alice.account }),
         ).to.be.rejected;
 
         const [, performDataBefore] = await scheduler.read.checkUpkeep(["0x"]);
@@ -316,7 +374,7 @@ describe("SideBet", function () {
         await fulfillRounds(roundEngine, [7, 1, 2]);
         await settleViaScheduler(scheduler);
         await expect(
-            sideBet.write.settleBatch([[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []], { account: admin.account }),
+            sideBet.write.settleBatchV2([[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []], { account: admin.account }),
         ).to.be.rejected;
     });
 
@@ -478,11 +536,11 @@ describe("SideBet", function () {
         expect(await sideBet.read.availableVaultLiquidity([MARKET_ID])).to.be.gt(0n);
         expect(await sideBet.read.isResolvable([99n])).to.equal(false);
 
-        const preview = await sideBet.read.previewSettleBundle([0n, 0, 0, 1]);
+        const preview = await sideBet.read.previewSettleBundleV2([0n, 0, 0, 1]);
         expect(preview[0].length).to.equal(0);
     });
 
-    it("ignores invalid settle rows in settleBatch", async function () {
+    it("ignores invalid settle rows in settleBatchV2", async function () {
         const { sideBet, scheduler, admin, alice, roundEngine } = await deployFixture();
         await registerConfig(sideBet, config({ betType: BetType.NUMBER_HIT, targetNumber: 7, windowSpins: 1 }), admin.account);
         await sideBet.write.placeBet([0n, USDC("10")], { account: alice.account });
@@ -490,19 +548,19 @@ describe("SideBet", function () {
 
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
-        await sideBet.write.settleBatch(
+        await sideBet.write.settleBatchV2(
             [[{ betId: 0n, won: true, payoutAmount: USDC("1"), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
 
-        await sideBet.write.settleBatch(
+        await sideBet.write.settleBatchV2(
             [[{ betId: 0n, won: false, payoutAmount: USDC("1"), expired: false }], []],
             { account: admin.account },
         );
         expect((await sideBet.read.getBet([0n])).status).to.equal(Status.ACTIVE);
 
-        await sideBet.write.settleBatch(
+        await sideBet.write.settleBatchV2(
             [[{ betId: 0n, won: true, payoutAmount: USDC("100"), expired: false }], []],
             { account: admin.account },
         );
@@ -605,7 +663,7 @@ describe("SideBet", function () {
         // cursorBetId=3, lane=1, laneCount=5 → id % laneCount (3) > lane (1). Pre-fix, the realignment
         // `lane - (id % laneCount)` underflowed in unsigned math and reverted; it must now return cleanly,
         // advancing to the next id ≡ lane (mod laneCount) at or after the cursor (3 → 6).
-        const preview = await sideBet.read.previewSettleBundle([3n, 10, 1, 5]);
+        const preview = await sideBet.read.previewSettleBundleV2([3n, 10, 1, 5]);
         expect(preview[0].length).to.equal(0); // rows
         expect(preview[1]).to.equal(6n); // nextCursorBetId
     });
@@ -622,14 +680,14 @@ describe("SideBet", function () {
         await fulfillRounds(roundEngine, [2, 7, 4]);
 
         // Capture the exact (rows, vaultApplies) blob a CRE report carries, then deliver it twice.
-        const bundle = await sideBet.read.previewSettleBundle([0n, 10, 0, 1]);
+        const bundle = await sideBet.read.previewSettleBundleV2([0n, 10, 0, 1]);
         expect(bundle[0].length).to.be.gt(0);
         expect(bundle[2].length).to.be.gt(0);
 
         const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
         await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
 
-        await sideBet.write.settleBatch([bundle[0], bundle[2]], { account: admin.account });
+        await sideBet.write.settleBatchV2([bundle[0], bundle[2]], { account: admin.account });
 
         const playerAfterFirst = await usdc.read.balanceOf([alice.account.address]);
         const vaultAfterFirst = await usdc.read.balanceOf([vault.address]);
@@ -639,7 +697,7 @@ describe("SideBet", function () {
 
         // Replay the identical report. Pre-fix this re-ran payoutBatch/releaseBets/fee collection,
         // paying the winner a second time out of LP liquidity.
-        await sideBet.write.settleBatch([bundle[0], bundle[2]], { account: admin.account });
+        await sideBet.write.settleBatchV2([bundle[0], bundle[2]], { account: admin.account });
 
         expect(await usdc.read.balanceOf([alice.account.address])).to.equal(playerAfterFirst);
         expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultAfterFirst);
@@ -724,7 +782,7 @@ describe("SideBet", function () {
         await sideBet.write.grantRole([settlementRole, admin.account.address], { account: admin.account });
 
         // The report claims expiry; the contract re-derives it from storage and refuses.
-        await sideBet.write.settleBatch(
+        await sideBet.write.settleBatchV2(
             [[{ betId: 0n, won: false, payoutAmount: 0n, expired: true }], []],
             { account: admin.account },
         );
@@ -898,7 +956,7 @@ describe("SideBet reserved-liquidity accounting", function () {
 
         await expect(
             sideBet.write.initializeReservedAccounting({ account: admin.account }),
-        ).to.be.rejectedWith("ReservedAccountingMigrationUnsafe");
+        ).to.be.rejectedWith(customErrorPattern("ReservedAccountingMigrationUnsafe()"));
     });
 
     it("accepts the reserved-accounting migration once on an empty proxy", async function () {
@@ -906,7 +964,7 @@ describe("SideBet reserved-liquidity accounting", function () {
         await sideBet.write.initializeReservedAccounting({ account: admin.account });
         await expect(
             sideBet.write.initializeReservedAccounting({ account: admin.account }),
-        ).to.be.rejectedWith("InvalidInitialization");
+        ).to.be.rejectedWith(customErrorPattern("InvalidInitialization()"));
     });
 });
 

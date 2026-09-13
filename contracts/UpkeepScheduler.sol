@@ -107,7 +107,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
         emit MaxPayoutsPerCallUpdated(newMaxPayoutsPerCall);
     }
 
-    /// @notice Simulation runs roulette `previewPayoutBundle` or side-bet `previewSettleBundle`; `performUpkeep` applies only.
+    /// @notice Simulation runs roulette `previewPayoutBundle` or side-bet `previewSettleBundleV2`; `performUpkeep` applies only.
     /// @dev Roulette: `abi.encode(UpkeepWorkKind.Roulette, lane, job, vaultPayouts, jackpotWinners, jackpotAmounts)`.
     /// Side bet: `abi.encode(UpkeepWorkKind.SideBet, lane, rows, nextCursorBetId, vaultApplies)`.
     function checkUpkeep(
@@ -143,7 +143,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
         if (cursorBetId < lane) cursorBetId = lane;
 
         (ISideBet.SettleRow[] memory rows, uint256 nextCursorBetId, ISideBet.SettleVaultApply[] memory vaultApplies) =
-            SIDE_BET.previewSettleBundle(cursorBetId, maxSnapshot, uint32(lane), laneCount);
+            SIDE_BET.previewSettleBundleV2(cursorBetId, maxSnapshot, uint32(lane), laneCount);
         if (rows.length == 0) return (false, bytes(""));
 
         performData = abi.encode(UpkeepWorkKind.SideBet, lane, rows, nextCursorBetId, vaultApplies);
@@ -208,7 +208,7 @@ contract UpkeepScheduler is AccessControl, AutomationCompatibleInterface, IUpkee
             sideBetCursor[lane] = nextCursorBetId;
             emit SideBetCursorAdvanced(lane, previousCursor, nextCursorBetId);
 
-            SIDE_BET.settleBatch(rows, vaultApplies);
+            SIDE_BET.settleBatchV2(rows, vaultApplies);
         }
     }
 }
