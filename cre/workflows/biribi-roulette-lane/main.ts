@@ -1,11 +1,13 @@
 import {
   EVMClient,
   HTTPCapability,
+  blockNumber,
   getNetwork,
   handler,
   hexToBase64,
   bytesToHex,
   bytesToBigint,
+  protoBigIntToBigint,
   TxStatus,
   type Runtime,
   Runner,
@@ -22,9 +24,12 @@ import {
   type Address,
 } from "viem";
 import { z } from "zod";
-import { IAutomationCompatibleABI } from "../../contracts/evm/ts/generated/IAutomationCompatible";
+import {
+  IAutomationCompatible,
+  IAutomationCompatibleABI,
+  type CallBlockNumber,
+} from "../../contracts/evm/ts/generated/IAutomationCompatible";
 import { AutomationReceiver } from "../../contracts/evm/ts/generated/AutomationReceiver";
-import { IAutomationCompatible } from "../../contracts/evm/ts/generated/IAutomationCompatible";
 
 // One binary, config selects handlers:
 // - HTTP: TriggerVrf (round-watcher)
@@ -119,6 +124,23 @@ function writePerformUpkeep(
 }
 
 /**
+ * Consensus tip → explicit block for eth_call.
+ * DON nodes may sit on different provider tips; pinning the agreed height keeps
+ * checkUpkeep/checkLog deterministic across the capability DON.
+ * Re-resolve each drain iteration so post-write state is visible.
+ */
+function resolveConsensusLatestBlock(
+  runtime: Runtime<Config>,
+  evmClient: EVMClient,
+): CallBlockNumber {
+  const latestHeader = evmClient.headerByNumber(runtime, {}).result();
+  if (!latestHeader.header?.blockNumber) {
+    throw new Error("Failed to get consensus latest block number");
+  }
+  return blockNumber(protoBigIntToBigint(latestHeader.header.blockNumber));
+}
+
+/**
  * Drain checkUpkeep → performUpkeep up to maxDrainIterations.
  * LOG wake: first iteration uses checkLog (validates the triggering log); later drains use checkUpkeep.
  * HTTP wake: always checkUpkeep (no log payload).
@@ -143,13 +165,19 @@ const runMigration = (runtime: Runtime<Config>, triggerLog?: EVMLog): string => 
   let lastTxHash = "";
 
   for (let i = 0; i < maxDrainIterations; i++) {
+    const atBlock = resolveConsensusLatestBlock(runtime, evmClient);
     let upkeepNeeded: boolean;
     let performData: Hex;
 
     if (triggerLog && i === 0) {
-      [upkeepNeeded, performData] = target.checkLog(runtime, mapLogToAutomation(triggerLog), checkData);
+      [upkeepNeeded, performData] = target.checkLog(
+        runtime,
+        mapLogToAutomation(triggerLog),
+        checkData,
+        atBlock,
+      );
     } else {
-      [upkeepNeeded, performData] = target.checkUpkeep(runtime, checkData);
+      [upkeepNeeded, performData] = target.checkUpkeep(runtime, checkData, atBlock);
     }
 
     if (!upkeepNeeded) {

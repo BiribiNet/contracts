@@ -8,22 +8,28 @@ import {
 } from 'viem'
 import type { Address, Hex } from 'viem'
 import {
+  blockNumber as toBlockNumber,
   bytesToHex,
   encodeCallMsg,
   EVMClient,
   hexToBase64,
-  LATEST_BLOCK_NUMBER,
   prepareReportRequest,
   type EVMLog,
   type Runtime,
 } from '@chainlink/cre-sdk'
 
-// Manual patch over codegen: checkLog/checkUpkeep read at LATEST instead of
-// LAST_FINALIZED. Arbitrum Sepolia finality lags head by ~15-20 min, so finalized
-// reads made the workflow act on stale jobs (StalePayoutChunk reverts) and miss
-// fresh ones. Safe: performUpkeep/executeJob fully re-validate state on-chain.
+// Manual patch over codegen:
+// - Prefer an explicit consensus tip (from headerByNumber) over LAST_FINALIZED —
+//   Arbitrum Sepolia finality lags head by ~15-20 min, so finalized reads acted on
+//   stale jobs and missed fresh ones.
+// - Prefer that pinned height over raw LATEST_BLOCK_NUMBER so every DON node
+//   eth_calls the same block even when provider tips disagree by 1+.
+// Safe: performUpkeep/executeJob fully re-validate state on-chain.
 
 export interface DecodedLog<T> extends Omit<EVMLog, 'data'> { data: T }
+
+/** Protobuf BigInt JSON accepted by `callContract` (from `blockNumber(n)`). */
+export type CallBlockNumber = ReturnType<typeof toBlockNumber>
 
 const encodeTopicValue = (t: Hex | Hex[] | null): string[] => {
   if (t == null) return []
@@ -47,6 +53,7 @@ export class IAutomationCompatible {
     runtime: Runtime<unknown>,
     log: { index: bigint; timestamp: bigint; txHash: `0x${string}`; blockNumber: bigint; blockHash: `0x${string}`; source: `0x${string}`; topics: readonly `0x${string}`[]; data: `0x${string}` },
     checkData: `0x${string}`,
+    atBlock: CallBlockNumber,
   ): readonly [boolean, `0x${string}`] {
     const callData = encodeFunctionData({
       abi: IAutomationCompatibleABI,
@@ -57,7 +64,7 @@ export class IAutomationCompatible {
     const result = this.client
       .callContract(runtime, {
         call: encodeCallMsg({ from: zeroAddress, to: this.address, data: callData }),
-        blockNumber: LATEST_BLOCK_NUMBER,
+        blockNumber: atBlock,
       })
       .result()
 
@@ -71,6 +78,7 @@ export class IAutomationCompatible {
   checkUpkeep(
     runtime: Runtime<unknown>,
     checkData: `0x${string}`,
+    atBlock: CallBlockNumber,
   ): readonly [boolean, `0x${string}`] {
     const callData = encodeFunctionData({
       abi: IAutomationCompatibleABI,
@@ -81,7 +89,7 @@ export class IAutomationCompatible {
     const result = this.client
       .callContract(runtime, {
         call: encodeCallMsg({ from: zeroAddress, to: this.address, data: callData }),
-        blockNumber: LATEST_BLOCK_NUMBER,
+        blockNumber: atBlock,
       })
       .result()
 

@@ -109,13 +109,14 @@ Registered in the Chainlink-hosted **private registry** (`deployment-registry: "
 HTTP triggers go to the standard gateway `https://01.gateway.zone-a.cre.chain.link` with a JWT using
 `alg: "ETH"` and the workflow ID **without** `0x` prefix.
 
-Binary includes the LATEST-block patch in `contracts/evm/ts/generated/IAutomationCompatible.ts`
-(`checkUpkeep`/`checkLog` read at `LATEST_BLOCK_NUMBER` instead of `LAST_FINALIZED_BLOCK_NUMBER`;
-Arbitrum Sepolia finality lags head by ~15-20 min, which made workflows act on stale jobs).
+Binary pins `checkUpkeep`/`checkLog` to a **consensus latest block** (`headerByNumber` →
+explicit height) instead of raw `LATEST_BLOCK_NUMBER` or `LAST_FINALIZED_BLOCK_NUMBER`
+(Arbitrum Sepolia finality lags head by ~15-20 min; raw LATEST lets DON nodes disagree when
+provider tips diverge).
 
 | Workflow | Workflow ID |
 |----------|-------------|
-| `biribi-trigger-vrf-production` | `006c4256a95bae56e37f285b6a183726051caf70c1fa99508265cc4c7d3c3dc6` |
+| `biribi-trigger-vrf-production` | `0014782ebde2c4ca34333f686c1dbc8c54f4914d908ee497b6e71ec6596694e8` |
 | `biribi-roulette-lane-0-production` | `0080e7288d55578edea7a27d385761376fb958c9b9ad5e3e5ef3a9ecac3eb179` |
 | `biribi-roulette-lane-1-production` | `00ce9386a3f27127e0c655c39e1ac12696cea9a9e462d575dab8f963c4ebc3d1` |
 
