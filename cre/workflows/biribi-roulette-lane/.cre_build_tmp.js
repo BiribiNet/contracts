@@ -4522,6 +4522,40 @@ function base64Decode(base64Str) {
     throw Error("invalid base64 string");
   return bytes.subarray(0, bytePos);
 }
+function base64Encode(bytes, encoding = "std") {
+  const table = getEncodeTable(encoding);
+  const pad = encoding == "std";
+  let base64 = "", groupPos = 0, b, p = 0;
+  for (let i = 0;i < bytes.length; i++) {
+    b = bytes[i];
+    switch (groupPos) {
+      case 0:
+        base64 += table[b >> 2];
+        p = (b & 3) << 4;
+        groupPos = 1;
+        break;
+      case 1:
+        base64 += table[p | b >> 4];
+        p = (b & 15) << 2;
+        groupPos = 2;
+        break;
+      case 2:
+        base64 += table[p | b >> 6];
+        base64 += table[b & 63];
+        groupPos = 0;
+        break;
+    }
+  }
+  if (groupPos) {
+    base64 += table[p];
+    if (pad) {
+      base64 += "=";
+      if (groupPos == 1)
+        base64 += "=";
+    }
+  }
+  return base64;
+}
 var encodeTableStd;
 var encodeTableUrl;
 var decodeTable;
@@ -6105,6 +6139,17 @@ var NullValue;
 (function(NullValue2) {
   NullValue2[NullValue2["NULL_VALUE"] = 0] = "NULL_VALUE";
 })(NullValue || (NullValue = {}));
+function getExtension(message, extension) {
+  assertExtendee(extension, message);
+  const ufs = filterUnknownFields(message.$unknown, extension);
+  const [container, field, get] = createExtensionContainer(extension);
+  for (const uf of ufs) {
+    readField(container, new BinaryReader(uf.data), field, uf.wireType, {
+      readUnknownFields: true
+    });
+  }
+  return get();
+}
 function setExtension(message, extension, value) {
   var _a;
   assertExtendee(extension, message);
@@ -6119,6 +6164,19 @@ function setExtension(message, extension, value) {
     ufs.push({ no, wireType, data });
   }
   message.$unknown = ufs;
+}
+function filterUnknownFields(unknownFields, extension) {
+  if (unknownFields === undefined)
+    return [];
+  if (extension.fieldKind === "enum" || extension.fieldKind === "scalar") {
+    for (let i = unknownFields.length - 1;i >= 0; --i) {
+      if (unknownFields[i].no == extension.number) {
+        return [unknownFields[i]];
+      }
+    }
+    return [];
+  }
+  return unknownFields.filter((uf) => uf.no === extension.number);
 }
 function createExtensionContainer(extension, value) {
   const localName = extension.typeName;
@@ -6145,6 +6203,314 @@ function assertExtendee(extension, message) {
   if (extension.extendee.typeName != message.$typeName) {
     throw new Error(`extension ${extension.typeName} can only be applied to message ${extension.extendee.typeName}`);
   }
+}
+var LEGACY_REQUIRED3 = 3;
+var IMPLICIT4 = 2;
+var jsonWriteDefaults = {
+  alwaysEmitImplicit: false,
+  enumAsInteger: false,
+  useProtoFieldName: false
+};
+function makeWriteOptions2(options) {
+  return options ? Object.assign(Object.assign({}, jsonWriteDefaults), options) : jsonWriteDefaults;
+}
+function toJson(schema, message, options) {
+  return reflectToJson(reflect(schema, message), makeWriteOptions2(options));
+}
+function reflectToJson(msg, opts) {
+  var _a;
+  const wktJson = tryWktToJson(msg, opts);
+  if (wktJson !== undefined)
+    return wktJson;
+  const json = {};
+  for (const f of msg.sortedFields) {
+    if (!msg.isSet(f)) {
+      if (f.presence == LEGACY_REQUIRED3) {
+        throw new Error(`cannot encode ${f} to JSON: required field not set`);
+      }
+      if (!opts.alwaysEmitImplicit || f.presence !== IMPLICIT4) {
+        continue;
+      }
+    }
+    const jsonValue = fieldToJson(f, msg.get(f), opts);
+    if (jsonValue !== undefined) {
+      json[jsonName(f, opts)] = jsonValue;
+    }
+  }
+  if (opts.registry) {
+    const tagSeen = new Set;
+    for (const { no } of (_a = msg.getUnknown()) !== null && _a !== undefined ? _a : []) {
+      if (!tagSeen.has(no)) {
+        tagSeen.add(no);
+        const extension = opts.registry.getExtensionFor(msg.desc, no);
+        if (!extension) {
+          continue;
+        }
+        const value = getExtension(msg.message, extension);
+        const [container, field] = createExtensionContainer(extension, value);
+        const jsonValue = fieldToJson(field, container.get(field), opts);
+        if (jsonValue !== undefined) {
+          json[extension.jsonName] = jsonValue;
+        }
+      }
+    }
+  }
+  return json;
+}
+function fieldToJson(f, val, opts) {
+  switch (f.fieldKind) {
+    case "scalar":
+      return scalarToJson(f, val);
+    case "message":
+      return reflectToJson(val, opts);
+    case "enum":
+      return enumToJsonInternal(f.enum, val, opts.enumAsInteger);
+    case "list":
+      return listToJson(val, opts);
+    case "map":
+      return mapToJson(val, opts);
+  }
+}
+function mapToJson(map, opts) {
+  const f = map.field();
+  const jsonObj = {};
+  switch (f.mapKind) {
+    case "scalar":
+      for (const [entryKey, entryValue] of map) {
+        jsonObj[entryKey] = scalarToJson(f, entryValue);
+      }
+      break;
+    case "message":
+      for (const [entryKey, entryValue] of map) {
+        jsonObj[entryKey] = reflectToJson(entryValue, opts);
+      }
+      break;
+    case "enum":
+      for (const [entryKey, entryValue] of map) {
+        jsonObj[entryKey] = enumToJsonInternal(f.enum, entryValue, opts.enumAsInteger);
+      }
+      break;
+  }
+  return opts.alwaysEmitImplicit || map.size > 0 ? jsonObj : undefined;
+}
+function listToJson(list, opts) {
+  const f = list.field();
+  const jsonArr = [];
+  switch (f.listKind) {
+    case "scalar":
+      for (const item of list) {
+        jsonArr.push(scalarToJson(f, item));
+      }
+      break;
+    case "enum":
+      for (const item of list) {
+        jsonArr.push(enumToJsonInternal(f.enum, item, opts.enumAsInteger));
+      }
+      break;
+    case "message":
+      for (const item of list) {
+        jsonArr.push(reflectToJson(item, opts));
+      }
+      break;
+  }
+  return opts.alwaysEmitImplicit || jsonArr.length > 0 ? jsonArr : undefined;
+}
+function enumToJsonInternal(desc, value, enumAsInteger) {
+  var _a;
+  if (typeof value != "number") {
+    throw new Error(`cannot encode ${desc} to JSON: expected number, got ${formatVal(value)}`);
+  }
+  if (desc.typeName == "google.protobuf.NullValue") {
+    return null;
+  }
+  if (enumAsInteger) {
+    return value;
+  }
+  const val = desc.value[value];
+  return (_a = val === null || val === undefined ? undefined : val.name) !== null && _a !== undefined ? _a : value;
+}
+function scalarToJson(field, value) {
+  var _a, _b, _c, _d, _e, _f;
+  switch (field.scalar) {
+    case ScalarType.INT32:
+    case ScalarType.SFIXED32:
+    case ScalarType.SINT32:
+    case ScalarType.FIXED32:
+    case ScalarType.UINT32:
+      if (typeof value != "number") {
+        throw new Error(`cannot encode ${field} to JSON: ${(_a = checkField(field, value)) === null || _a === undefined ? undefined : _a.message}`);
+      }
+      return value;
+    case ScalarType.FLOAT:
+    case ScalarType.DOUBLE:
+      if (typeof value != "number") {
+        throw new Error(`cannot encode ${field} to JSON: ${(_b = checkField(field, value)) === null || _b === undefined ? undefined : _b.message}`);
+      }
+      if (Number.isNaN(value))
+        return "NaN";
+      if (value === Number.POSITIVE_INFINITY)
+        return "Infinity";
+      if (value === Number.NEGATIVE_INFINITY)
+        return "-Infinity";
+      return value;
+    case ScalarType.STRING:
+      if (typeof value != "string") {
+        throw new Error(`cannot encode ${field} to JSON: ${(_c = checkField(field, value)) === null || _c === undefined ? undefined : _c.message}`);
+      }
+      return value;
+    case ScalarType.BOOL:
+      if (typeof value != "boolean") {
+        throw new Error(`cannot encode ${field} to JSON: ${(_d = checkField(field, value)) === null || _d === undefined ? undefined : _d.message}`);
+      }
+      return value;
+    case ScalarType.UINT64:
+    case ScalarType.FIXED64:
+    case ScalarType.INT64:
+    case ScalarType.SFIXED64:
+    case ScalarType.SINT64:
+      if (typeof value != "bigint" && typeof value != "string") {
+        throw new Error(`cannot encode ${field} to JSON: ${(_e = checkField(field, value)) === null || _e === undefined ? undefined : _e.message}`);
+      }
+      return value.toString();
+    case ScalarType.BYTES:
+      if (value instanceof Uint8Array) {
+        return base64Encode(value);
+      }
+      throw new Error(`cannot encode ${field} to JSON: ${(_f = checkField(field, value)) === null || _f === undefined ? undefined : _f.message}`);
+  }
+}
+function jsonName(f, opts) {
+  return opts.useProtoFieldName ? f.name : f.jsonName;
+}
+function tryWktToJson(msg, opts) {
+  if (!msg.desc.typeName.startsWith("google.protobuf.")) {
+    return;
+  }
+  switch (msg.desc.typeName) {
+    case "google.protobuf.Any":
+      return anyToJson(msg.message, opts);
+    case "google.protobuf.Timestamp":
+      return timestampToJson(msg.message);
+    case "google.protobuf.Duration":
+      return durationToJson(msg.message);
+    case "google.protobuf.FieldMask":
+      return fieldMaskToJson(msg.message);
+    case "google.protobuf.Struct":
+      return structToJson(msg.message);
+    case "google.protobuf.Value":
+      return valueToJson(msg.message);
+    case "google.protobuf.ListValue":
+      return listValueToJson(msg.message);
+    default:
+      if (isWrapperDesc(msg.desc)) {
+        const valueField = msg.desc.fields[0];
+        return scalarToJson(valueField, msg.get(valueField));
+      }
+      return;
+  }
+}
+function anyToJson(val, opts) {
+  if (val.typeUrl === "") {
+    return {};
+  }
+  const { registry } = opts;
+  let message;
+  let desc;
+  if (registry) {
+    message = anyUnpack(val, registry);
+    if (message) {
+      desc = registry.getMessage(message.$typeName);
+    }
+  }
+  if (!desc || !message) {
+    throw new Error(`cannot encode message ${val.$typeName} to JSON: "${val.typeUrl}" is not in the type registry`);
+  }
+  let json = reflectToJson(reflect(desc, message), opts);
+  if (desc.typeName.startsWith("google.protobuf.") || json === null || Array.isArray(json) || typeof json !== "object") {
+    json = { value: json };
+  }
+  json["@type"] = val.typeUrl;
+  return json;
+}
+function durationToJson(val) {
+  if (Number(val.seconds) > 315576000000 || Number(val.seconds) < -315576000000) {
+    throw new Error(`cannot encode message ${val.$typeName} to JSON: value out of range`);
+  }
+  let text = val.seconds.toString();
+  if (val.nanos !== 0) {
+    let nanosStr = Math.abs(val.nanos).toString();
+    nanosStr = "0".repeat(9 - nanosStr.length) + nanosStr;
+    if (nanosStr.substring(3) === "000000") {
+      nanosStr = nanosStr.substring(0, 3);
+    } else if (nanosStr.substring(6) === "000") {
+      nanosStr = nanosStr.substring(0, 6);
+    }
+    text += "." + nanosStr;
+    if (val.nanos < 0 && Number(val.seconds) == 0) {
+      text = "-" + text;
+    }
+  }
+  return text + "s";
+}
+function fieldMaskToJson(val) {
+  return val.paths.map((p) => {
+    if (p.match(/_[0-9]?_/g) || p.match(/[A-Z]/g)) {
+      throw new Error(`cannot encode message ${val.$typeName} to JSON: lowerCamelCase of path name "` + p + '" is irreversible');
+    }
+    return protoCamelCase(p);
+  }).join(",");
+}
+function structToJson(val) {
+  const json = {};
+  for (const [k, v] of Object.entries(val.fields)) {
+    json[k] = valueToJson(v);
+  }
+  return json;
+}
+function valueToJson(val) {
+  switch (val.kind.case) {
+    case "nullValue":
+      return null;
+    case "numberValue":
+      if (!Number.isFinite(val.kind.value)) {
+        throw new Error(`${val.$typeName} cannot be NaN or Infinity`);
+      }
+      return val.kind.value;
+    case "boolValue":
+      return val.kind.value;
+    case "stringValue":
+      return val.kind.value;
+    case "structValue":
+      return structToJson(val.kind.value);
+    case "listValue":
+      return listValueToJson(val.kind.value);
+    default:
+      throw new Error(`${val.$typeName} must have a value`);
+  }
+}
+function listValueToJson(val) {
+  return val.values.map(valueToJson);
+}
+function timestampToJson(val) {
+  const ms = Number(val.seconds) * 1000;
+  if (ms < Date.parse("0001-01-01T00:00:00Z") || ms > Date.parse("9999-12-31T23:59:59Z")) {
+    throw new Error(`cannot encode message ${val.$typeName} to JSON: must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive`);
+  }
+  if (val.nanos < 0) {
+    throw new Error(`cannot encode message ${val.$typeName} to JSON: nanos must not be negative`);
+  }
+  let z = "Z";
+  if (val.nanos > 0) {
+    const nanosStr = (val.nanos + 1e9).toString().substring(1);
+    if (nanosStr.substring(3) === "000000") {
+      z = "." + nanosStr.substring(0, 3) + "Z";
+    } else if (nanosStr.substring(6) === "000") {
+      z = "." + nanosStr.substring(0, 6) + "Z";
+    } else {
+      z = "." + nanosStr + "Z";
+    }
+  }
+  return new Date(ms).toISOString().replace(".000Z", z);
 }
 var jsonReadDefaults = {
   ignoreUnknownFields: false
@@ -8614,6 +8980,16 @@ var hexToBase64 = (hex) => {
   }
   return Buffer.from(cleanHex, "hex").toString("base64");
 };
+var bigintToBytes = (n) => {
+  if (n < 0n) {
+    throw new Error(`bigintToBytes does not support negative values: ${n}`);
+  }
+  if (n === 0n) {
+    return new Uint8Array;
+  }
+  const hex = n.toString(16);
+  return Buffer.from(hex.padStart(hex.length + hex.length % 2, "0"), "hex");
+};
 var bytesToBigint = (bytes) => {
   let result = 0n;
   for (const byte of bytes) {
@@ -10698,6 +11074,24 @@ function assertSafeIntegerNumber(value, label) {
     throw new Error(`${label} requires a safe integer number, received ${value}. Pass a bigint or string for larger values`);
   }
 }
+var bigintToProtoBigInt = (n) => {
+  if (typeof n === "number") {
+    assertSafeIntegerNumber(n, "bigintToProtoBigInt");
+  }
+  const val = BigInt(n);
+  const abs = val < 0n ? -val : val;
+  const sign = val === 0n ? 0n : val < 0n ? -1n : 1n;
+  const msg = create(BigIntSchema, {
+    absVal: bigintToBytes(abs),
+    sign
+  });
+  return toJson(BigIntSchema, msg);
+};
+var protoBigIntToBigint = (pb) => {
+  const result = bytesToBigint(pb.absVal);
+  return pb.sign < 0n ? -result : result;
+};
+var blockNumber = bigintToProtoBigInt;
 var LAST_FINALIZED_BLOCK_NUMBER = {
   absVal: Buffer.from([3]).toString("base64"),
   sign: "-1"
@@ -23054,7 +23448,7 @@ function isScalarZeroValue2(type, value2) {
       return value2 == 0;
   }
 }
-var IMPLICIT4 = 2;
+var IMPLICIT5 = 2;
 var unsafeLocal2 = Symbol.for("reflect unsafe local");
 function unsafeOneofCase2(target, oneof) {
   const c = target[oneof.localName].case;
@@ -23068,7 +23462,7 @@ function unsafeIsSet2(target, field) {
   if (field.oneof) {
     return target[field.oneof.localName].case === name;
   }
-  if (field.presence != IMPLICIT4) {
+  if (field.presence != IMPLICIT5) {
     return target[name] !== undefined && Object.prototype.hasOwnProperty.call(target, name);
   }
   switch (field.fieldKind) {
@@ -23113,7 +23507,7 @@ function unsafeClear2(target, field) {
     if (target[oneofLocalName].case === name) {
       target[oneofLocalName] = { case: undefined };
     }
-  } else if (field.presence != IMPLICIT4) {
+  } else if (field.presence != IMPLICIT5) {
     delete target[name];
   } else {
     switch (field.fieldKind) {
@@ -23183,7 +23577,7 @@ function isWrapperTypeName2(name) {
 }
 var EDITION_PROTO33 = 999;
 var EDITION_PROTO23 = 998;
-var IMPLICIT5 = 2;
+var IMPLICIT6 = 2;
 function create3(schema, init) {
   if (isMessage2(init, schema)) {
     return init;
@@ -23290,7 +23684,7 @@ function createZeroMessage2(desc) {
       $typeName: desc.typeName
     };
     for (const member of desc.members) {
-      if (member.kind == "oneof" || member.presence == IMPLICIT5) {
+      if (member.kind == "oneof" || member.presence == IMPLICIT6) {
         msg[member.localName] = createZeroField2(member);
       }
     }
@@ -23310,7 +23704,7 @@ function createZeroMessage2(desc) {
         if (member.fieldKind != "scalar" && member.fieldKind != "enum") {
           continue;
         }
-        if (member.presence == IMPLICIT5) {
+        if (member.presence == IMPLICIT6) {
           continue;
         }
         members.add(member);
@@ -23329,7 +23723,7 @@ function createZeroMessage2(desc) {
           continue;
         }
         if (member.fieldKind == "scalar" || member.fieldKind == "enum") {
-          if (member.presence != IMPLICIT5) {
+          if (member.presence != IMPLICIT6) {
             continue;
           }
         }
@@ -23346,7 +23740,7 @@ function needsPrototypeChain2(desc) {
     case EDITION_PROTO23:
       return true;
     default:
-      return desc.fields.some((f) => f.presence != IMPLICIT5 && f.fieldKind != "message" && !f.oneof);
+      return desc.fields.some((f) => f.presence != IMPLICIT6 && f.fieldKind != "message" && !f.oneof);
   }
 }
 function createZeroField2(field) {
@@ -24771,8 +25165,8 @@ var LABEL_REQUIRED2 = 2;
 var JS_STRING2 = 1;
 var IDEMPOTENCY_UNKNOWN2 = 0;
 var EXPLICIT2 = 1;
-var IMPLICIT6 = 2;
-var LEGACY_REQUIRED3 = 3;
+var IMPLICIT7 = 2;
+var LEGACY_REQUIRED4 = 3;
 var PACKED2 = 1;
 var DELIMITED2 = 2;
 var OPEN2 = 1;
@@ -25230,10 +25624,10 @@ function findOneof2(proto, allOneofs) {
 }
 function getFieldPresence2(proto, oneof, isExtension, parent) {
   if (proto.label == LABEL_REQUIRED2) {
-    return LEGACY_REQUIRED3;
+    return LEGACY_REQUIRED4;
   }
   if (proto.label == LABEL_REPEATED2) {
-    return IMPLICIT6;
+    return IMPLICIT7;
   }
   if (!!oneof || proto.proto3Optional) {
     return EXPLICIT2;
@@ -25242,7 +25636,7 @@ function getFieldPresence2(proto, oneof, isExtension, parent) {
     return EXPLICIT2;
   }
   const resolved = resolveFeature2("fieldPresence", { proto, parent });
-  if (resolved == IMPLICIT6 && (proto.type == TYPE_MESSAGE2 || proto.type == TYPE_GROUP2)) {
+  if (resolved == IMPLICIT7 && (proto.type == TYPE_MESSAGE2 || proto.type == TYPE_GROUP2)) {
     return EXPLICIT2;
   }
   return resolved;
@@ -25733,21 +26127,21 @@ function fileDesc2(b64, imports) {
 var file_google_protobuf_timestamp2 = /* @__PURE__ */ fileDesc2("Ch9nb29nbGUvcHJvdG9idWYvdGltZXN0YW1wLnByb3RvEg9nb29nbGUucHJvdG9idWYiKwoJVGltZXN0YW1wEg8KB3NlY29uZHMYASABKAMSDQoFbmFub3MYAiABKAVChQEKE2NvbS5nb29nbGUucHJvdG9idWZCDlRpbWVzdGFtcFByb3RvUAFaMmdvb2dsZS5nb2xhbmcub3JnL3Byb3RvYnVmL3R5cGVzL2tub3duL3RpbWVzdGFtcHBi+AEBogIDR1BCqgIeR29vZ2xlLlByb3RvYnVmLldlbGxLbm93blR5cGVzYgZwcm90bzM");
 var file_google_protobuf_any2 = /* @__PURE__ */ fileDesc2("Chlnb29nbGUvcHJvdG9idWYvYW55LnByb3RvEg9nb29nbGUucHJvdG9idWYiJgoDQW55EhAKCHR5cGVfdXJsGAEgASgJEg0KBXZhbHVlGAIgASgMQnYKE2NvbS5nb29nbGUucHJvdG9idWZCCEFueVByb3RvUAFaLGdvb2dsZS5nb2xhbmcub3JnL3Byb3RvYnVmL3R5cGVzL2tub3duL2FueXBiogIDR1BCqgIeR29vZ2xlLlByb3RvYnVmLldlbGxLbm93blR5cGVzYgZwcm90bzM");
 var AnySchema2 = /* @__PURE__ */ messageDesc2(file_google_protobuf_any2, 0);
-var LEGACY_REQUIRED4 = 3;
+var LEGACY_REQUIRED5 = 3;
 var writeDefaults2 = {
   writeUnknownFields: true
 };
-function makeWriteOptions2(options) {
+function makeWriteOptions3(options) {
   return options ? Object.assign(Object.assign({}, writeDefaults2), options) : writeDefaults2;
 }
 function toBinary2(schema, message, options) {
-  return writeFields2(new BinaryWriter2, makeWriteOptions2(options), reflect2(schema, message)).finish();
+  return writeFields2(new BinaryWriter2, makeWriteOptions3(options), reflect2(schema, message)).finish();
 }
 function writeFields2(writer, opts, msg) {
   var _a;
   for (const f of msg.sortedFields) {
     if (!msg.isSet(f)) {
-      if (f.presence == LEGACY_REQUIRED4) {
+      if (f.presence == LEGACY_REQUIRED5) {
         throw new Error(`cannot encode ${f} to binary: required field not set`);
       }
       continue;
@@ -35792,7 +36186,7 @@ class IAutomationCompatible {
     this.client = client;
     this.address = address3;
   }
-  checkLog(runtime3, log, checkData) {
+  checkLog(runtime3, log, checkData, atBlock) {
     const callData = encodeFunctionData2({
       abi: IAutomationCompatibleABI,
       functionName: "checkLog",
@@ -35800,7 +36194,7 @@ class IAutomationCompatible {
     });
     const result = this.client.callContract(runtime3, {
       call: encodeCallMsg({ from: zeroAddress2, to: this.address, data: callData }),
-      blockNumber: LATEST_BLOCK_NUMBER2
+      blockNumber: atBlock
     }).result();
     return decodeFunctionResult2({
       abi: IAutomationCompatibleABI,
@@ -35808,7 +36202,7 @@ class IAutomationCompatible {
       data: bytesToHex5(result.data)
     });
   }
-  checkUpkeep(runtime3, checkData) {
+  checkUpkeep(runtime3, checkData, atBlock) {
     const callData = encodeFunctionData2({
       abi: IAutomationCompatibleABI,
       functionName: "checkUpkeep",
@@ -35816,7 +36210,7 @@ class IAutomationCompatible {
     });
     const result = this.client.callContract(runtime3, {
       call: encodeCallMsg({ from: zeroAddress2, to: this.address, data: callData }),
-      blockNumber: LATEST_BLOCK_NUMBER2
+      blockNumber: atBlock
     }).result();
     return decodeFunctionResult2({
       abi: IAutomationCompatibleABI,
@@ -36593,6 +36987,13 @@ function writePerformUpkeep(runtime3, receiver, targetAddress, performData, writ
   }
   return bytesToHex3(writeResult.txHash || new Uint8Array(32));
 }
+function resolveConsensusLatestBlock(runtime3, evmClient) {
+  const latestHeader = evmClient.headerByNumber(runtime3, {}).result();
+  if (!latestHeader.header?.blockNumber) {
+    throw new Error("Failed to get consensus latest block number");
+  }
+  return blockNumber(protoBigIntToBigint(latestHeader.header.blockNumber));
+}
 var runMigration = (runtime3, triggerLog) => {
   const config = runtime3.config;
   const checkData = config.checkData ?? "0x";
@@ -36609,12 +37010,13 @@ var runMigration = (runtime3, triggerLog) => {
   const targetAddress = config.targetAddress;
   let lastTxHash = "";
   for (let i2 = 0;i2 < maxDrainIterations; i2++) {
+    const atBlock = resolveConsensusLatestBlock(runtime3, evmClient);
     let upkeepNeeded;
     let performData;
     if (triggerLog && i2 === 0) {
-      [upkeepNeeded, performData] = target.checkLog(runtime3, mapLogToAutomation(triggerLog), checkData);
+      [upkeepNeeded, performData] = target.checkLog(runtime3, mapLogToAutomation(triggerLog), checkData, atBlock);
     } else {
-      [upkeepNeeded, performData] = target.checkUpkeep(runtime3, checkData);
+      [upkeepNeeded, performData] = target.checkUpkeep(runtime3, checkData, atBlock);
     }
     if (!upkeepNeeded) {
       return i2 === 0 ? "No upkeep needed" : lastTxHash || "Drain complete";
