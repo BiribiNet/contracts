@@ -116,9 +116,9 @@ provider tips diverge).
 
 | Workflow | Workflow ID |
 |----------|-------------|
-| `biribi-trigger-vrf-production` | `00e983638398da411fb34cd194c3e7db5021ed81fad51ed52bdcafb11d43ad39` |
-| `biribi-roulette-lane-0-production` | `001431167381433191af40d28cfc7afcbd4592fcc87d968d5480d03c5e0e2242` |
-| `biribi-roulette-lane-1-production` | `005100bb9c81ac9d0636efc911fcd26f24faafe51b4e6299ed687ef2eb3f0e85` |
+| `biribi-trigger-vrf-production` | `00ce83a8968e1ff63e3d738962302ade862361ba142a21ea3c199ae8d4ca7e42` |
+| `biribi-roulette-lane-0-production` | `0007f807f2d68f3d219783e43e3f18d01e1e9986feece2095625b5cbda910a7a` |
+| `biribi-roulette-lane-1-production` | `008e2329483a437ea24efc85494c35344c7f6a87458516cdd2925febaf18ffcf` |
 
 Round-watcher env `CRE_WORKFLOW_ID_TRIGGER_VRF` (Railway) must match the trigger-vrf ID above.
 

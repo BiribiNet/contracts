@@ -179,6 +179,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     event ReferralSet(address player, address referrer);
     event JackpotFunderUpdated(address previousFunder, address newFunder);
     event JackpotTreasuryUpdated(address previousTreasury, address newTreasury);
+    event UpkeepSchedulerUpdated(address previousScheduler, address newScheduler);
 
     modifier onlyScheduler() {
         if (msg.sender != _s().UPKEEP_SCHEDULER) revert UnauthorizedScheduler();
@@ -315,6 +316,16 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         address previous = address($.JACKPOT_TREASURY);
         $.JACKPOT_TREASURY = IJackpotTreasury(newTreasury);
         emit JackpotTreasuryUpdated(previous, newTreasury);
+    }
+
+    /// @notice Swap the CRE/`UpkeepScheduler` entrypoint. Admin-only: a wrong address bricks automation.
+    /// @dev Needed when the scheduler must be redeployed (non-upgradeable) after SideBet ABI changes.
+    function setUpkeepScheduler(address newScheduler) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newScheduler == address(0)) revert ZeroAddress();
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        address previous = $.UPKEEP_SCHEDULER;
+        $.UPKEEP_SCHEDULER = newScheduler;
+        emit UpkeepSchedulerUpdated(previous, newScheduler);
     }
 
     function registerMarketFromRegistry(uint32 marketId, address bank) external onlyRegistry {

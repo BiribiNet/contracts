@@ -9,17 +9,15 @@ import { encodeFunctionData, getAddress, isAddress, parseAbi, zeroHash } from "v
 /**
  * UUPS-upgrade the live Arbitrum Sepolia `SideBet` proxy to the current local implementation.
  *
- * WHY: the deployed implementation predates the side-bet security fixes (multi-market winner
- * payouts, lane realignment, post-VRF placement guard, undecided-bet expiry). Its bytecode is
- * missing `settleTimeout()` and `setSettleTimeout(uint64)`. The candidate preserves the deployed
- * three-field settlement ABI and exposes the four-field format under explicit V2 endpoints.
+ * WHY: the deployed implementation predates the side-bet security / settlement-compatibility
+ * fixes (multi-market winner payouts, lane realignment, post-VRF placement guard, undecided-bet
+ * expiry, LegacySettleRow + previewSettleBundleV2, nextCursor clamp to betCount). Its bytecode is
+ * missing the V2 settlement endpoints the current `UpkeepScheduler` calls.
  *
- * THE UPGRADE PAYLOAD IS NOT OPTIONAL EITHER: it calls `initializeReservedAccounting`, which adopts
- * the incremental `reservedOf` accounting. That accounting only counts bets placed after it exists,
- * so a proxy holding bets must not adopt it — the call reverts in that case and takes the whole
- * upgrade with it, which is the intended outcome: a loud abort instead of a `reservedOf` that
- * silently under-reports the payout at risk. Upgrade before seeding the catalogue, not after.
- *
+ * THE UPGRADE PAYLOAD: when `betCount == 0`, call `initializeReservedAccounting`. When the proxy
+ * already holds bets, allow a code-only upgrade **only if** `reservedOf` already equals the ACTIVE
+ * payout sum per market (accounting was adopted while empty). Otherwise refuse — under-reporting
+ * would be silent and settling would underflow.
  * THE POST-UPGRADE CALL IS NOT OPTIONAL: `DEFAULT_SETTLE_TIMEOUT` is applied only inside
  * `initialize`, so an upgraded proxy reads `settleTimeout == 0` and expiry stays disabled. A bet
  * that never becomes decidable — its market went quiet, so global rounds stopped advancing — would
@@ -62,8 +60,53 @@ const proxyAbi = parseAbi([
     "function betCount() view returns (uint256)",
     "function reservedOf(uint32 marketId) view returns (uint256)",
     "function initializeReservedAccounting()",
+    "function getBet(uint256 betId) view returns ((address player, uint32 marketId, uint256 stake, uint256 payout, uint64 startGlobalRound, uint16 windowSpins, uint8 betType, uint8 color, uint8 targetNumber, uint16 targetCount, uint16 redRatioBps, uint8 status, uint64 placedAt, uint64 resolvedAt))",
 ]);
 
+/** SideBetStatus.ACTIVE */
+const SIDE_BET_STATUS_ACTIVE = 0;
+
+/**
+ * When the proxy already holds bets, `initializeReservedAccounting` must not run.
+ * Allow a code-only upgrade only if on-chain `reservedOf` already matches ACTIVE payouts
+ * (incremental accounting adopted while the proxy was empty, then bets placed afterwards).
+ */
+async function assertReservedAccountingHealthy(
+    publicClient: Awaited<ReturnType<typeof viem.getPublicClient>>,
+    sideBetProxy: `0x${string}`,
+    betCount: bigint,
+): Promise<void> {
+    const expected = new Map<number, bigint>();
+    for (let id = 0n; id < betCount; id++) {
+        const bet = await publicClient.readContract({
+            address: sideBetProxy,
+            abi: proxyAbi,
+            functionName: "getBet",
+            args: [id],
+        });
+        if (bet.status !== SIDE_BET_STATUS_ACTIVE) continue;
+        const marketId = Number(bet.marketId);
+        expected.set(marketId, (expected.get(marketId) ?? 0n) + bet.payout);
+    }
+
+    for (const [marketId, want] of expected) {
+        const got = await publicClient.readContract({
+            address: sideBetProxy,
+            abi: proxyAbi,
+            functionName: "reservedOf",
+            args: [marketId],
+        });
+        if (got !== want) {
+            throw new Error(
+                `reservedOf(${marketId})=${got} != ACTIVE payout sum ${want}. ` +
+                    "Cannot upgrade a populated proxy without a deliberate reserved-accounting backfill.",
+            );
+        }
+    }
+    console.log(
+        `reservedOf matches ACTIVE payouts across ${expected.size} market(s) — upgrading without initializeReservedAccounting`,
+    );
+}
 function envAddress(name: string, fallback: `0x${string}`): `0x${string}` {
     const raw = process.env[name]?.trim();
     if (!raw) return fallback;
@@ -124,23 +167,22 @@ async function main(): Promise<void> {
         );
     }
 
-    // Adopting the incremental reserved accounting is only sound while the proxy holds no bets.
-    // The call below enforces that on-chain; check it here too so the failure names its cause
-    // before a deployment is paid for.
+    // Adopting incremental reserved accounting is only sound while empty OR when reservedOf already
+    // matches ACTIVE payouts (accounting was adopted earlier). Otherwise refuse — under-reporting
+    // would let vaults over-commit and settling would underflow on `reservedByMarket -= payout`.
     const betCountBefore = await publicClient.readContract({
         address: sideBetProxy,
         abi: proxyAbi,
         functionName: "betCount",
     });
-    if (betCountBefore !== 0n) {
-        throw new Error(
-            `SideBet already holds ${betCountBefore} bet(s). \`initializeReservedAccounting\` would leave ` +
-                "`reservedOf` under-reporting every one of them, so this upgrade is refused. Migrating a " +
-                "populated proxy needs a deliberate backfill, not this script.",
-        );
+    let upgradeCalldata: `0x${string}` = "0x";
+    if (betCountBefore === 0n) {
+        upgradeCalldata = encodeFunctionData({ abi: proxyAbi, functionName: "initializeReservedAccounting" });
+    } else {
+        await assertReservedAccountingHealthy(publicClient, sideBetProxy, betCountBefore);
     }
 
-    // The compatibility endpoints retain the deployed scheduler's three-field format.
+    // Legacy settleBatch keeps the original three-field wire format; V2 carries `expired`.
     // Validate the exact compiled candidate before paying for deployment.
     assertSideBetCompatibility(await artifacts.readArtifact("SideBet"));
     const sideBetReadAbi = parseAbi(["function ENGINE() view returns (address)"]);
@@ -154,19 +196,19 @@ async function main(): Promise<void> {
     const newImplementation = await viem.deployContract("SideBet", [], { account: deployer.account });
     console.log("New implementation:", newImplementation.address);
 
-    console.log("Calling upgradeToAndCall on proxy…");
+    console.log(
+        upgradeCalldata === "0x"
+            ? "Calling upgradeToAndCall (code only — reserved accounting already healthy)…"
+            : "Calling upgradeToAndCall(+initializeReservedAccounting)…",
+    );
     const upgradeHash = await deployer.writeContract({
         address: sideBetProxy,
         abi: proxyAbi,
         functionName: "upgradeToAndCall",
-        args: [
-            newImplementation.address,
-            encodeFunctionData({ abi: proxyAbi, functionName: "initializeReservedAccounting" }),
-        ],
+        args: [newImplementation.address, upgradeCalldata],
         account: deployer.account,
         chain: publicClient.chain,
-    });
-    const upgradeReceipt = await publicClient.waitForTransactionReceipt({ hash: upgradeHash });
+    });    const upgradeReceipt = await publicClient.waitForTransactionReceipt({ hash: upgradeHash });
     if (upgradeReceipt.status !== "success") {
         throw new Error(`upgradeToAndCall reverted (tx ${upgradeHash})`);
     }
