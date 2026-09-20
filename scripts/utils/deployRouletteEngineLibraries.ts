@@ -108,6 +108,7 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
     };
 
     const engineLinks: RouletteEngineLibraryLinks = {
+        [JACKPOT_BATCH_LIB]: jackpotBatchLib.address,
         [ROULETTE_BET_CODEC_LIB]: rouletteBetCodecLib.address,
         [ROULETTE_LIABILITY_MATH_LIB]: rouletteLiabilityMathLib.address,
         [ROULETTE_PAYOUT_SWEEP_LIB]: roulettePayoutSweepLib.address,

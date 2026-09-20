@@ -11,7 +11,7 @@ market settlement counters and jackpot payment progress. Pre-upgrade rounds have
 `available=false`; read their original events instead of treating missing metadata as
 a zero result. `fulfilled=false` means result numbers are not yet usable.
 A duplicate fulfillment cannot overwrite randomness or clear a newer pending request.
-The callback's existing winner snapshot is preserved; no reroll or retry request is added.
+The callback's existing winner snapshot and admin retry policy are preserved. This change adds no new retry capability.
 
 The local one-market fixture consumes about 249,306 gas for the mock fulfillment
 transaction, including mock coordinator overhead. This is not a worst-case certificate.

@@ -64,7 +64,7 @@ describe('Protocol observability', function () {
     const outcome = await engine.read.roundDiagnostics([round]);
     expect(outcome.winningNumber).to.equal(7);
     expect(outcome.jackpotNumber).to.equal(12);
-    await vrf.write.fulfillWithJackpot([engine.address, pending.requestId, 3n, 3n]);
+    await expect(vrf.write.fulfillWithJackpot([engine.address, pending.requestId, 3n, 3n])).to.be.rejected;
     expect((await engine.read.roundDiagnostics([round])).winningNumber).to.equal(7);
     const before = await token.read.balanceOf([alice.account.address]);
     const fromBlock = await client.getBlockNumber();

@@ -25,6 +25,9 @@ const destDir = process.env.SUBGRAPH_ABIS_DIR
 const artifactsRoot = path.join(repoRoot, "artifacts", "contracts");
 
 function artifactJsonPath(solName) {
+  if (solName === "MockUSDC") {
+    return path.join(artifactsRoot, "test", `${solName}.sol`, `${solName}.json`);
+  }
   if (solName === "AutomationReceiver") {
     return path.join(artifactsRoot, "chainlink", "cre", `${solName}.sol`, `${solName}.json`);
   }

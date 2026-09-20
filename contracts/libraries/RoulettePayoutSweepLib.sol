@@ -16,7 +16,7 @@ library RoulettePayoutSweepLib {
         if (roundId == 0) revert InvalidRound();
 
         RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
-        if (gr.vrfFulfilled) return; // Never overwrite a settled random outcome.
+        if (gr.vrfFulfilled) revert InvalidRound();
         gr.vrfFulfilled = true;
         gr.randomWord = randomWords[0];
         uint256 modWin = randomWords[0] % 37;

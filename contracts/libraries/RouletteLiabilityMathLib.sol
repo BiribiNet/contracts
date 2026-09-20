@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
-import { IBankVault } from "../interfaces/IBankVault.sol";
 import { RouletteLib } from "../RouletteLib.sol";
+import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 
 /// @dev Linked library: worst-case liability aggregation + safety buffer (moves bytecode off `RouletteEngine`).
+import { IBankVault } from "../interfaces/IBankVault.sol";
 library RouletteLiabilityMathLib {
     error PayoutExceedsMarketLiability();
     function assertPayoutWithinLiability(
@@ -22,33 +22,11 @@ library RouletteLiabilityMathLib {
             }
         }
         uint256 paidSoFar = $.marketRoundStateByRound[roundId][marketId].bankPaidRunning;
-        if (paidSoFar + requested > fromRound($, roundId, marketId)) {
+        if (paidSoFar + requested > bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
             revert PayoutExceedsMarketLiability();
         }
     }
-    function fromRound(RouletteEngineStorageLib.Layout storage $, uint64 rid, uint32 mid)
-        public
-        view
-        returns (uint256)
-    {
-        Inputs memory liab;
-        liab.maxStraightBet = $.roundMaxStraightBet[rid][mid];
-        liab.maxStreetBet = $.roundMaxStreetBet[rid][mid];
-        liab.redSum = $.roundRedBetsSum[rid][mid];
-        liab.blackSum = $.roundBlackBetsSum[rid][mid];
-        liab.oddSum = $.roundOddBetsSum[rid][mid];
-        liab.evenSum = $.roundEvenBetsSum[rid][mid];
-        liab.lowSum = $.roundLowBetsSum[rid][mid];
-        liab.highSum = $.roundHighBetsSum[rid][mid];
-        liab.dozen1 = $.roundDozenBetsSum[rid][mid][1];
-        liab.dozen2 = $.roundDozenBetsSum[rid][mid][2];
-        liab.dozen3 = $.roundDozenBetsSum[rid][mid][3];
-        liab.col1 = $.roundColumnBetsSum[rid][mid][1];
-        liab.col2 = $.roundColumnBetsSum[rid][mid][2];
-        liab.col3 = $.roundColumnBetsSum[rid][mid][3];
-        liab.otherBetsWeightedPayout = $.roundOtherBetsWeightedPayout[rid][mid];
-        return bufferedMarketMaxLiability(liab);
-    }
+
     struct Inputs {
         uint256 maxStraightBet;
         uint256 maxStreetBet;
@@ -67,7 +45,7 @@ library RouletteLiabilityMathLib {
         uint256 otherBetsWeightedPayout;
     }
 
-    function bufferedMarketMaxLiability(Inputs memory i) public pure returns (uint256) {
+    function bufferedMarketMaxLiability(Inputs memory i) internal pure returns (uint256) {
         unchecked {
             uint256 ss = i.maxStraightBet * 36 + i.maxStreetBet * 12;
             uint256 rb = RouletteLib.max(i.redSum, i.blackSum) * 2;
@@ -78,5 +56,29 @@ library RouletteLiabilityMathLib {
             uint256 raw = ss + rb + oe + lh + dc + i.otherBetsWeightedPayout;
             return RouletteLib.applySafetyBuffer(raw);
         }
+    }
+
+    function bufferedMarketMaxLiabilityFromRound(
+        RouletteEngineStorageLib.Layout storage $,
+        uint64 rid,
+        uint32 mid
+    ) public view returns (uint256) {
+        Inputs memory i;
+        i.maxStraightBet = $.roundMaxStraightBet[rid][mid];
+        i.maxStreetBet = $.roundMaxStreetBet[rid][mid];
+        i.redSum = $.roundRedBetsSum[rid][mid];
+        i.blackSum = $.roundBlackBetsSum[rid][mid];
+        i.oddSum = $.roundOddBetsSum[rid][mid];
+        i.evenSum = $.roundEvenBetsSum[rid][mid];
+        i.lowSum = $.roundLowBetsSum[rid][mid];
+        i.highSum = $.roundHighBetsSum[rid][mid];
+        i.dozen1 = $.roundDozenBetsSum[rid][mid][1];
+        i.dozen2 = $.roundDozenBetsSum[rid][mid][2];
+        i.dozen3 = $.roundDozenBetsSum[rid][mid][3];
+        i.col1 = $.roundColumnBetsSum[rid][mid][1];
+        i.col2 = $.roundColumnBetsSum[rid][mid][2];
+        i.col3 = $.roundColumnBetsSum[rid][mid][3];
+        i.otherBetsWeightedPayout = $.roundOtherBetsWeightedPayout[rid][mid];
+        return bufferedMarketMaxLiability(i);
     }
 }
