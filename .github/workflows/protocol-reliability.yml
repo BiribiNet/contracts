@@ -1,0 +1,19 @@
+name: Protocol reliability
+on:
+  pull_request:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable && yarn install --immutable
+      - name: Compile contracts and run protocol regressions
+        run: yarn hardhat test test/ProtocolObservability.test.ts test/PayoutLiabilityBound.test.ts test/JackpotMultiMarketSplit.test.ts test/BRBJackpotFunder.test.ts test/StuckWithdrawalQueue.test.ts test/GasScaling.test.ts test/PayoutParallelLanes.test.ts test/SideBetLiabilityCollision.test.ts

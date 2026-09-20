@@ -27,8 +27,6 @@ library RouletteEngineStorageLib {
         uint256 jackpotPoolSnapshot;
         uint256 jackpotTotalStake;
         uint32 jackpotWinnerCount;
-        /// @dev `block.timestamp` of the latest `requestRandomWords` for this round (0 on pre-upgrade rounds).
-        uint256 vrfRequestedAt;
     }
 
     struct MarketRoundState {
@@ -125,6 +123,11 @@ library RouletteEngineStorageLib {
         RoundPhase _roundPhase;
         mapping(uint256 => uint64) requestIdToGlobalRound;
         mapping(address => address) referrerOf;
+        // Append-only diagnostics. Older rounds have diagnosticsAvailable == false.
+        mapping(uint64 => uint256) roundRequestId;
+        mapping(uint64 => uint256) roundRequestedAt;
+        mapping(uint64 => uint8) roundJackpotNumber;
+        mapping(uint64 => bool) diagnosticsAvailable;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.RouletteEngine")) - 1)) & ~bytes32(uint256(0xff));

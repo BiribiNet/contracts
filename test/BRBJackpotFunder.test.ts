@@ -95,6 +95,8 @@ describe("BRBJackpotFunder", function () {
         const toBurn = swapIn - toTreasury;
         expect(treasuryAfter - treasuryBefore).to.equal(toTreasury);
         expect(await brb.read.totalSupply()).to.equal(supplyBefore - toBurn);
+        expect(await funder.read.fundingAttemptCount()).to.equal(1n);
+        expect(await funder.read.pendingFundingBalances([brb.address])).to.deep.equal([0n, 0n]);
     });
 
     it("returns without revert when router swap reverts", async function () {
@@ -105,6 +107,8 @@ describe("BRBJackpotFunder", function () {
 
         await funder.write.fundFromMarket([1n, usdc.address], { account: admin.account });
         expect(await usdc.read.balanceOf([funder.address])).to.equal(parseUnits("100", 6));
+        expect(await funder.read.fundingAttemptCount()).to.equal(1n);
+        expect((await funder.read.pendingFundingBalances([usdc.address]))[0]).to.equal(parseUnits("100", 6));
     });
 
     it("reverts constructor on zero addresses", async function () {

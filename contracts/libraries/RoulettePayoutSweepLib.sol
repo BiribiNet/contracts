@@ -8,6 +8,34 @@ import { RoulettePayoutMulLib } from "./RoulettePayoutMulLib.sol";
 
 /// @dev Linked library: flattened winner-stream traversal for payout preview (offloads `RouletteEngine`).
 library RoulettePayoutSweepLib {
+    error InvalidRound();
+    event VRFResult(uint64 roundId, uint8 winningNumber, uint8 jackpotNumber);
+    function fulfill(uint256 requestId, uint256[] memory randomWords) external {
+        RouletteEngineStorageLib.Layout storage $ = RouletteEngineStorageLib.layout();
+        uint64 roundId = $.requestIdToGlobalRound[requestId];
+        if (roundId == 0) revert InvalidRound();
+
+        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if (gr.vrfFulfilled) return; // Never overwrite a settled random outcome.
+        gr.vrfFulfilled = true;
+        gr.randomWord = randomWords[0];
+        uint256 modWin = randomWords[0] % 37;
+        uint8 winningNumber = uint8(modWin);
+        gr.winningNumber = winningNumber;
+        snapshotRoundMarketWinningCounts($, roundId, winningNumber);
+
+        uint8 jackpotNumber = uint8(randomWords[1] % 37);
+        $.roundJackpotNumber[roundId] = jackpotNumber;
+        if (winningNumber == jackpotNumber) {
+            gr.jackpotTriggered = true;
+        }
+
+        $._pendingRequestId = 0;
+
+        emit VRFResult(roundId, winningNumber, jackpotNumber);
+    }
+
+
     struct PayoutSweepCtx {
         uint64 rid;
         uint32 mid;
@@ -24,7 +52,7 @@ library RoulettePayoutSweepLib {
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
         uint8 winningNumber
-    ) external {
+    ) public {
         uint32 totalMarkets = $.REGISTRY.marketCount();
         for (uint32 mid = 1; mid <= totalMarkets; ) {
             if (!$._roundHasMarket[roundId][mid]) {

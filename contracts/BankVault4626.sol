@@ -42,6 +42,16 @@ contract BankVault4626 is
 
     bytes32 public constant BANK_ADMIN_ROLE = keccak256("BANK_ADMIN_ROLE");
 
+    struct WithdrawalReceipt {
+        address owner;
+        address receiver;
+        uint16 bps;
+        uint256 requestedAt;
+        uint256 processedAt;
+        uint256 assetsPaid;
+        uint256 sharesBurned;
+    }
+
     /// @custom:storage-location erc7201:biribi.storage.BankVault4626
     struct BankVaultStorage {
         uint32 marketId;
@@ -55,6 +65,9 @@ contract BankVault4626 is
         uint256 _queueHead;
         mapping(address => QueuedWithdrawal) _pendingWithdrawal;
         mapping(address => uint256) _userQueueIndex;
+        uint256 nextWithdrawalId;
+        mapping(address => uint256) pendingWithdrawalId;
+        mapping(uint256 => WithdrawalReceipt) withdrawalReceipts;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.BankVault4626")) - 1)) & ~bytes32(uint256(0xff));
@@ -123,6 +136,20 @@ contract BankVault4626 is
     event PayoutBatchProcessed(uint256 payoutCount, uint256 totalPaid);
     event FundsTransferred(address recipient, uint256 amount);
     event WithdrawalRequested(address owner, uint16 bps, address receiver);
+    event WithdrawalIdentified(uint256 indexed requestId, address indexed owner, address receiver, uint16 bps);
+    event WithdrawalPaid(uint256 indexed requestId, address indexed owner, uint256 assetsPaid, uint256 sharesBurned);
+
+    function withdrawalReceipt(uint256 requestId) external view returns (WithdrawalReceipt memory) {
+        return _s().withdrawalReceipts[requestId];
+    }
+
+    function pendingWithdrawalStatus(address owner) external view returns (uint256 requestId, bool pending, uint256 ahead) {
+        BankVaultStorage storage s = _s();
+        pending = s._pendingWithdrawal[owner].bps != 0;
+        requestId = s.pendingWithdrawalId[owner];
+        ahead = pending ? s._userQueueIndex[owner] - s._queueHead : 0;
+    }
+
     event WithdrawalProcessed(address owner, uint16 bps, address receiver, uint256 assetsPaid, uint256 sharesBurned);
     event SideBetControllerUpdated(address previousController, address newController);
     event SideBetStakeLocked(address player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
@@ -356,6 +383,15 @@ contract BankVault4626 is
                 }
             }
 
+            uint256 requestId = $.pendingWithdrawalId[owner];
+            if (requestId != 0) {
+                WithdrawalReceipt storage receipt = $.withdrawalReceipts[requestId];
+                receipt.processedAt = block.timestamp;
+                receipt.assetsPaid = paid;
+                receipt.sharesBurned = shares;
+                delete $.pendingWithdrawalId[owner];
+                emit WithdrawalPaid(requestId, owner, paid, shares);
+            }
             emit WithdrawalProcessed(owner, q.bps, q.receiver, paid, shares);
 
             unchecked {
@@ -393,6 +429,10 @@ contract BankVault4626 is
         uint256 idx = $._withdrawalQueue.length;
         $._userQueueIndex[owner] = idx;
         $._withdrawalQueue.push(owner);
+        uint256 requestId = ++$.nextWithdrawalId;
+        $.pendingWithdrawalId[owner] = requestId;
+        $.withdrawalReceipts[requestId] = WithdrawalReceipt(owner, receiver, bps, block.timestamp, 0, 0, 0);
+        emit WithdrawalIdentified(requestId, owner, receiver, bps);
         emit WithdrawalRequested(owner, bps, receiver);
     }
 

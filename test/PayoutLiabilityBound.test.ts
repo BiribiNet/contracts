@@ -5,7 +5,6 @@ import { expect } from "chai";
 import { parseUnits, zeroAddress } from "viem";
 
 import { createMarketWithBeacon } from "./helpers/createMarket";
-import { customErrorPattern } from "./helpers/customErrorPattern";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { fulfillVrfForGlobalRound, runParallelLanesUntilVrfPending } from "./helpers/parallelUpkeep";
@@ -97,8 +96,8 @@ describe("Payout rows are bounded by the round's own liability", function () {
         const aliceBefore = await usdc.read.balanceOf([alice.account.address]);
 
         await expect(
-            engine.write.executeJob([job, looted, [], []], { account: scheduler }),
-        ).to.be.rejectedWith(customErrorPattern("PayoutExceedsMarketLiability()"));
+            engine.write.executeJob([job, looted, [], []], { account: scheduler }).catch((error) => { throw new Error(String(error)); }),
+        ).to.be.rejectedWith(/PayoutExceedsMarketLiability/);
 
         expect(await usdc.read.balanceOf([bank.address])).to.equal(vaultBefore);
         expect(await usdc.read.balanceOf([alice.account.address])).to.equal(aliceBefore);
@@ -124,7 +123,7 @@ describe("Payout rows are bounded by the round's own liability", function () {
         const padded = [...rows, { player: stranger.account.address, amount: USDC("40000") }];
 
         await expect(
-            engine.write.executeJob([job, padded, [], []], { account: scheduler }),
-        ).to.be.rejectedWith(customErrorPattern("PayoutExceedsMarketLiability()"));
+            engine.write.executeJob([job, padded, [], []], { account: scheduler }).catch((error) => { throw new Error(String(error)); }),
+        ).to.be.rejectedWith(/PayoutExceedsMarketLiability/);
     });
 });
