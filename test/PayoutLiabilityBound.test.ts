@@ -10,6 +10,7 @@ import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { fulfillVrfForGlobalRound, runParallelLanesUntilVrfPending } from "./helpers/parallelUpkeep";
 import { wireTestSchedulerForwarder } from "./helpers/wireTestSchedulerForwarder";
 
+// Hardhat formats linked-library reverts by name or raw selector depending on the runtime.
 const USDC = (amount: string) => parseUnits(amount, 6);
 
 /**
@@ -97,7 +98,7 @@ describe("Payout rows are bounded by the round's own liability", function () {
 
         await expect(
             engine.write.executeJob([job, looted, [], []], { account: scheduler }).catch((error) => { throw new Error(String(error)); }),
-        ).to.be.rejectedWith(/PayoutExceedsMarketLiability/);
+        ).to.be.rejectedWith(/PayoutExceedsMarketLiability|0x8bb7dbae/);
 
         expect(await usdc.read.balanceOf([bank.address])).to.equal(vaultBefore);
         expect(await usdc.read.balanceOf([alice.account.address])).to.equal(aliceBefore);
@@ -124,6 +125,6 @@ describe("Payout rows are bounded by the round's own liability", function () {
 
         await expect(
             engine.write.executeJob([job, padded, [], []], { account: scheduler }).catch((error) => { throw new Error(String(error)); }),
-        ).to.be.rejectedWith(/PayoutExceedsMarketLiability/);
+        ).to.be.rejectedWith(/PayoutExceedsMarketLiability|0x8bb7dbae/);
     });
 });
