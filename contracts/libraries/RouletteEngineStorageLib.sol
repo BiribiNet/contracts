@@ -125,6 +125,10 @@ library RouletteEngineStorageLib {
         RoundPhase _roundPhase;
         mapping(uint256 => uint64) requestIdToGlobalRound;
         mapping(address => address) referrerOf;
+        mapping(uint64 => uint256) roundRequestId;
+        mapping(uint64 => uint256) roundRequestedAt;
+        mapping(uint64 => uint8) roundJackpotNumber;
+        mapping(uint64 => bool) diagnosticsAvailable;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.RouletteEngine")) - 1)) & ~bytes32(uint256(0xff));

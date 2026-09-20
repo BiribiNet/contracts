@@ -7,7 +7,65 @@ import { IMarketRegistry } from "../interfaces/IMarketRegistry.sol";
 import { IBankVault } from "../interfaces/IBankVault.sol";
 
 /// @dev Linked library: cross-market jackpot-eligible straight stake collection (offloads `RouletteEngine`).
+interface IJackpotTokenView { function brb() external view returns (address); }
 library RouletteJackpotCollectLib {
+    error StaleJackpotChunk();
+    event JackpotPayment(uint64 indexed roundId, address indexed recipient, address indexed token, uint256 amount);
+    function applyJackpotChunk(
+        RouletteEngineStorageLib.Layout storage $,
+        uint64 roundId,
+        uint32 marketId,
+        uint8 winningNumber,
+        RouletteEngineStorageLib.GlobalRoundState storage gr,
+        address[] memory winners,
+        uint256[] memory amounts
+    ) external {
+        // The preview gates the jackpot on both of these; the apply path gated on neither, so a
+        // payload carrying jackpot rows reached the treasury on rounds where no jackpot ever fired.
+        if (!gr.jackpotTriggered) revert StaleJackpotChunk();
+        if (marketId != $._roundTriggerMarket[roundId]) revert StaleJackpotChunk();
+        if (gr.jackpotDistributed) revert StaleJackpotChunk();
+        if (gr.jackpotPoolSnapshot == 0) {
+            (address[] memory allWinners,, uint256 totalStake) =
+                collectJackpotEligibleStraightStakes($, roundId, winningNumber);
+            gr.jackpotPoolSnapshot = $.JACKPOT_TREASURY.jackpotPool();
+            gr.jackpotTotalStake = totalStake;
+            gr.jackpotWinnerCount = uint32(allWinners.length);
+        }
+        // A raced duplicate of an already-applied chunk would overrun the winner count.
+        if (uint256(gr.jackpotCursor) + winners.length > gr.jackpotWinnerCount) revert StaleJackpotChunk();
+
+        // The winner count bounds how many rows may be paid, but not how much: bound the chunk by
+        // what is left of this round's snapshotted pool so a single row cannot drain the treasury.
+        uint256 requested;
+        for (uint256 i; i < amounts.length; ) {
+            requested += amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+        uint256 remainingPool = gr.jackpotPoolSnapshot > gr.jackpotPaid ? gr.jackpotPoolSnapshot - gr.jackpotPaid : 0;
+        if (requested > remainingPool) revert StaleJackpotChunk();
+
+        uint256 paid = $.JACKPOT_TREASURY.payBatch(winners, amounts);
+        emitJackpotPayments(roundId, address($.JACKPOT_TREASURY), winners, amounts, paid);
+        gr.jackpotPaid += paid;
+        gr.jackpotCursor += uint32(winners.length);
+        if (gr.jackpotCursor >= gr.jackpotWinnerCount) gr.jackpotDistributed = true;
+    }
+
+
+    /// @dev Treasury caps sequentially; reconstruct actual rows from its returned total.
+    function emitJackpotPayments(uint64 roundId, address treasury, address[] memory winners, uint256[] memory amounts, uint256 paid) private {
+        address token = IJackpotTokenView(treasury).brb();
+        for (uint256 i; i < winners.length && paid != 0; ++i) {
+            uint256 actual = amounts[i] < paid ? amounts[i] : paid;
+            if (actual != 0) emit JackpotPayment(roundId, winners[i], token, actual);
+            paid -= actual;
+        }
+    }
+
+
     struct CollectState {
         address[] winners;
         uint256[] stakes;
@@ -25,7 +83,7 @@ library RouletteJackpotCollectLib {
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
         uint8 winningNumber
-    ) external view returns (address[] memory winners, uint256[] memory stakes, uint256 totalStake) {
+    ) public view returns (address[] memory winners, uint256[] memory stakes, uint256 totalStake) {
         uint256 maxEntries = _countEligible($, roundId, winningNumber);
         CollectState memory st;
         st.winners = new address[](maxEntries);

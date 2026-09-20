@@ -5,7 +5,28 @@ import { RouletteLib } from "../RouletteLib.sol";
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 
 /// @dev Linked library: worst-case liability aggregation + safety buffer (moves bytecode off `RouletteEngine`).
+import { IBankVault } from "../interfaces/IBankVault.sol";
 library RouletteLiabilityMathLib {
+    error PayoutExceedsMarketLiability();
+    function assertPayoutWithinLiability(
+        uint64 roundId,
+        uint32 marketId,
+        IBankVault.Payout[] memory rows
+    ) external view {
+        RouletteEngineStorageLib.Layout storage $ = RouletteEngineStorageLib.layout();
+        uint256 requested;
+        for (uint256 i; i < rows.length; ) {
+            requested += rows[i].amount;
+            unchecked {
+                ++i;
+            }
+        }
+        uint256 paidSoFar = $.marketRoundStateByRound[roundId][marketId].bankPaidRunning;
+        if (paidSoFar + requested > bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
+            revert PayoutExceedsMarketLiability();
+        }
+    }
+
     struct Inputs {
         uint256 maxStraightBet;
         uint256 maxStreetBet;
@@ -41,7 +62,7 @@ library RouletteLiabilityMathLib {
         RouletteEngineStorageLib.Layout storage $,
         uint64 rid,
         uint32 mid
-    ) external view returns (uint256) {
+    ) public view returns (uint256) {
         Inputs memory i;
         i.maxStraightBet = $.roundMaxStraightBet[rid][mid];
         i.maxStreetBet = $.roundMaxStreetBet[rid][mid];

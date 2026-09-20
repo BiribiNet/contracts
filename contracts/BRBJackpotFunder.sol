@@ -121,7 +121,6 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         _;
     }
 
-    /// @inheritdoc IBRBJackpotFunder
     function brbToken() external view returns (address) {
         return address(brb);
     }
@@ -168,8 +167,23 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         emit TokenSwept(asset, to, xfer);
     }
 
-    /// @inheritdoc IBRBJackpotFunder
+    uint256 public fundingAttemptCount;
+    event FundingAttemptStarted(uint256 indexed attemptId, uint32 indexed marketId, address indexed asset, uint256 inputBalance, uint256 brbBalance);
+    event FundingAttemptCompleted(uint256 indexed attemptId, uint256 remainingInput, uint256 remainingBrb);
+
+    /// @notice Raw balances retained here, not an attribution to a single round.
+    function pendingFundingBalances(address asset) external view returns (uint256 inputBalance, uint256 brbBalance) {
+        return (IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
+    }
+
     function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector {
+        uint256 attemptId = ++fundingAttemptCount;
+        emit FundingAttemptStarted(attemptId, marketId, asset, IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
+        _fundFromMarket(marketId, asset);
+        emit FundingAttemptCompleted(attemptId, IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
+    }
+
+    function _fundFromMarket(uint32 marketId, address asset) private {
         IERC20 assetToken = IERC20(asset);
         uint256 swapIn = assetToken.balanceOf(address(this));
         if (swapIn == 0) return;
