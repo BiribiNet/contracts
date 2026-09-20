@@ -13,7 +13,7 @@ a zero result. `fulfilled=false` means result numbers are not yet usable.
 A duplicate fulfillment cannot overwrite randomness or clear a newer pending request.
 The callback's existing winner snapshot and admin retry policy are preserved. This change adds no new retry capability.
 
-The local one-market fixture consumes about 249,306 gas for the mock fulfillment
+The local one-market fixture consumes about 249,328 gas for the mock fulfillment
 transaction, including mock coordinator overhead. This is not a worst-case certificate.
 Callback cost still depends on registered markets and winning bet buckets. Before
 increasing market/lane/bet limits, profile the intended maximum and keep headroom in

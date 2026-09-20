@@ -9,6 +9,43 @@ import { runParallelLanesUntilVrfPending, runParallelLanesUntilIdle } from './he
 import { wireTestSchedulerForwarder } from './helpers/wireTestSchedulerForwarder';
 
 describe('Protocol observability', function () {
+  for (const [name, decimals] of [['MockUSDC', 6], ['MockDAI', 18]] as const) {
+    it(`conserves assets and shares through seeded deposit/withdrawal sequences (${decimals} decimals)`, async function () {
+      const [admin, alice] = await viem.getWalletClients();
+      const { registry } = await deployProtocolStack();
+      const token = await viem.deployContract(name);
+      const bank = await createMarketWithBeacon(registry, admin.account.address, token.address);
+      const initial = parseUnits('10000', decimals);
+      const unit = parseUnits('1', decimals);
+      await token.write.mint([alice.account.address, initial]);
+      await token.write.approve([bank.address, initial], { account: alice.account });
+      let seed = 17041;
+      let lastRequest = 0n;
+      for (let step = 0; step < 24; step++) {
+        seed = (seed * 16807) % 2147483647;
+        const shares = await bank.read.balanceOf([alice.account.address]);
+        if (seed % 3 === 0 || shares === 0n) {
+          await bank.write.deposit([BigInt(seed % 31 + 1) * unit, alice.account.address], { account: alice.account });
+        } else if (seed % 3 === 1) {
+          const bps = seed % 10000 + 1;
+          await bank.write.redeemBps([bps, alice.account.address, alice.account.address], { account: alice.account });
+          const [id] = await bank.read.pendingWithdrawalStatus([alice.account.address]);
+          expect(id).to.equal(++lastRequest);
+          const before = await token.read.balanceOf([alice.account.address]);
+          await bank.write.drainWithdrawalQueue([1n]);
+          const receipt = await bank.read.withdrawalReceipt([id]);
+          expect(receipt.assetsPaid).to.equal((await token.read.balanceOf([alice.account.address])) - before);
+        } else {
+          await token.write.transfer([bank.address, unit], { account: alice.account });
+        }
+        const vaultBalance = await token.read.balanceOf([bank.address]);
+        expect(vaultBalance + await token.read.balanceOf([alice.account.address])).to.equal(initial);
+        expect(await bank.read.totalAssets()).to.equal(vaultBalance);
+        expect(await bank.read.totalSupply()).to.equal(await bank.read.balanceOf([alice.account.address]));
+      }
+    });
+  }
+
   it('keeps deployable implementations within EIP-170', async function () {
     for (const name of ['RouletteEngine', 'BankVault4626', 'BRBJackpotFunder', 'SideBet']) {
       const artifact = await artifacts.readArtifact(name);
@@ -61,6 +98,7 @@ describe('Protocol observability', function () {
     const hash = await vrf.write.fulfillWithJackpot([engine.address, pending.requestId, 7n, 12n]);
     const tx = await client.waitForTransactionReceipt({ hash });
     console.log('VRF diagnostic fixture gas:', tx.gasUsed.toString());
+    expect(tx.gasUsed).to.be.lt(BigInt(await engine.read.VRF_CALLBACK_GAS_LIMIT()));
     const outcome = await engine.read.roundDiagnostics([round]);
     expect(outcome.winningNumber).to.equal(7);
     expect(outcome.jackpotNumber).to.equal(12);
