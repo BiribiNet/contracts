@@ -117,10 +117,10 @@ provider tips diverge).
 | Workflow | Workflow ID |
 |----------|-------------|
 | `biribi-trigger-vrf-production` | `00ce83a8968e1ff63e3d738962302ade862361ba142a21ea3c199ae8d4ca7e42` |
-| `biribi-roulette-lane-0-production` | `0007f807f2d68f3d219783e43e3f18d01e1e9986feece2095625b5cbda910a7a` |
-| `biribi-roulette-lane-1-production` | `008e2329483a437ea24efc85494c35344c7f6a87458516cdd2925febaf18ffcf` |
+| `biribi-roulette-lane-0-production` | `00a1e8b570d9dc4393baa65768739f3dd7368cbff922508139b50586c5fa6c13` |
+| `biribi-roulette-lane-1-production` | `00a38cacec8bb8bbb60847e55d8957cf251631bdd4b229e2dcee34b43b72c1df` |
 
-Round-watcher env `CRE_WORKFLOW_ID_TRIGGER_VRF` (Railway) must match the trigger-vrf ID above.
+Round-watcher env `CRE_WORKFLOW_ID_TRIGGER_VRF` (Cloudflare Worker `biribi-round-watcher`) must match the trigger-vrf ID above. Lane HTTP recovery uses `CRE_WORKFLOW_ID_LANE_0` / `CRE_WORKFLOW_ID_LANE_1`.
 
 On-chain `payoutParallelLaneCount` set to **2** to match the two deployed payout lanes
 (tx `0x5deaa591dddb37bdf65c4a0eb5e0b159124713e30cc23a935daba8808ee1fe9d`).
