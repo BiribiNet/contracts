@@ -156,6 +156,115 @@ async function fulfillRoundsWithJackpot(
 }
 
 describe("SideBet", function () {
+    describe('original challenge settlement',()=>{
+it('pays DOZEN_PASSPORT once and releases all reserves',async()=>{
+ const {sideBet,vault,usdc,admin,alice,roundEngine}=await deployFixture();
+ await sideBet.write.setMultiplierBand([10001,5000000],{account:admin.account});
+ await registerConfig(sideBet,config({betType:9,targetNumber:0,targetCount:3,windowSpins:5,multiplierBps:16004}),admin.account);
+ const before=await usdc.read.balanceOf([alice.account.address]);
+ await sideBet.write.placeBet([0n,USDC('10')],{account:alice.account});
+ await roundEngine.write.fulfillRounds([[1,13,25]]);
+ await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(),admin.account.address],{account:admin.account});
+ const [rows,,bundles]=await sideBet.read.previewSettleBundleV2([0n,10,0,1]);
+ expect(rows.length).eq(1);expect(rows[0].won).eq(true);
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ const after=await usdc.read.balanceOf([alice.account.address]);
+ expect(after-before).eq(USDC('10')*16004n/10000n-USDC('10'));
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ expect(await usdc.read.balanceOf([alice.account.address])).eq(after);
+ expect(await sideBet.read.reservedOf([1])).eq(0n);expect(await vault.read.lockedBetLiquidity()).eq(0n);
+});
+it('pays BOOMERANG once and releases all reserves',async()=>{
+ const {sideBet,vault,usdc,admin,alice,roundEngine}=await deployFixture();
+ await sideBet.write.setMultiplierBand([10001,5000000],{account:admin.account});
+ await registerConfig(sideBet,config({betType:10,targetNumber:0,targetCount:0,windowSpins:6,multiplierBps:94008}),admin.account);
+ const before=await usdc.read.balanceOf([alice.account.address]);
+ await sideBet.write.placeBet([0n,USDC('10')],{account:alice.account});
+ await roundEngine.write.fulfillRounds([[0,7,0]]);
+ await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(),admin.account.address],{account:admin.account});
+ const [rows,,bundles]=await sideBet.read.previewSettleBundleV2([0n,10,0,1]);
+ expect(rows.length).eq(1);expect(rows[0].won).eq(true);
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ const after=await usdc.read.balanceOf([alice.account.address]);
+ expect(after-before).eq(USDC('10')*94008n/10000n-USDC('10'));
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ expect(await usdc.read.balanceOf([alice.account.address])).eq(after);
+ expect(await sideBet.read.reservedOf([1])).eq(0n);expect(await vault.read.lockedBetLiquidity()).eq(0n);
+});
+it('pays MIRROR_PAIR once and releases all reserves',async()=>{
+ const {sideBet,vault,usdc,admin,alice,roundEngine}=await deployFixture();
+ await sideBet.write.setMultiplierBand([10001,5000000],{account:admin.account});
+ await registerConfig(sideBet,config({betType:11,targetNumber:0,targetCount:0,windowSpins:5,multiplierBps:91518}),admin.account);
+ const before=await usdc.read.balanceOf([alice.account.address]);
+ await sideBet.write.placeBet([0n,USDC('10')],{account:alice.account});
+ await roundEngine.write.fulfillRounds([[18,18]]);
+ await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(),admin.account.address],{account:admin.account});
+ const [rows,,bundles]=await sideBet.read.previewSettleBundleV2([0n,10,0,1]);
+ expect(rows.length).eq(1);expect(rows[0].won).eq(true);
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ const after=await usdc.read.balanceOf([alice.account.address]);
+ expect(after-before).eq(USDC('10')*91518n/10000n-USDC('10'));
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ expect(await usdc.read.balanceOf([alice.account.address])).eq(after);
+ expect(await sideBet.read.reservedOf([1])).eq(0n);expect(await vault.read.lockedBetLiquidity()).eq(0n);
+});
+it('pays WHEEL_NEIGHBORS once and releases all reserves',async()=>{
+ const {sideBet,vault,usdc,admin,alice,roundEngine}=await deployFixture();
+ await sideBet.write.setMultiplierBand([10001,5000000],{account:admin.account});
+ await registerConfig(sideBet,config({betType:12,targetNumber:0,targetCount:0,windowSpins:5,multiplierBps:47664}),admin.account);
+ const before=await usdc.read.balanceOf([alice.account.address]);
+ await sideBet.write.placeBet([0n,USDC('10')],{account:alice.account});
+ await roundEngine.write.fulfillRounds([[26,0]]);
+ await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(),admin.account.address],{account:admin.account});
+ const [rows,,bundles]=await sideBet.read.previewSettleBundleV2([0n,10,0,1]);
+ expect(rows.length).eq(1);expect(rows[0].won).eq(true);
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ const after=await usdc.read.balanceOf([alice.account.address]);
+ expect(after-before).eq(USDC('10')*47664n/10000n-USDC('10'));
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ expect(await usdc.read.balanceOf([alice.account.address])).eq(after);
+ expect(await sideBet.read.reservedOf([1])).eq(0n);expect(await vault.read.lockedBetLiquidity()).eq(0n);
+});
+it('pays DISTINCT_COLLECTION once and releases all reserves',async()=>{
+ const {sideBet,vault,usdc,admin,alice,roundEngine}=await deployFixture();
+ await sideBet.write.setMultiplierBand([10001,5000000],{account:admin.account});
+ await registerConfig(sideBet,config({betType:13,targetNumber:0,targetCount:5,windowSpins:6,multiplierBps:10227}),admin.account);
+ const before=await usdc.read.balanceOf([alice.account.address]);
+ await sideBet.write.placeBet([0n,USDC('10')],{account:alice.account});
+ await roundEngine.write.fulfillRounds([[0,1,2,3,4]]);
+ await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(),admin.account.address],{account:admin.account});
+ const [rows,,bundles]=await sideBet.read.previewSettleBundleV2([0n,10,0,1]);
+ expect(rows.length).eq(1);expect(rows[0].won).eq(true);
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ const after=await usdc.read.balanceOf([alice.account.address]);
+ expect(after-before).eq(USDC('10')*10227n/10000n-USDC('10'));
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ expect(await usdc.read.balanceOf([alice.account.address])).eq(after);
+ expect(await sideBet.read.reservedOf([1])).eq(0n);expect(await vault.read.lockedBetLiquidity()).eq(0n);
+});
+it('pays COLOR_DUEL once and releases all reserves',async()=>{
+ const {sideBet,vault,usdc,admin,alice,roundEngine}=await deployFixture();
+ await sideBet.write.setMultiplierBand([10001,5000000],{account:admin.account});
+ await registerConfig(sideBet,config({betType:14,targetNumber:0,targetCount:3,windowSpins:7,multiplierBps:19004}),admin.account);
+ const before=await usdc.read.balanceOf([alice.account.address]);
+ await sideBet.write.placeBet([0n,USDC('10')],{account:alice.account});
+ await roundEngine.write.fulfillRounds([[1,0,3,5]]);
+ await sideBet.write.grantRole([await sideBet.read.SETTLEMENT_ROLE(),admin.account.address],{account:admin.account});
+ const [rows,,bundles]=await sideBet.read.previewSettleBundleV2([0n,10,0,1]);
+ expect(rows.length).eq(1);expect(rows[0].won).eq(true);
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ const after=await usdc.read.balanceOf([alice.account.address]);
+ expect(after-before).eq(USDC('10')*19004n/10000n-USDC('10'));
+ await sideBet.write.settleBatchV2([rows,bundles],{account:admin.account});
+ expect(await usdc.read.balanceOf([alice.account.address])).eq(after);
+ expect(await sideBet.read.reservedOf([1])).eq(0n);expect(await vault.read.lockedBetLiquidity()).eq(0n);
+});
+it('rejects invalid challenge windows and parameters',async()=>{
+const {sideBet,admin}=await deployFixture();
+for(const bad of [{betType:9,targetCount:2},{betType:10,windowSpins:2,targetCount:0},{betType:11,targetCount:1},{betType:12,windowSpins:65,targetCount:0},{betType:13,targetCount:38,windowSpins:40},{betType:14,targetCount:0}])await expect(registerConfig(sideBet,config(bad),admin.account)).to.be.rejected;
+});
+});
+
     it("keeps the legacy preview tuple stable and refunds multiple expired bets exactly once", async function () {
         const { sideBet, vault, usdc, admin, alice } = await deployFixture();
         await registerConfig(sideBet, config({ targetNumber: 7, windowSpins: 5 }), admin.account);
