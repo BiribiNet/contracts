@@ -6,6 +6,7 @@ import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/ac
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
+import { SideBetChallengeEvaluator } from "./SideBetChallengeEvaluator.sol";
 import { ISideBet } from "./interfaces/ISideBet.sol";
 import { IBankVault } from "./interfaces/IBankVault.sol";
 import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
@@ -21,6 +22,8 @@ import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 /// @notice Players stake against a per-market vault on outcomes resolved over global roulette rounds.
 ///         Settlement is automation-only: `previewSettleBundleV2` in `checkUpkeep`, apply-only `settleBatchV2` in `performUpkeep`.
 contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, ISideBet {
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable state-variable-assignment
+    SideBetChallengeEvaluator public immutable CHALLENGE_EVALUATOR = new SideBetChallengeEvaluator();
     bytes32 public constant SIDE_BET_CONFIG_ROLE = keccak256("SIDE_BET_CONFIG_ROLE");
     bytes32 public constant SIDE_BET_LIMITS_ROLE = keccak256("SIDE_BET_LIMITS_ROLE");
     bytes32 public constant SETTLEMENT_ROLE = keccak256("SETTLEMENT_ROLE");
@@ -245,6 +248,18 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
             if (cfg.windowSpins < 2) revert InvalidConfig();
         } else if (cfg.betType == SideBetType.JACKPOT_IN_WINDOW) {
             // `windowSpins` is the number of upcoming global rounds; other fields unused.
+        } else if (uint8(cfg.betType) >= uint8(SideBetType.DOZEN_PASSPORT)) {
+            // Bound per-ticket evaluation cost for the new challenge families.
+            if (cfg.windowSpins > 64 || cfg.targetNumber != 0 || cfg.redRatioBps != 0) revert InvalidConfig();
+            if (cfg.betType == SideBetType.DOZEN_PASSPORT) {
+                if (cfg.windowSpins < 3 || cfg.targetCount != 3) revert InvalidConfig();
+            } else if (cfg.betType == SideBetType.DISTINCT_COLLECTION) {
+                if (cfg.targetCount < 2 || cfg.targetCount > 37 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
+            } else if (cfg.betType == SideBetType.COLOR_DUEL) {
+                if (cfg.targetCount < 1 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
+            } else {
+                if (cfg.targetCount != 0 || cfg.windowSpins < (cfg.betType == SideBetType.BOOMERANG ? 3 : 2)) revert InvalidConfig();
+            }
         } else {
             if (cfg.targetNumber < 1 || cfg.targetNumber > 3) revert InvalidConfig();
             if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
@@ -704,7 +719,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
 
         (uint8[] memory observed, ) = SideBetRoundLib.loadWindow(ENGINE, start, obsLen);
         bool windowComplete = obsLen == windowN && SideBetRoundLib.windowFulfilled(ENGINE, start, windowN);
-        return SideBetOutcomeLib.evaluate(observed, windowComplete, _betMemory(bet));
+        return CHALLENGE_EVALUATOR.evaluate(observed, windowComplete, _betMemory(bet));
     }
 
     /// @dev True once an undecided bet has outlived `settleTimeout`. Checked against storage, never

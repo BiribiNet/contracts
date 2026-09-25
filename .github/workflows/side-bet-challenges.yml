@@ -1,0 +1,18 @@
+name: SideBet compatibility and challenge rules
+on:
+  pull_request:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable && yarn install --immutable
+      - run: yarn hardhat test test/SideBet.test.ts test/SideBetChallenges.test.ts test/SideBetCatalogue.test.ts test/SideBetCompatibilityArtifact.test.ts

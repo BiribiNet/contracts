@@ -16,7 +16,13 @@ interface ISideBet {
         PERFECT_ALTERNATION,
         DOZEN_HIT,
         COLUMN_HIT,
-        JACKPOT_IN_WINDOW
+        JACKPOT_IN_WINDOW,
+        DOZEN_PASSPORT,
+        BOOMERANG,
+        MIRROR_PAIR,
+        WHEEL_NEIGHBORS,
+        DISTINCT_COLLECTION,
+        COLOR_DUEL
     }
 
     enum SideBetColor {
