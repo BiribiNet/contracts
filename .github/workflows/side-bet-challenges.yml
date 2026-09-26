@@ -15,4 +15,4 @@ jobs:
         with:
           node-version: 22
       - run: corepack enable && yarn install --immutable
-      - run: yarn hardhat test test/SideBet.test.ts test/SideBetChallenges.test.ts test/SideBetCatalogue.test.ts test/SideBetCompatibilityArtifact.test.ts
+      - run: yarn hardhat test test/SideBet.test.ts test/SideBetChallenges.test.ts test/SideBetWindowChallenges.test.ts test/WindowChallengePricing.test.ts test/SideBetCatalogue.test.ts test/SideBetCompatibilityArtifact.test.ts

@@ -249,17 +249,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         } else if (cfg.betType == SideBetType.JACKPOT_IN_WINDOW) {
             // `windowSpins` is the number of upcoming global rounds; other fields unused.
         } else if (uint8(cfg.betType) >= uint8(SideBetType.DOZEN_PASSPORT)) {
-            // Bound per-ticket evaluation cost for the new challenge families.
-            if (cfg.windowSpins > 64 || cfg.targetNumber != 0 || cfg.redRatioBps != 0) revert InvalidConfig();
-            if (cfg.betType == SideBetType.DOZEN_PASSPORT) {
-                if (cfg.windowSpins < 3 || cfg.targetCount != 3) revert InvalidConfig();
-            } else if (cfg.betType == SideBetType.DISTINCT_COLLECTION) {
-                if (cfg.targetCount < 2 || cfg.targetCount > 37 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-            } else if (cfg.betType == SideBetType.COLOR_DUEL) {
-                if (cfg.targetCount < 1 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-            } else {
-                if (cfg.targetCount != 0 || cfg.windowSpins < (cfg.betType == SideBetType.BOOMERANG ? 3 : 2)) revert InvalidConfig();
-            }
+            if (!CHALLENGE_EVALUATOR.validConfig(cfg)) revert InvalidConfig();
         } else {
             if (cfg.targetNumber < 1 || cfg.targetNumber > 3) revert InvalidConfig();
             if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();

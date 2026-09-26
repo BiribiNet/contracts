@@ -15,6 +15,7 @@ library SideBetChallengeLib {
         bool complete,
         ISideBet.Bet memory bet
     ) internal pure returns (bool decided, bool won) {
+        if (uint8(bet.betType) >= uint8(ISideBet.SideBetType.FIRST_RETURN)) return evaluateWindow(observed, complete, bet);
         uint256 mask;
         uint256 collected;
         uint256 own;
@@ -49,6 +50,42 @@ library SideBetChallengeLib {
             }
         }
         return (complete, false);
+    }
+
+    /// @dev Full-window families never accept a different or replacement round window.
+    function evaluateWindow(uint8[] memory nums, bool complete, ISideBet.Bet memory b) private pure returns (bool, bool) {
+        if (nums.length > b.windowSpins) return (false, false);
+        uint256 count;
+        uint256 other;
+        uint256 sum;
+        bool returned;
+        bool broken;
+        for (uint256 i; i < nums.length; ++i) {
+            uint8 n = nums[i];
+            if (n > 36) return (false, false);
+            sum += n;
+            if (i > 0 && n == nums[0]) returned = true;
+            if (b.betType == ISideBet.SideBetType.STRICT_ASCENT && i > 0 && n <= nums[i-1]) broken = true;
+            if (b.betType == ISideBet.SideBetType.COLOR_MIRROR) {
+                if (n == 0) broken = true;
+                if (i == 1 && SideBetOutcomeLib.isRed(n) == SideBetOutcomeLib.isRed(nums[0])) broken = true;
+                if (i == 2 && SideBetOutcomeLib.isRed(n) != SideBetOutcomeLib.isRed(nums[1])) broken = true;
+                if (i == 3 && SideBetOutcomeLib.isRed(n) != SideBetOutcomeLib.isRed(nums[0])) broken = true;
+            }
+            if (b.betType == ISideBet.SideBetType.EXACT_DOZEN && n != 0 && _dozenOf(n) == b.targetNumber) ++count;
+            if (b.betType == ISideBet.SideBetType.COLOR_MAJORITY && n != 0) {
+                if (_matchesColor(n,b.color)) ++count; else ++other;
+            }
+        }
+        // Except first-return, keep settlement at the end even if the UI can explain impossibility.
+        if (b.betType == ISideBet.SideBetType.FIRST_RETURN && returned) return (true, true);
+        if (!complete || nums.length != b.windowSpins) return (false, false);
+        if (b.betType == ISideBet.SideBetType.FIRST_RETURN) return (true, false);
+        if (b.betType == ISideBet.SideBetType.COLOR_MIRROR || b.betType == ISideBet.SideBetType.STRICT_ASCENT) return (true, !broken);
+        if (b.betType == ISideBet.SideBetType.SUM_RANGE) return (true, sum >= b.targetNumber && sum <= b.redRatioBps);
+        if (b.betType == ISideBet.SideBetType.COLOR_MAJORITY) return (true, count > other);
+        if (b.betType == ISideBet.SideBetType.EXACT_DOZEN) return (true, count == b.targetCount);
+        return (false, false);
     }
 
     function adjacent(uint8 a, uint8 b) private pure returns (bool) {

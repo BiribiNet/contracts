@@ -22,7 +22,13 @@ interface ISideBet {
         MIRROR_PAIR,
         WHEEL_NEIGHBORS,
         DISTINCT_COLLECTION,
-        COLOR_DUEL
+        COLOR_DUEL,
+        FIRST_RETURN,
+        COLOR_MIRROR,
+        STRICT_ASCENT,
+        SUM_RANGE,
+        COLOR_MAJORITY,
+        EXACT_DOZEN
     }
 
     enum SideBetColor {
