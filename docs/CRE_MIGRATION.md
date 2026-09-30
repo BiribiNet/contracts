@@ -198,3 +198,7 @@ Round-watcher should poll `checkUpkeep(lane)` while the round is settling; if it
 **HTTP trigger rejected** — verify `CRE_HTTP_AUTHORIZED_ADDRESS` matches the private key used by round-watcher (TriggerVrf and lane recovery BOTH configs share the same authorized key list).
 
 **Stuck after VRFResult (no payouts)** — CRE does not retry failed LOG runs. With `migrationType: "BOTH"`, HTTP-trigger the stuck lane workflow, or simulate with `--trigger-index=1` (HTTP) / `--trigger-index=0 --evm-tx-hash=…` (LOG replay). See [Payout-lane HTTP recovery](#payout-lane-http-recovery-stuck-after-vrfresult).
+
+## Self-hosted keeper (temporary CRE replacement)
+
+The round-watcher Worker (`cre-automation-starter`) can submit `performUpkeep` directly (`EXECUTION_MODE=keeper`) instead of HTTP-triggering CRE. No contract change: approve the keeper EOA on `CreExecutionAuthority`, set the Worker mode, optionally revoke `AutomationReceiver`. Flip back the same way. Runbook: [cre-automation-starter/DEPLOY.md — Switch CRE ↔ keeper](../../cre-automation-starter/DEPLOY.md#switch-cre--keeper).
