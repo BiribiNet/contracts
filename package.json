@@ -31,7 +31,10 @@
     "sync:subgraph:arbitrum-sepolia": "cd ../subgraph && DEPLOY_JSON=./deployments/arbitrum-sepolia.json yarn sync:pipeline",
     "distribute:brb": "hardhat run scripts/distributeBRB.ts --network arbitrumsepolia",
     "generate:cre:configs": "hardhat run scripts/generateCreLaneConfigs.ts",
-    "generate:cre:http:configs": "hardhat run scripts/generateCreHttpConfigs.ts"
+    "generate:cre:http:configs": "hardhat run scripts/generateCreHttpConfigs.ts",
+    "seed:side-bets:x100:arbitrum-sepolia": "hardhat run scripts/seedX100SideBetConfigs.ts --network arbitrumsepolia",
+    "export:x100": "ts-node scripts/exportSideBetX100Catalogue.ts",
+    "check:x100": "ts-node scripts/exportSideBetX100Catalogue.ts --check"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
