@@ -1,0 +1,1100 @@
+{
+  "model": "Independent tickets; no expiry, gas, roulette exposure or price conversion. Correlation stress is separate.",
+  "seed": 9127,
+  "tickets": 10000,
+  "fees": "300 funding + 200 infrastructure bps; the funding input is not BRB output.",
+  "scenarios": [
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "NUMBER_HIT_7_IN_5",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1319,
+      "stake": "1000000",
+      "payout": "7397700",
+      "expectedNetStakeFraction": 0.006555320000000094,
+      "stakes": "10000000000",
+      "paid": "9757566300",
+      "ticketPolicy": {
+        "fees": "434050000",
+        "lpNet": "-191616300"
+      },
+      "batchPolicy": {
+        "fees": "53974055",
+        "lpNet": "188459645",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "12121685",
+        "lpNet": "230312015"
+      },
+      "sampleMaxDrawdown": "444997200",
+      "allWinAdditionalReserve": "63977000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "LIGHTNING_DOUBLE_ANY_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1306,
+      "stake": "1000000",
+      "payout": "7475600",
+      "expectedNetStakeFraction": 0.006206240000000071,
+      "stakes": "10000000000",
+      "paid": "9763133600",
+      "ticketPolicy": {
+        "fees": "434700000",
+        "lpNet": "-197833600"
+      },
+      "batchPolicy": {
+        "fees": "53814300",
+        "lpNet": "183052100",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "11843320",
+        "lpNet": "225023080"
+      },
+      "sampleMaxDrawdown": "452926000",
+      "allWinAdditionalReserve": "64756000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "COLOR_COUNT_RED_5_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1002,
+      "stake": "1000000",
+      "payout": "9784700",
+      "expectedNetStakeFraction": 0.0047606299999999255,
+      "stakes": "10000000000",
+      "paid": "9804269400",
+      "ticketPolicy": {
+        "fees": "449900000",
+        "lpNet": "-254169400"
+      },
+      "batchPolicy": {
+        "fees": "61693540",
+        "lpNet": "134037060",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "9786530",
+        "lpNet": "185944070"
+      },
+      "sampleMaxDrawdown": "462566600",
+      "allWinAdditionalReserve": "87847000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "JACKPOT_IN_3",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 789,
+      "stake": "1000000",
+      "payout": "12030000",
+      "expectedNetStakeFraction": 0.0035799999999999513,
+      "stakes": "10000000000",
+      "paid": "9491670000",
+      "ticketPolicy": {
+        "fees": "460550000",
+        "lpNet": "47780000"
+      },
+      "batchPolicy": {
+        "fees": "78911000",
+        "lpNet": "429419000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "25416500",
+        "lpNet": "482913500"
+      },
+      "sampleMaxDrawdown": "415360000",
+      "allWinAdditionalReserve": "110300000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "CONSECUTIVE_STREAK_BLACK_5_IN_8",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 681,
+      "stake": "1000000",
+      "payout": "13882800",
+      "expectedNetStakeFraction": 0.0038364799999999824,
+      "stakes": "10000000000",
+      "paid": "9454186800",
+      "ticketPolicy": {
+        "fees": "465950000",
+        "lpNet": "79863200"
+      },
+      "batchPolicy": {
+        "fees": "83287300",
+        "lpNet": "462525900",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "27290660",
+        "lpNet": "518522540"
+      },
+      "sampleMaxDrawdown": "365346800",
+      "allWinAdditionalReserve": "128828000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "PERFECT_ALTERNATION_5",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 544,
+      "stake": "1000000",
+      "payout": "17582000",
+      "expectedNetStakeFraction": 0.0032719999999999486,
+      "stakes": "10000000000",
+      "paid": "9564608000",
+      "ticketPolicy": {
+        "fees": "472800000",
+        "lpNet": "-37408000"
+      },
+      "batchPolicy": {
+        "fees": "83960700",
+        "lpNet": "351431300",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "21769600",
+        "lpNet": "413622400"
+      },
+      "sampleMaxDrawdown": "372250000",
+      "allWinAdditionalReserve": "165820000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "RED_RATIO_80_IN_10",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 451,
+      "stake": "1000000",
+      "payout": "20834500",
+      "expectedNetStakeFraction": 0.0022267999999999594,
+      "stakes": "10000000000",
+      "paid": "9396359500",
+      "ticketPolicy": {
+        "fees": "477450000",
+        "lpNet": "126190500"
+      },
+      "batchPolicy": {
+        "fees": "97282275",
+        "lpNet": "506358225",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "30182025",
+        "lpNet": "573458475"
+      },
+      "sampleMaxDrawdown": "345381500",
+      "allWinAdditionalReserve": "198345000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "COLUMN_HIT_2_SIX_IN_8",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 162,
+      "stake": "1000000",
+      "payout": "55710300",
+      "expectedNetStakeFraction": -0.001791129999999981,
+      "stakes": "10000000000",
+      "paid": "9025068600",
+      "ticketPolicy": {
+        "fees": "491900000",
+        "lpNet": "483031400"
+      },
+      "batchPolicy": {
+        "fees": "176434550",
+        "lpNet": "798496850",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "48746570",
+        "lpNet": "926184830"
+      },
+      "sampleMaxDrawdown": "836416500",
+      "allWinAdditionalReserve": "547103000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "DOZEN_HIT_1_FIVE_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 150,
+      "stake": "1000000",
+      "payout": "60126600",
+      "expectedNetStakeFraction": 0.0007897199999998619,
+      "stakes": "10000000000",
+      "paid": "9018990000",
+      "ticketPolicy": {
+        "fees": "492500000",
+        "lpNet": "488510000"
+      },
+      "batchPolicy": {
+        "fees": "185822760",
+        "lpNet": "795187240",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "49050500",
+        "lpNet": "931959500"
+      },
+      "sampleMaxDrawdown": "778930000",
+      "allWinAdditionalReserve": "591266000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "PERFECT_DOZEN",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 111,
+      "stake": "1000000",
+      "payout": "85862800",
+      "expectedNetStakeFraction": 0.0005542369092088884,
+      "stakes": "10000000000",
+      "paid": "9530770800",
+      "ticketPolicy": {
+        "fees": "494450000",
+        "lpNet": "-25220800"
+      },
+      "batchPolicy": {
+        "fees": "196153820",
+        "lpNet": "273075380",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "23461460",
+        "lpNet": "445767740"
+      },
+      "sampleMaxDrawdown": "884345600",
+      "allWinAdditionalReserve": "848628000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "DOUBLE_NUMBER",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 102,
+      "stake": "1000000",
+      "payout": "93220500",
+      "expectedNetStakeFraction": 0.0005103588390821881,
+      "stakes": "10000000000",
+      "paid": "9508491000",
+      "ticketPolicy": {
+        "fees": "494900000",
+        "lpNet": "-3391000"
+      },
+      "batchPolicy": {
+        "fees": "196864125",
+        "lpNet": "294644875",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "24575450",
+        "lpNet": "466933550"
+      },
+      "sampleMaxDrawdown": "876642000",
+      "allWinAdditionalReserve": "922205000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "SEVEN_STREAK",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 97,
+      "stake": "1000000",
+      "payout": "97328900",
+      "expectedNetStakeFraction": 0.0004880797384445093,
+      "stakes": "10000000000",
+      "paid": "9440903300",
+      "ticketPolicy": {
+        "fees": "495150000",
+        "lpNet": "63946700"
+      },
+      "batchPolicy": {
+        "fees": "194674425",
+        "lpNet": "364422275",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "27954835",
+        "lpNet": "531141865"
+      },
+      "sampleMaxDrawdown": "804995900",
+      "allWinAdditionalReserve": "963289000000"
+    },
+    {
+      "asset": "USDC",
+      "decimals": 6,
+      "offer": "NINE_OF_TEN",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 85,
+      "stake": "1000000",
+      "payout": "110719700",
+      "expectedNetStakeFraction": 0.000429152725901584,
+      "stakes": "10000000000",
+      "paid": "9411174500",
+      "ticketPolicy": {
+        "fees": "495750000",
+        "lpNet": "93075500"
+      },
+      "batchPolicy": {
+        "fees": "205000000",
+        "lpNet": "383825500",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "29441275",
+        "lpNet": "559384225"
+      },
+      "sampleMaxDrawdown": "964613700",
+      "allWinAdditionalReserve": "1097197000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "NUMBER_HIT_7_IN_5",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1319,
+      "stake": "1000000000000000000",
+      "payout": "7397700000000000000",
+      "expectedNetStakeFraction": 0.006555320000000094,
+      "stakes": "10000000000000000000000",
+      "paid": "9757566300000000000000",
+      "ticketPolicy": {
+        "fees": "434050000000000000000",
+        "lpNet": "-191616300000000000000"
+      },
+      "batchPolicy": {
+        "fees": "53974055000000000000",
+        "lpNet": "188459645000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "12121685000000000000",
+        "lpNet": "230312015000000000000"
+      },
+      "sampleMaxDrawdown": "444997200000000000000",
+      "allWinAdditionalReserve": "63977000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "LIGHTNING_DOUBLE_ANY_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1306,
+      "stake": "1000000000000000000",
+      "payout": "7475600000000000000",
+      "expectedNetStakeFraction": 0.006206240000000071,
+      "stakes": "10000000000000000000000",
+      "paid": "9763133600000000000000",
+      "ticketPolicy": {
+        "fees": "434700000000000000000",
+        "lpNet": "-197833600000000000000"
+      },
+      "batchPolicy": {
+        "fees": "53814300000000000000",
+        "lpNet": "183052100000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "11843320000000000000",
+        "lpNet": "225023080000000000000"
+      },
+      "sampleMaxDrawdown": "452926000000000000000",
+      "allWinAdditionalReserve": "64756000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "COLOR_COUNT_RED_5_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1002,
+      "stake": "1000000000000000000",
+      "payout": "9784700000000000000",
+      "expectedNetStakeFraction": 0.0047606300000000365,
+      "stakes": "10000000000000000000000",
+      "paid": "9804269400000000000000",
+      "ticketPolicy": {
+        "fees": "449900000000000000000",
+        "lpNet": "-254169400000000000000"
+      },
+      "batchPolicy": {
+        "fees": "61693540000000000000",
+        "lpNet": "134037060000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "9786530000000000000",
+        "lpNet": "185944070000000000000"
+      },
+      "sampleMaxDrawdown": "462566600000000000000",
+      "allWinAdditionalReserve": "87847000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "JACKPOT_IN_3",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 789,
+      "stake": "1000000000000000000",
+      "payout": "12030000000000000000",
+      "expectedNetStakeFraction": 0.0035799999999999513,
+      "stakes": "10000000000000000000000",
+      "paid": "9491670000000000000000",
+      "ticketPolicy": {
+        "fees": "460550000000000000000",
+        "lpNet": "47780000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "78911000000000000000",
+        "lpNet": "429419000000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "25416500000000000000",
+        "lpNet": "482913500000000000000"
+      },
+      "sampleMaxDrawdown": "415360000000000000000",
+      "allWinAdditionalReserve": "110300000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "CONSECUTIVE_STREAK_BLACK_5_IN_8",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 681,
+      "stake": "1000000000000000000",
+      "payout": "13882800000000000000",
+      "expectedNetStakeFraction": 0.0038364799999999824,
+      "stakes": "10000000000000000000000",
+      "paid": "9454186800000000000000",
+      "ticketPolicy": {
+        "fees": "465950000000000000000",
+        "lpNet": "79863200000000000000"
+      },
+      "batchPolicy": {
+        "fees": "83287300000000000000",
+        "lpNet": "462525900000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "27290660000000000000",
+        "lpNet": "518522540000000000000"
+      },
+      "sampleMaxDrawdown": "365346800000000000000",
+      "allWinAdditionalReserve": "128828000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "PERFECT_ALTERNATION_5",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 544,
+      "stake": "1000000000000000000",
+      "payout": "17582000000000000000",
+      "expectedNetStakeFraction": 0.0032719999999999486,
+      "stakes": "10000000000000000000000",
+      "paid": "9564608000000000000000",
+      "ticketPolicy": {
+        "fees": "472800000000000000000",
+        "lpNet": "-37408000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "83960700000000000000",
+        "lpNet": "351431300000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "21769600000000000000",
+        "lpNet": "413622400000000000000"
+      },
+      "sampleMaxDrawdown": "372250000000000000000",
+      "allWinAdditionalReserve": "165820000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "RED_RATIO_80_IN_10",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 451,
+      "stake": "1000000000000000000",
+      "payout": "20834500000000000000",
+      "expectedNetStakeFraction": 0.0022267999999999594,
+      "stakes": "10000000000000000000000",
+      "paid": "9396359500000000000000",
+      "ticketPolicy": {
+        "fees": "477450000000000000000",
+        "lpNet": "126190500000000000000"
+      },
+      "batchPolicy": {
+        "fees": "97282275000000000000",
+        "lpNet": "506358225000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "30182025000000000000",
+        "lpNet": "573458475000000000000"
+      },
+      "sampleMaxDrawdown": "345381500000000000000",
+      "allWinAdditionalReserve": "198345000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "COLUMN_HIT_2_SIX_IN_8",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 162,
+      "stake": "1000000000000000000",
+      "payout": "55710300000000000000",
+      "expectedNetStakeFraction": -0.001791129999999981,
+      "stakes": "10000000000000000000000",
+      "paid": "9025068600000000000000",
+      "ticketPolicy": {
+        "fees": "491900000000000000000",
+        "lpNet": "483031400000000000000"
+      },
+      "batchPolicy": {
+        "fees": "176434550000000000000",
+        "lpNet": "798496850000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "48746570000000000000",
+        "lpNet": "926184830000000000000"
+      },
+      "sampleMaxDrawdown": "836416500000000000000",
+      "allWinAdditionalReserve": "547103000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "DOZEN_HIT_1_FIVE_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 150,
+      "stake": "1000000000000000000",
+      "payout": "60126600000000000000",
+      "expectedNetStakeFraction": 0.0007897199999998619,
+      "stakes": "10000000000000000000000",
+      "paid": "9018990000000000000000",
+      "ticketPolicy": {
+        "fees": "492500000000000000000",
+        "lpNet": "488510000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "185822760000000000000",
+        "lpNet": "795187240000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "49050500000000000000",
+        "lpNet": "931959500000000000000"
+      },
+      "sampleMaxDrawdown": "778930000000000000000",
+      "allWinAdditionalReserve": "591266000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "PERFECT_DOZEN",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 111,
+      "stake": "1000000000000000000",
+      "payout": "85862800000000000000",
+      "expectedNetStakeFraction": 0.0005542369092088884,
+      "stakes": "10000000000000000000000",
+      "paid": "9530770800000000000000",
+      "ticketPolicy": {
+        "fees": "494450000000000000000",
+        "lpNet": "-25220800000000000000"
+      },
+      "batchPolicy": {
+        "fees": "196153820000000000000",
+        "lpNet": "273075380000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "23461460000000000000",
+        "lpNet": "445767740000000000000"
+      },
+      "sampleMaxDrawdown": "884345600000000000000",
+      "allWinAdditionalReserve": "848628000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "DOUBLE_NUMBER",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 102,
+      "stake": "1000000000000000000",
+      "payout": "93220500000000000000",
+      "expectedNetStakeFraction": 0.0005103588390822991,
+      "stakes": "10000000000000000000000",
+      "paid": "9508491000000000000000",
+      "ticketPolicy": {
+        "fees": "494900000000000000000",
+        "lpNet": "-3391000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "196864125000000000000",
+        "lpNet": "294644875000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "24575450000000000000",
+        "lpNet": "466933550000000000000"
+      },
+      "sampleMaxDrawdown": "876642000000000000000",
+      "allWinAdditionalReserve": "922205000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "SEVEN_STREAK",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 97,
+      "stake": "1000000000000000000",
+      "payout": "97328900000000000000",
+      "expectedNetStakeFraction": 0.0004880797384445093,
+      "stakes": "10000000000000000000000",
+      "paid": "9440903300000000000000",
+      "ticketPolicy": {
+        "fees": "495150000000000000000",
+        "lpNet": "63946700000000000000"
+      },
+      "batchPolicy": {
+        "fees": "194674425000000000000",
+        "lpNet": "364422275000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "27954835000000000000",
+        "lpNet": "531141865000000000000"
+      },
+      "sampleMaxDrawdown": "804995900000000000000",
+      "allWinAdditionalReserve": "963289000000000000000000"
+    },
+    {
+      "asset": "DAI",
+      "decimals": 18,
+      "offer": "NINE_OF_TEN",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 85,
+      "stake": "1000000000000000000",
+      "payout": "110719700000000000000",
+      "expectedNetStakeFraction": 0.0004291527259015909,
+      "stakes": "10000000000000000000000",
+      "paid": "9411174500000000000000",
+      "ticketPolicy": {
+        "fees": "495750000000000000000",
+        "lpNet": "93075500000000000000"
+      },
+      "batchPolicy": {
+        "fees": "205000000000000000000",
+        "lpNet": "383825500000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "29441275000000000000",
+        "lpNet": "559384225000000000000"
+      },
+      "sampleMaxDrawdown": "964613700000000000000",
+      "allWinAdditionalReserve": "1097197000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "NUMBER_HIT_7_IN_5",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1319,
+      "stake": "1000000000000000000",
+      "payout": "7397700000000000000",
+      "expectedNetStakeFraction": 0.006555320000000094,
+      "stakes": "10000000000000000000000",
+      "paid": "9757566300000000000000",
+      "ticketPolicy": {
+        "fees": "434050000000000000000",
+        "lpNet": "-191616300000000000000"
+      },
+      "batchPolicy": {
+        "fees": "53974055000000000000",
+        "lpNet": "188459645000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "12121685000000000000",
+        "lpNet": "230312015000000000000"
+      },
+      "sampleMaxDrawdown": "444997200000000000000",
+      "allWinAdditionalReserve": "63977000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "LIGHTNING_DOUBLE_ANY_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1306,
+      "stake": "1000000000000000000",
+      "payout": "7475600000000000000",
+      "expectedNetStakeFraction": 0.006206240000000071,
+      "stakes": "10000000000000000000000",
+      "paid": "9763133600000000000000",
+      "ticketPolicy": {
+        "fees": "434700000000000000000",
+        "lpNet": "-197833600000000000000"
+      },
+      "batchPolicy": {
+        "fees": "53814300000000000000",
+        "lpNet": "183052100000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "11843320000000000000",
+        "lpNet": "225023080000000000000"
+      },
+      "sampleMaxDrawdown": "452926000000000000000",
+      "allWinAdditionalReserve": "64756000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "COLOR_COUNT_RED_5_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 1002,
+      "stake": "1000000000000000000",
+      "payout": "9784700000000000000",
+      "expectedNetStakeFraction": 0.0047606300000000365,
+      "stakes": "10000000000000000000000",
+      "paid": "9804269400000000000000",
+      "ticketPolicy": {
+        "fees": "449900000000000000000",
+        "lpNet": "-254169400000000000000"
+      },
+      "batchPolicy": {
+        "fees": "61693540000000000000",
+        "lpNet": "134037060000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "9786530000000000000",
+        "lpNet": "185944070000000000000"
+      },
+      "sampleMaxDrawdown": "462566600000000000000",
+      "allWinAdditionalReserve": "87847000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "JACKPOT_IN_3",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 789,
+      "stake": "1000000000000000000",
+      "payout": "12030000000000000000",
+      "expectedNetStakeFraction": 0.0035799999999999513,
+      "stakes": "10000000000000000000000",
+      "paid": "9491670000000000000000",
+      "ticketPolicy": {
+        "fees": "460550000000000000000",
+        "lpNet": "47780000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "78911000000000000000",
+        "lpNet": "429419000000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "25416500000000000000",
+        "lpNet": "482913500000000000000"
+      },
+      "sampleMaxDrawdown": "415360000000000000000",
+      "allWinAdditionalReserve": "110300000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "CONSECUTIVE_STREAK_BLACK_5_IN_8",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 681,
+      "stake": "1000000000000000000",
+      "payout": "13882800000000000000",
+      "expectedNetStakeFraction": 0.0038364799999999824,
+      "stakes": "10000000000000000000000",
+      "paid": "9454186800000000000000",
+      "ticketPolicy": {
+        "fees": "465950000000000000000",
+        "lpNet": "79863200000000000000"
+      },
+      "batchPolicy": {
+        "fees": "83287300000000000000",
+        "lpNet": "462525900000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "27290660000000000000",
+        "lpNet": "518522540000000000000"
+      },
+      "sampleMaxDrawdown": "365346800000000000000",
+      "allWinAdditionalReserve": "128828000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "PERFECT_ALTERNATION_5",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 544,
+      "stake": "1000000000000000000",
+      "payout": "17582000000000000000",
+      "expectedNetStakeFraction": 0.0032719999999999486,
+      "stakes": "10000000000000000000000",
+      "paid": "9564608000000000000000",
+      "ticketPolicy": {
+        "fees": "472800000000000000000",
+        "lpNet": "-37408000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "83960700000000000000",
+        "lpNet": "351431300000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "21769600000000000000",
+        "lpNet": "413622400000000000000"
+      },
+      "sampleMaxDrawdown": "372250000000000000000",
+      "allWinAdditionalReserve": "165820000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "RED_RATIO_80_IN_10",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 451,
+      "stake": "1000000000000000000",
+      "payout": "20834500000000000000",
+      "expectedNetStakeFraction": 0.0022267999999999594,
+      "stakes": "10000000000000000000000",
+      "paid": "9396359500000000000000",
+      "ticketPolicy": {
+        "fees": "477450000000000000000",
+        "lpNet": "126190500000000000000"
+      },
+      "batchPolicy": {
+        "fees": "97282275000000000000",
+        "lpNet": "506358225000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "30182025000000000000",
+        "lpNet": "573458475000000000000"
+      },
+      "sampleMaxDrawdown": "345381500000000000000",
+      "allWinAdditionalReserve": "198345000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "COLUMN_HIT_2_SIX_IN_8",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 162,
+      "stake": "1000000000000000000",
+      "payout": "55710300000000000000",
+      "expectedNetStakeFraction": -0.001791129999999981,
+      "stakes": "10000000000000000000000",
+      "paid": "9025068600000000000000",
+      "ticketPolicy": {
+        "fees": "491900000000000000000",
+        "lpNet": "483031400000000000000"
+      },
+      "batchPolicy": {
+        "fees": "176434550000000000000",
+        "lpNet": "798496850000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "48746570000000000000",
+        "lpNet": "926184830000000000000"
+      },
+      "sampleMaxDrawdown": "836416500000000000000",
+      "allWinAdditionalReserve": "547103000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "DOZEN_HIT_1_FIVE_IN_6",
+      "probabilitySource": "sampled legacy catalogue",
+      "tickets": 10000,
+      "wins": 150,
+      "stake": "1000000000000000000",
+      "payout": "60126600000000000000",
+      "expectedNetStakeFraction": 0.0007897199999998619,
+      "stakes": "10000000000000000000000",
+      "paid": "9018990000000000000000",
+      "ticketPolicy": {
+        "fees": "492500000000000000000",
+        "lpNet": "488510000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "185822760000000000000",
+        "lpNet": "795187240000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "49050500000000000000",
+        "lpNet": "931959500000000000000"
+      },
+      "sampleMaxDrawdown": "778930000000000000000",
+      "allWinAdditionalReserve": "591266000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "PERFECT_DOZEN",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 111,
+      "stake": "1000000000000000000",
+      "payout": "85862800000000000000",
+      "expectedNetStakeFraction": 0.0005542369092088884,
+      "stakes": "10000000000000000000000",
+      "paid": "9530770800000000000000",
+      "ticketPolicy": {
+        "fees": "494450000000000000000",
+        "lpNet": "-25220800000000000000"
+      },
+      "batchPolicy": {
+        "fees": "196153820000000000000",
+        "lpNet": "273075380000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "23461460000000000000",
+        "lpNet": "445767740000000000000"
+      },
+      "sampleMaxDrawdown": "884345600000000000000",
+      "allWinAdditionalReserve": "848628000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "DOUBLE_NUMBER",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 102,
+      "stake": "1000000000000000000",
+      "payout": "93220500000000000000",
+      "expectedNetStakeFraction": 0.0005103588390822991,
+      "stakes": "10000000000000000000000",
+      "paid": "9508491000000000000000",
+      "ticketPolicy": {
+        "fees": "494900000000000000000",
+        "lpNet": "-3391000000000000000"
+      },
+      "batchPolicy": {
+        "fees": "196864125000000000000",
+        "lpNet": "294644875000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "24575450000000000000",
+        "lpNet": "466933550000000000000"
+      },
+      "sampleMaxDrawdown": "876642000000000000000",
+      "allWinAdditionalReserve": "922205000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "SEVEN_STREAK",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 97,
+      "stake": "1000000000000000000",
+      "payout": "97328900000000000000",
+      "expectedNetStakeFraction": 0.0004880797384445093,
+      "stakes": "10000000000000000000000",
+      "paid": "9440903300000000000000",
+      "ticketPolicy": {
+        "fees": "495150000000000000000",
+        "lpNet": "63946700000000000000"
+      },
+      "batchPolicy": {
+        "fees": "194674425000000000000",
+        "lpNet": "364422275000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "27954835000000000000",
+        "lpNet": "531141865000000000000"
+      },
+      "sampleMaxDrawdown": "804995900000000000000",
+      "allWinAdditionalReserve": "963289000000000000000000"
+    },
+    {
+      "asset": "BRB",
+      "decimals": 18,
+      "offer": "NINE_OF_TEN",
+      "probabilitySource": "exact X100 manifest",
+      "tickets": 10000,
+      "wins": 85,
+      "stake": "1000000000000000000",
+      "payout": "110719700000000000000",
+      "expectedNetStakeFraction": 0.0004291527259015909,
+      "stakes": "10000000000000000000000",
+      "paid": "9411174500000000000000",
+      "ticketPolicy": {
+        "fees": "495750000000000000000",
+        "lpNet": "93075500000000000000"
+      },
+      "batchPolicy": {
+        "fees": "205000000000000000000",
+        "lpNet": "383825500000000000000",
+        "batchSize": 100
+      },
+      "lifetimePolicy": {
+        "fees": "29441275000000000000",
+        "lpNet": "559384225000000000000"
+      },
+      "sampleMaxDrawdown": "964613700000000000000",
+      "allWinAdditionalReserve": "1097197000000000000000000"
+    }
+  ]
+}

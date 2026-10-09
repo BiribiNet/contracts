@@ -45,7 +45,7 @@ library MarketFeeLib {
         if (result.swapIn > 0) {
             address asset = IERC4626(bank).asset();
             IBankVault(bank).transferOut(address(funder), result.swapIn);
-            funder.fundFromMarket(marketId, asset);
+            funder.queueFunding(marketId, asset, result.swapIn);
         }
 
         if (infraRecipient != address(0) && result.infraFee > 0) {

@@ -1140,6 +1140,15 @@ describe("SideBet fees", function () {
         if (marketAsset === "usdc") {
             await brb.write.transfer([mockRouter.address, ROUTER_BRB_LIQUIDITY], { account: admin.account });
         }
+        if (marketAsset === "usdc") {
+            const factory = await viem.deployContract("MockUniswapV2Factory");
+            const pair = await viem.deployContract("MockUniswapV2Pair", [asset.address, brb.address]);
+            await factory.write.setPair([asset.address, brb.address, pair.address]);
+            await mockRouter.write.setFactory([factory.address]);
+            const reserves = asset.address.toLowerCase() < brb.address.toLowerCase()
+                ? [parseUnits("10000", 6), parseUnits("10000", 18)] : [parseUnits("10000", 18), parseUnits("10000", 6)];
+            await pair.write.setReserves(reserves);
+        }
 
         const minBet = parseUnits("1", marketAsset === "usdc" ? 6 : 18);
         await registry.write.createMarket(
@@ -1230,6 +1239,9 @@ describe("SideBet fees", function () {
         const toTreasury = (brbOut * treasuryNum) / treasuryDen;
         const toBurn = brbOut - toTreasury;
 
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        expect((await funder.read.fundingAccounts([MARKET_ID]))[1]).to.equal(swapIn);
+        await funder.write.processFunding([MARKET_ID], { gas: 1000000n });
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore - toBurn);
     });
@@ -1270,6 +1282,9 @@ describe("SideBet fees", function () {
         const toTreasury = (swapIn * treasuryNum) / treasuryDen;
         const toBurn = swapIn - toTreasury;
 
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        expect((await funder.read.fundingAccounts([MARKET_ID]))[1]).to.equal(swapIn);
+        await funder.write.processFunding([MARKET_ID], { gas: 1000000n });
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore - toBurn);
     });
