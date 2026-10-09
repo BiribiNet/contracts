@@ -6,14 +6,13 @@
  * `placeBet` reverts `UnknownConfig` and the frontend renders its "no side bets are open" empty
  * state. This catalogue is the single source of truth for what gets seeded.
  *
- * MULTIPLIER DERIVATION: every `multiplierBps` below is `(1 - HOUSE_EDGE) / p`, where `p` is the
- * win probability of that exact parameter set under `SideBetOutcomeLib.evaluate` on a 37-pocket
- * European wheel. The probabilities were measured by simulating the library's semantics (400k
- * trials per entry) rather than derived by hand, because several kinds resolve early (a win is
- * awarded the moment it becomes certain) and closed forms would not match the contract.
+ * MULTIPLIER DERIVATION: exact integer outcome counts on a uniform European wheel,
+ * floored to the contract precision. Early resolution does not change the winning event.
  *
  * Every entry is checked against `SideBet._validateConfigCore` by `test/SideBetCatalogue.test.ts`.
  */
+
+import { legacyProbability, priceAtFivePercent } from "./sideBetEconomics";
 
 /** `ISideBet.SideBetType` — order must match the enum in `contracts/interfaces/ISideBet.sol`. */
 export const SIDE_BET_TYPE = {
@@ -65,7 +64,7 @@ export interface SideBetTemplate {
     readonly redRatioBps: number;
     readonly windowSpins: number;
     readonly multiplierBps: number;
-    /** Measured win probability, kept alongside the multiplier so the two cannot drift apart. */
+    /** Exact win probability (display approximation), kept alongside the multiplier so the two cannot drift apart. */
     readonly winProbability: number;
 }
 
@@ -81,7 +80,7 @@ export const HOUSE_EDGE = 0.05;
  * somebody places a roulette bet. A quiet market therefore leaves bets undecided, which is what
  * `SideBet.settleTimeout` exists to unstick — see `scripts/upgradeSideBet.ts`.
  */
-export const SIDE_BET_TEMPLATES: readonly SideBetTemplate[] = [
+export const HISTORICAL_SIDE_BET_TEMPLATES: readonly SideBetTemplate[] = [
     {
         // p = 1 - (36/37)^5: number 7 shows at least once in five rounds.
         key: "NUMBER_HIT_7_IN_5",
@@ -192,6 +191,17 @@ export const SIDE_BET_TEMPLATES: readonly SideBetTemplate[] = [
         winProbability: 0.0158,
     },
 ] as const;
+
+/** Reprice the same rules using integer counts; historical tickets retain their snapshot. */
+export const SIDE_BET_TEMPLATES: readonly SideBetTemplate[] = HISTORICAL_SIDE_BET_TEMPLATES.map((template) => {
+    const probability = legacyProbability(template);
+    if (!probability) throw new Error("Unsupported catalogue rule: " + template.key);
+    return {
+        ...template,
+        multiplierBps: priceAtFivePercent(probability),
+        winProbability: Number(probability.wins) / Number(probability.total),
+    };
+});
 
 /** A catalogue entry bound to a market, ready to be passed to `addConfig`. */
 export interface SideBetCatalogueEntry extends SideBetTemplate {

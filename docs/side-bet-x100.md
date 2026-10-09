@@ -37,6 +37,10 @@ offer. `assertX100Pricing` enforces this with rational integer comparisons befor
 The JSON pricing report retains exact winning/total counts. Token payouts also floor
 `stakeRaw * multiplierBps / 10000`; their extra edge is less than `p/stakeRaw` as a
 fraction of stake. Very small raw stakes can therefore exceed the multiplier-only tolerance.
+The seed now raises the raw-token minimum when necessary so the combined multiplier/payout
+rounding stays within 0.0002 percentage point above 5% at every permitted stake. The frontend
+also applies that floor before signing; the on-chain limits must be activated to enforce it
+for other clients. Existing higher minima are preserved.
 The house edge excludes gas and describes decided win/loss tickets; expired tickets refund
 their stake. Protocol fee distribution comes from vault accounting, not a second deduction
 from the promised player payout. Review vault returns separately from the player edge.
@@ -74,6 +78,38 @@ IDs remain dynamic; do not hardcode config IDs or infer a live catalogue from th
 6. Check real on-chain configs and indexed choices for every market; place minimal
    test-token tickets and verify outcomes, player transfers and released reserves.
 
-Reruns match every configuration field and preserve existing active limits. This is an
-additive range: old configs and open tickets are not repriced or removed. A catalogue
-replacement/retirement, mainnet activation, funding or contract upgrade is separate work.
+Reruns match every configuration field, retain a stricter existing minimum and never raise
+an existing active maximum. They may raise an unsafe minimum or lower a maximum to current
+capacity. The X100 command does not retire old configs; open tickets are never repriced.
+
+## Exact repricing of the nine historical offers
+
+`sideBetCatalogue.ts` retains the historical rules/prices and derives replacement prices
+with `sideBetEconomics.ts`, using exact integer counts rather than simulation. See
+`side-bet-legacy-pricing.json` for old/new multipliers, rational probabilities and raw-token
+minima. Legacy rules need a 0.002 percentage point tolerance because their higher winning
+probability amplifies the contract's four-decimal multiplier rounding. This is a 5% target,
+not an assertion of mathematically identical margins. X100 retains its tighter tolerance.
+
+Preview `yarn reprice:side-bets:arbitrum-sepolia`. This is read-only by default and requires
+the same settlement/network preflight as X100. `SEED_APPLY=true SEED_STAGE_ONLY=true` creates
+closed replacements only. With reviewed liquidity/limits, `SEED_APPLY=true` activates each
+replacement before retiring known historical configs with identical rules. Both role checks
+precede any write. Current replacement and historical rules are reread before retirement;
+custom prices are untouched. Insufficient capacity leaves the historical offer in place and
+reports the skipped replacement. Rerunning after interruption resumes without duplicate prices.
+
+Ticket payouts/rules were snapshotted at placement; retirement blocks new tickets on old IDs
+while their existing tickets still settle for the original promised payout. No proxy upgrade,
+storage change or subgraph migration is required. These scripts are prepared, not executed.
+
+Run `yarn export:side-bet-economics` after changing the shared math; it copies the pure source
+and a SHA-256 fingerprint to the sibling frontend. Both repositories test that fingerprint.
+Regenerate the legacy report with `yarn ts-node scripts/exportLegacySideBetPricing.ts`.
+
+The frontend admin audit reads configurations, reservations and recent tickets at one chain
+block. It scans at most 1,000 config IDs and 500 newest tickets in batches of 50, with manual
+refresh and no new polling loop. Market reserves remain available even when family exposure
+is unknown; family exposure is shown only after a complete scan reconciles with `reservedOf`.
+Amounts remain separated by market asset. The audit flags prices/minima outside policy and
+reports capacity as an upper bound for one additional ticket, not a funding guarantee.

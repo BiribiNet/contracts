@@ -1,5 +1,5 @@
 import { SIDE_BET_TEMPLATES } from './utils/sideBetCatalogue';
-import { simulateSideBetEconomics } from './utils/sideBetEconomics';
+import { simulateSideBetEconomics } from './utils/sideBetSimulation';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
