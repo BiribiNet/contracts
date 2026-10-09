@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { IUniswapV2Pair } from "../vendor/uniswap-v2-core/interfaces/IUniswapV2Pair.sol";
 
@@ -75,6 +76,17 @@ library UniswapV2TwapLib {
                 amountOut = (amountIn * uint256(price1Average)) >> 112;
             }
         }
+    }
+
+    /// @dev Apply pool fees and trade price impact to the historical marginal price.
+    function quoteExecutableTwapAmountOut(
+        address pair, address tokenIn, uint256 amountIn, Observation memory obs, uint32 nowTimestamp
+    ) internal view returns (uint256) {
+        uint256 marginalOut = quoteTwapAmountOut(pair, tokenIn, amountIn, obs, nowTimestamp);
+        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(pair).getReserves();
+        uint256 reserveIn = tokenIn == IUniswapV2Pair(pair).token0() ? reserve0 : reserve1;
+        if (reserveIn == 0 || amountIn > (type(uint256).max - reserveIn * 1000) / 997) return 0;
+        return Math.mulDiv(marginalOut, reserveIn * 997, reserveIn * 1000 + amountIn * 997);
     }
 
     /// @dev Constant-product spot output (997/1000 fee), used before TWAP window is warm or as fallback.
