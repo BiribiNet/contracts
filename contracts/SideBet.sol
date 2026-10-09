@@ -478,23 +478,30 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
             if (bundle.winnerPayouts.length != 0) {
                 bank.payoutBatch(bundle.winnerPayouts);
             }
-            _collectMarketFees(bundle.marketId, bundle.bank, bundle.totalStakes, bundle.totalPaid);
+            _collectMarketFees($, bundle.marketId, bundle.bank, finalized);
             unchecked {
                 ++v;
             }
         }
     }
 
-    function _collectMarketFees(uint32 marketId, address bank, uint256 totalStakes, uint256 totalPaid) private {
+    function _collectMarketFees(SideBetData storage $, uint32 marketId, address bank, SettleRow[] memory rows) private {
         IRouletteFeeConfig feeCfg = IRouletteFeeConfig(address(ENGINE));
-        MarketFeeLib.CollectResult memory fees = MarketFeeLib.collect(
-            IBRBJackpotFunder(feeCfg.JACKPOT_FUNDER()),
-            feeCfg.INFRA_RECIPIENT(),
-            bank,
-            marketId,
-            totalStakes,
-            totalPaid
-        );
+        IBRBJackpotFunder funder = IBRBJackpotFunder(feeCfg.JACKPOT_FUNDER());
+        if (address(funder) == address(0)) return;
+        uint256 swapBps = funder.swapAssetTotalBps();
+        MarketFeeLib.CollectResult memory fees;
+        // A ticket's positive house profit is the fee base. Winners cannot offset unrelated
+        // tickets merely by sharing an automation batch. Round each ticket before summing.
+        for (uint256 i; i < rows.length; ++i) {
+            SettleRow memory row = rows[i];
+            Bet storage bet = $.bets[row.betId];
+            if (bet.marketId != marketId || row.expired) continue;
+            (uint256 swap, uint256 infra) = CHALLENGE_EVALUATOR.ticketFees(bet.stake, row.won ? row.payoutAmount : 0, swapBps);
+            fees.swapIn += swap;
+            fees.infraFee += infra;
+        }
+        fees = MarketFeeLib.collectAmounts(funder, feeCfg.INFRA_RECIPIENT(), bank, marketId, fees);
         if (fees.swapIn > 0) emit SideBetJackpotFunded(marketId, fees.swapIn);
         if (fees.infraFee > 0) emit SideBetInfrastructureFeePaid(marketId, fees.infraFee);
     }
