@@ -274,6 +274,29 @@ describe("BRBJackpotFunder", function () {
         await brb.write.transfer([funder.address, parseUnits("5", 18)], { account: admin.account });
         await funder.write.fundFromMarket([1n, brb.address], { account: admin.account });
         await brb.write.setFailBurn([false]);
+        const owedTreasury = await funder.read.pendingTreasuryBrb();
+        const owedBurn = await funder.read.pendingBurnBrb();
+        expect(owedBurn).to.be.gt(0n);
+        expect(await brb.read.balanceOf([funder.address])).to.equal(owedTreasury + owedBurn);
+        await expect(funder.write.sweepToken([brb.address, admin.account.address, 1n])).to.be.rejected;
+        // New split parameters cannot change already attributed obligations.
+        await funder.write.setTreasuryBrbSplit([0n, 1n]);
+        const treasuryBeforeRetry = await brb.read.balanceOf([treasury.address]);
+        const supplyBeforeRetry = await brb.read.totalSupply();
+        const usdc = await viem.deployContract("MockUSDC");
+        // A different market cannot consume these retained BRB as fresh input.
+        await funder.write.fundFromMarket([2n, brb.address]);
+        expect(await funder.read.pendingBurnBrb()).to.equal(owedBurn);
+        // Even a fee collection with zero new input retries the original market.
+        await funder.write.fundFromMarket([1n, usdc.address]);
+        expect(await brb.read.balanceOf([treasury.address])).to.equal(treasuryBeforeRetry + owedTreasury);
+        expect(await brb.read.totalSupply()).to.equal(supplyBeforeRetry - owedBurn);
+        expect(await brb.read.balanceOf([funder.address])).to.equal(0n);
+        expect(await funder.read.pendingTreasuryBrb()).to.equal(0n);
+        expect(await funder.read.pendingBurnBrb()).to.equal(0n);
+        await funder.write.retryPendingBrb([1n]);
+        expect(await brb.read.totalSupply()).to.equal(supplyBeforeRetry - owedBurn);
+
     });
 
     it("sweepToken reverts when amount exceeds balance", async function () {

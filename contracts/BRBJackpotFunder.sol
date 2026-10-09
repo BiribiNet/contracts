@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
@@ -16,7 +17,7 @@ interface IERC20BurnFromSelf {
 
 /// @notice Swaps the contract's current `asset` balance to BRB via Uniswap V2 (when `asset != brb`); splits BRB between jackpot treasury and on-chain burn (reduces total supply).
 /// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send. Non-BRB swaps use a Uniswap V2 TWAP floor when the observation window is warm (`slippageBps`); otherwise spot with `coldSlippageBps` (stricter, default 3%).
-contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
+contract BRBJackpotFunder is AccessControl, ReentrancyGuard, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
     bytes32 public constant FUNDER_ADMIN_ROLE = keccak256("FUNDER_ADMIN_ROLE");
@@ -157,14 +158,35 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
     /// @notice Recover market assets left after skipped swaps (TWAP / liquidity). Use when migrating to a new funder or during prolonged pool stress.
     /// @param amount `0` sweeps the full balance of `asset`.
-    function sweepToken(address asset, address to, uint256 amount) external onlyRole(FUNDER_ADMIN_ROLE) {
+    function sweepToken(address asset, address to, uint256 amount) external onlyRole(FUNDER_ADMIN_ROLE) nonReentrant {
         if (asset == address(0) || to == address(0)) revert ZeroAddress();
         uint256 balance = IERC20(asset).balanceOf(address(this));
+        if (asset == address(brb)) balance -= pendingTreasuryBrb + pendingBurnBrb;
         uint256 xfer = amount == 0 ? balance : amount;
         if (xfer == 0) revert ZeroAmount();
         if (xfer > balance) revert InsufficientBalance();
         IERC20(asset).safeTransfer(to, xfer);
         emit TokenSwept(asset, to, xfer);
+    }
+
+    struct PendingBrb { uint256 treasury; uint256 burn; }
+    mapping(uint32 => PendingBrb) public pendingBrbByMarket;
+    uint256 public pendingTreasuryBrb;
+    uint256 public pendingBurnBrb;
+    event PendingBrbDistributed(uint32 indexed marketId, uint256 treasuryAmount, uint256 burnedAmount);
+
+    function retryPendingBrb(uint32 marketId) external onlyRole(FUNDER_ADMIN_ROLE) nonReentrant {
+        _retryPendingBrb(marketId);
+    }
+
+    function _retryPendingBrb(uint32 marketId) private {
+        PendingBrb memory owed = pendingBrbByMarket[marketId];
+        if (owed.treasury == 0 && owed.burn == 0) return;
+        delete pendingBrbByMarket[marketId];
+        pendingTreasuryBrb -= owed.treasury;
+        pendingBurnBrb -= owed.burn;
+        (uint256 sent, uint256 burned) = _distributeBrb(marketId, owed.treasury, owed.burn);
+        emit PendingBrbDistributed(marketId, sent, burned);
     }
 
     uint256 public fundingAttemptCount;
@@ -176,9 +198,10 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         return (IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
     }
 
-    function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector {
+    function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector nonReentrant {
         uint256 attemptId = ++fundingAttemptCount;
         emit FundingAttemptStarted(attemptId, marketId, asset, IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
+        _retryPendingBrb(marketId);
         _fundFromMarket(marketId, asset);
         emit FundingAttemptCompleted(attemptId, IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
     }
@@ -186,6 +209,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     function _fundFromMarket(uint32 marketId, address asset) private {
         IERC20 assetToken = IERC20(asset);
         uint256 swapIn = assetToken.balanceOf(address(this));
+        if (asset == address(brb)) swapIn -= pendingTreasuryBrb + pendingBurnBrb;
         if (swapIn == 0) return;
 
         uint256 brbOut;
@@ -225,29 +249,39 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         uint256 toTreasury = (brbOut * treasuryBrbNumerator) / treasuryBrbDenominator;
         uint256 toBurn = brbOut - toTreasury;
 
-        uint256 sentTreasury;
+        (uint256 sentTreasury, uint256 burnedAmt) = _distributeBrb(marketId, toTreasury, toBurn);
+        emit FundedFromMarket(marketId, asset, swapIn, brbOut, sentTreasury, burnedAmt);
+    }
+
+    function _distributeBrb(uint32 marketId, uint256 toTreasury, uint256 toBurn)
+        private returns (uint256 sentTreasury, uint256 burnedAmt)
+    {
         if (toTreasury > 0) {
             try brb.transfer(jackpotTreasury, toTreasury) returns (bool ok) {
                 if (ok) {
                     sentTreasury = toTreasury;
                 } else {
+                    pendingBrbByMarket[marketId].treasury += toTreasury;
+                    pendingTreasuryBrb += toTreasury;
                     emit JackpotTreasuryTransferFailed(marketId, jackpotTreasury, toTreasury);
                 }
             } catch {
+                pendingBrbByMarket[marketId].treasury += toTreasury;
+                pendingTreasuryBrb += toTreasury;
                 emit JackpotTreasuryTransferFailed(marketId, jackpotTreasury, toTreasury);
             }
         }
 
-        uint256 burnedAmt;
         if (toBurn > 0) {
             try IERC20BurnFromSelf(address(brb)).burn(toBurn) {
                 burnedAmt = toBurn;
             } catch {
+                pendingBrbByMarket[marketId].burn += toBurn;
+                pendingBurnBrb += toBurn;
                 emit JackpotBurnFailed(marketId, toBurn);
             }
         }
 
-        emit FundedFromMarket(marketId, asset, swapIn, brbOut, sentTreasury, burnedAmt);
     }
 
     /// @dev TWAP quote when `pairObservations` is older than `twapWindowSeconds`; otherwise spot. Applies warm or cold slippage on top.
