@@ -19,6 +19,7 @@ import {
   computeMaxStake,
 } from '../scripts/utils/sideBetCatalogue';
 import { deploySideBetProxy, deploySideBetRegistryStack } from './helpers/deploySideBetRegistryStack';
+import { HISTORICAL_SIDE_BET_TEMPLATES, buildCatalogueForMarket } from '../scripts/utils/sideBetCatalogue';
 
 const units = (value: string) => parseUnits(value, 6);
 async function fixture() {
@@ -85,6 +86,29 @@ describe('X100 exact pricing', () => {
 });
 
 describe('X100 real vault integration', () => {
+  it('preserves and pays an old ticket after replacement activation and retirement', async () => {
+    const { sideBet, player, token, engine } = await loadFixture(fixture);
+    const old = { ...HISTORICAL_SIDE_BET_TEMPLATES[0], marketId: 1 };
+    await sideBet.write.addConfig([toConfigStruct(old)]);
+    await sideBet.write.setConfigStakeLimits([0n, units('1'), units('10')]);
+    const before = await token.read.balanceOf([player.account.address]);
+    const stake = units('1') + 1n;
+    await sideBet.write.placeBet([0n, stake], { account: player.account });
+    const promised = (stake * BigInt(old.multiplierBps)) / 10000n;
+    const replacement = buildCatalogueForMarket(1)[0];
+    await sideBet.write.addConfig([toConfigStruct(replacement)]);
+    await sideBet.write.setConfigStakeLimits([1n, units('1'), units('10')]);
+    await sideBet.write.removeConfig([0n]);
+    expect((await sideBet.read.getBet([0n])).payout).eq(promised);
+    expect((await sideBet.read.getConfig([1n])).multiplierBps).eq(replacement.multiplierBps);
+    await engine.write.fulfillRound([7]);
+    const [rows, , effects] = await sideBet.read.previewSettleBundleV2([0n, 1, 0, 1]);
+    await sideBet.write.settleBatchV2([rows, effects]);
+    expect(await token.read.balanceOf([player.account.address])).eq(before - stake + promised);
+    expect(await sideBet.read.reservedOf([1])).eq(0n);
+    await sideBet.write.settleBatchV2([rows, effects]);
+    expect(await token.read.balanceOf([player.account.address])).eq(before - stake + promised);
+  });
   it('creates and activates all choices, recognizes them on rerun and places each ticket', async () => {
     const { sideBet, player } = await loadFixture(fixture);
     for (const entry of buildX100CatalogueForMarket(1)) {

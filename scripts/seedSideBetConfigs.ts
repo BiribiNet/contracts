@@ -18,12 +18,13 @@ import { formatUnits, isAddress, parseAbi, parseEventLogs, parseUnits } from "vi
  *                                                        `placeBet` reverts `StakeLimitsNotSet` until then
  *
  * The script is idempotent: it reads every existing config first and skips templates already
- * present, so a re-run after topping up a vault only activates what was previously left inactive.
+ * present. Reruns enforce the rounding floor and may lower active maxima to current capacity.
  *
  * Env:
  * - SIDE_BET_ADDRESS       — SideBet proxy (default: ../subgraph/deployments/arbitrum-sepolia.json)
  * - SEED_APPLY             — set to `true` to broadcast; otherwise this is a dry run
  * - SEED_CATALOGUE         — legacy (default) or x100
+ * - SEED_RETIRE_LEGACY     — true retires known historical prices only after replacements open
  * - SEED_STAGE_ONLY        — true creates configs with zero limits, without activating them
  * - SEED_MIN_STAKE_UNITS   — minimum stake in whole asset units (default 1)
  * - SEED_SAFETY_BPS        — share of vault liquidity one max-size bet may reserve (default 2000 = 20%)
@@ -44,6 +45,9 @@ import {
     type SideBetConfigStruct,
 } from "./utils/sideBetCatalogue";
 import { assertX100Pricing, buildX100CatalogueForMarket } from "./utils/sideBetX100Catalogue";
+
+import { legacyProbability, roundingSafeMinimum, LEGACY_TOLERANCE, X100_TOLERANCE } from "./utils/sideBetEconomics";
+import { supersededConfigIds } from "./utils/sideBetMigration";
 
 const catalogueName = process.env.SEED_CATALOGUE?.trim() || "legacy";
 if (catalogueName !== "legacy" && catalogueName !== "x100") throw new Error("SEED_CATALOGUE must be legacy or x100");
@@ -85,6 +89,7 @@ interface PlannedAction {
     existingConfigId?: number;
     /** Set when the vault cannot back this multiplier — the config is created but left inactive. */
     skipReason?: string;
+    retireIds: number[];
 }
 
 function envAddress(name: string, fallback: `0x${string}`): `0x${string}` {
@@ -103,6 +108,8 @@ function envBigInt(name: string, fallback: bigint): bigint {
 }
 
 function readSideBetAddress(): `0x${string}` {
+    const override = process.env.SIDE_BET_ADDRESS?.trim();
+    if (override) return envAddress("SIDE_BET_ADDRESS", "0x0000000000000000000000000000000000000000");
     const deploy = JSON.parse(readFileSync(DEPLOY_JSON, "utf8")) as {
         addresses: { sideBet: `0x${string}` };
     };
@@ -119,10 +126,12 @@ async function loadMarkets(sideBet: SideBetContract): Promise<MarketInfo[]> {
     const markets: MarketInfo[] = [];
     for (let marketId = 1; marketId <= Number(marketCount); marketId += 1) {
         const config = await registry.read.getMarket([marketId]);
-        const [symbol, decimals, availableLiquidity] = await Promise.all([
+        const engine = await viem.getContractAt("RouletteEngine", await sideBet.read.ENGINE());
+        const [symbol, decimals, availableLiquidity, rouletteNeed] = await Promise.all([
             publicClient.readContract({ address: config.asset, abi: ERC20_METADATA_ABI, functionName: "symbol" }),
             publicClient.readContract({ address: config.asset, abi: ERC20_METADATA_ABI, functionName: "decimals" }),
             sideBet.read.availableVaultLiquidity([marketId]),
+            engine.read.marketRouletteLiquidityNeed([marketId]),
         ]);
         markets.push({
             marketId,
@@ -130,7 +139,7 @@ async function loadMarkets(sideBet: SideBetContract): Promise<MarketInfo[]> {
             bank: config.bank,
             symbol,
             decimals: Number(decimals),
-            availableLiquidity,
+            availableLiquidity: availableLiquidity > rouletteNeed ? availableLiquidity - rouletteNeed : 0n,
         });
     }
     return markets;
@@ -176,10 +185,20 @@ function planActions(
     const plan: PlannedAction[] = [];
 
     for (const market of markets) {
-        const minStake = parseUnits(minStakeWholeUnits, market.decimals);
+        const requestedMinimum = parseUnits(minStakeWholeUnits, market.decimals);
+        if (requestedMinimum <= 0n) throw new Error("Minimum stake must be positive");
 
         for (const entry of catalogueForMarket(market.marketId)) {
-            const maxStake = computeMaxStake(market.availableLiquidity, entry.multiplierBps, safetyBps);
+            const probability = legacyProbability(entry);
+            if (!probability) throw new Error(`Unknown probability: ${entry.key}`);
+            const precisionMinimum = roundingSafeMinimum(
+                probability,
+                entry.multiplierBps,
+                catalogueName === "x100" ? X100_TOLERANCE : LEGACY_TOLERANCE,
+            );
+            if (precisionMinimum === null) throw new Error(`Price cannot meet edge tolerance: ${entry.key}`);
+            let minStake = requestedMinimum > precisionMinimum ? requestedMinimum : precisionMinimum;
+            let maxStake = computeMaxStake(market.availableLiquidity, entry.multiplierBps, safetyBps);
 
             // `existing` only holds active configs, so a match here is always a live template.
             let existingConfigId: number | undefined;
@@ -190,6 +209,11 @@ function planActions(
                 }
             }
 
+            const previous = existingConfigId === undefined ? undefined : existing.get(existingConfigId);
+            if (previous && previous.minStake > 0n) {
+                minStake = previous.minStake > minStake ? previous.minStake : minStake;
+                maxStake = previous.maxStake < maxStake ? previous.maxStake : maxStake;
+            }
             let skipReason: string | undefined;
             if (maxStake < minStake) {
                 // Invert computeMaxStake: liquidity needed so that maxStake reaches minStake.
@@ -201,7 +225,15 @@ function planActions(
                     `Deposit at least ~${formatUnits(needed, market.decimals)} ${market.symbol} and re-run.`;
             }
 
-            plan.push({ entry, market, minStake, maxStake, existingConfigId, skipReason });
+            plan.push({
+                entry,
+                market,
+                minStake,
+                maxStake,
+                existingConfigId,
+                skipReason,
+                retireIds: process.env.SEED_RETIRE_LEGACY === "true" ? supersededConfigIds(entry, existing) : [],
+            });
         }
     }
 
@@ -222,7 +254,8 @@ function assertCatalogueInBand(plan: PlannedAction[], minimum: number, maximum: 
 
 async function main(): Promise<void> {
     const publicClient = await viem.getPublicClient();
-    if (await publicClient.getChainId() !== 421614) throw new Error("This activation script requires Arbitrum Sepolia (421614)");
+    if ((await publicClient.getChainId()) !== 421614)
+        throw new Error("This activation script requires Arbitrum Sepolia (421614)");
 
     const apply = process.env.SEED_APPLY?.trim().toLowerCase() === "true";
     const stageOnly = process.env.SEED_STAGE_ONLY?.trim().toLowerCase() === "true";
@@ -235,13 +268,20 @@ async function main(): Promise<void> {
 
     console.log("SideBet proxy:", sideBetAddress);
     console.log("Catalogue:", catalogueName);
-    console.log("Stake limits:", stageOnly ? "STAGE ONLY (new configs remain closed)" : "activate when backed by liquidity");
+    console.log(
+        "Stake limits:",
+        stageOnly ? "STAGE ONLY (new configs remain closed)" : "activate when backed by liquidity",
+    );
     console.log(apply ? "Mode: APPLY (transactions will be broadcast)" : "Mode: DRY RUN (no transactions)");
 
     // A catalogue must never be activated on the pre-fix implementation or while the
     // roulette is stalled. The dry run still prints the plan to make recovery reviewable.
     let timeout: bigint | undefined;
-    try { timeout = await sideBet.read.settleTimeout(); } catch { /* legacy implementation */ }
+    try {
+        timeout = await sideBet.read.settleTimeout();
+    } catch {
+        /* legacy implementation */
+    }
     const engine = await viem.getContractAt("RouletteEngine", await sideBet.read.ENGINE());
     const pendingVrf = await engine.read.hasPendingVrf();
     const scheduler = await engine.read.UPKEEP_SCHEDULER();
@@ -250,7 +290,9 @@ async function main(): Promise<void> {
         await sideBet.read.previewSettleBundleV2([0n, 0, 0, 1]);
         await sideBet.read.previewSettleBundle([0n, 0, 0, 1]);
         compatible = true;
-    } catch { /* the old proxy has not been upgraded yet */ }
+    } catch {
+        /* the old proxy has not been upgraded yet */
+    }
     if (!compatible) {
         const reason = `Activation blocked: SideBet at ${sideBetAddress} does not expose both settlement formats for scheduler ${scheduler}. Upgrade the compatible implementation first.`;
         if (apply) throw new Error(reason);
@@ -270,10 +312,12 @@ async function main(): Promise<void> {
         sideBet.read.SIDE_BET_CONFIG_ROLE(),
         sideBet.read.SIDE_BET_LIMITS_ROLE(),
     ]);
-    const [hasConfigRole, hasLimitsRole] = signer?.account ? await Promise.all([
-        sideBet.read.hasRole([configRole, signer.account.address]),
-        sideBet.read.hasRole([limitsRole, signer.account.address]),
-    ]) : [false, false];
+    const [hasConfigRole, hasLimitsRole] = signer?.account
+        ? await Promise.all([
+              sideBet.read.hasRole([configRole, signer.account.address]),
+              sideBet.read.hasRole([limitsRole, signer.account.address]),
+          ])
+        : [false, false];
     if (signer?.account && (!hasConfigRole || (!stageOnly && !hasLimitsRole))) {
         throw new Error(
             `Signer ${signer.account.address} needs SIDE_BET_CONFIG_ROLE (has: ${hasConfigRole}) and ` +
@@ -324,7 +368,11 @@ async function main(): Promise<void> {
                 if (!signer?.account) throw new Error("Missing signer");
                 const hash = await sideBet.write.addConfig([toConfigStruct(entry)], { account: signer.account });
                 const receipt = await waitFor(hash, `addConfig(${label})`);
-                const [added] = parseEventLogs({ abi: sideBet.abi, eventName: "ConfigAdded", logs: receipt.logs.filter(log => log.address.toLowerCase() === sideBetAddress.toLowerCase()) });
+                const [added] = parseEventLogs({
+                    abi: sideBet.abi,
+                    eventName: "ConfigAdded",
+                    logs: receipt.logs.filter((log) => log.address.toLowerCase() === sideBetAddress.toLowerCase()),
+                });
                 if (!added) throw new Error(`Missing ConfigAdded event for ${label}`);
                 configId = Number(added.args.configId);
                 console.log(`  created config ${configId}       ${label}`);
@@ -343,9 +391,35 @@ async function main(): Promise<void> {
             continue;
         }
 
-        const isAlreadyActive =
-            configId !== undefined && (existing.get(configId)?.minStake ?? 0n) > 0n;
-        if (isAlreadyActive) continue;
+        const previous = configId === undefined ? undefined : existing.get(configId);
+        const needsLimits = !previous || previous.minStake !== minStake || previous.maxStake !== maxStake;
+        if (!needsLimits && action.retireIds.length === 0) continue;
+        const retire = async () => {
+            for (const oldId of action.retireIds) {
+                if (!apply) console.log(`  [dry-run] removeConfig ${oldId} only after replacement opens: ${label}`);
+                else {
+                    if (configId === undefined || !signer?.account) throw new Error("Missing replacement");
+                    const replacement = await sideBet.read.getConfig([BigInt(configId)]);
+                    if (
+                        replacement.minStake < minStake ||
+                        replacement.maxStake < replacement.minStake ||
+                        !matchesConfig(entry, replacement)
+                    )
+                        throw new Error("Replacement changed or closed; retirement aborted");
+                    const old = await sideBet.read.getConfig([BigInt(oldId)]);
+                    if (!supersededConfigIds(entry, new Map([[oldId, old]])).includes(oldId))
+                        throw new Error("Historical configuration changed; retirement aborted");
+                    await waitFor(
+                        await sideBet.write.removeConfig([BigInt(oldId)], { account: signer.account }),
+                        `removeConfig(${oldId})`,
+                    );
+                }
+            }
+        };
+        if (!needsLimits) {
+            await retire();
+            continue;
+        }
 
         if (!apply) {
             console.log(
@@ -353,6 +427,7 @@ async function main(): Promise<void> {
                     `[${formatUnits(minStake, market.decimals)}, ${formatUnits(maxStake, market.decimals)}] ${market.symbol}`,
             );
             activated += 1;
+            await retire();
             continue;
         }
 
@@ -367,6 +442,7 @@ async function main(): Promise<void> {
                 `[${formatUnits(minStake, market.decimals)}, ${formatUnits(maxStake, market.decimals)}] ${market.symbol}`,
         );
         activated += 1;
+        await retire();
     }
 
     console.log(

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true },
+  "include": [
+    "hardhat.config.ts",
+    "artifacts/**/*.d.ts",
+    "scripts/seedSideBetConfigs.ts",
+    "scripts/repriceLegacySideBetConfigs.ts",
+    "scripts/exportSideBetEconomics.ts",
+    "scripts/exportLegacySideBetPricing.ts",
+    "scripts/utils/sideBetEconomics.ts",
+    "scripts/utils/sideBetMigration.ts",
+    "test/SideBetEconomics.test.ts",
+    "test/SideBetX100Catalogue.test.ts"
+  ],
+  "exclude": []
+}
