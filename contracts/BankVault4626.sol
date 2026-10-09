@@ -14,6 +14,7 @@ import { IBankVault } from "./interfaces/IBankVault.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
+import { PlayerProtectionLib } from "./libraries/PlayerProtectionLib.sol";
 
 /// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `ERC1967Proxy`.
 /// @dev Deposit / withdraw enqueue policy follows `ENGINE.isBankLiquidityRestricted(marketId)`. Queue limits and batch sizes are read from the engine (global per protocol).
@@ -68,6 +69,8 @@ contract BankVault4626 is
         uint256 nextWithdrawalId;
         mapping(address => uint256) pendingWithdrawalId;
         mapping(uint256 => WithdrawalReceipt) withdrawalReceipts;
+        // Append-only proxy storage. Limits apply to both roulette and side bets.
+        mapping(address => PlayerProtectionLib.Limits) playerLimits;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.BankVault4626")) - 1)) & ~bytes32(uint256(0xff));
@@ -82,6 +85,18 @@ contract BankVault4626 is
 
     function marketId() external view override returns (uint32) {
         return _s().marketId;
+    }
+
+    function playerLimits(address player) external view returns (PlayerProtectionLib.Limits memory) {
+        return PlayerProtectionLib.effective(_s().playerLimits[player]);
+    }
+
+    function setPlayerLimits(uint256 dailyLimit, uint32 sessionSeconds) external {
+        PlayerProtectionLib.configure(_s().playerLimits[msg.sender], dailyLimit, sessionSeconds);
+    }
+
+    function selfExclude(uint32 durationSeconds) external {
+        PlayerProtectionLib.exclude(_s().playerLimits[msg.sender], durationSeconds);
     }
 
     function ENGINE() external view returns (IRouletteEngine) {
@@ -209,6 +224,7 @@ contract BankVault4626 is
     function lockSideBetStake(address player, uint256 stake, uint256 payoutReserve) public virtual onlySideBet {
         if (player == address(0) || stake == 0) revert ZeroAmount();
         BankVaultStorage storage $ = _s();
+        PlayerProtectionLib.consume($.playerLimits[player], player, stake);
         uint256 free = availableForSideBet();
         // `lockedBetLiquidity` holds roulette stakes but never the worst case they can pay out, so
         // free liquidity alone overstates what a side bet may reserve. The engine's solvency check
@@ -253,6 +269,7 @@ contract BankVault4626 is
     function _placeBetCore(uint256 amount, bytes calldata betData, address referral) private nonReentrant {
         BankVaultStorage storage $ = _s();
         if (amount < $.minBet) revert BetTooSmall();
+        PlayerProtectionLib.consume($.playerLimits[msg.sender], msg.sender, amount);
         $.lockedBetLiquidity += amount;
         $.ENGINE.recordBet($.marketId, msg.sender, amount, betData, referral);
         emit BetPlaced(msg.sender, amount, betData, $.ENGINE.currentGlobalRound());
