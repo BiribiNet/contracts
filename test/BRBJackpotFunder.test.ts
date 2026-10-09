@@ -283,12 +283,11 @@ describe("BRBJackpotFunder", function () {
         await funder.write.setTreasuryBrbSplit([0n, 1n]);
         const treasuryBeforeRetry = await brb.read.balanceOf([treasury.address]);
         const supplyBeforeRetry = await brb.read.totalSupply();
-        const usdc = await viem.deployContract("MockUSDC");
         // A different market cannot consume these retained BRB as fresh input.
         await funder.write.fundFromMarket([2n, brb.address]);
         expect(await funder.read.pendingBurnBrb()).to.equal(owedBurn);
         // Even a fee collection with zero new input retries the original market.
-        await funder.write.fundFromMarket([1n, usdc.address]);
+        await funder.write.fundFromMarket([1n, brb.address]);
         expect(await brb.read.balanceOf([treasury.address])).to.equal(treasuryBeforeRetry + owedTreasury);
         expect(await brb.read.totalSupply()).to.equal(supplyBeforeRetry - owedBurn);
         expect(await brb.read.balanceOf([funder.address])).to.equal(0n);
