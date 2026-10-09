@@ -2,8 +2,11 @@
 pragma solidity ^0.8.27;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { IUniswapV2Pair } from "./vendor/uniswap-v2-core/interfaces/IUniswapV2Pair.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
 import { IUniswapV2Factory } from "./vendor/uniswap-v2-core/interfaces/IUniswapV2Factory.sol";
@@ -14,9 +17,9 @@ interface IERC20BurnFromSelf {
     function burn(uint256 value) external;
 }
 
-/// @notice Swaps the contract's current `asset` balance to BRB via Uniswap V2 (when `asset != brb`); splits BRB between jackpot treasury and on-chain burn (reduces total supply).
-/// @dev `fundFromMarket` does not revert on swap failure, treasury transfer failure, or burn failure (emits / try-catch) so settlement is not bricked by Uniswap or BRB hooks. Swap size is `IERC20(asset).balanceOf(address(this))` after the engine's `transferOut`; the engine uses `swapAssetTotalBps` and per-round profit on its side to decide how much to send. Non-BRB swaps use a Uniswap V2 TWAP floor when the observation window is warm (`slippageBps`); otherwise spot with `coldSlippageBps` (stricter, default 3%).
-contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
+/// @notice Exact per-vault funding queues, permissionless bounded execution and BRB distribution.
+/// @dev New collectors enqueue after transfer; external token/router calls run in a separate worker.
+contract BRBJackpotFunder is AccessControl, ReentrancyGuard, IBRBJackpotFunder {
     using SafeERC20 for IERC20;
 
     bytes32 public constant FUNDER_ADMIN_ROLE = keccak256("FUNDER_ADMIN_ROLE");
@@ -54,7 +57,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// cadence, leaving `amountOutMin` derived from spot alone.
     mapping(address pair => UniswapV2TwapLib.Observation) public pairObservations;
 
-    /// @dev Most recent sample per pair (still taken after every successful swap). Promoted to the
+    /// @dev Oldest pending sample per pair, retained between successful swaps. Promoted to the
     /// anchor once it has aged past `twapWindowSeconds`.
     mapping(address pair => UniswapV2TwapLib.Observation) public pendingPairObservations;
 
@@ -66,6 +69,142 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     error InvalidBps();
     error ZeroAmount();
     error InsufficientBalance();
+    error AssetMismatch();
+    error OnlySelf();
+    error BatchTooLarge();
+    error InsufficientAttemptGas();
+
+    struct FundingAccount {
+        address asset;
+        uint256 queued;
+        uint256 credited;
+        uint256 processed;
+        uint256 brbProduced;
+        uint256 treasuryPaid;
+        uint256 burned;
+    }
+    mapping(uint32 => FundingAccount) public fundingAccounts;
+    mapping(address => uint256) public queuedAssetTotals;
+    mapping(uint32 => uint8) public consecutiveFailures;
+    mapping(uint32 => uint256) public nextAttemptAt;
+    uint256 public constant RETRY_DELAY = 60;
+    uint8 public constant MAX_FAILURES = 5;
+    uint256 public constant ATTEMPT_GAS = 500_000;
+    uint256 public maxSwapReserveBps = 100; // At most 1% of the current input reserve.
+    event FundingQueued(uint32 indexed marketId, address indexed asset, uint256 amount, uint256 pending);
+    event FundingRetryScheduled(uint32 indexed marketId, uint8 failures, uint256 nextAttemptAt, bool stopped);
+    event FundingRetryReset(uint32 indexed marketId);
+    event FundingImported(uint32 indexed marketId, address indexed asset, uint256 amount, bytes32 sourceTransaction);
+    event MaxSwapReserveBpsUpdated(uint256 bps);
+    event FundingReconciled(uint32 indexed marketId, address indexed asset, uint256 credited, uint256 processed,
+        uint256 queued, uint256 brbProduced, uint256 treasuryPaid, uint256 burned,
+        uint256 pendingTreasury, uint256 pendingBurn);
+
+    /// @notice Pure bookkeeping after the collector transfers the exact fee. No router/token calls.
+    /// @dev Collectors must transfer standard, non-rebasing, non-fee-on-transfer assets atomically.
+    function queueFunding(uint32 marketId, address asset, uint256 amount) external override onlyFeeCollector {
+        if (asset == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
+        _credit(marketId, asset, amount);
+    }
+
+    /// @notice Explicitly assign already transferred migration inputs, with their source receipt.
+    /// @dev Old BRB distribution liabilities must be repaid on the old funder, not imported as input.
+    function importFunding(uint32 marketId, address asset, uint256 amount, bytes32 sourceTransaction)
+        external onlyRole(FUNDER_ADMIN_ROLE) nonReentrant
+    {
+        if (asset == address(0) || sourceTransaction == bytes32(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
+        uint256 free = IERC20(asset).balanceOf(address(this)) - queuedAssetTotals[asset];
+        if (asset == address(brb)) free -= pendingTreasuryBrb + pendingBurnBrb;
+        if (amount > free) revert InsufficientBalance();
+        emit FundingImported(marketId, asset, amount, sourceTransaction);
+        _credit(marketId, asset, amount);
+    }
+
+    function _credit(uint32 marketId, address asset, uint256 amount) private {
+        FundingAccount storage a = fundingAccounts[marketId];
+        if (a.asset == address(0)) a.asset = asset;
+        if (a.asset != asset) revert AssetMismatch();
+        a.queued += amount;
+        a.credited += amount;
+        queuedAssetTotals[asset] += amount;
+        emit FundingQueued(marketId, asset, amount, a.queued);
+        _reconcile(marketId);
+    }
+
+    function _reconcile(uint32 marketId) private {
+        FundingAccount storage a = fundingAccounts[marketId];
+        emit FundingReconciled(marketId, a.asset, a.credited, a.processed, a.queued,
+            a.brbProduced, a.treasuryPaid, a.burned,
+            pendingBrbByMarket[marketId].treasury, pendingBrbByMarket[marketId].burn);
+    }
+
+    function setMaxSwapReserveBps(uint256 bps) external onlyRole(FUNDER_ADMIN_ROLE) {
+        if (bps == 0 || bps > 500) revert InvalidBps();
+        maxSwapReserveBps = bps;
+        emit MaxSwapReserveBpsUpdated(bps);
+    }
+
+    /// @notice Permissionless oracle maintenance, independent of swap success.
+    function updateObservation(address asset) external nonReentrant {
+        _snapshotPairObservation(asset);
+    }
+
+    function resetFundingRetry(uint32 marketId) external onlyRole(FUNDER_ADMIN_ROLE) {
+        consecutiveFailures[marketId] = 0;
+        nextAttemptAt[marketId] = 0;
+        emit FundingRetryReset(marketId);
+    }
+
+    /// @notice One gas-bounded attempt; failures never erase the queue.
+    function processFunding(uint32 marketId) external nonReentrant returns (bool) {
+        return _processFunding(marketId);
+    }
+
+    function processFundingBatch(uint32[] calldata marketIds) external nonReentrant {
+        if (marketIds.length > 10) revert BatchTooLarge();
+        for (uint256 i; i < marketIds.length; ++i) _processFunding(marketIds[i]);
+    }
+
+    function _processFunding(uint32 marketId) private returns (bool complete) {
+        FundingAccount storage a = fundingAccounts[marketId];
+        if (a.asset == address(0) || (a.queued == 0 && pendingBrbByMarket[marketId].treasury == 0
+            && pendingBrbByMarket[marketId].burn == 0)) return true;
+        if (consecutiveFailures[marketId] >= MAX_FAILURES || block.timestamp < nextAttemptAt[marketId]) return false;
+        // A permissionless caller cannot exhaust the retry budget with an underfunded gas limit.
+        if (gasleft() < ATTEMPT_GAS + 200_000) revert InsufficientAttemptGas();
+        uint256 attemptId = ++fundingAttemptCount;
+        // Ledger balances avoid token getter failures outside the isolated call.
+        emit FundingAttemptStarted(attemptId, marketId, a.asset, a.queued,
+            pendingBrbByMarket[marketId].treasury + pendingBrbByMarket[marketId].burn);
+        bool progressed;
+        try this.executeFunding{gas: ATTEMPT_GAS}(marketId) returns (bool progress) { progressed = progress; }
+        catch { emit FundFromMarketSkipped(marketId, a.asset, SKIP_SWAP_REVERTED); }
+        if (progressed && pendingBrbByMarket[marketId].treasury == 0 && pendingBrbByMarket[marketId].burn == 0) {
+            consecutiveFailures[marketId] = 0;
+        } else {
+            ++consecutiveFailures[marketId];
+        }
+        nextAttemptAt[marketId] = block.timestamp + RETRY_DELAY;
+        emit FundingRetryScheduled(marketId, consecutiveFailures[marketId], nextAttemptAt[marketId],
+            consecutiveFailures[marketId] >= MAX_FAILURES);
+        emit FundingAttemptCompleted(attemptId, a.queued,
+            pendingBrbByMarket[marketId].treasury + pendingBrbByMarket[marketId].burn);
+        _reconcile(marketId);
+        return a.queued == 0 && pendingBrbByMarket[marketId].treasury == 0 && pendingBrbByMarket[marketId].burn == 0;
+    }
+
+    /// @dev Self-call boundary rolls back approvals, token transfers and ledger changes together.
+    function executeFunding(uint32 marketId) external returns (bool progressed) {
+        if (msg.sender != address(this)) revert OnlySelf();
+        FundingAccount storage a = fundingAccounts[marketId];
+        uint256 beforeQueued = a.queued;
+        uint256 beforePending = pendingBrbByMarket[marketId].treasury + pendingBrbByMarket[marketId].burn;
+        _retryPendingBrb(marketId);
+        _fundFromMarket(marketId, a.asset, true);
+        return a.queued < beforeQueued || pendingBrbByMarket[marketId].treasury + pendingBrbByMarket[marketId].burn < beforePending;
+    }
 
     event SwapAssetBpsUpdated(uint256 totalBps);
     event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
@@ -157,14 +296,37 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
     /// @notice Recover market assets left after skipped swaps (TWAP / liquidity). Use when migrating to a new funder or during prolonged pool stress.
     /// @param amount `0` sweeps the full balance of `asset`.
-    function sweepToken(address asset, address to, uint256 amount) external onlyRole(FUNDER_ADMIN_ROLE) {
+    function sweepToken(address asset, address to, uint256 amount) external onlyRole(FUNDER_ADMIN_ROLE) nonReentrant {
         if (asset == address(0) || to == address(0)) revert ZeroAddress();
         uint256 balance = IERC20(asset).balanceOf(address(this));
+        balance -= queuedAssetTotals[asset];
+        if (asset == address(brb)) balance -= pendingTreasuryBrb + pendingBurnBrb;
         uint256 xfer = amount == 0 ? balance : amount;
         if (xfer == 0) revert ZeroAmount();
         if (xfer > balance) revert InsufficientBalance();
         IERC20(asset).safeTransfer(to, xfer);
         emit TokenSwept(asset, to, xfer);
+    }
+
+    struct PendingBrb { uint256 treasury; uint256 burn; }
+    mapping(uint32 => PendingBrb) public pendingBrbByMarket;
+    uint256 public pendingTreasuryBrb;
+    uint256 public pendingBurnBrb;
+    event PendingBrbDistributed(uint32 indexed marketId, uint256 treasuryAmount, uint256 burnedAmount);
+
+    function retryPendingBrb(uint32 marketId) external onlyRole(FUNDER_ADMIN_ROLE) nonReentrant {
+        _retryPendingBrb(marketId);
+        _reconcile(marketId);
+    }
+
+    function _retryPendingBrb(uint32 marketId) private {
+        PendingBrb memory owed = pendingBrbByMarket[marketId];
+        if (owed.treasury == 0 && owed.burn == 0) return;
+        delete pendingBrbByMarket[marketId];
+        pendingTreasuryBrb -= owed.treasury;
+        pendingBurnBrb -= owed.burn;
+        (uint256 sent, uint256 burned) = _distributeBrb(marketId, owed.treasury, owed.burn);
+        emit PendingBrbDistributed(marketId, sent, burned);
     }
 
     uint256 public fundingAttemptCount;
@@ -176,16 +338,34 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         return (IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
     }
 
-    function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector {
+    function fundFromMarket(uint32 marketId, address asset) external override onlyFeeCollector nonReentrant {
+        address boundAsset = fundingAccounts[marketId].asset;
+        if (boundAsset != address(0) && boundAsset != asset) revert AssetMismatch();
+        // Legacy collectors may credit only previously unassigned balance, never another vault's queue.
+        uint256 free = IERC20(asset).balanceOf(address(this)) - queuedAssetTotals[asset];
+        if (asset == address(brb)) free -= pendingTreasuryBrb + pendingBurnBrb;
+        if (free > 0) _credit(marketId, asset, free);
         uint256 attemptId = ++fundingAttemptCount;
         emit FundingAttemptStarted(attemptId, marketId, asset, IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
-        _fundFromMarket(marketId, asset);
+        _retryPendingBrb(marketId);
+        _fundFromMarket(marketId, asset, false);
+        _reconcile(marketId);
         emit FundingAttemptCompleted(attemptId, IERC20(asset).balanceOf(address(this)), brb.balanceOf(address(this)));
     }
 
-    function _fundFromMarket(uint32 marketId, address asset) private {
+    function _fundFromMarket(uint32 marketId, address asset, bool bounded) private {
         IERC20 assetToken = IERC20(asset);
-        uint256 swapIn = assetToken.balanceOf(address(this));
+        FundingAccount storage a = fundingAccounts[marketId];
+        uint256 swapIn = a.queued;
+        if (bounded && asset != address(brb) && swapIn > 0) {
+            address pair = _assetBrbPair(asset);
+            if (pair == address(0)) { emit FundFromMarketSkipped(marketId, asset, SKIP_NO_QUOTE); return; }
+            (uint112 r0, uint112 r1,) = IUniswapV2Pair(pair).getReserves();
+            uint256 reserveIn = IUniswapV2Pair(pair).token0() == asset ? r0 : r1;
+            uint256 cap = Math.mulDiv(reserveIn, maxSwapReserveBps, BPS_DENOM);
+            if (cap == 0) { emit FundFromMarketSkipped(marketId, asset, SKIP_NO_QUOTE); return; }
+            if (swapIn > cap) swapIn = cap;
+        }
         if (swapIn == 0) return;
 
         uint256 brbOut;
@@ -204,11 +384,13 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
             assetToken.forceApprove(address(router), swapIn);
 
+            uint256 assetBefore = assetToken.balanceOf(address(this));
             uint256 brbBefore = brb.balanceOf(address(this));
             try router.swapExactTokensForTokens(swapIn, amountOutMin, path, address(this), block.timestamp + 600) returns (
                 uint256[] memory
             ) {
                 brbOut = brb.balanceOf(address(this)) - brbBefore;
+                if (brbOut < amountOutMin || assetBefore - assetToken.balanceOf(address(this)) != swapIn) revert InsufficientBalance();
             } catch {
                 emit FundFromMarketSkipped(marketId, asset, SKIP_SWAP_REVERTED);
             }
@@ -222,32 +404,48 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
 
         if (brbOut == 0) return;
 
-        uint256 toTreasury = (brbOut * treasuryBrbNumerator) / treasuryBrbDenominator;
+        a.queued -= swapIn;
+        queuedAssetTotals[asset] -= swapIn;
+        a.processed += swapIn;
+        a.brbProduced += brbOut;
+        uint256 toTreasury = Math.mulDiv(brbOut, treasuryBrbNumerator, treasuryBrbDenominator);
         uint256 toBurn = brbOut - toTreasury;
 
-        uint256 sentTreasury;
+        (uint256 sentTreasury, uint256 burnedAmt) = _distributeBrb(marketId, toTreasury, toBurn);
+        emit FundedFromMarket(marketId, asset, swapIn, brbOut, sentTreasury, burnedAmt);
+    }
+
+    function _distributeBrb(uint32 marketId, uint256 toTreasury, uint256 toBurn)
+        private returns (uint256 sentTreasury, uint256 burnedAmt)
+    {
         if (toTreasury > 0) {
             try brb.transfer(jackpotTreasury, toTreasury) returns (bool ok) {
                 if (ok) {
                     sentTreasury = toTreasury;
+                    fundingAccounts[marketId].treasuryPaid += toTreasury;
                 } else {
+                    pendingBrbByMarket[marketId].treasury += toTreasury;
+                    pendingTreasuryBrb += toTreasury;
                     emit JackpotTreasuryTransferFailed(marketId, jackpotTreasury, toTreasury);
                 }
             } catch {
+                pendingBrbByMarket[marketId].treasury += toTreasury;
+                pendingTreasuryBrb += toTreasury;
                 emit JackpotTreasuryTransferFailed(marketId, jackpotTreasury, toTreasury);
             }
         }
 
-        uint256 burnedAmt;
         if (toBurn > 0) {
             try IERC20BurnFromSelf(address(brb)).burn(toBurn) {
                 burnedAmt = toBurn;
+                fundingAccounts[marketId].burned += toBurn;
             } catch {
+                pendingBrbByMarket[marketId].burn += toBurn;
+                pendingBurnBrb += toBurn;
                 emit JackpotBurnFailed(marketId, toBurn);
             }
         }
 
-        emit FundedFromMarket(marketId, asset, swapIn, brbOut, sentTreasury, burnedAmt);
     }
 
     /// @dev TWAP quote when `pairObservations` is older than `twapWindowSeconds`; otherwise spot. Applies warm or cold slippage on top.
@@ -281,7 +479,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         uint32 window = twapWindowSeconds;
 
         if (window > 0 && obs.timestamp != 0 && nowTs > obs.timestamp && nowTs - obs.timestamp >= window) {
-            uint256 twapOut = UniswapV2TwapLib.quoteTwapAmountOut(pair, asset, swapIn, obs, nowTs);
+            uint256 twapOut = UniswapV2TwapLib.quoteExecutableTwapAmountOut(pair, asset, swapIn, obs, nowTs);
             // Protective floor: only a TWAP ABOVE spot carries information — it means spot has been
             // pushed down (sandwich, thin liquidity), which is exactly when the floor must bite.
             // Taking the lower of the two, as this did before, made `amountOutMin` follow the
@@ -337,13 +535,18 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
             return;
         }
 
-        pendingPairObservations[pair] = sample;
-
         // Roll the anchor forward only once the previous sample has aged past the window, so the
         // anchor keeps a >= `twapWindowSeconds` lookback instead of being reset by every swap.
         uint32 window = twapWindowSeconds;
-        if (window > 0 && timestamp > pending.timestamp && timestamp - pending.timestamp >= window) {
+        if (window == 0) {
+            pairObservations[pair] = sample;
+            pendingPairObservations[pair] = sample;
+            emit PairObservationUpdated(pair, timestamp);
+        } else if (pending.timestamp == pairObservations[pair].timestamp) {
+            pendingPairObservations[pair] = sample;
+        } else if (timestamp > pending.timestamp && timestamp - pending.timestamp >= window) {
             pairObservations[pair] = pending;
+            pendingPairObservations[pair] = sample;
             emit PairObservationUpdated(pair, pending.timestamp);
         }
     }
