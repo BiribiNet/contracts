@@ -34,7 +34,11 @@
     "generate:cre:http:configs": "hardhat run scripts/generateCreHttpConfigs.ts",
     "seed:side-bets:x100:arbitrum-sepolia": "hardhat run scripts/seedX100SideBetConfigs.ts --network arbitrumsepolia",
     "export:x100": "ts-node scripts/exportSideBetX100Catalogue.ts",
-    "check:x100": "ts-node scripts/exportSideBetX100Catalogue.ts --check"
+    "check:x100": "ts-node scripts/exportSideBetX100Catalogue.ts --check",
+    "reprice:side-bets:arbitrum-sepolia": "hardhat run scripts/repriceLegacySideBetConfigs.ts --network arbitrumsepolia",
+    "export:side-bet-economics": "ts-node scripts/exportSideBetEconomics.ts",
+    "check:side-bet-economics": "ts-node scripts/exportSideBetEconomics.ts --check",
+    "typecheck:side-bet-economics": "tsc --noEmit --project tsconfig.side-bet-economics.json"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
