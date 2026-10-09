@@ -3,6 +3,7 @@ import { isAddress } from 'viem';
 
 /** Operator worker. Read-only unless FUNDING_APPLY=true; never run during settlement.
  * Run from a supervised service every minute. Contract cooldown/failure limits remain authoritative. */
+const observationTimes = new Map<string, bigint>();
 async function main() {
   const address = process.env.FUNDER_ADDRESS;
   if (!address || !isAddress(address)) throw new Error('FUNDER_ADDRESS is required');
@@ -16,7 +17,10 @@ async function main() {
   if (!Number.isSafeInteger(after) || after < 0) throw new Error('Invalid AFTER_MARKET_ID');
   const client = await viem.getPublicClient();
   const now = (await client.getBlock()).timestamp;
-  const markets: number[] = [];
+  const maxJobs = Number(process.env.MAX_FUNDING_MARKETS ?? 10);
+  if (!Number.isInteger(maxJobs) || maxJobs < 1 || maxJobs > 10) throw new Error('MAX_FUNDING_MARKETS must be 1-10');
+  const ready: { id: number; next: bigint }[] = [];
+  let observations = 0;
   const observed = new Set<string>();
   for (let id = after + 1; id <= Math.min(count, after + 100); id++) {
     const a = await funder.read.fundingAccounts([id]);
@@ -28,7 +32,10 @@ async function main() {
     // Warm observations even before the first successful swap, for every registered asset.
     if (!observed.has(cfg.asset.toLowerCase())) {
       observed.add(cfg.asset.toLowerCase());
-      if (apply) {
+      const key = address.toLowerCase() + ':' + cfg.asset.toLowerCase();
+      if (apply && observations < 10 && now - (observationTimes.get(key) ?? 0n) >= 600n) {
+        observations++;
+        observationTimes.set(key, now);
         try {
           const hash = await funder.write.updateObservation([cfg.asset], { gas: 200000n });
           const receipt = await client.waitForTransactionReceipt({ hash });
@@ -39,8 +46,11 @@ async function main() {
     if (a[1] === 0n && debt[0] === 0n && debt[1] === 0n) continue;
     console.log(JSON.stringify({ market: id, queued: a[1].toString(), pendingTreasury: debt[0].toString(),
       pendingBurn: debt[1].toString(), failures: attempts, nextAttemptAt: next.toString(), stopped: attempts >= 5 }));
-    if (attempts < 5 && next <= now) markets.push(id);
+    if (attempts < 5 && next <= now) ready.push({ id, next });
   }
+  // Oldest ready work wins; continuously active early market IDs cannot starve the others.
+  const markets = ready.sort((a, b) => a.next < b.next ? -1 : a.next > b.next ? 1 : a.id - b.id)
+    .slice(0, maxJobs).map(x => x.id);
   if (apply) {
     for (let i = 0; i < markets.length; i += 10) {
       const batch = markets.slice(i, i + 10);

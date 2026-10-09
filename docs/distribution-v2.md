@@ -22,7 +22,7 @@ the treasury's existing balance. Frontend estimates must not include the queue.
    update it when an approved offer changes. Legacy probabilities are sampled
    catalogue estimates. None of the simulations activates or changes an offer.
 4. The permissionless worker limits each non-BRB swap to 1% of input reserves
-   (admin range 0–5%, with zero rejected). A missing/empty pair keeps funds queued;
+   (admin range 0.01–5%). A missing/empty pair keeps funds queued;
    it does not bypass the cap via a router quote. Observations can be sampled
    independently of successful swaps. Native BRB needs no swap.
 5. One self-call isolates token getters, approvals, swaps and distribution behind
@@ -48,7 +48,10 @@ and uses the previous synchronous quote path. New collectors never call it.
 
 `FUNDER_ADDRESS` is mandatory. The worker checks it against the engine's active
 funder, inspects up to 100 markets (`AFTER_MARKET_ID` pages larger registries), and
-warms each unique asset observation. Reads fail visibly; stopped queues are logged.
+warms each unique asset observation at most once per ten minutes within a worker
+process. At most ten observations and ten ready markets are submitted per cycle
+(`MAX_FUNDING_MARKETS=1..10`). Oldest ready queues are processed first to avoid
+starving later market IDs. Reads fail visibly; stopped queues are logged.
 
 Run `yarn hardhat run scripts/runFundingKeeper.ts --network arbitrumsepolia`.
 Default mode is a one-cycle read-only report. Set `FUNDING_APPLY=true` only for
