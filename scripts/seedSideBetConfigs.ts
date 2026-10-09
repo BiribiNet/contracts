@@ -23,6 +23,8 @@ import { formatUnits, isAddress, parseAbi, parseEventLogs, parseUnits } from "vi
  * Env:
  * - SIDE_BET_ADDRESS       — SideBet proxy (default: ../subgraph/deployments/arbitrum-sepolia.json)
  * - SEED_APPLY             — set to `true` to broadcast; otherwise this is a dry run
+ * - SEED_CATALOGUE         — legacy (default) or x100
+ * - SEED_STAGE_ONLY        — true creates configs with zero limits, without activating them
  * - SEED_MIN_STAKE_UNITS   — minimum stake in whole asset units (default 1)
  * - SEED_SAFETY_BPS        — share of vault liquidity one max-size bet may reserve (default 2000 = 20%)
  *
@@ -41,6 +43,12 @@ import {
     type SideBetCatalogueEntry,
     type SideBetConfigStruct,
 } from "./utils/sideBetCatalogue";
+import { assertX100Pricing, buildX100CatalogueForMarket } from "./utils/sideBetX100Catalogue";
+
+const catalogueName = process.env.SEED_CATALOGUE?.trim() || "legacy";
+if (catalogueName !== "legacy" && catalogueName !== "x100") throw new Error("SEED_CATALOGUE must be legacy or x100");
+if (catalogueName === "x100") assertX100Pricing();
+const catalogueForMarket = catalogueName === "x100" ? buildX100CatalogueForMarket : buildCatalogueForMarket;
 
 const DEPLOY_JSON = join(__dirname, "..", "..", "subgraph", "deployments", "arbitrum-sepolia.json");
 
@@ -170,7 +178,7 @@ function planActions(
     for (const market of markets) {
         const minStake = parseUnits(minStakeWholeUnits, market.decimals);
 
-        for (const entry of buildCatalogueForMarket(market.marketId)) {
+        for (const entry of catalogueForMarket(market.marketId)) {
             const maxStake = computeMaxStake(market.availableLiquidity, entry.multiplierBps, safetyBps);
 
             // `existing` only holds active configs, so a match here is always a live template.
@@ -217,6 +225,7 @@ async function main(): Promise<void> {
     if (await publicClient.getChainId() !== 421614) throw new Error("This activation script requires Arbitrum Sepolia (421614)");
 
     const apply = process.env.SEED_APPLY?.trim().toLowerCase() === "true";
+    const stageOnly = process.env.SEED_STAGE_ONLY?.trim().toLowerCase() === "true";
     const minStakeWholeUnits = process.env.SEED_MIN_STAKE_UNITS?.trim() || DEFAULT_MIN_STAKE_WHOLE_UNITS;
     const safetyBps = envBigInt("SEED_SAFETY_BPS", DEFAULT_LIQUIDITY_SAFETY_BPS);
     if (safetyBps > BPS_DENOMINATOR) throw new Error("SEED_SAFETY_BPS cannot exceed 10000");
@@ -225,6 +234,8 @@ async function main(): Promise<void> {
     const sideBet = await getSideBetContract(sideBetAddress);
 
     console.log("SideBet proxy:", sideBetAddress);
+    console.log("Catalogue:", catalogueName);
+    console.log("Stake limits:", stageOnly ? "STAGE ONLY (new configs remain closed)" : "activate when backed by liquidity");
     console.log(apply ? "Mode: APPLY (transactions will be broadcast)" : "Mode: DRY RUN (no transactions)");
 
     // A catalogue must never be activated on the pre-fix implementation or while the
@@ -263,10 +274,10 @@ async function main(): Promise<void> {
         sideBet.read.hasRole([configRole, signer.account.address]),
         sideBet.read.hasRole([limitsRole, signer.account.address]),
     ]) : [false, false];
-    if (signer?.account && (!hasConfigRole || !hasLimitsRole)) {
+    if (signer?.account && (!hasConfigRole || (!stageOnly && !hasLimitsRole))) {
         throw new Error(
-            `Signer ${signer.account.address} needs both SIDE_BET_CONFIG_ROLE (has: ${hasConfigRole}) and ` +
-                `SIDE_BET_LIMITS_ROLE (has: ${hasLimitsRole}) — seeding aborted before any transaction.`,
+            `Signer ${signer.account.address} needs SIDE_BET_CONFIG_ROLE (has: ${hasConfigRole}) and ` +
+                `SIDE_BET_LIMITS_ROLE when activating (has: ${hasLimitsRole}, stage only: ${stageOnly}) — seeding aborted before any transaction.`,
         );
     }
 
@@ -322,6 +333,8 @@ async function main(): Promise<void> {
         } else {
             alreadyPresent += 1;
         }
+
+        if (stageOnly) continue;
 
         if (action.skipReason) {
             console.warn(`  ! not activated             ${label}: ${action.skipReason}`);

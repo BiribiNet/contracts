@@ -1,0 +1,46 @@
+[
+  {
+    "key": "PERFECT_DOZEN",
+    "betType": 6,
+    "windowSpins": 4,
+    "targetCount": 4,
+    "multiplierBps": 858628,
+    "wins": "20736",
+    "total": "1874161",
+    "houseEdgeBps": 500,
+    "winProbability": 0.011064150838695289
+  },
+  {
+    "key": "DOUBLE_NUMBER",
+    "betType": 1,
+    "windowSpins": 6,
+    "targetCount": 2,
+    "multiplierBps": 932205,
+    "wins": "26147017",
+    "total": "2565726409",
+    "houseEdgeBps": 500,
+    "winProbability": 0.010190882748948624
+  },
+  {
+    "key": "SEVEN_STREAK",
+    "betType": 2,
+    "windowSpins": 8,
+    "targetCount": 7,
+    "multiplierBps": 973289,
+    "wins": "34284321792",
+    "total": "3512479453921",
+    "houseEdgeBps": 500,
+    "winProbability": 0.009760718102913946
+  },
+  {
+    "key": "NINE_OF_TEN",
+    "betType": 0,
+    "windowSpins": 10,
+    "targetCount": 9,
+    "multiplierBps": 1107197,
+    "wins": "41258732396544",
+    "total": "4808584372417849",
+    "houseEdgeBps": 500,
+    "winProbability": 0.00858022428247387
+  }
+]
