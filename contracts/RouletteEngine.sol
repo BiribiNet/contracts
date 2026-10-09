@@ -643,7 +643,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
 
 
         if (winnerPayoutRows.length == 0) {
-            if (mr.winningBetCount == 0 && RouletteUpkeepScanLib.allPayoutShardsComplete($, roundId, marketId, job.payoutShardWidth)) {
+            if (RouletteUpkeepScanLib.allPayoutShardsComplete($, roundId, marketId, job.payoutShardWidth)) {
                 _finalizeMarketSettlement($, roundId, marketId, bank, mr);
             }
             return;
@@ -685,6 +685,14 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         RouletteEngineStorageLib.MarketRoundState storage mr
     ) private {
         if (mr.settled) return;
+        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if (marketId == $._roundTriggerMarket[roundId] && gr.jackpotTriggered && !gr.jackpotDistributed) {
+            (,, uint256 eligibleStake) =
+                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, gr.winningNumber);
+            if (eligibleStake != 0) return;
+            // A triggered draw with no eligible straight stakes has no jackpot liability.
+            gr.jackpotDistributed = true;
+        }
         _collectMarketFees($, roundId, marketId, bank, mr.totals.totalAmount, mr.bankPaidRunning);
         mr.settled = true;
         unchecked {
@@ -719,6 +727,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
 
     /// @dev Pays the jackpot chunk from `previewPayoutBundle`; snapshots pool/stake counts on the first chunk only.
     function _isRoundDone(RouletteEngineStorageLib.Layout storage $, uint64 roundId) internal view returns (bool) {
+        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if (gr.jackpotTriggered && !gr.jackpotDistributed) return false;
         uint32 n = $._roundMarketParticipantCount[roundId];
         if (n == 0) return false;
         return $._roundMarketsSettledCount[roundId] == n;
