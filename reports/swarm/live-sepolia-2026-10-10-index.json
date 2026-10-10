@@ -1,0 +1,50 @@
+{
+  "project": {
+    "projectId": "project_cmfbfxud380il01v04gey3ym6",
+    "name": "brb"
+  },
+  "version": "0.1.55",
+  "data": {
+    "globalRounds": [
+      {
+        "roundNumber": "2141",
+        "status": "CLEAN",
+        "winningNumber": "21",
+        "jackpotNumber": "10",
+        "firstBetAt": "1791627213",
+        "lockAt": "1791627273",
+        "resolvedAt": "1791627288",
+        "failedAutomationCalls": "0",
+        "marketRounds": [
+          {
+            "totalBets": "9250000000000000000000",
+            "totalPayouts": "9000000000000000000000"
+          }
+        ]
+      }
+    ],
+    "markets": [
+      {
+        "id": "1",
+        "totalAssets": "10950000",
+        "totalShares": "10000000000000"
+      },
+      {
+        "id": "2",
+        "totalAssets": "4730578099610404432743999",
+        "totalShares": "4289616197442843190705557573851"
+      },
+      {
+        "id": "3",
+        "totalAssets": "1292170487536187171514806",
+        "totalShares": "1032528577526072647880413765279"
+      }
+    ],
+    "_meta": {
+      "block": {
+        "number": 317703487
+      },
+      "hasIndexingErrors": false
+    }
+  }
+}

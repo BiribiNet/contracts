@@ -42,7 +42,8 @@
     "test:swarm": "RUN_MAINNET_SWARM=1 REPORT_GAS=false hardhat test test/MainnetSwarm.test.ts",
     "test:fork:arbitrum": "RUN_ARBITRUM_FORK=1 REPORT_GAS=false hardhat test test/ArbitrumMainnet.fork.test.ts",
     "rehearse:engine:arbitrum-sepolia": "RUN_ARBITRUM_FORK=1 REPORT_GAS=false hardhat run scripts/rehearseEngineArbitrumSepolia.ts",
-    "verify:engine-upgrade:arbitrum-sepolia": "REPORT_GAS=false hardhat run scripts/verifyEngineArbitrumSepoliaUpgrade.ts --network arbitrumsepolia"
+    "verify:engine-upgrade:arbitrum-sepolia": "REPORT_GAS=false hardhat run scripts/verifyEngineArbitrumSepoliaUpgrade.ts --network arbitrumsepolia",
+    "test:swarm:live-sepolia": "REPORT_GAS=false hardhat run scripts/liveSepoliaSwarm.ts --network arbitrumsepolia"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
