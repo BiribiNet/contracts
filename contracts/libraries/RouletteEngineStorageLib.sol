@@ -80,6 +80,18 @@ library RouletteEngineStorageLib {
         address upkeepScheduler;
     }
 
+    struct JackpotEligibleEntry {
+        address player;
+        uint256 stake;
+    }
+
+    struct JackpotPreparation {
+        uint32 marketId;
+        uint256 betCursor;
+        bool ready;
+        JackpotEligibleEntry[] entries;
+    }
+
     /// @custom:storage-location erc7201:biribi.storage.RouletteEngine
     struct Layout {
         IMarketRegistry REGISTRY;
@@ -129,6 +141,8 @@ library RouletteEngineStorageLib {
         mapping(uint64 => uint256) roundRequestedAt;
         mapping(uint64 => uint8) roundJackpotNumber;
         mapping(uint64 => bool) diagnosticsAvailable;
+        // Append-only: existing ERC-7201 fields and mapped structs retain their offsets.
+        mapping(uint64 => JackpotPreparation) jackpotPreparation;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.RouletteEngine")) - 1)) & ~bytes32(uint256(0xff));

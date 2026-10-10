@@ -1,7 +1,7 @@
 import { viem } from "hardhat";
 
 import type { Account, Address, Chain, PublicClient, WalletClient } from "viem";
-import { parseAbi, toFunctionSelector } from "viem";
+import { parseAbi, toFunctionSelector, zeroAddress } from "viem";
 
 /** Production KeystoneForwarder — verify at https://docs.chain.link/cre/guides/workflow/using-evm-client/forwarder-directory-ts */
 export const CRE_KEYSTONE_FORWARDER_ARBITRUM_ONE =
@@ -25,6 +25,8 @@ export type CreAutomationDeployment = {
 export type DeployCreAutomationParams = {
     scheduler: Address;
     admin: Address;
+    expectedWorkflowOwner?: Address;
+    receiverOwner?: Address;
     keystoneForwarder: Address;
     wallet: WalletClient;
     publicClient: PublicClient;
@@ -40,6 +42,12 @@ export async function deployCreAutomation(params: DeployCreAutomationParams): Pr
     if (!account) throw new Error("deployCreAutomation: wallet has no account");
     const chain = publicClient.chain as Chain | undefined;
 
+    if (params.expectedWorkflowOwner?.toLowerCase() === zeroAddress) throw new Error("Expected workflow owner cannot be zero");
+    if (params.receiverOwner?.toLowerCase() === zeroAddress) throw new Error("Receiver owner cannot be zero");
+    if (await publicClient.getChainId() === 42161 && !params.expectedWorkflowOwner) {
+        throw new Error("Mainnet requires expectedWorkflowOwner before any CRE deployment");
+    }
+
     const receiver = await viem.deployContract("AutomationReceiver", [keystoneForwarder], { account });
     const authority = await viem.deployContract("CreExecutionAuthority", [admin], { account });
 
@@ -54,11 +62,22 @@ export async function deployCreAutomation(params: DeployCreAutomationParams): Pr
         }),
     );
 
+    if (params.expectedWorkflowOwner) {
+        await waitWrite(receiver.write.setExpectedAuthor([params.expectedWorkflowOwner], { account }));
+    }
+
     await waitWrite(authority.write.setExecutorApproved([receiver.address, true], { account }));
 
     await waitWrite(
         receiver.write.setCallAllowed([scheduler, PERFORM_UPKEEP_SELECTOR, true], { account }),
     );
+
+    if (params.receiverOwner && params.receiverOwner.toLowerCase() !== account.address.toLowerCase()) {
+        await waitWrite(receiver.write.transferOwnership([params.receiverOwner], { account }));
+    }
+
+    if (params.expectedWorkflowOwner && (await receiver.read.getExpectedAuthor()).toLowerCase() !== params.expectedWorkflowOwner.toLowerCase()) throw new Error("CRE workflow owner binding failed");
+    if ((await receiver.read.owner()).toLowerCase() !== (params.receiverOwner ?? account.address).toLowerCase()) throw new Error("CRE receiver ownership handoff failed");
 
     return {
         automationReceiver: receiver.address,

@@ -1,0 +1,394 @@
+{
+  "BetEntry": [
+    {
+      "name": "player",
+      "type": "address"
+    },
+    {
+      "name": "amount",
+      "type": "uint128"
+    },
+    {
+      "name": "betType",
+      "type": "uint8"
+    },
+    {
+      "name": "number",
+      "type": "uint16"
+    }
+  ],
+  "GlobalRoundState": [
+    {
+      "name": "vrfRequested",
+      "type": "bool"
+    },
+    {
+      "name": "vrfFulfilled",
+      "type": "bool"
+    },
+    {
+      "name": "randomWord",
+      "type": "uint256"
+    },
+    {
+      "name": "winningNumber",
+      "type": "uint8"
+    },
+    {
+      "name": "jackpotTriggered",
+      "type": "bool"
+    },
+    {
+      "name": "jackpotDistributed",
+      "type": "bool"
+    },
+    {
+      "name": "jackpotCursor",
+      "type": "uint32"
+    },
+    {
+      "name": "jackpotPaid",
+      "type": "uint256"
+    },
+    {
+      "name": "jackpotPoolSnapshot",
+      "type": "uint256"
+    },
+    {
+      "name": "jackpotTotalStake",
+      "type": "uint256"
+    },
+    {
+      "name": "jackpotWinnerCount",
+      "type": "uint32"
+    },
+    {
+      "name": "vrfRequestedAt",
+      "type": "uint256"
+    }
+  ],
+  "MarketRoundState": [
+    {
+      "name": "betsReleased",
+      "type": "bool"
+    },
+    {
+      "name": "winningBetCount",
+      "type": "uint256"
+    },
+    {
+      "name": "bankPaidRunning",
+      "type": "uint256"
+    },
+    {
+      "name": "settled",
+      "type": "bool"
+    },
+    {
+      "name": "totals",
+      "type": "struct BetStorageLib.RoundTotals"
+    }
+  ],
+  "FlatBetBucket": [
+    {
+      "name": "Red",
+      "type": "enum"
+    },
+    {
+      "name": "Black",
+      "type": "enum"
+    },
+    {
+      "name": "Odd",
+      "type": "enum"
+    },
+    {
+      "name": "Even",
+      "type": "enum"
+    },
+    {
+      "name": "Low",
+      "type": "enum"
+    },
+    {
+      "name": "High",
+      "type": "enum"
+    },
+    {
+      "name": "Trio012",
+      "type": "enum"
+    },
+    {
+      "name": "Trio023",
+      "type": "enum"
+    }
+  ],
+  "NumberedBetBucket": [
+    {
+      "name": "Straight",
+      "type": "enum"
+    },
+    {
+      "name": "Split",
+      "type": "enum"
+    },
+    {
+      "name": "Street",
+      "type": "enum"
+    },
+    {
+      "name": "Corner",
+      "type": "enum"
+    },
+    {
+      "name": "Line",
+      "type": "enum"
+    },
+    {
+      "name": "Column",
+      "type": "enum"
+    },
+    {
+      "name": "Dozen",
+      "type": "enum"
+    }
+  ],
+  "RoundPhase": [
+    {
+      "name": "Unset",
+      "type": "enum"
+    },
+    {
+      "name": "Open",
+      "type": "enum"
+    },
+    {
+      "name": "Locked",
+      "type": "enum"
+    },
+    {
+      "name": "Settling",
+      "type": "enum"
+    },
+    {
+      "name": "Completed",
+      "type": "enum"
+    }
+  ],
+  "InitConfig": [
+    {
+      "name": "registry",
+      "type": "address"
+    },
+    {
+      "name": "jackpotTreasury",
+      "type": "address"
+    },
+    {
+      "name": "jackpotFunder",
+      "type": "address"
+    },
+    {
+      "name": "infraRecipient",
+      "type": "address"
+    },
+    {
+      "name": "subscriptionId",
+      "type": "uint256"
+    },
+    {
+      "name": "callbackGasLimit",
+      "type": "uint32"
+    },
+    {
+      "name": "roundDuration",
+      "type": "uint32"
+    },
+    {
+      "name": "admin",
+      "type": "address"
+    },
+    {
+      "name": "upkeepScheduler",
+      "type": "address"
+    }
+  ],
+  "Layout": [
+    {
+      "name": "REGISTRY",
+      "type": "contract IMarketRegistry"
+    },
+    {
+      "name": "JACKPOT_TREASURY",
+      "type": "contract IJackpotTreasury"
+    },
+    {
+      "name": "JACKPOT_FUNDER",
+      "type": "contract IBRBJackpotFunder"
+    },
+    {
+      "name": "VRF_SUBSCRIPTION_ID",
+      "type": "uint256"
+    },
+    {
+      "name": "VRF_CALLBACK_GAS_LIMIT",
+      "type": "uint32"
+    },
+    {
+      "name": "ROUND_DURATION",
+      "type": "uint32"
+    },
+    {
+      "name": "_globalRound",
+      "type": "uint64"
+    },
+    {
+      "name": "_pendingRequestId",
+      "type": "uint256"
+    },
+    {
+      "name": "withdrawalQueueBatchSize",
+      "type": "uint256"
+    },
+    {
+      "name": "maxWithdrawalQueueLength",
+      "type": "uint256"
+    },
+    {
+      "name": "payoutLaneCount",
+      "type": "uint32"
+    },
+    {
+      "name": "INFRA_RECIPIENT",
+      "type": "address"
+    },
+    {
+      "name": "UPKEEP_SCHEDULER",
+      "type": "address"
+    },
+    {
+      "name": "globalRoundState",
+      "type": "mapping(uint64 => struct RouletteEngineStorageLib.GlobalRoundState)"
+    },
+    {
+      "name": "marketRoundStateByRound",
+      "type": "mapping(uint64 => mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState))"
+    },
+    {
+      "name": "payoutCursorByShard",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint32 => uint256)))"
+    },
+    {
+      "name": "winningBetCountByShard",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint32 => uint256)))"
+    },
+    {
+      "name": "roundStraightBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))"
+    },
+    {
+      "name": "roundMaxStraightBet",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundMaxStreetBet",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundStreetBetsTotal",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))"
+    },
+    {
+      "name": "roundRedBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundBlackBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundOddBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundEvenBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundLowBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundHighBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundDozenBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))"
+    },
+    {
+      "name": "roundColumnBetsSum",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))"
+    },
+    {
+      "name": "roundOtherBetsWeightedPayout",
+      "type": "mapping(uint64 => mapping(uint32 => uint256))"
+    },
+    {
+      "name": "roundNumberedBets",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))))"
+    },
+    {
+      "name": "roundFlatBets",
+      "type": "mapping(uint64 => mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])))"
+    },
+    {
+      "name": "_roundMarketParticipantCount",
+      "type": "mapping(uint64 => uint32)"
+    },
+    {
+      "name": "_roundMarketsSettledCount",
+      "type": "mapping(uint64 => uint32)"
+    },
+    {
+      "name": "_roundHasMarket",
+      "type": "mapping(uint64 => mapping(uint32 => bool))"
+    },
+    {
+      "name": "_roundTriggerMarket",
+      "type": "mapping(uint64 => uint32)"
+    },
+    {
+      "name": "_roundLockAt",
+      "type": "mapping(uint64 => uint256)"
+    },
+    {
+      "name": "_roundPhase",
+      "type": "enum RouletteEngineStorageLib.RoundPhase"
+    },
+    {
+      "name": "requestIdToGlobalRound",
+      "type": "mapping(uint256 => uint64)"
+    },
+    {
+      "name": "referrerOf",
+      "type": "mapping(address => address)"
+    },
+    {
+      "name": "roundRequestId",
+      "type": "mapping(uint64 => uint256)"
+    },
+    {
+      "name": "roundRequestedAt",
+      "type": "mapping(uint64 => uint256)"
+    },
+    {
+      "name": "roundJackpotNumber",
+      "type": "mapping(uint64 => uint8)"
+    },
+    {
+      "name": "diagnosticsAvailable",
+      "type": "mapping(uint64 => bool)"
+    }
+  ]
+}

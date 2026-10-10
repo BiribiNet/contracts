@@ -461,6 +461,8 @@ describe("Branch coverage — final 100% gaps", function () {
                         nextCursor: Number(await engine.read.payoutShardCursor([laneJob.roundId, laneJob.marketId, lane])),
                     };
                     const p = await engine.read.previewPayoutBundle([fresh, 5]);
+                    // Jackpot-only chunks bind the jackpot cursor, rather than the exhausted roulette cursor.
+                    if (p[0].length === 0 && p[1].length > 0) fresh.nextCursor = (await engine.read.globalRoundState([fresh.roundId])).jackpotCursor;
                     await scheduler.write.performUpkeep([encodePerformData(fresh, p[0], p[1], p[2])]);
                     batches++;
                 }

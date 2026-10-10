@@ -339,6 +339,8 @@ describe("Branch coverage — last 16 arms", function () {
                 const p = await engine.read.previewPayoutBundle([freshJackpotJob, 1]);
                 previewCalls++;
                 if (p[1].length > 0) expect(p[1].length).to.equal(1);
+                // Jackpot-only chunks bind the jackpot cursor, rather than the exhausted roulette cursor.
+                if (p[0].length === 0 && p[1].length > 0) freshJackpotJob.nextCursor = (await engine.read.globalRoundState([freshJackpotJob.roundId])).jackpotCursor;
                 await scheduler.write.performUpkeep([encodePerformData(freshJackpotJob, p[0], p[1], p[2])]);
                 if (previewCalls === 1) {
                     await harness.write.harnessPayoutLaneHasWork([jackpotJob]);
@@ -350,6 +352,9 @@ describe("Branch coverage — last 16 arms", function () {
             // L571: jackpot cursor exhausted but distribution flag still open
             await harness.write.harnessSetJackpotPreviewState([jackpotRound, true, false, jackpotWinnerCount]);
             await harness.write.harnessPayoutLaneHasWork([jackpotJob]);
+            // Restore the completed flag after the artificial preview edge. Finalization now
+            // correctly refuses to settle a market with eligible but undistributed jackpot rows.
+            await harness.write.harnessSetJackpotPreviewState([jackpotRound, true, true, jackpotWinnerCount]);
 
             await runParallelLanesUntilIdle(scheduler);
             await testClient.impersonateAccount({ address: scheduler.address });

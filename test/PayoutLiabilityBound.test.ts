@@ -51,6 +51,20 @@ async function settleUntilPayoutReady() {
 }
 
 describe("Payout rows are bounded by the round's own liability", function () {
+    it("documents the launch blocker: an authorized report can replace an honest winner within the cap", async function () {
+        const { alice, engine, scheduler, usdc } = await settleUntilPayoutReady();
+        const [, , stranger] = await viem.getWalletClients();
+        const job = { kind: 2, marketId: 1, roundId: 1n, nextCursor: 0, payoutShardIndex: 0, payoutShardWidth: 1 };
+        const [rows] = await engine.read.previewPayoutBundle([job, 10]);
+        expect(rows.length).to.be.gt(0);
+        const aliceBefore = await usdc.read.balanceOf([alice.account.address]);
+        const strangerBefore = await usdc.read.balanceOf([stranger.account.address]);
+        const replaced = rows.map(row => ({ ...row, player: stranger.account.address }));
+        await engine.write.executeJob([job, replaced, [], []], { account: scheduler });
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(aliceBefore);
+        expect(await usdc.read.balanceOf([stranger.account.address])).to.equal(strangerBefore + rows.reduce((sum, row) => sum + row.amount, 0n));
+    });
+
     it("applies honest preview rows unchanged", async function () {
         const { alice, engine, scheduler, usdc } = await settleUntilPayoutReady();
 

@@ -106,6 +106,7 @@ export async function vrfCreateSubscription(
         gas: GAS_CREATE_SUBSCRIPTION,
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status !== "success") throw new Error(`VRF transaction reverted: ${hash}`);
     for (const log of receipt.logs) {
         if (log.address.toLowerCase() !== coordinator.toLowerCase()) continue;
         const topic0 = log.topics[0];
@@ -166,7 +167,8 @@ export async function vrfAddConsumerIfNeeded(
         chain: walletClient.chain,
         gas: GAS_ADD_CONSUMER,
     });
-    await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status !== "success") throw new Error(`VRF transaction reverted: ${hash}`);
 }
 
 /**
@@ -208,5 +210,6 @@ export async function vrfFundSubscriptionWithLink(
         chain: walletClient.chain,
         gas: GAS_LINK_TRANSFER_AND_CALL,
     });
-    await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status !== "success") throw new Error(`VRF transaction reverted: ${hash}`);
 }

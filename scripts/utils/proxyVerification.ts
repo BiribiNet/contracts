@@ -160,12 +160,13 @@ export async function verifyErc1967ProxyWithDelay(
     implementation: Address,
     initData: Hex,
     delayMs: number,
+    strict = false,
 ): Promise<void> {
     try {
         await verifyContractWithDelay(proxy, [implementation, initData], delayMs, FQ_ERC1967_PROXY);
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (isEtherscanV2LogLookupFailure(msg)) {
+        if (!strict && isEtherscanV2LogLookupFailure(msg)) {
             console.warn(
                 `Proxy ${proxy} verification skipped (OZ upgrades log lookup vs Etherscan API v2). ` +
                     `Verify on Arbiscan: ERC1967Proxy(${implementation}, <initData>).`,
@@ -181,12 +182,13 @@ export async function verifyBeaconProxyWithDelay(
     beacon: Address,
     initData: Hex,
     delayMs: number,
+    strict = false,
 ): Promise<void> {
     try {
         await verifyContractWithDelay(proxy, [beacon, initData], delayMs, FQ_BEACON_PROXY);
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (isEtherscanV2LogLookupFailure(msg)) {
+        if (!strict && isEtherscanV2LogLookupFailure(msg)) {
             console.warn(
                 `BeaconProxy ${proxy} verification skipped (OZ upgrades log lookup vs Etherscan API v2). ` +
                     `Verify on Arbiscan: BeaconProxy(${beacon}, <initData>).`,
@@ -202,6 +204,7 @@ export async function verifySideBetImplementationWithDelay(implementation: Addre
 }
 
 export type VerifyProtocolProxiesParams = {
+    strict?: boolean;
     delayMs: number;
     engineProxy: Address;
     engineImplementation: Address;
@@ -232,11 +235,11 @@ export async function verifyProtocolProxies(p: VerifyProtocolProxiesParams): Pro
         p.engineLibraryMap,
         p.delayMs,
     );
-    await verifyErc1967ProxyWithDelay(p.engineProxy, p.engineImplementation, p.engineInitData, p.delayMs);
+    await verifyErc1967ProxyWithDelay(p.engineProxy, p.engineImplementation, p.engineInitData, p.delayMs, p.strict);
     if (proxyLinkSpacingMs > 0) await sleep(proxyLinkSpacingMs);
-    await verifyErc1967ProxyWithDelay(p.sideBetProxy, p.sideBetImplementation, p.sideBetInitData, p.delayMs);
+    await verifyErc1967ProxyWithDelay(p.sideBetProxy, p.sideBetImplementation, p.sideBetInitData, p.delayMs, p.strict);
     for (const { bank, initData } of p.bankVaults) {
         if (proxyLinkSpacingMs > 0) await sleep(proxyLinkSpacingMs);
-        await verifyBeaconProxyWithDelay(bank, p.vaultBeacon, initData, p.delayMs);
+        await verifyBeaconProxyWithDelay(bank, p.vaultBeacon, initData, p.delayMs, p.strict);
     }
 }

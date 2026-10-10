@@ -1,13 +1,20 @@
 import { viem } from 'hardhat';
 import { isAddress } from 'viem';
 
-/** Operator worker. Read-only unless FUNDING_APPLY=true; never run during settlement.
+/** Operator worker. Read-only unless FUNDING_APPLY=true; never call AMM execution from the settlement transaction.
  * Run from a supervised service every minute. Contract cooldown/failure limits remain authoritative. */
 const observationTimes = new Map<string, bigint>();
 async function main() {
   const address = process.env.FUNDER_ADDRESS;
   if (!address || !isAddress(address)) throw new Error('FUNDER_ADDRESS is required');
   const apply = process.env.FUNDING_APPLY === 'true';
+  const client = await viem.getPublicClient();
+  const chainId = await client.getChainId();
+  const expected = process.env.FUNDING_EXPECTED_CHAIN_ID;
+  if (apply && !expected) throw new Error('FUNDING_EXPECTED_CHAIN_ID is required before writes');
+  if (expected && (!/^\d+$/.test(expected) || Number(expected) !== chainId)) throw new Error('Funding keeper chain mismatch');
+  if (apply && chainId === 42161 && process.env.CONFIRM_MAINNET_FUNDING !== 'arbitrum-one:42161') throw new Error('Mainnet funding requires CONFIRM_MAINNET_FUNDING=arbitrum-one:42161');
+  console.log(JSON.stringify({ chainId, funder: address, mode: apply ? 'execute' : 'read-only' }));
   const funder = await viem.getContractAt('BRBJackpotFunder', address);
   const engine = await viem.getContractAt('RouletteEngine', await funder.read.engine());
   if ((await engine.read.JACKPOT_FUNDER()).toLowerCase() !== address.toLowerCase()) throw new Error('Funder is not active on this engine');
@@ -15,7 +22,6 @@ async function main() {
   const count = Number(await registry.read.marketCount());
   const after = Number(process.env.AFTER_MARKET_ID ?? 0);
   if (!Number.isSafeInteger(after) || after < 0) throw new Error('Invalid AFTER_MARKET_ID');
-  const client = await viem.getPublicClient();
   const now = (await client.getBlock()).timestamp;
   const maxJobs = Number(process.env.MAX_FUNDING_MARKETS ?? 10);
   if (!Number.isInteger(maxJobs) || maxJobs < 1 || maxJobs > 10) throw new Error('MAX_FUNDING_MARKETS must be 1-10');
@@ -71,10 +77,11 @@ async function run() {
   for (let cycle = 0; cycle < cycles && !stopping; cycle++) {
     try { await main(); }
     catch (error) {
-      console.error(error instanceof Error ? error.message : 'Funding worker failed');
+      // Transport errors can contain credential-bearing RPC URLs.
+      console.error('Funding worker cycle failed; inspect confirmed hashes and queue state before retrying.');
       if (cycles === 1) process.exitCode = 1;
     }
     if (cycle + 1 < cycles && !stopping) await new Promise(resolve => setTimeout(resolve, 60000));
   }
 }
-run().catch(error => { console.error(error instanceof Error ? error.message : 'Funding worker failed'); process.exitCode = 1; });
+run().catch(() => { console.error('Funding worker failed'); process.exitCode = 1; });

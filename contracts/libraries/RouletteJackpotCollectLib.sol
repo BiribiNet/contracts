@@ -10,6 +10,71 @@ import { IBankVault } from "../interfaces/IBankVault.sol";
 interface IJackpotTokenView { function brb() external view returns (address); }
 library RouletteJackpotCollectLib {
     error StaleJackpotChunk();
+    uint256 private constant PREPARATION_STEPS = 32;
+    event JackpotPreparationProgress(uint64 indexed roundId, uint32 marketId, uint256 betCursor, bool ready);
+
+    /// @dev Bound all state-changing collection work, including skipped dust and
+    /// empty markets. Lane zero keeps reporting work until this snapshot is ready.
+    function prepareJackpotSnapshot(RouletteEngineStorageLib.Layout storage $, uint64 roundId, uint8 number)
+        external returns (bool)
+    {
+        RouletteEngineStorageLib.JackpotPreparation storage prep = $.jackpotPreparation[roundId];
+        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if (prep.ready || gr.jackpotPoolSnapshot != 0 || gr.jackpotDistributed) return true;
+        uint32 totalMarkets = $.REGISTRY.marketCount();
+        uint32 mid = prep.marketId == 0 ? 1 : prep.marketId;
+        uint256 cursor = prep.betCursor;
+        for (uint256 steps; steps < PREPARATION_STEPS && mid <= totalMarkets; ++steps) {
+            if (!$._roundHasMarket[roundId][mid]) { ++mid; cursor = 0; continue; }
+            RouletteEngineStorageLib.BetEntry[] storage bucket = $.roundNumberedBets[roundId][mid][0][number];
+            if (cursor >= bucket.length) { ++mid; cursor = 0; continue; }
+            IMarketRegistry.MarketConfig memory mc = $.REGISTRY.getMarket(mid);
+            RouletteEngineStorageLib.BetEntry storage entry = bucket[cursor++];
+            if (entry.amount >= IBankVault(mc.bank).minBet()) {
+                uint256 stake = normalizeStakeWeight(entry.amount, IERC20Metadata(mc.asset).decimals());
+                prep.entries.push(RouletteEngineStorageLib.JackpotEligibleEntry(entry.player, stake));
+                gr.jackpotTotalStake += stake;
+                ++gr.jackpotWinnerCount;
+            }
+        }
+        prep.marketId = mid;
+        prep.betCursor = cursor;
+        if (mid > totalMarkets) {
+            prep.ready = true;
+            gr.jackpotPoolSnapshot = $.JACKPOT_TREASURY.jackpotPool();
+            if (gr.jackpotTotalStake == 0) gr.jackpotDistributed = true;
+        }
+        emit JackpotPreparationProgress(roundId, mid, cursor, prep.ready);
+        return prep.ready;
+    }
+
+    function previewPreparedJackpot(RouletteEngineStorageLib.Layout storage $, uint64 roundId, uint32 maxRows)
+        external view returns (address[] memory winners, uint256[] memory amounts)
+    {
+        RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        RouletteEngineStorageLib.JackpotPreparation storage prep = $.jackpotPreparation[roundId];
+        uint256 start = gr.jackpotCursor;
+        uint256 n = prep.entries.length;
+        if (!prep.ready || gr.jackpotDistributed || start >= n || gr.jackpotTotalStake == 0) return (winners, amounts);
+        uint256 count = n - start;
+        if (count > maxRows) count = maxRows;
+        if (count > PREPARATION_STEPS) count = PREPARATION_STEPS;
+        winners = new address[](count);
+        amounts = new uint256[](count);
+        uint256 paid;
+        for (uint256 i; i < count; ++i) {
+            RouletteEngineStorageLib.JackpotEligibleEntry storage entry = prep.entries[start + i];
+            winners[i] = entry.player;
+            uint256 amount = start + i + 1 == n ? gr.jackpotPoolSnapshot - gr.jackpotPaid - paid
+                : gr.jackpotPoolSnapshot * entry.stake / gr.jackpotTotalStake;
+            amounts[i] = amount;
+            paid += amount;
+        }
+    }
+
+    function smallJackpot(RouletteEngineStorageLib.Layout storage $, uint64 roundId, uint8 number) external view returns (bool) {
+        return _countEligible($, roundId, number) < PREPARATION_STEPS;
+    }
     event JackpotPayment(uint64 indexed roundId, address indexed recipient, address indexed token, uint256 amount);
     function applyJackpotChunk(
         RouletteEngineStorageLib.Layout storage $,
@@ -25,7 +90,7 @@ library RouletteJackpotCollectLib {
         if (!gr.jackpotTriggered) revert StaleJackpotChunk();
         if (marketId != $._roundTriggerMarket[roundId]) revert StaleJackpotChunk();
         if (gr.jackpotDistributed) revert StaleJackpotChunk();
-        if (gr.jackpotPoolSnapshot == 0) {
+        if (!$.jackpotPreparation[roundId].ready && gr.jackpotPoolSnapshot == 0) {
             (address[] memory allWinners,, uint256 totalStake) =
                 collectJackpotEligibleStraightStakes($, roundId, winningNumber);
             gr.jackpotPoolSnapshot = $.JACKPOT_TREASURY.jackpotPool();

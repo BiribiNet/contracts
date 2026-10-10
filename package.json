@@ -38,7 +38,9 @@
     "reprice:side-bets:arbitrum-sepolia": "hardhat run scripts/repriceLegacySideBetConfigs.ts --network arbitrumsepolia",
     "export:side-bet-economics": "ts-node scripts/exportSideBetEconomics.ts",
     "check:side-bet-economics": "ts-node scripts/exportSideBetEconomics.ts --check",
-    "typecheck:side-bet-economics": "tsc --noEmit --project tsconfig.side-bet-economics.json"
+    "typecheck:side-bet-economics": "tsc --noEmit --project tsconfig.side-bet-economics.json",
+    "test:swarm": "RUN_MAINNET_SWARM=1 REPORT_GAS=false hardhat test test/MainnetSwarm.test.ts",
+    "test:fork:arbitrum": "RUN_ARBITRUM_FORK=1 REPORT_GAS=false hardhat test test/ArbitrumMainnet.fork.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

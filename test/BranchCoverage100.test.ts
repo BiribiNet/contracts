@@ -511,20 +511,20 @@ describe("Branch coverage — 100% targets", function () {
 
             await brb.write.transfer([funder.address, parseUnits("10", 18)], { account: admin.account });
             await brb.write.setFailTransfer([true]);
-            await funder.write.fundFromMarket([1n, brb.address], { account: admin.account });
+            await funder.write.fundFromMarket([2n, brb.address], { account: admin.account });
             await brb.write.setFailTransfer([false]);
 
             await brb.write.transfer([funder.address, parseUnits("5", 18)], { account: admin.account });
             await brb.write.setRevertTransfer([true]);
-            await funder.write.fundFromMarket([1n, brb.address], { account: admin.account });
+            await funder.write.fundFromMarket([2n, brb.address], { account: admin.account });
             await brb.write.setRevertTransfer([false]);
 
             await funder.write.setTreasuryBrbSplit([0, 1], { account: admin.account });
             await brb.write.transfer([funder.address, parseUnits("3", 18)], { account: admin.account });
-            await funder.write.fundFromMarket([1n, brb.address], { account: admin.account });
+            await funder.write.fundFromMarket([2n, brb.address], { account: admin.account });
 
             await brb.write.setFailBurn([true]);
-            await funder.write.fundFromMarket([1n, brb.address], { account: admin.account });
+            await funder.write.fundFromMarket([2n, brb.address], { account: admin.account });
             await brb.write.setFailBurn([false]);
 
             await expect(

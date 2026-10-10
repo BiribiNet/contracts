@@ -29,13 +29,6 @@ export type RouletteEngineLibraryAddresses = {
 export type RouletteEngineLibraryLinks = Record<string, Address>;
 
 const CREATE_GAS = 8_000_000n;
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-function isRetryableDeployError(error: unknown): boolean {
-    const msg = error instanceof Error ? error.message : String(error);
-    return /nonce too low|Internal error|replacement transaction underpriced|already known/i.test(msg);
-}
-
 async function deployLib(
     name: string,
     account: Account,
@@ -48,19 +41,12 @@ async function deployLib(
         ...(libraries !== undefined ? { libraries } : {}),
     };
 
-    const attempts = live ? 8 : 1;
-    for (let attempt = 0; attempt < attempts; attempt++) {
-        try {
-            if (live && attempt > 0) await sleep(1500 * attempt);
-            const deployed = await viem.deployContract(name, [], options);
-            if (live) console.log(`  ${name}: ${deployed.address}`);
-            return deployed;
-        } catch (error) {
-            if (!live || !isRetryableDeployError(error) || attempt === attempts - 1) throw error;
-            console.warn(`Retry ${name} (${attempt + 1}/${attempts}): ${(error instanceof Error ? error.message : String(error)).split("\n")[0]}`);
-        }
-    }
-    throw new Error(`Failed to deploy ${name}`);
+    // CREATE addresses are nonce-sensitive. An RPC error (including "already known") may
+    // follow successful broadcast: repeating deployContract could deploy a second library
+    // and invalidate the predicted stack. Inspect receipts/nonce before manual recovery.
+    const deployed = await viem.deployContract(name, [], options);
+    if (live) console.log(`  ${name}: ${deployed.address}`);
+    return deployed;
 }
 
 /** Deploys the linked libraries used by `RouletteEngine` (CREATE order matches deploy script). */

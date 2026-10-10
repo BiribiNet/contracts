@@ -1,7 +1,6 @@
 import "dotenv/config";
 
-import { spawnSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { vars } from "hardhat/config";
@@ -14,7 +13,7 @@ import {
     deployCreAutomation,
 } from "./utils/deployCreAutomation";
 import { resolveCreLaneCounts, writeCreWorkflowConfigs } from "./utils/writeCreWorkflowConfigs";
-import { deployUniswapV2Local } from "./utils/deployUniswapV2Local";
+import { boundedInteger, requiredAddress, MAINNET_CONFIRMATION, preflightMainnet, handoffProtocolRoles } from "./utils/mainnetRelease";
 import {
     envAddressOrDefault,
     envBigIntOr,
@@ -22,7 +21,7 @@ import {
     optionalAddressEnv,
     vrfKeyHashTriple,
 } from "./utils/protocolDeployEnv";
-import { vrfAddConsumerIfNeeded, vrfCreateSubscription, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
+import { vrfAddConsumerIfNeeded, vrfFundSubscriptionWithLink } from "./utils/vrfSubscription";
 import {
     encodeBankVaultProxyInitDataFromAsset,
     verifyProtocolProxies,
@@ -34,15 +33,16 @@ import {
 } from "./utils/verifyWithEtherscan";
 
 /**
+ * Read-only preflight by default; broadcast requires CONFIRM_MAINNET_DEPLOY=arbitrum-one:42161.
  * Production-oriented deploy for Arbitrum One (chain 42161).
  *
  * Run: `yarn deploy:protocol:arbitrum`
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` and `hardhat vars set ARBITRUM_RPC_URL`
- * - `UNISWAP_V2_ROUTER` — production Uniswap V2 compatible router (required unless `DEPLOY_LOCAL_UNISWAP=true`)
+ * - `UNISWAP_V2_ROUTER` — reviewed production Uniswap V2 compatible router (required)
  * - `USDC_TOKEN`, `DAI_TOKEN`, optional `BRB_TOKEN` (omit to deploy new BRBToken to `PROTOCOL_ADMIN`)
- * - `PROTOCOL_ADMIN` — multisig receiving AccessControl roles (defaults to deployer)
+ * - `PROTOCOL_ADMIN` — explicit admin wallet (EOA initially; migrate to Safe later)
  * - Funded VRF subscription (`VRF_SUBSCRIPTION_ID`)
  * - After deploy: register CRE workflows per lane (see docs/CRE_MIGRATION.md)
  * - Verify Chainlink addresses on https://docs.chain.link before mainnet deploy
@@ -50,7 +50,6 @@ import {
  * Defaults (override via env): see Chainlink VRF v2.5 + Automation docs for Arbitrum One.
  */
 
-const ARBITRUM_ONE_CHAIN_ID = 42161n;
 
 const DEFAULT_LINK = "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4" as const;
 /** VRF v2.5 coordinator — must match `VRFConsumerBaseV2` / subscription interface. */
@@ -65,12 +64,9 @@ const DEFAULT_VRF_KEY_HASH_150_GWEI =
 /** CRE KeystoneForwarder on Arbitrum One — override with CRE_KEYSTONE_FORWARDER; verify in Chainlink Forwarder Directory. */
 const DEFAULT_CRE_KEYSTONE_FORWARDER = CRE_KEYSTONE_FORWARDER_ARBITRUM_ONE;
 
-const DEFAULT_USDC = "0xaf88d065e77c8cC2239327C2EDb1aB17869eD1BE" as const;
-const DEFAULT_DAI = "0xDA10009cBd5D07dd0Cecc66161FC93D7c9000da1" as const;
+const DEFAULT_USDC = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as const;
+const DEFAULT_DAI = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" as const;
 
-const FQ_UNISWAP_FACTORY = "contracts/vendor/uniswap-v2-core/UniswapV2Factory.sol:UniswapV2Factory" as const;
-const FQ_WETH9 = "contracts/vendor/uniswap-v2-periphery/test/WETH9.sol:WETH9" as const;
-const FQ_UNISWAP_ROUTER = "contracts/vendor/uniswap-v2-periphery/UniswapV2Router02.sol:UniswapV2Router02" as const;
 
 async function main() {
     const publicClient = await viem.getPublicClient();
@@ -91,55 +87,72 @@ async function main() {
     const [deployer] = walletClients;
     if (!deployer.account) throw new Error("Deployer wallet has no account");
 
-    const protocolAdmin =
-        optionalAddressEnv("PROTOCOL_ADMIN", process.env.PROTOCOL_ADMIN) ?? deployer.account.address;
+    const protocolAdmin = requiredAddress("PROTOCOL_ADMIN");
+    const bootstrapAdmin = deployer.account.address;
+    const workflowOwner = requiredAddress("CRE_WORKFLOW_OWNER");
     const infraRecipient =
         optionalAddressEnv("INFRA_RECIPIENT", process.env.INFRA_RECIPIENT) ?? protocolAdmin;
 
-    const deployLocalUniswap = envBool("DEPLOY_LOCAL_UNISWAP", false);
-    const routerFromEnv = optionalAddressEnv("UNISWAP_V2_ROUTER", process.env.UNISWAP_V2_ROUTER);
-    if (!deployLocalUniswap && !routerFromEnv) {
-        throw new Error("Set UNISWAP_V2_ROUTER to a production router, or DEPLOY_LOCAL_UNISWAP=true for test only.");
-    }
-
-    let router: `0x${string}`;
-    let uniswapDeployed: { factory: `0x${string}`; weth: `0x${string}`; router: `0x${string}` } | undefined;
-    if (routerFromEnv) {
-        router = routerFromEnv;
-    } else {
-        uniswapDeployed = await deployUniswapV2Local(deployer);
-        router = uniswapDeployed.router;
-        console.warn("DEPLOY_LOCAL_UNISWAP=true — not for production economics.");
-    }
-
+    if (envBool("DEPLOY_LOCAL_UNISWAP", false)) throw new Error("Local Uniswap is forbidden on mainnet");
+    if (!envBool("SKIP_SUBGRAPH_SYNC", true)) throw new Error("Build/release the subgraph separately; deployment never mutates testnet or Goldsky");
+    const router = requiredAddress("UNISWAP_V2_ROUTER");
     const vrfCoordinator = envAddressOrDefault("VRF_COORDINATOR", DEFAULT_VRF_COORDINATOR);
     const linkToken = envAddressOrDefault("LINK_TOKEN", DEFAULT_LINK);
     const creKeystoneForwarder = envAddressOrDefault("CRE_KEYSTONE_FORWARDER", DEFAULT_CRE_KEYSTONE_FORWARDER);
     const usdc = envAddressOrDefault("USDC_TOKEN", DEFAULT_USDC);
     const dai = envAddressOrDefault("DAI_TOKEN", DEFAULT_DAI);
 
-    const vrfSubFromEnv = envBigIntOr("VRF_SUBSCRIPTION_ID", 0n);
+    const vrfSubFromEnv = boundedInteger("VRF_SUBSCRIPTION_ID", 0n, 1n, 2n ** 256n - 1n);
     if (vrfSubFromEnv === 0n) {
         throw new Error("VRF_SUBSCRIPTION_ID is required on Arbitrum One (create at vrf.chain.link).");
     }
     const vrfSubscriptionId = vrfSubFromEnv;
 
-    const vrfInitialLinkJuels = envBigIntOr("VRF_INITIAL_LINK_JUELS", 0n);
-    if (vrfInitialLinkJuels > 0n) {
-        await vrfFundSubscriptionWithLink(deployer, publicClient, linkToken, vrfCoordinator, vrfSubscriptionId, vrfInitialLinkJuels);
-    }
-
-    const vrfKeyHashes = vrfKeyHashTriple(DEFAULT_VRF_KEY_HASH_2_GWEI);
-    const callbackGasLimit = Number(envBigIntOr("VRF_CALLBACK_GAS_LIMIT", 2_500_000n));
-    const confirmations = Number(envBigIntOr("VRF_CONFIRMATIONS", 3n));
-    const roundDuration = Number(envBigIntOr("ROUND_DURATION_SECONDS", 300n));
+    const vrfInitialLinkJuels = boundedInteger("VRF_INITIAL_LINK_JUELS", 0n, 0n, 2n ** 96n - 1n);
+    const vrfKeyHashes = vrfKeyHashTriple([DEFAULT_VRF_KEY_HASH_2_GWEI, DEFAULT_VRF_KEY_HASH_30_GWEI, DEFAULT_VRF_KEY_HASH_150_GWEI]);
+    if (vrfKeyHashes.some(hash => BigInt(hash) === 0n)) throw new Error("VRF gas lane key hashes cannot be zero");
+    const callbackGasLimit = Number(boundedInteger("VRF_CALLBACK_GAS_LIMIT", 2_500_000n, 1n, 2_500_000n));
+    const confirmations = Number(boundedInteger("VRF_CONFIRMATIONS", 3n, 1n, 200n));
+    const roundDuration = Number(boundedInteger("ROUND_DURATION_SECONDS", 300n, 1n, 2n ** 32n - 1n));
     const { payoutLaneCount, creWorkflowLaneCount } = resolveCreLaneCounts({
         payoutLaneCount: process.env.PAYOUT_LANE_COUNT,
         upkeepLaneCount: process.env.UPKEEP_LANE_COUNT,
     });
-    const creLaneMaxDrainIterations = Number(envBigIntOr("CRE_LANE_MAX_DRAIN_ITERATIONS", 5n));
+    const creLaneMaxDrainIterations = Number(boundedInteger("CRE_LANE_MAX_DRAIN_ITERATIONS", 5n, 1n, 100n));
 
+    boundedInteger("VERIFY_DELAY_MS", 12_000n, 0n, 60_000n);
+    boundedInteger("PAYOUT_LANE_COUNT", 10n, 1n, 100n);
+    boundedInteger("UPKEEP_LANE_COUNT", BigInt(payoutLaneCount), 1n, 100n);
     const brbAddressEnv = optionalAddressEnv("BRB_TOKEN", process.env.BRB_TOKEN);
+    const minStable = parseUnits(process.env.MIN_BET_STABLE ?? "1", 6);
+    const minDai = parseUnits(process.env.MIN_BET_DAI ?? "1", 18);
+    const minBrb = parseUnits(process.env.MIN_BET_BRB ?? "1", 18);
+    if ([minStable, minDai, minBrb].some(value => value <= 0n || value > 2n ** 128n - 1n)) throw new Error("Invalid market minimum bet");
+    const scanLimit = Number(boundedInteger("UPKEEP_SCAN_LIMIT", 25n, 1n, 2n ** 32n - 1n));
+    const maxPayouts = Number(boundedInteger("UPKEEP_MAX_PAYOUTS_PER_CALL", 60n, 1n, 2n ** 32n - 1n));
+    if (payoutLaneCount !== creWorkflowLaneCount) throw new Error("Mainnet requires a deployed CRE workflow for every payout lane");
+    const brbStartBlock = brbAddressEnv ? Number(boundedInteger("BRB_START_BLOCK", 0n, 1n, BigInt(Number.MAX_SAFE_INTEGER))) : undefined;
+    const workflowHttpKey = optionalAddressEnv("CRE_HTTP_AUTHORIZED_ADDRESS", process.env.CRE_HTTP_AUTHORIZED_ADDRESS);
+    if (!workflowHttpKey || workflowHttpKey === zeroAddress) throw new Error("CRE_HTTP_AUTHORIZED_ADDRESS is required on mainnet");
+    const preflight = await preflightMainnet(publicClient, { deployer: bootstrapAdmin, admin: protocolAdmin,
+        router, coordinator: vrfCoordinator, link: linkToken, forwarder: creKeystoneForwarder,
+        usdc, dai, subscriptionId: vrfSubscriptionId, brb: brbAddressEnv });
+    if (brbStartBlock && brbStartBlock > Number(preflight.blockNumber)) throw new Error("BRB_START_BLOCK is in the future");
+    console.log(JSON.stringify({ ...preflight, workflowOwner, activationApproved: false }, null, 2));
+    if (process.env.CONFIRM_MAINNET_DEPLOY !== MAINNET_CONFIRMATION) {
+        console.log("Read-only preflight complete. Review docs/MAINNET_RUNBOOK.md before setting CONFIRM_MAINNET_DEPLOY.");
+        return;
+    }
+    const contractsRoot = join(__dirname, "..");
+    const releaseDir = join(contractsRoot, "deployments");
+    mkdirSync(releaseDir, { recursive: true });
+    const deployJsonPath = join(releaseDir, "arbitrum-one.json");
+    const journalPath = join(releaseDir, "arbitrum-one-progress.json");
+    if (existsSync(deployJsonPath) || existsSync(journalPath)) throw new Error("Mainnet release already started; inspect its journal and chain receipts before any recovery. Do not rerun blindly.");
+    const deployBlock = Number(preflight.blockNumber);
+    const deploymentNonce = await publicClient.getTransactionCount({ address: bootstrapAdmin, blockTag: "pending" });
+    writeFileSync(journalPath, JSON.stringify({ stage: "started", deployer: bootstrapAdmin, deploymentNonce, preflight }, null, 2) + "\n", { flag: "wx" });
+    if (vrfInitialLinkJuels > 0n) await vrfFundSubscriptionWithLink(deployer, publicClient, linkToken, vrfCoordinator, vrfSubscriptionId, vrfInitialLinkJuels);
     let brb: `0x${string}`;
     if (brbAddressEnv) {
         brb = brbAddressEnv;
@@ -174,20 +187,24 @@ async function main() {
                 callbackGasLimit,
                 confirmations,
                 roundDuration,
-                protocolAdmin,
+                bootstrapAdmin,
             ],
             {
-                admin: protocolAdmin,
-                scanLimit: Number(envBigIntOr("UPKEEP_SCAN_LIMIT", 25n)),
-                maxPayoutsPerCall: Number(envBigIntOr("UPKEEP_MAX_PAYOUTS_PER_CALL", 60n)),
+                admin: bootstrapAdmin,
+                scanLimit,
+                maxPayoutsPerCall: maxPayouts,
             },
             {
-                protocolPrefix: { brb, mockRouter: router, admin: protocolAdmin },
-                deployBrbReferral: envBool("DEPLOY_BRB_REFERRAL", true),
+                protocolPrefix: { brb, mockRouter: router, admin: bootstrapAdmin },
+                deployBrbReferral: true,
                 wireMockForwarder: false,
             },
         );
 
+    writeFileSync(journalPath, JSON.stringify({ stage: "stack-deployed", deployer: bootstrapAdmin, deploymentNonce,
+        brb, engine: engine.address, engineImplementation: engineImplementation.address, registry: registry.address,
+        sideBet: sideBet.address, sideBetImplementation: sideBetImplementation.address, scheduler: scheduler.address,
+        jackpotTreasury: jackpotTreasury.address, jackpotFunder: funder.address, brbReferral, linkedLibraries }, null, 2) + "\n");
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, protocolAdmin]);
     await waitWrite(registry.write.setVaultBeacon([beacon.address], { account: deployer.account }));
@@ -199,14 +216,25 @@ async function main() {
 
     const creAutomation = await deployCreAutomation({
         scheduler: scheduler.address,
-        admin: protocolAdmin,
+        admin: bootstrapAdmin,
+        expectedWorkflowOwner: workflowOwner,
+        receiverOwner: protocolAdmin,
         keystoneForwarder: creKeystoneForwarder,
         wallet: deployer,
         publicClient,
         waitWrite,
     });
 
+    const creProject = join(releaseDir, "arbitrum-one-cre");
+    const creOutput = join(creProject, "workflows/biribi-roulette-lane");
+    mkdirSync(creOutput, { recursive: true });
+    cpSync(join(contractsRoot, "cre/contracts"), join(creProject, "contracts"), { recursive: true });
+    cpSync(join(contractsRoot, "cre/package.json"), join(creProject, "package.json"));
+    for (const file of ["main.ts", "package.json", "tsconfig.json"]) {
+        cpSync(join(contractsRoot, "cre/workflows/biribi-roulette-lane", file), join(creOutput, file));
+    }
     writeCreWorkflowConfigs({
+        outputDirectory: creOutput,
         network: "arbitrum-one",
         scheduler: scheduler.address,
         receiver: creAutomation.automationReceiver,
@@ -223,9 +251,10 @@ async function main() {
         })(),
     });
 
-    const minStable = parseUnits(process.env.MIN_BET_STABLE ?? "1", 6);
-    const minDai = parseUnits(process.env.MIN_BET_DAI ?? "1", 18);
-    const minBrb = parseUnits(process.env.MIN_BET_BRB ?? "1", 18);
+    const creTargets = ["test-settings", "production-settings", "trigger-vrf-test-settings", "trigger-vrf-production-settings",
+        ...Array.from({ length: creWorkflowLaneCount }, (_, lane) => [`lane${lane}-test-settings`, `lane${lane}-production-settings`]).flat()];
+    writeFileSync(join(creProject, "project.yaml"), creTargets.map(target =>
+        `${target}:\n  rpcs:\n    - chain-name: ethereum-mainnet-arbitrum-1\n      url: \${ARBITRUM_RPC_URL}\n`).join("\n"));
 
     for (const params of [
         { asset: usdc, minBet: minStable },
@@ -243,21 +272,31 @@ async function main() {
     const marketUsdc = await registry.read.getMarket([1]);
     const marketDai = await registry.read.getMarket([2]);
     const marketBrb = await registry.read.getMarket([3]);
+    const challengeEvaluator = await sideBet.read.CHALLENGE_EVALUATOR();
 
-    const deployBlock = Number(await publicClient.getBlockNumber());
     const deploymentManifest = {
         network: "arbitrum-one",
         chainId: 42161,
         startBlock: deployBlock,
+        startBlocks: { brb: brbStartBlock ?? deployBlock },
+        deployer: bootstrapAdmin,
+        workflowOwner,
+        activationApproved: false,
+        handoffComplete: false,
+        verificationComplete: false,
+        linkedLibraries,
         protocolAdmin,
         infraRecipient,
         addresses: {
             brb,
             brbReferal: brbReferral,
             registry: registry.address,
+            roulette: engine.address,
             engine: engine.address,
             engineImplementation: engineImplementation.address,
             sideBet: sideBet.address,
+            sideBetImplementation: sideBetImplementation.address,
+            challengeEvaluator,
             scheduler: scheduler.address,
             automationReceiver: creAutomation.automationReceiver,
             creExecutionAuthority: creAutomation.creExecutionAuthority,
@@ -277,6 +316,7 @@ async function main() {
         },
         vrf: {
             coordinator: vrfCoordinator,
+            linkToken,
             subscriptionId: vrfSubscriptionId.toString(),
             keyHash2Gwei: vrfKeyHashes[0],
             keyHash30Gwei: vrfKeyHashes[1],
@@ -284,42 +324,33 @@ async function main() {
         },
     };
 
-    const contractsRoot = join(__dirname, "..");
-    const subgraphRoot = join(contractsRoot, "..", "subgraph");
-    const deployJsonPath = join(subgraphRoot, "deployments", "arbitrum-one.json");
-    writeFileSync(deployJsonPath, `${JSON.stringify(deploymentManifest, null, 2)}\n`, "utf8");
-    console.log(`Wrote ${deployJsonPath}`);
+    writeFileSync(deployJsonPath, `${JSON.stringify(deploymentManifest, null, 2)}\n`, { flag: "wx" });
+    const authority = await viem.getContractAt("CreExecutionAuthority", creAutomation.creExecutionAuthority);
+    await handoffProtocolRoles([
+        { contract: engine, roles: ["DEFAULT_ADMIN_ROLE", "ENGINE_WITHDRAWAL_ROLE", "ENGINE_PAYOUT_ROLE", "ENGINE_ROUND_ROLE", "ENGINE_FEE_ROLE"] },
+        { contract: sideBet, roles: ["DEFAULT_ADMIN_ROLE", "SIDE_BET_CONFIG_ROLE", "SIDE_BET_LIMITS_ROLE"] },
+        { contract: registry, roles: ["DEFAULT_ADMIN_ROLE", "MARKET_FACTORY_ROLE"] },
+        { contract: scheduler, roles: ["DEFAULT_ADMIN_ROLE", "SCHEDULER_ADMIN_ROLE"] },
+        { contract: funder, roles: ["DEFAULT_ADMIN_ROLE", "FUNDER_ADMIN_ROLE"] },
+        { contract: jackpotTreasury, roles: ["DEFAULT_ADMIN_ROLE", "TREASURY_ADMIN_ROLE"] },
+        { contract: authority, roles: ["DEFAULT_ADMIN_ROLE", "EXECUTOR_ADMIN_ROLE"] },
+    ], bootstrapAdmin, protocolAdmin, waitWrite);
+    deploymentManifest.handoffComplete = true;
+    writeFileSync(deployJsonPath, `${JSON.stringify(deploymentManifest, null, 2)}\n`);
+    writeFileSync(journalPath, JSON.stringify({ stage: "configured-handoff-complete", manifest: deployJsonPath }, null, 2) + "\n");
 
-    if (!envBool("SKIP_SUBGRAPH_SYNC", true)) {
-        spawnSync("yarn", ["update:subgraph:abis"], { cwd: contractsRoot, stdio: "inherit", shell: true });
-        spawnSync("yarn", ["sync:pipeline"], {
-            cwd: subgraphRoot,
-            stdio: "inherit",
-            shell: true,
-            env: { ...process.env, DEPLOY_JSON: "./deployments/arbitrum-one.json" },
-        });
-    }
-
-    const runVerify = envBool("VERIFY_CONTRACTS", vars.has("ETHERSCAN_API_KEY"));
+    const runVerify = envBool("VERIFY_CONTRACTS", true);
     if (runVerify && vars.has("ETHERSCAN_API_KEY")) {
         const verifyDelayMs = Number(envBigIntOr("VERIFY_DELAY_MS", 12_000n));
-        if (uniswapDeployed) {
-            await verifyContractWithDelay(uniswapDeployed.factory, [protocolAdmin], verifyDelayMs, FQ_UNISWAP_FACTORY);
-            await verifyContractWithDelay(uniswapDeployed.weth, [], verifyDelayMs, FQ_WETH9);
-            await verifyContractWithDelay(
-                uniswapDeployed.router,
-                [uniswapDeployed.factory, uniswapDeployed.weth],
-                verifyDelayMs,
-                FQ_UNISWAP_ROUTER,
-            );
-        }
-        await verifyContractWithDelay(jackpotTreasury.address, [brb, engine.address, protocolAdmin], verifyDelayMs);
+        if (!brbAddressEnv) await verifyContractWithDelay(brb, [protocolAdmin], verifyDelayMs);
+        await verifyContractWithDelay(jackpotTreasury.address, [brb, engine.address, bootstrapAdmin], verifyDelayMs);
         await verifyContractWithDelay(
             funder.address,
-            [engine.address, brb, router, jackpotTreasury.address, sideBet.address, protocolAdmin],
+            [engine.address, brb, router, jackpotTreasury.address, sideBet.address, bootstrapAdmin],
             verifyDelayMs,
         );
-        await verifyContractWithDelay(registry.address, [protocolAdmin, engine.address, sideBet.address], verifyDelayMs);
+        await verifyContractWithDelay(registry.address, [bootstrapAdmin, engine.address, sideBet.address], verifyDelayMs);
+        await verifyContractWithDelay(challengeEvaluator, [], verifyDelayMs);
         await verifyContractWithDelay(vaultImpl.address, [], verifyDelayMs);
         await verifyContractWithDelay(beacon.address, [vaultImpl.address, protocolAdmin], verifyDelayMs);
         if (brbReferral !== zeroAddress) {
@@ -355,6 +386,7 @@ async function main() {
         ]);
 
         await verifyProtocolProxies({
+            strict: true,
             delayMs: verifyDelayMs,
             engineProxy: engine.address,
             engineImplementation: engineImplementation.address,
@@ -384,9 +416,9 @@ async function main() {
             [
                 engine.address,
                 sideBet.address,
-                protocolAdmin,
-                Number(envBigIntOr("UPKEEP_SCAN_LIMIT", 25n)),
-                Number(envBigIntOr("UPKEEP_MAX_PAYOUTS_PER_CALL", 60n)),
+                bootstrapAdmin,
+                scanLimit,
+                maxPayouts,
             ],
             verifyDelayMs,
         );
@@ -396,13 +428,19 @@ async function main() {
             verifyDelayMs,
             "contracts/chainlink/cre/AutomationReceiver.sol:AutomationReceiver",
         );
-        await verifyContractWithDelay(creAutomation.creExecutionAuthority, [protocolAdmin], verifyDelayMs);
+        await verifyContractWithDelay(creAutomation.creExecutionAuthority, [bootstrapAdmin], verifyDelayMs);
+        deploymentManifest.verificationComplete = true;
+        writeFileSync(deployJsonPath, `${JSON.stringify(deploymentManifest, null, 2)}\n`);
     }
 
     console.log(JSON.stringify(deploymentManifest, null, 2));
+    console.log("Contracts configured. Public launch, liquidity, CRE activation, index promotion and Vercel cutover remain separate runbook gates.");
 }
 
 main().catch((error) => {
-    console.error(error);
+    // Viem errors can embed RPC URLs/headers. Never print raw transport errors.
+    const message = error instanceof Error && !error.cause && !/https?:\/\//i.test(error.message)
+        ? error.message : "Mainnet operation failed or its result is uncertain. Inspect the local deployment journal and chain receipts before recovery; do not rerun blindly.";
+    console.error(message);
     process.exitCode = 1;
 });

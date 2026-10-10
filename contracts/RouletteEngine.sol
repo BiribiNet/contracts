@@ -632,6 +632,10 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         // vacuously true, finalizing a market whose winners were never paid.
         if (job.payoutShardWidth == 0 || lane >= job.payoutShardWidth) revert InvalidJob();
 
+        if (lane == 0 && marketId == $._roundTriggerMarket[roundId] && gr.jackpotTriggered && !gr.jackpotDistributed) {
+            if (!RouletteJackpotCollectLib.prepareJackpotSnapshot($, roundId, gr.winningNumber)) return;
+        }
+
         if (!mr.betsReleased) {
             IBankVault(bank).releaseBets(mr.totals.totalAmount);
             mr.betsReleased = true;
@@ -690,11 +694,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         if (mr.settled) return;
         RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
         if (marketId == $._roundTriggerMarket[roundId] && gr.jackpotTriggered && !gr.jackpotDistributed) {
-            (,, uint256 eligibleStake) =
-                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, gr.winningNumber);
-            if (eligibleStake != 0) return;
-            // A triggered draw with no eligible straight stakes has no jackpot liability.
-            gr.jackpotDistributed = true;
+            // Lane zero prepares a bounded snapshot and marks empty jackpots
+            // distributed. Never rescan an unbounded winner list in a write.
+            return;
         }
         _collectMarketFees($, roundId, marketId, bank, mr.totals.totalAmount, mr.bankPaidRunning);
         mr.settled = true;

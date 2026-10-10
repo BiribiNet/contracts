@@ -156,9 +156,7 @@ library RouletteUpkeepScanLib {
         }
 
         if (lane == 0 && gr.jackpotTriggered && !gr.jackpotDistributed && marketId == $._roundTriggerMarket[roundId]) {
-            (address[] memory winners,, uint256 totalStake) =
-                RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, gr.winningNumber);
-            if (totalStake > 0 && uint256(gr.jackpotCursor) < winners.length) return true;
+            return true;
         }
 
         return lane == 0 && mr.winningBetCount == 0 && _allPayoutShardsComplete($, roundId, marketId, laneCount);
@@ -226,6 +224,14 @@ library RouletteUpkeepScanLib {
         uint32 maxPayoutsPerCall
     ) private view returns (address[] memory jackpotWinners, uint256[] memory jackpotAmounts) {
         RouletteEngineStorageLib.GlobalRoundState storage gr = $.globalRoundState[roundId];
+        if ($.jackpotPreparation[roundId].ready) {
+            return RouletteJackpotCollectLib.previewPreparedJackpot($, roundId, maxPayoutsPerCall);
+        }
+        // Small existing rounds can prepare and pay in one call. Large rounds
+        // first submit empty jackpot rows to advance bounded preparation.
+        if (gr.jackpotPoolSnapshot == 0 && !RouletteJackpotCollectLib.smallJackpot($, roundId, winningNumber)) {
+            return (jackpotWinners, jackpotAmounts);
+        }
         (address[] memory winners, uint256[] memory stakes, uint256 totalStake) =
             RouletteJackpotCollectLib.collectJackpotEligibleStraightStakes($, roundId, winningNumber);
         uint256 n = winners.length;

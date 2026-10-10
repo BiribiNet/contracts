@@ -42,10 +42,11 @@ export function envBool(name: string, defaultValue: boolean): boolean {
     throw new Error(`${name} must be true/false (got ${process.env[name]})`);
 }
 
-export function vrfKeyHashTriple(defaultLane: `0x${string}`): readonly [`0x${string}`, `0x${string}`, `0x${string}`] {
+export function vrfKeyHashTriple(defaultLane: `0x${string}` | readonly [`0x${string}`, `0x${string}`, `0x${string}`]): readonly [`0x${string}`, `0x${string}`, `0x${string}`] {
+    const lanes = typeof defaultLane === "string" ? [defaultLane, defaultLane, defaultLane] : defaultLane;
     return [
-        envBytes32Or("VRF_KEY_HASH_2_GWEI", defaultLane),
-        envBytes32Or("VRF_KEY_HASH_30_GWEI", defaultLane),
-        envBytes32Or("VRF_KEY_HASH_150_GWEI", defaultLane),
+        envBytes32Or("VRF_KEY_HASH_2_GWEI", lanes[0]),
+        envBytes32Or("VRF_KEY_HASH_30_GWEI", lanes[1]),
+        envBytes32Or("VRF_KEY_HASH_150_GWEI", lanes[2]),
     ] as const;
 }

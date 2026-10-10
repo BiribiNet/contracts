@@ -10,12 +10,12 @@ const HARDHAT_TEST_MNEMONIC =
  * Crowd / parallel-lane tests need 100+ distinct `viem.getWalletClients()` accounts.
  * Override with `HARDHAT_ACCOUNT_COUNT` (e.g. 256) if you need more headroom locally.
  */
-const HARDHAT_ACCOUNT_COUNT = Number(process.env.HARDHAT_ACCOUNT_COUNT ?? 128);
+const HARDHAT_ACCOUNT_COUNT = Number(process.env.HARDHAT_ACCOUNT_COUNT ?? (process.env.RUN_ARBITRUM_FORK === '1' ? 4 : 128));
 
 const networks: NetworksUserConfig = {};
 
 networks.hardhat = {
-  allowUnlimitedContractSize: true,
+  allowUnlimitedContractSize: process.env.RUN_ARBITRUM_FORK !== '1',
   accounts: {
     mnemonic: HARDHAT_TEST_MNEMONIC,
     count: HARDHAT_ACCOUNT_COUNT,

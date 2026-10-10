@@ -34,7 +34,6 @@ const HTTP_WORKFLOW_KINDS: Record<HttpWorkflowKind, { deployNameSuffix: string }
 };
 
 const WORKFLOW_DIR = join(__dirname, "..", "..", "cre", "workflows", "biribi-roulette-lane");
-const WORKFLOW_YAML_PATH = join(WORKFLOW_DIR, "workflow.yaml");
 
 /** Matches `RouletteEngine.DEFAULT_PAYOUT_LANE_COUNT`. */
 export const ENGINE_DEFAULT_PAYOUT_LANE_COUNT = 10;
@@ -81,9 +80,9 @@ function laneWorkflowTargetYaml(
     secrets-path: ""`;
 }
 
-function httpWorkflowTargetYaml(kind: HttpWorkflowKind, env: "test" | "production"): string {
+function httpWorkflowTargetYaml(kind: HttpWorkflowKind, env: "test" | "production", prefix = "biribi"): string {
     const target = `${kind}-${env}-settings`;
-    const workflowName = `biribi-${kind}-${env}`;
+    const workflowName = `${prefix}-${kind}-${env}`;
     const configPath = `./config.${kind}.${env}.json`;
     return `${target}:
   user-workflow:
@@ -97,12 +96,12 @@ function httpWorkflowTargetYaml(kind: HttpWorkflowKind, env: "test" | "productio
 }
 
 /** Regenerates `workflow.yaml` with one deploy target per payout lane (parallel LOG[+HTTP] workflows). */
-export function writeCreWorkflowYaml(laneCount: number): void {
+export function writeCreWorkflowYaml(laneCount: number, outputDirectory = WORKFLOW_DIR, prefix = "biribi"): void {
     if (!Number.isInteger(laneCount) || laneCount < 1) {
         throw new Error(`laneCount must be a positive integer (got ${laneCount})`);
     }
 
-    mkdirSync(WORKFLOW_DIR, { recursive: true });
+    mkdirSync(outputDirectory, { recursive: true });
 
     const sections: string[] = [
         "# Auto-generated lane targets — run deploy / yarn generate:cre:configs to refresh.",
@@ -112,7 +111,7 @@ export function writeCreWorkflowYaml(laneCount: number): void {
     ];
 
     for (let lane = 0; lane < laneCount; lane++) {
-        sections.push(laneWorkflowTargetYaml(lane, "test"));
+        sections.push(laneWorkflowTargetYaml(lane, "test", { workflowName: `${prefix}-roulette-lane-${lane}-test` }));
         sections.push("");
     }
 
@@ -120,13 +119,13 @@ export function writeCreWorkflowYaml(laneCount: number): void {
         "# Legacy alias: lane 0 test",
         laneWorkflowTargetYaml(0, "test", {
             targetName: "test-settings",
-            workflowName: "biribi-roulette-lane-test",
+            workflowName: `${prefix}-roulette-lane-test`,
         }),
         "",
     );
 
     for (let lane = 0; lane < laneCount; lane++) {
-        sections.push(laneWorkflowTargetYaml(lane, "production"));
+        sections.push(laneWorkflowTargetYaml(lane, "production", { workflowName: `${prefix}-roulette-lane-${lane}-production` }));
         sections.push("");
     }
 
@@ -134,20 +133,20 @@ export function writeCreWorkflowYaml(laneCount: number): void {
         "# Legacy alias: lane 0 production",
         laneWorkflowTargetYaml(0, "production", {
             targetName: "production-settings",
-            workflowName: "biribi-roulette-lane-production",
+            workflowName: `${prefix}-roulette-lane-production`,
         }),
         "",
     );
 
     for (const kind of Object.keys(HTTP_WORKFLOW_KINDS) as HttpWorkflowKind[]) {
-        sections.push(httpWorkflowTargetYaml(kind, "test"));
+        sections.push(httpWorkflowTargetYaml(kind, "test", prefix));
         sections.push("");
-        sections.push(httpWorkflowTargetYaml(kind, "production"));
+        sections.push(httpWorkflowTargetYaml(kind, "production", prefix));
         sections.push("");
     }
 
-    writeFileSync(WORKFLOW_YAML_PATH, `${sections.join("\n").trimEnd()}\n`, "utf8");
-    console.log(`Wrote ${WORKFLOW_YAML_PATH} (${laneCount} parallel payout lane target(s))`);
+    writeFileSync(join(outputDirectory, "workflow.yaml"), `${sections.join("\n").trimEnd()}\n`, "utf8");
+    console.log(`Wrote ${join(outputDirectory, "workflow.yaml")} (${laneCount} parallel payout lane target(s))`);
 }
 
 export function logCrePayoutWorkflowDeployCommands(laneCount: number, env: "test" | "production"): void {
@@ -163,6 +162,7 @@ export function laneCheckDataHex(lane: number): `0x${string}` {
 }
 
 export type WriteCreLaneConfigsParams = {
+    outputDirectory?: string;
     network: CreNetworkKey;
     scheduler: Address;
     receiver: Address;
@@ -178,6 +178,7 @@ export type WriteCreLaneConfigsParams = {
 };
 
 export type WriteCreHttpConfigsParams = {
+    outputDirectory?: string;
     network: CreNetworkKey;
     scheduler: Address;
     receiver: Address;
@@ -196,6 +197,7 @@ function writeJson(path: string, data: unknown) {
 }
 
 export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
+    const outputDirectory = params.outputDirectory ?? WORKFLOW_DIR;
     const {
         network,
         scheduler,
@@ -214,7 +216,7 @@ export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
     }
 
     const { chainSelectorName } = CRE_NETWORKS[network];
-    mkdirSync(WORKFLOW_DIR, { recursive: true });
+    mkdirSync(outputDirectory, { recursive: true });
 
     const recoveryKeys = (httpAuthorizedKeys ?? []).filter((key) => isAddress(key));
     const useHttpRecovery = recoveryKeys.length > 0;
@@ -246,7 +248,7 @@ export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
         };
 
         for (const env of ["test", "production"] as const) {
-            writeJson(join(WORKFLOW_DIR, `config.lane${lane}.${env}.json`), {
+            writeJson(join(outputDirectory, `config.lane${lane}.${env}.json`), {
                 ...shared,
                 logTriggerConfidence: logTriggerConfidenceByEnv[env],
             });
@@ -255,6 +257,7 @@ export function writeCreLaneConfigs(params: WriteCreLaneConfigsParams): void {
 }
 
 export function writeCreHttpConfigs(params: WriteCreHttpConfigsParams): void {
+    const outputDirectory = params.outputDirectory ?? WORKFLOW_DIR;
     const {
         network,
         scheduler,
@@ -274,7 +277,7 @@ export function writeCreHttpConfigs(params: WriteCreHttpConfigsParams): void {
     }
 
     const { chainSelectorName } = CRE_NETWORKS[network];
-    mkdirSync(WORKFLOW_DIR, { recursive: true });
+    mkdirSync(outputDirectory, { recursive: true });
 
     for (const kind of Object.keys(HTTP_WORKFLOW_KINDS) as HttpWorkflowKind[]) {
         const { deployNameSuffix } = HTTP_WORKFLOW_KINDS[kind];
@@ -291,7 +294,7 @@ export function writeCreHttpConfigs(params: WriteCreHttpConfigsParams): void {
         };
 
         for (const env of ["test", "production"] as const) {
-            writeJson(join(WORKFLOW_DIR, `config.${kind}.${env}.json`), base);
+            writeJson(join(outputDirectory, `config.${kind}.${env}.json`), base);
         }
 
         console.log(
@@ -303,8 +306,9 @@ export function writeCreHttpConfigs(params: WriteCreHttpConfigsParams): void {
 export function writeCreWorkflowConfigs(params: WriteCreWorkflowConfigsParams): void {
     const { httpAuthorizedKeys, ...laneParams } = params;
     writeCreLaneConfigs({ ...laneParams, httpAuthorizedKeys });
-    writeCreWorkflowYaml(laneParams.laneCount);
+    writeCreWorkflowYaml(laneParams.laneCount, params.outputDirectory, params.network === "arbitrum-one" ? "biribi-arbitrum-one" : "biribi");
     writeCreHttpConfigs({
+        outputDirectory: params.outputDirectory,
         network: params.network,
         scheduler: params.scheduler,
         receiver: params.receiver,

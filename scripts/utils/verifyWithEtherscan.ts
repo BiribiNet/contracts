@@ -37,7 +37,7 @@ export async function verifyContract(
             }
             if (/Internal error|rate limit|429|timeout/i.test(msg) && attempt < attempts - 1) {
                 const waitMs = 4000 * (attempt + 1);
-                console.warn(`Verify retry ${address} (${attempt + 1}/${attempts}): ${msg.split("\n")[0]}`);
+                console.warn(`Verification service retry ${address} (${attempt + 1}/${attempts}); transport details redacted`);
                 await sleep(waitMs);
                 continue;
             }

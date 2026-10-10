@@ -83,7 +83,7 @@ const config: HardhatUserConfig = {
     enabled:
       process.env.SOLIDITY_COVERAGE === 'true'
         ? false
-        : vars.has('REPORT_GAS') || vars.has('ETHERSCAN_API_KEY'),
+        : process.env.REPORT_GAS !== 'false' && (process.env.REPORT_GAS === 'true' || vars.has('REPORT_GAS')),
     coinmarketcap: vars.has('REPORT_GAS') ? vars.get('REPORT_GAS') : '',
     currency: 'EUR',
   },

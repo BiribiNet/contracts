@@ -30,15 +30,16 @@ describe('Jackpot completion across parallel lanes', () => {
     const d=await s.engine.read.roundDiagnostics([1n]);
     await s.vrf.write.fulfillWithJackpot([s.engine.address,d.requestId,7n,7n]);
     // Finish lane zero's 20 roulette rows while leaving lane one untouched.
-    for(let i=0;i<4;i++){const [needed,data]=await s.scheduler.read.checkUpkeep(['0x']);expect(needed).to.equal(true);await s.scheduler.write.performUpkeep([data]);}
+    for(let i=0;i<30 && await s.engine.read.payoutShardCursor([1n,1,0]) < 20n;i++){const [needed,data]=await s.scheduler.read.checkUpkeep(['0x']);expect(needed).to.equal(true);await s.scheduler.write.performUpkeep([data]);}
     expect(await s.engine.read.payoutShardCursor([1n,1,0])).to.equal(20n);
+    const cursorBefore=(await s.engine.read.globalRoundState([1n])).jackpotCursor;
     const [needed,data]=await s.scheduler.read.checkUpkeep(['0x']);expect(needed).to.equal(true);
     await s.scheduler.write.performUpkeep([data]);
     const before=await s.brb.read.balanceOf([s.alice.account.address]);
-    expect((await s.engine.read.globalRoundState([1n])).jackpotCursor).to.equal(25);
+    expect((await s.engine.read.globalRoundState([1n])).jackpotCursor).to.equal(cursorBefore + 5);
     await expect(s.scheduler.write.performUpkeep([data])).to.be.rejected;
     expect(await s.brb.read.balanceOf([s.alice.account.address])).to.equal(before);
-    expect((await s.engine.read.globalRoundState([1n])).jackpotCursor).to.equal(25);
+    expect((await s.engine.read.globalRoundState([1n])).jackpotCursor).to.equal(cursorBefore + 5);
     await runParallelLanesUntilIdle(s.scheduler,{laneCount:2n});
     expect((await s.engine.read.globalRoundState([1n])).jackpotPaid).to.equal(parseUnits('1000',18));
     expect(await s.engine.read.currentGlobalRound()).to.equal(2n);

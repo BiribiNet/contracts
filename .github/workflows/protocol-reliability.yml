@@ -3,10 +3,29 @@ on:
   pull_request:
   push:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      fork_block:
+        description: Optional pinned Arbitrum One block (latest when empty)
+        required: false
+        type: string
 permissions:
   contents: read
 jobs:
   regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      REPORT_GAS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable && yarn install --immutable
+      - name: Compile contracts and run protocol regressions
+        run: yarn hardhat test
+  swarm:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -15,5 +34,37 @@ jobs:
         with:
           node-version: 22
       - run: corepack enable && yarn install --immutable
-      - name: Compile contracts and run protocol regressions
-        run: yarn hardhat test test/RetryVrf.test.ts test/ProtocolObservability.test.ts test/PayoutLiabilityBound.test.ts test/JackpotMultiMarketSplit.test.ts test/BRBJackpotFunder.test.ts test/FundingQueue.test.ts test/SideBetEconomics.test.ts test/SideBetSimulation.test.ts test/FullBalanceSettlement.test.ts test/MultiAssetArchitecture.test.ts test/StuckWithdrawalQueue.test.ts test/GasScaling.test.ts test/PayoutParallelLanes.test.ts test/SideBetLiabilityCollision.test.ts test/TipJar.test.ts test/JackpotCompletion.test.ts test/SideBet.test.ts
+      - run: yarn test:swarm
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brb-swarm-gas-and-accounting
+          path: reports/swarm/*.json
+  arbitrum-fork:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: mainnet-rehearsal
+    env:
+      ARBITRUM_FORK_URL: ${{ secrets.ARBITRUM_FORK_URL }}
+      ARBITRUM_FORK_BLOCK: ${{ inputs.fork_block }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable && yarn install --immutable
+      - name: Rehearse on isolated chain; keep credential-bearing RPC diagnostics private
+        shell: bash
+        run: |
+          if yarn test:fork:arbitrum > "$RUNNER_TEMP/arbitrum-fork.log" 2>&1; then
+            cat reports/fork/arbitrum-one.json
+          else
+            echo 'Arbitrum fork rehearsal failed. Inspect the RPC provider and rerun locally with private diagnostics.'
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: arbitrum-fork-rehearsal
+          path: reports/fork/arbitrum-one.json
