@@ -1,6 +1,8 @@
 import "dotenv/config";
 
 import hre, { viem } from "hardhat";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { getAddress, isAddress, keccak256, parseAbi, toBytes, zeroHash } from "viem";
 
 import { deployRouletteEngineLibraries } from "./utils/deployRouletteEngineLibraries";
@@ -12,7 +14,7 @@ import {
 
 /**
  * UUPS-upgrade the live Arbitrum Sepolia `RouletteEngine` proxy to the current local implementation
- * (including admin-only `retryVrf` for stuck VRF rounds).
+ * (including bounded jackpot preparation).
  *
  * Prerequisites:
  * - `hardhat vars set BRB_KEY` (must hold `DEFAULT_ADMIN_ROLE` on the engine proxy)
@@ -26,6 +28,8 @@ import {
  * - VERIFY_CONTRACTS — default true when `ETHERSCAN_API_KEY` is set
  * - VERIFY_DELAY_MS — default 8000
  * - CALL_RETRY_VRF — default false; set true to call admin `retryVrf()` after upgrade
+ * - ENGINE_UPGRADE_REHEARSAL — successful local fork report; enables matching/idle guards
+ * - ENGINE_UPGRADE_JOURNAL — fresh public receipt journal; existing paths block blind reruns
  *
  * Run: `yarn upgrade:engine:arbitrum-sepolia`
  */
@@ -100,6 +104,32 @@ async function main() {
     const vrfCoordinator = envAddress("VRF_COORDINATOR", DEFAULT_VRF_COORDINATOR);
 
     const previousImplementation = await readErc1967Implementation(publicClient, engineProxy);
+    const rehearsalPath = process.env.ENGINE_UPGRADE_REHEARSAL;
+    const rehearsal = rehearsalPath ? JSON.parse(readFileSync(rehearsalPath, "utf8")) : undefined;
+    const journalPath = process.env.ENGINE_UPGRADE_JOURNAL;
+    const journal: Record<string, unknown> = { chainId, engineProxy, previousImplementation,
+        signer: deployer.account.address, startedAt: new Date().toISOString(), status: "preflight" };
+    const checkpoint = () => {
+        if (!journalPath) return;
+        mkdirSync(dirname(journalPath), { recursive: true });
+        writeFileSync(journalPath, JSON.stringify(journal, null, 2) + "\n");
+    };
+    if (journalPath && existsSync(journalPath)) throw new Error("Upgrade journal exists; inspect confirmed receipts before recovery");
+    if (rehearsal && (!rehearsal.statePreserved || rehearsal.sourceChainId !== chainId ||
+        rehearsal.proxy.toLowerCase() !== engineProxy.toLowerCase() ||
+        rehearsal.previousImplementation.toLowerCase() !== previousImplementation.toLowerCase() ||
+        rehearsal.admin.toLowerCase() !== deployer.account.address.toLowerCase())) {
+        throw new Error("Live deployment no longer matches the successful fork rehearsal");
+    }
+    const assertIdle = async () => {
+        const engine = await viem.getContractAt("RouletteEngine", engineProxy);
+        const round = await engine.read.currentGlobalRound();
+        const d = await engine.read.roundDiagnostics([round]);
+        if (await engine.read.hasPendingVrf() || d.marketsParticipating !== d.marketsSettled) {
+            throw new Error("Finish pending VRF/settlement before upgrading");
+        }
+    };
+    if (rehearsal) await assertIdle();
     console.log("Engine proxy:", engineProxy);
     console.log("Current implementation:", previousImplementation);
 
@@ -123,11 +153,23 @@ async function main() {
         );
     }
 
+    const constructorArguments = [vrfCoordinator, key2, key30, key150, confirmations, brbReferral];
+    if (rehearsal && JSON.stringify(constructorArguments).toLowerCase() !== JSON.stringify(rehearsal.constructorArgs).toLowerCase()) {
+        throw new Error("Constructor inputs differ from rehearsal");
+    }
+    const latestNonce = await publicClient.getTransactionCount({ address: deployer.account.address, blockTag: "latest" });
+    const pendingNonce = await publicClient.getTransactionCount({ address: deployer.account.address, blockTag: "pending" });
+    if (latestNonce !== pendingNonce) throw new Error("Signer has pending transactions; resolve before upgrade");
+    Object.assign(journal, { startingNonce: latestNonce, constructorArguments, status: "deploying-libraries" });
+    checkpoint();
+
     console.log("Deploying linked libraries…");
     if (hre.network.name !== "hardhat") {
         await new Promise((resolve) => setTimeout(resolve, 3000));
     }
     const { addresses: linkedLibraries, engineLinks } = await deployRouletteEngineLibraries(deployer.account);
+    Object.assign(journal, { linkedLibraries, status: "deploying-implementation" });
+    checkpoint();
 
     console.log("Deploying new RouletteEngine implementation…");
     const newImplementation = await viem.deployContract(
@@ -136,6 +178,8 @@ async function main() {
         { account: deployer.account, libraries: engineLinks, gas: 8_000_000n },
     );
     console.log("New implementation:", newImplementation.address);
+    Object.assign(journal, { newImplementation: newImplementation.address, status: "implementation-deployed" });
+    checkpoint();
 
     const newUsesVrfV25 = await implementationUsesVrfV25(publicClient, newImplementation.address);
     if (!newUsesVrfV25) {
@@ -143,6 +187,10 @@ async function main() {
     }
 
     console.log("Calling upgradeToAndCall on proxy…");
+    if (rehearsal) await assertIdle();
+    if ((await readErc1967Implementation(publicClient, engineProxy)).toLowerCase() !== previousImplementation.toLowerCase()) {
+        throw new Error("Proxy changed concurrently; upgrade aborted");
+    }
     const upgradeHash = await deployer.writeContract({
         address: engineProxy,
         abi: implReadAbi,
@@ -152,10 +200,14 @@ async function main() {
         chain: publicClient.chain,
         gas: 500_000n,
     });
+    Object.assign(journal, { upgradeTx: upgradeHash, status: "upgrade-broadcast" });
+    checkpoint();
     const receipt = await publicClient.waitForTransactionReceipt({ hash: upgradeHash });
     if (receipt.status !== "success") {
         throw new Error(`upgradeToAndCall reverted (tx ${upgradeHash})`);
     }
+    Object.assign(journal, { upgradeTx: upgradeHash, upgradeBlock: receipt.blockNumber.toString(), status: "upgrade-confirmed" });
+    checkpoint();
 
     const upgradedImplementation = await readErc1967Implementation(publicClient, engineProxy);
     if (upgradedImplementation.toLowerCase() !== newImplementation.address.toLowerCase()) {
@@ -216,10 +268,12 @@ async function main() {
             FQ_ROULETTE_ENGINE,
             buildRouletteEngineLibraryMap(linkedLibraries),
         );
+        journal.status = "verified";
+        checkpoint();
     }
 }
 
-main().catch((error) => {
-    console.error(error);
+main().catch(() => {
+    console.error("Engine upgrade stopped. Inspect the journal, signer nonce and confirmed receipts before recovery; transport diagnostics are withheld.");
     process.exitCode = 1;
 });
