@@ -157,6 +157,11 @@ async function fulfillRoundsWithJackpot(
 
 
 const variants = [
+{"name":"Déjà-vu","betType":21,"windowSpins":6,"targetCount":0,"targetNumber":0,"redRatioBps":0,"yes":[7,0,1,0,2,3],"no":[0,1,2,3,4,5]},
+{"name":"Montagnes russes","betType":22,"windowSpins":4,"targetCount":0,"targetNumber":0,"redRatioBps":0,"yes":[0,36,1,35],"no":[0,1,2,1]},
+{"name":"Aimant","betType":23,"windowSpins":5,"targetCount":3,"targetNumber":0,"redRatioBps":0,"yes":[0,13,24,1,14],"no":[0,1,13,25,2]},
+{"name":"Photo finish","betType":24,"windowSpins":5,"targetCount":0,"targetNumber":7,"redRatioBps":0,"yes":[0,1,2,3,7],"no":[7,1,2,3,7]},
+
   {
     "targetCount": 3,
     "targetNumber": 0,
@@ -344,7 +349,7 @@ describe('Window challenge settlement',()=>{
  });
  it('rejects invalid parameter encodings at the public config entrypoint',async()=>{
   const {sideBet,admin}=await deployFixture();
-  for(const bad of [{betType:15,windowSpins:1},{betType:16,windowSpins:3},{betType:17,windowSpins:4},{betType:18,windowSpins:3,targetNumber:61,redRatioBps:60},{betType:18,windowSpins:3,targetNumber:0,redRatioBps:108},{betType:18,windowSpins:3,targetNumber:40,redRatioBps:109},{betType:19,targetCount:1},{betType:20,targetNumber:0},{betType:20,targetNumber:4},{betType:20,targetNumber:1,targetCount:4,windowSpins:3}]) await expect(registerConfig(sideBet,config({targetCount:0,...bad}),admin.account)).to.be.rejected;
+  for(const bad of [{betType:21,windowSpins:17},{betType:21,targetCount:1},{betType:22,windowSpins:5},{betType:23,targetCount:1},{betType:23,targetNumber:1,targetCount:3},{betType:24,targetNumber:37},{betType:24,redRatioBps:1},{betType:15,windowSpins:1},{betType:16,windowSpins:3},{betType:17,windowSpins:4},{betType:18,windowSpins:3,targetNumber:61,redRatioBps:60},{betType:18,windowSpins:3,targetNumber:0,redRatioBps:108},{betType:18,windowSpins:3,targetNumber:40,redRatioBps:109},{betType:19,targetCount:1},{betType:20,targetNumber:0},{betType:20,targetNumber:4},{betType:20,targetNumber:1,targetCount:4,windowSpins:3}]) await expect(registerConfig(sideBet,config({targetCount:0,...bad}),admin.account)).to.be.rejected;
  });
  it('never settles an exact count before its last result',async()=>{
   const {sideBet,admin,alice,roundEngine}=await deployFixture();

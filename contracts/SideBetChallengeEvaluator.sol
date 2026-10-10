@@ -13,6 +13,14 @@ contract SideBetChallengeEvaluator {
     }
     /// @notice Immutable stateless validation keeps the upgrade implementation below EIP-170.
     function validConfig(ISideBet.SideBetConfig calldata cfg) external pure returns (bool) {
+        if (uint8(cfg.betType) >= uint8(ISideBet.SideBetType.ANY_REPEAT)) {
+            if (cfg.windowSpins < 2 || cfg.windowSpins > 64 || cfg.redRatioBps != 0) return false;
+            if (cfg.betType == ISideBet.SideBetType.PHOTO_FINISH) return cfg.targetNumber <= 36 && cfg.targetCount == 0;
+            if (cfg.targetNumber != 0) return false;
+            if (cfg.betType == ISideBet.SideBetType.ANY_DOZEN) return cfg.windowSpins <= 16 && cfg.targetCount >= 2 && cfg.targetCount <= cfg.windowSpins;
+            if (cfg.targetCount != 0) return false;
+            return cfg.betType == ISideBet.SideBetType.ZIGZAG ? cfg.windowSpins == 4 : cfg.windowSpins <= 16;
+        }
         if (uint8(cfg.betType) >= uint8(ISideBet.SideBetType.FIRST_RETURN)) {
             if (cfg.windowSpins < 2 || cfg.windowSpins > 64) return false;
             if (cfg.betType == ISideBet.SideBetType.SUM_RANGE) {
@@ -38,6 +46,19 @@ contract SideBetChallengeEvaluator {
                 if (cfg.targetCount != 0 || cfg.windowSpins < (cfg.betType == ISideBet.SideBetType.BOOMERANG ? 3 : 2)) return false;
             }
 
+        }
+        else if (cfg.betType == ISideBet.SideBetType.NUMBER_HIT) {
+            return cfg.targetNumber <= 36 && cfg.targetCount > 0 && cfg.targetCount <= cfg.windowSpins;
+        } else if (cfg.betType == ISideBet.SideBetType.COLOR_COUNT || cfg.betType == ISideBet.SideBetType.CONSECUTIVE_STREAK) {
+            return cfg.targetCount > 0 && cfg.targetCount <= cfg.windowSpins;
+        } else if (cfg.betType == ISideBet.SideBetType.RED_RATIO) {
+            return cfg.redRatioBps > 0 && cfg.redRatioBps <= 10000;
+        } else if (cfg.betType == ISideBet.SideBetType.LIGHTNING_DOUBLE) {
+            return cfg.targetNumber <= 37 && cfg.targetCount >= 2 && cfg.targetCount <= cfg.windowSpins;
+        } else if (cfg.betType == ISideBet.SideBetType.PERFECT_ALTERNATION) {
+            return cfg.windowSpins >= 2;
+        } else if (cfg.betType != ISideBet.SideBetType.JACKPOT_IN_WINDOW) {
+            return cfg.targetNumber >= 1 && cfg.targetNumber <= 3 && cfg.targetCount > 0 && cfg.targetCount <= cfg.windowSpins;
         }
         return true;
     }
