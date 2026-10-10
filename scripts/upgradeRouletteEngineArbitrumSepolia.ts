@@ -163,6 +163,14 @@ async function main() {
     Object.assign(journal, { startingNonce: latestNonce, constructorArguments, status: "deploying-libraries" });
     checkpoint();
 
+    // This Engine queues fees; legacy funders only implement fundFromMarket.
+    const activeEngine = await viem.getContractAt("RouletteEngine", engineProxy);
+    const funderAddress = await activeEngine.read.JACKPOT_FUNDER();
+    const funderCode = await publicClient.getBytecode({ address: funderAddress });
+    const queueSelector = keccak256(toBytes("queueFunding(uint32,address,uint256)")).slice(2, 10);
+    if (!funderCode?.toLowerCase().includes(queueSelector.toLowerCase())) {
+        throw new Error("Active funder lacks queueFunding; rehearse and migrate the funder before this Engine upgrade");
+    }
     console.log("Deploying linked libraries…");
     if (hre.network.name !== "hardhat") {
         await new Promise((resolve) => setTimeout(resolve, 3000));

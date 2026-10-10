@@ -1,6 +1,6 @@
 # Arbitrum Sepolia Engine upgrade — 2026-10-10
 
-The existing Engine proxy was upgraded to activate bounded jackpot preparation. No protocol reset, new bank, frontend address migration or Goldsky deployment was needed. Mainnet was untouched.
+The existing Engine proxy was upgraded to activate bounded jackpot preparation. Mainnet was untouched. A subsequent settlement exposed an incompatible legacy funder; see [recovery evidence](TESTNET_VRF_RESULT_RECOVERY_2026-10-10.md). The initial idle rehearsal below did not exercise that dependency.
 
 - Chain: Arbitrum Sepolia, 421614.
 - Proxy: `0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1`.
