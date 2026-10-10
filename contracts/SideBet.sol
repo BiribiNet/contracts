@@ -234,26 +234,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         if (cfg.windowSpins == 0) revert InvalidConfig();
         if (cfg.multiplierBps < $.minMultiplierBps || cfg.multiplierBps > $.maxMultiplierBps) revert MultiplierOutOfBand();
 
-        if (cfg.betType == SideBetType.NUMBER_HIT) {
-            if (cfg.targetNumber > MAX_ROULETTE_NUMBER) revert InvalidConfig();
-            if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-        } else if (cfg.betType == SideBetType.COLOR_COUNT || cfg.betType == SideBetType.CONSECUTIVE_STREAK) {
-            if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-        } else if (cfg.betType == SideBetType.RED_RATIO) {
-            if (cfg.redRatioBps == 0 || cfg.redRatioBps > BPS_DENOMINATOR) revert InvalidConfig();
-        } else if (cfg.betType == SideBetType.LIGHTNING_DOUBLE) {
-            if (cfg.targetNumber > SideBetOutcomeLib.ANY_NUMBER) revert InvalidConfig();
-            if (cfg.targetCount < 2 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-        } else if (cfg.betType == SideBetType.PERFECT_ALTERNATION) {
-            if (cfg.windowSpins < 2) revert InvalidConfig();
-        } else if (cfg.betType == SideBetType.JACKPOT_IN_WINDOW) {
-            // `windowSpins` is the number of upcoming global rounds; other fields unused.
-        } else if (uint8(cfg.betType) >= uint8(SideBetType.DOZEN_PASSPORT)) {
-            if (!CHALLENGE_EVALUATOR.validConfig(cfg)) revert InvalidConfig();
-        } else {
-            if (cfg.targetNumber < 1 || cfg.targetNumber > 3) revert InvalidConfig();
-            if (cfg.targetCount == 0 || cfg.targetCount > cfg.windowSpins) revert InvalidConfig();
-        }
+        if (!CHALLENGE_EVALUATOR.validConfig(cfg)) revert InvalidConfig();
     }
 
     function _marketOrRevert(uint32 marketId) private view returns (IMarketRegistry.MarketConfig memory m) {

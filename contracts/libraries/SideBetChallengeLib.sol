@@ -15,6 +15,7 @@ library SideBetChallengeLib {
         bool complete,
         ISideBet.Bet memory bet
     ) internal pure returns (bool decided, bool won) {
+        if (uint8(bet.betType) >= uint8(ISideBet.SideBetType.ANY_REPEAT)) return evaluateFunky(observed, complete, bet);
         if (uint8(bet.betType) >= uint8(ISideBet.SideBetType.FIRST_RETURN)) return evaluateWindow(observed, complete, bet);
         uint256 mask;
         uint256 collected;
@@ -86,6 +87,33 @@ library SideBetChallengeLib {
         if (b.betType == ISideBet.SideBetType.COLOR_MAJORITY) return (true, count > other);
         if (b.betType == ISideBet.SideBetType.EXACT_DOZEN) return (true, count == b.targetCount);
         return (false, false);
+    }
+
+    /// @dev Fixed consecutive window; early wins only for duplicate/any-dozen conditions.
+    function evaluateFunky(uint8[] memory nums, bool complete, ISideBet.Bet memory b) private pure returns (bool, bool) {
+        if (nums.length > b.windowSpins) return (false, false);
+        for (uint256 i; i < nums.length; ++i) if (nums[i] > 36) return (false, false);
+        uint256 mask;
+        uint256[3] memory dozens;
+        bool broken;
+        for (uint256 i; i < nums.length; ++i) {
+            uint8 n = nums[i];
+            if (b.betType == ISideBet.SideBetType.ANY_REPEAT) {
+                uint256 bit = uint256(1) << n;
+                if (mask & bit != 0) return (true, true);
+                mask |= bit;
+            } else if (b.betType == ISideBet.SideBetType.ANY_DOZEN && n != 0) {
+                if (++dozens[_dozenOf(n) - 1] >= b.targetCount) return (true, true);
+            } else if (b.betType == ISideBet.SideBetType.ZIGZAG && i > 0) {
+                if (n == nums[i-1] || (i > 1 && (n > nums[i-1]) == (nums[i-1] > nums[i-2]))) broken = true;
+            } else if (b.betType == ISideBet.SideBetType.PHOTO_FINISH && i + 1 < b.windowSpins && n == b.targetNumber) {
+                broken = true;
+            }
+        }
+        if (!complete || nums.length != b.windowSpins) return (false, false);
+        if (b.betType == ISideBet.SideBetType.ZIGZAG) return (true, !broken);
+        if (b.betType == ISideBet.SideBetType.PHOTO_FINISH) return (true, !broken && nums[nums.length - 1] == b.targetNumber);
+        return (true, false);
     }
 
     function adjacent(uint8 a, uint8 b) private pure returns (bool) {

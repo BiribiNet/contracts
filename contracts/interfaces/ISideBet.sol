@@ -28,7 +28,11 @@ interface ISideBet {
         STRICT_ASCENT,
         SUM_RANGE,
         COLOR_MAJORITY,
-        EXACT_DOZEN
+        EXACT_DOZEN,
+        ANY_REPEAT,
+        ZIGZAG,
+        ANY_DOZEN,
+        PHOTO_FINISH
     }
 
     enum SideBetColor {

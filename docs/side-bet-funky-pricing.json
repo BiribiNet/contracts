@@ -1,0 +1,212 @@
+[
+  {
+    "key": "CHAMELEON",
+    "probability": {
+      "wins": "209952",
+      "total": "1874161"
+    },
+    "houseEdgeBps": 500,
+    "compatible": true,
+    "config": {
+      "marketId": 1,
+      "betType": 5,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 0,
+      "redRatioBps": 0,
+      "windowSpins": 4,
+      "multiplierBps": 84802,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "COLOR_MIRROR",
+    "probability": {
+      "wins": "209952",
+      "total": "1874161"
+    },
+    "houseEdgeBps": 500,
+    "compatible": true,
+    "config": {
+      "marketId": 1,
+      "betType": 16,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 0,
+      "redRatioBps": 0,
+      "windowSpins": 4,
+      "multiplierBps": 84802,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "ANY_REPEAT",
+    "probability": {
+      "wins": "891881929",
+      "total": "2565726409"
+    },
+    "houseEdgeBps": 500,
+    "compatible": false,
+    "config": {
+      "marketId": 1,
+      "betType": 21,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 0,
+      "redRatioBps": 0,
+      "windowSpins": 6,
+      "multiplierBps": 27329,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "STRICT_ASCENT",
+    "probability": {
+      "wins": "7770",
+      "total": "50653"
+    },
+    "houseEdgeBps": 500,
+    "compatible": true,
+    "config": {
+      "marketId": 1,
+      "betType": 17,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 0,
+      "redRatioBps": 0,
+      "windowSpins": 3,
+      "multiplierBps": 61930,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "ZIGZAG",
+    "probability": {
+      "wins": "739482",
+      "total": "1874161"
+    },
+    "houseEdgeBps": 500,
+    "compatible": false,
+    "config": {
+      "marketId": 1,
+      "betType": 22,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 0,
+      "redRatioBps": 0,
+      "windowSpins": 4,
+      "multiplierBps": 24077,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "ANY_DOZEN",
+    "probability": {
+      "wins": "40922496",
+      "total": "69343957"
+    },
+    "houseEdgeBps": 500,
+    "compatible": false,
+    "config": {
+      "marketId": 1,
+      "betType": 23,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 3,
+      "redRatioBps": 0,
+      "windowSpins": 5,
+      "multiplierBps": 16097,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "COLLECTOR",
+    "probability": {
+      "wins": "41160960",
+      "total": "69343957"
+    },
+    "houseEdgeBps": 500,
+    "compatible": false,
+    "config": {
+      "marketId": 1,
+      "betType": 9,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 3,
+      "redRatioBps": 0,
+      "windowSpins": 5,
+      "multiplierBps": 16004,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "PHOTO_FINISH",
+    "probability": {
+      "wins": "1679616",
+      "total": "69343957"
+    },
+    "houseEdgeBps": 500,
+    "compatible": true,
+    "config": {
+      "marketId": 1,
+      "betType": 24,
+      "color": 0,
+      "targetNumber": 7,
+      "targetCount": 0,
+      "redRatioBps": 0,
+      "windowSpins": 5,
+      "multiplierBps": 392213,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "TWINS",
+    "probability": {
+      "wins": "328477897",
+      "total": "2565726409"
+    },
+    "houseEdgeBps": 500,
+    "compatible": true,
+    "config": {
+      "marketId": 1,
+      "betType": 4,
+      "color": 0,
+      "targetNumber": 37,
+      "targetCount": 2,
+      "redRatioBps": 0,
+      "windowSpins": 6,
+      "multiplierBps": 74204,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  },
+  {
+    "key": "ECLIPSE",
+    "probability": {
+      "wins": "691369546465",
+      "total": "3512479453921"
+    },
+    "houseEdgeBps": 500,
+    "compatible": false,
+    "config": {
+      "marketId": 1,
+      "betType": 1,
+      "color": 0,
+      "targetNumber": 0,
+      "targetCount": 1,
+      "redRatioBps": 0,
+      "windowSpins": 8,
+      "multiplierBps": 48264,
+      "minStake": "0",
+      "maxStake": "0"
+    }
+  }
+]
