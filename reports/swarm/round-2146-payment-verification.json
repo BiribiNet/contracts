@@ -1,0 +1,822 @@
+{
+  "round": "2146",
+  "checkedAt": "2026-10-10T10:45:03.318Z",
+  "phase": 4,
+  "wallets": 100,
+  "confirmedTickets": 100,
+  "allReceiptsSuccessfulInTargetRound": true,
+  "allWalletsPaidCorrectly": true,
+  "walletBalanceBRB": "369",
+  "market": {
+    "betsReleased": true,
+    "winningBetCount": "100",
+    "bankPaidRunning": "3600000000000000000000",
+    "settled": true,
+    "totals": {
+      "totalAmount": "3700000000000000000000",
+      "betCount": "100"
+    }
+  },
+  "walletChecks": [
+    {
+      "address": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x541e25F12601c4D21723808F573C2B70893553D2",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x020F24392f73364D6B6F3601b5142C5323A76F00",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x53b9b02A1fB3A3b0EDA710bd51DE8Ff0715a179a",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x1Aa22e1599a6B834538B92d3C22007a7C75268C8",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xaD30D834FA3f3c0f5b86e1418159B5F037faDE92",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xA16F522372A6D9b7A2eC6bf5C6F274a60f45c33B",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x3C6385b6E96dFB744d838F99ce9A8e4eDFF59fB2",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xE1c08FF57EF5BD3fd57dDf9d7a296e494416237F",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x5028023ef62D0146D6Cda14E9b004485AAdFE6F0",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x8557b522115D1AA7Be27B75AF2FBdF3882520833",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xeAf6AA5f5b2A715f6B931D657e0FC600C0E8e223",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xFF89d20035d84a0534399202B0350cF970769298",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xbC1a07a10d821e1FC4212761617542110E017d3b",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x44D7bc38Fc2965dFc9A22af335fB8628aAfd4c50",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x8567823F4CF0d7aABEfE1b6EF846dB7C072015b2",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x0F46c6FB38e048123881CB12ACC167D7c4392cD0",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x03C571721962f3B63758b498A861C1364788D4ce",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x53bA6fcFCd2E439bdF6Cf60D3036263B20f9Fe7F",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xBfC9B0BfE3dBd029b9251dAfB94D2bADB6308B93",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x4c896f42dA181d0fb40d3bfE30D8aF17489Bf90e",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xF3eA8E3E6488D73D96e6a2cfab12BcDeD7072976",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x54C7BC62529e5c116794CE7fC2dE17e92836c473",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xA390124fB87911d97373A7001A791e117f94AC41",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xDfbdbe3330c3C4d73da2AD83C2Ca68217790f0f3",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xd69F8402B816e6926bfaa7Db38AA85042fF42dbE",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xDda06e02B050b96F3af416420cAc6c628dE338A2",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xb779489A1210491Cfe65d1a99129D2B273E25A2A",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x66737C089cCB59E388Ab9610b7Fb69bAc80Db4c5",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x5Fb7BBE517E59b1829493626361a800101fe9b0f",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xd9c9Cc7ccf29EdA01E22B7B07AF7FA2B0ef6243C",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xc90577fE56e75AeD143A3C0B2354316946f07396",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x0fB01D4b4E39C13FB7f7C8BE4dfAAc3eb231C17d",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xA08fdF840f40424d3Ac6f9480456Cdb73c589d6a",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xA77654134f7054a6b2e877EAaB3dE276896Ae8F5",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x1503D51Bc685cE5a5d7ea8F4D594Ca951a1C9f88",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xeDca8C1bEab93c81D898f80DBB780f1eba4E04D0",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xa0dc75d286bF33a2e704b7ed0822B19bF90598C2",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xd2D80046B18EA208b906b89Ee8e5aA8790a10Bfd",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x9A09b80ca1727B2414545d1589175625f990CA22",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x9e5aF9b3b35Ef13A6A1f638C157e19b82Dff1e82",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x796221D6B91754d52e4fdF277F455C4041d4EDCB",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x3cc3cE7F5f668d553920743DaC7C889B2DDB06c0",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x48348FA02a79c73033c13F214B14966561c8fff1",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xA908BfA33466d312E0973b5cfd890A753B8B480F",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x56DeED1c28E388D4b1EFa9dE553920883Ce6FAf8",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x6AD35d52Db23F397d1980f1E1d57724997bA107d",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xcC8fd88aab1c889195EbfB96967982f24dD2cAd9",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xC5C601cAEF6bD6dE8861eB542061AD4d45fe0Ba1",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xccAcff3Ac7A86D34dB7544f3883798c178c00ada",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x69a49E2cBfc2bA94cf19b41311d06A0D5974bC8a",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xC1e47D762D479D681D49185331291d6dEA27e52c",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x381EC540742F2B74f07ce0e5dd3646ac520EdE8B",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x65D9592574dF4E83AF18E68D356660c465bE2442",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xeD81fBBE04287765d8934d3c8C5e7C09ABa30932",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xEcEc54c214a656D62E78bd74DC9b85A6314c94A9",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xD5DeB92003197A159aF840c7490eb3f72a69FB36",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xe60809c6Eb6A81bB797bd8A946556C31239E2260",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x9AbCDbec452Ee4e01Eaec49316F0195BAf01D241",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x8D177564555E3A2e1EC8885609DEF6D8EeBAcC2a",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xea7845fE8544742FD96c8C92C983Be97De4C1eA3",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x60eF970235D85c0703f2d36236Be316a1bb2B029",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xDfACD36fC2F9a1BB2fF55B7BB6CF1b5D7f1A3f44",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x4890E11ae9c6C7bEA889086B0e14D3ded65cDcd1",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x6DDF90E085A606F11CCf226c92fE44a72D429fa0",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x2C851A27C0F0B0c1E75263942520d2990FA12d48",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x72EF3aA40Bb67f074964844fBAc860E207B2e510",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xC1195bfDb0dFEC3Da66Bd74c1814108A21EE2211",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xB8109E49566C1ED06ff206D60e138f518e791c69",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0xD6FB4300C4919EFC6ca3E41A2Fd3F486a6993Ae2",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x128B04BdA11AD15649eaE2B8F1F8b1a5c5Cc6CA4",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    },
+    {
+      "address": "0x749DB4E6F3175A0BBbdb1EC4862E20BCaC7c71E1",
+      "tickets": 1,
+      "valid": true,
+      "balance": "369000000000000000000",
+      "expected": "369000000000000000000",
+      "paidCorrectly": true
+    }
+  ]
+}

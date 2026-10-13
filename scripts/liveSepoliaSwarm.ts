@@ -6,17 +6,36 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { createWalletClient, http, parseEther, zeroAddress, parseEventLogs } from 'viem';
 import { arbitrumSepolia } from 'viem/chains';
 import { encodeMultiBet, straightLegs } from '../test/helpers/multiBetEncode';
+import { inBatches, submissionEvidence } from './utils/liveSwarmEvidence';
 
 const stringify = (v: unknown) => JSON.stringify(v, (_, x) => (typeof x === 'bigint' ? x.toString() : x), 2);
-const path = process.env.LIVE_SWARM_JOURNAL || 'reports/swarm/live-sepolia-2026-10-10.json';
+const count = Number(process.env.LIVE_SWARM_TICKETS || 250);
+const walletCount = Number(process.env.LIVE_SWARM_WALLETS || 25);
+if (
+  !Number.isSafeInteger(count) ||
+  !Number.isSafeInteger(walletCount) ||
+  count <= 200 ||
+  count > 2000 ||
+  walletCount < 25 ||
+  walletCount > 200 ||
+  count % walletCount !== 0
+)
+  throw Error('Use 201–2000 tickets, 25–200 wallets, and an equal integer ticket count per wallet');
+const perWallet = count / walletCount;
+if (perWallet > 10) throw Error('Use at most 10 tickets per wallet for a 60-second campaign');
+const path =
+  process.env.LIVE_SWARM_JOURNAL ||
+  (count === 250 && walletCount === 25
+    ? 'reports/swarm/live-sepolia-2026-10-10.json'
+    : `reports/swarm/live-sepolia-2026-10-10-${count}x${walletCount}.json`);
 const mode = process.env.LIVE_SWARM_MODE || 'preflight';
 async function main() {
   if (network.name !== 'arbitrumsepolia') throw Error('Live swarm requires arbitrumsepolia');
   const pc = await viem.getPublicClient();
   if ((await pc.getChainId()) !== 421614) throw Error('Wrong chain');
-  if (!['preflight', 'prepare', 'run', 'observe', 'cleanup', 'verify-cleanup'].includes(mode))
+  if (!['preflight', 'prepare', 'run', 'reconcile', 'observe', 'cleanup', 'verify-cleanup'].includes(mode))
     throw Error('Unknown mode');
-  if (['prepare', 'run', 'cleanup'].includes(mode) && process.env.CONFIRM_LIVE_SWARM !== '421614:250x37x1BRB')
+  if (['prepare', 'run', 'cleanup'].includes(mode) && process.env.CONFIRM_LIVE_SWARM !== `421614:${count}x37x1BRB`)
     throw Error('Explicit live testnet confirmation required');
   const key = vars.get('BRB_KEY');
   const admin = privateKeyToAccount((key.startsWith('0x') ? key : `0x${key}`) as `0x${string}`);
@@ -35,9 +54,7 @@ async function main() {
     funder.toLowerCase() !== deploy.addresses.jackpotFunder.toLowerCase()
   )
     throw Error('Deployment wiring mismatch');
-  const count = 250,
-    walletCount = 25,
-    ticket = parseEther('37');
+  const ticket = parseEther('37');
   const accounts = Array.from({ length: walletCount }, (_, i) =>
     privateKeyToAccount(
       `0x${createHmac('sha256', Buffer.from(key.replace(/^0x/, ''), 'hex'))
@@ -50,6 +67,12 @@ async function main() {
     timeout: 20000,
   });
   const clients = accounts.map((account) => createWalletClient({ account, chain: arbitrumSepolia, transport }));
+  const campaignAccount = privateKeyToAccount(
+    `0x${createHmac('sha256', Buffer.from(key.replace(/^0x/, ''), 'hex'))
+      .update('biribi-live-swarm-funding:421614:2026-10-10')
+      .digest('hex')}`,
+  );
+  const campaignWallet = createWalletClient({ account: campaignAccount, chain: arbitrumSepolia, transport });
   const round = await engine.read.currentGlobalRound();
   const baseline = {
     chainId: 421614,
@@ -85,8 +108,12 @@ async function main() {
       };
   if (
     report.engine.toLowerCase() !== engine.address.toLowerCase() ||
+    report.bank.toLowerCase() !== bank.address.toLowerCase() ||
     report.admin !== admin.address ||
     report.chainId !== 421614 ||
+    report.tickets !== count ||
+    report.uniqueWallets !== walletCount ||
+    report.wallets.length !== walletCount ||
     report.wallets.some((w: any, i: number) => w.address !== accounts[i].address)
   )
     throw Error('Journal identity mismatch');
@@ -95,7 +122,7 @@ async function main() {
     writeFileSync(path, stringify(report) + '\n');
   };
   const wait = async (hash: `0x${string}`) => {
-    const r = await pc.waitForTransactionReceipt({ hash, timeout: 120000 });
+    const r = await pc.waitForTransactionReceipt({ hash, timeout: 120000, pollingInterval: 1500 });
     if (r.status !== 'success') throw Error(`Reverted transaction ${hash}`);
     return r;
   };
@@ -106,6 +133,38 @@ async function main() {
     await wait(hash);
     return hash;
   };
+  const confirmEntries = async (entries: any[]) => {
+    await inBatches(entries, 10, async (entry) => {
+      const receipt = await wait(entry.hash);
+      entry.gas = receipt.gasUsed.toString();
+      entry.block = receipt.blockNumber.toString();
+      entry.receiptStatus = receipt.status;
+      const events = parseEventLogs({
+        abi: bank.abi,
+        logs: receipt.logs.filter((log) => log.address.toLowerCase() === bank.address.toLowerCase()),
+        eventName: 'BetPlaced',
+      });
+      const event = events.length === 1 ? events[0] : undefined;
+      entry.actualRound = event?.args.roundId.toString();
+      entry.confirmed = entry.actualRound === String(report.round);
+      const countdown = parseEventLogs({ abi: engine.abi, logs: receipt.logs, eventName: 'RoundCountdownStarted' })[0];
+      if (countdown) report.lockAt = countdown.args.lockAt.toString();
+      entry.confirmedAt = new Date().toISOString();
+      save();
+      if (!entry.confirmed) throw Error('Bet receipt round mismatch');
+    });
+  };
+  if (mode === 'reconcile') {
+    if (!['running', 'submitted', 'partial-submitted'].includes(report.status))
+      throw Error('Reconciliation requires a submitted or interrupted campaign');
+    await confirmEntries(report.wallets.flatMap((w: any) => w.bets));
+    Object.assign(report, submissionEvidence(report));
+    report.status = report.fullSubmission ? 'submitted' : 'partial-submitted';
+    report.reconciledAt = new Date().toISOString();
+    save();
+    console.log(stringify({ status: report.status, confirmedTickets: report.confirmedTickets, target: count }));
+    return;
+  }
   if (mode === 'verify-cleanup') {
     if (report.status !== 'cleaned') throw Error('Cleanup has not finished');
     const balances = await Promise.all(
@@ -117,6 +176,10 @@ async function main() {
       })),
     );
     if (balances.some((b) => b.brb !== 0n || b.allowance !== 0n)) throw Error('Test-wallet recovery incomplete');
+    const campaignBrb = report.campaignFundingWallet ? await brb.read.balanceOf([campaignAccount.address]) : 0n;
+    if (report.campaignFundingWallet && report.campaignFundingWallet !== campaignAccount.address)
+      throw Error('Funding wallet identity mismatch');
+    if (campaignBrb !== 0n) throw Error('Funding-wallet BRB recovery incomplete');
     if ((await engine.read.ROUND_DURATION()) !== 60) throw Error('Round duration changed');
     const blocks = report.wallets.flatMap((w: any) => w.bets.map((b: any) => BigInt(b.block)));
     const first = blocks.reduce((a: bigint, b: bigint) => (a < b ? a : b)),
@@ -127,6 +190,7 @@ async function main() {
     ]);
     report.cleanupVerification = {
       wallets: balances,
+      campaignFundingBrb: campaignBrb,
       roundDuration: 60,
       chainAdmissionSeconds: lastBlock.timestamp - firstBlock.timestamp,
       firstBetBlock: first,
@@ -151,8 +215,8 @@ async function main() {
   }
   if (mode === 'prepare') {
     if (report.status !== 'created' && report.status !== 'preparing') throw Error('Preparation already finished');
-    if (baseline.adminBrb < ticket * BigInt(count)) throw Error('Insufficient BRB for 250 tickets');
-    if (baseline.adminEth < parseEther('0.15')) throw Error('Insufficient test ETH budget');
+    if (baseline.adminBrb < ticket * BigInt(count)) throw Error('Insufficient BRB for configured ticket count');
+    if (baseline.adminEth < parseEther(String(walletCount * 0.004 + 0.05))) throw Error('Insufficient test ETH budget');
     if (
       (await pc.getTransactionCount({ address: admin.address, blockTag: 'pending' })) !==
       (await pc.getTransactionCount({ address: admin.address, blockTag: 'latest' }))
@@ -160,28 +224,99 @@ async function main() {
       throw Error('Admin has pending transactions');
     report.status = 'preparing';
     save();
-    for (let i = 0; i < walletCount; i++) {
-      const a = accounts[i].address,
-        target = ticket * 10n;
-      const balance = await brb.read.balanceOf([a]);
-      if (balance < target) await adminTx(`fund BRB wallet ${i}`, () => brb.write.transfer([a, target - balance]));
-      if ((await pc.getBalance({ address: a })) < parseEther('0.004'))
-        await adminTx(`fund ETH wallet ${i}`, () => wallet.sendTransaction({ to: a, value: parseEther('0.004') }));
-      if ((await brb.read.allowance([a, bank.address])) < target) {
-        const hash = await clients[i].writeContract({
-          address: brb.address,
-          abi: brb.abi,
-          functionName: 'approve',
-          args: [bank.address, target],
-        });
-        report.transactions.push({ label: `approve wallet ${i}`, hash });
-        save();
-        await wait(hash);
+    // Reconcile earlier preparation hashes before using a separate funding signer.
+    await inBatches(report.transactions, 10, async (tx: any) => {
+      await wait(tx.hash);
+    });
+    const states = await Promise.all(
+      accounts.map(async (a) => ({
+        brb: await brb.read.balanceOf([a.address]),
+        eth: await pc.getBalance({ address: a.address }),
+      })),
+    );
+    const target = ticket * BigInt(perWallet);
+    const neededBrb = states.reduce((sum, b) => sum + (b.brb < target ? target - b.brb : 0n), 0n);
+    const neededEth = states.reduce(
+      (sum, b) => sum + (b.eth < parseEther('0.004') ? parseEther('0.004') - b.eth : 0n),
+      parseEther('0.01'),
+    );
+    report.campaignFundingWallet = campaignAccount.address;
+    save();
+    const fundingBrb = await brb.read.balanceOf([campaignAccount.address]);
+    if (fundingBrb < neededBrb)
+      await adminTx('seed isolated funding wallet BRB', () =>
+        brb.write.transfer([campaignAccount.address, neededBrb - fundingBrb]),
+      );
+    const fundingEth = await pc.getBalance({ address: campaignAccount.address });
+    if (fundingEth < neededEth)
+      await adminTx('seed isolated funding wallet ETH', () =>
+        wallet.sendTransaction({ to: campaignAccount.address, value: neededEth - fundingEth }),
+      );
+    if (
+      (await pc.getTransactionCount({ address: campaignAccount.address, blockTag: 'pending' })) !==
+      (await pc.getTransactionCount({ address: campaignAccount.address, blockTag: 'latest' }))
+    )
+      throw Error('Funding wallet has pending transactions; reconcile before resuming');
+    let nonce = await pc.getTransactionCount({ address: campaignAccount.address });
+    const gasPrice = (await pc.getGasPrice()) * 2n;
+    for (let group = 0; group < walletCount; group += 20) {
+      const hashes: `0x${string}`[] = [];
+      for (let i = group; i < Math.min(group + 20, walletCount); i++) {
+        const state = states[i],
+          a = accounts[i].address;
+        if (state.brb < target) {
+          const hash = await campaignWallet.writeContract({
+            address: brb.address,
+            abi: brb.abi,
+            functionName: 'transfer',
+            args: [a, target - state.brb],
+            gas: 120000n,
+            gasPrice,
+            nonce: nonce++,
+            type: 'legacy',
+          });
+          report.transactions.push({ label: `fund BRB wallet ${i}`, hash });
+          save();
+          hashes.push(hash);
+        }
+        if (state.eth < parseEther('0.004')) {
+          const hash = await campaignWallet.sendTransaction({
+            to: a,
+            value: parseEther('0.004') - state.eth,
+            gas: 100000n,
+            gasPrice,
+            nonce: nonce++,
+            type: 'legacy',
+          });
+          report.transactions.push({ label: `fund ETH wallet ${i}`, hash });
+          save();
+          hashes.push(hash);
+        }
       }
+      await Promise.all(hashes.map(wait));
+      const approvals = await Promise.allSettled(
+        accounts.slice(group, group + 20).map(async (a, offset) => {
+          const i = group + offset;
+          if ((await brb.read.allowance([a.address, bank.address])) < target) {
+            const hash = await clients[i].writeContract({
+              address: brb.address,
+              abi: brb.abi,
+              functionName: 'approve',
+              args: [bank.address, target],
+            });
+            report.transactions.push({ label: `approve wallet ${i}`, hash });
+            save();
+            await wait(hash);
+          }
+        }),
+      );
+      const failure = approvals.find((r) => r.status === 'rejected');
+      if (failure?.status === 'rejected') throw failure.reason;
+      console.log(`Prepared ${Math.min(group + 20, walletCount)}/${walletCount} wallets`);
     }
     report.status = 'prepared';
     save();
-    console.log('Prepared 25 wallets for 250 live tickets.');
+    console.log(`Prepared ${walletCount} wallets for ${count} live tickets.`);
     return;
   }
   if (mode === 'run') {
@@ -214,11 +349,14 @@ async function main() {
     save();
     // One in-flight transaction per EOA; cache fees/nonces and avoid per-wager
     // estimation RPCs. Each wave waits for all receipts before another wave.
-    for (let wave = 0; wave < 10; wave++) {
+    for (let wave = 0; wave < perWallet; wave++) {
       if (Date.now() - started > 50_000) throw Error('Admission safety deadline reached; inspect partial journal');
       if ((await engine.read.currentGlobalRound()) !== round) throw Error('Round changed during admission');
-      const results = await Promise.allSettled(
-        accounts.map(async (_, i) => {
+      const entries: any[] = [];
+      let sendFailure: unknown;
+      try {
+        await inBatches(accounts, 25, async (_, i) => {
+          if (Date.now() - started > 50_000) throw Error('Admission safety deadline reached; inspect partial journal');
           const hash = await clients[i].writeContract({
             address: bank.address,
             abi: bank.abi,
@@ -231,44 +369,30 @@ async function main() {
           });
           const entry: any = { hash };
           report.wallets[i].bets.push(entry);
+          entries.push(entry);
           save();
-          const receipt = await pc.waitForTransactionReceipt({ hash, timeout: 60_000, pollingInterval: 500 });
-          entry.gas = receipt.gasUsed.toString();
-          entry.block = receipt.blockNumber.toString();
-          entry.receiptStatus = receipt.status;
-          if (receipt.status !== 'success') {
-            save();
-            throw Error(`Wager reverted ${hash}`);
-          }
-          const event = parseEventLogs({ abi: bank.abi, logs: receipt.logs, eventName: 'BetPlaced' })[0];
-          entry.actualRound = event?.args.roundId.toString();
-          if (!event || event.args.roundId !== round) {
-            save();
-            throw Error('Bet receipt round mismatch');
-          }
-          const countdown = parseEventLogs({
-            abi: engine.abi,
-            logs: receipt.logs,
-            eventName: 'RoundCountdownStarted',
-          })[0];
-          if (countdown) report.lockAt = countdown.args.lockAt.toString();
-          entry.confirmed = true;
-          entry.confirmedAt = new Date().toISOString();
-          save();
-        }),
+        });
+      } catch (error) {
+        sendFailure = error;
+      }
+      await confirmEntries(entries);
+      if (sendFailure) throw sendFailure;
+      console.log(
+        `Confirmed ${(wave + 1) * walletCount}/${count} tickets in ${((Date.now() - started) / 1000).toFixed(1)}s`,
       );
-      const failed = results.find((r) => r.status === 'rejected');
-      if (failed?.status === 'rejected') throw failed.reason;
-      console.log(`Confirmed ${(wave + 1) * 25}/250 tickets in ${((Date.now() - started) / 1000).toFixed(1)}s`);
     }
     report.admissionSeconds = (Date.now() - started) / 1000;
     report.status = 'submitted';
     report.admissionEndBlock = (await pc.getBlockNumber()).toString();
     save();
-    console.log('250 tickets submitted; observing real VRF and existing automation.');
+    console.log(`${count} tickets submitted; observing real VRF and existing automation.`);
     return;
   }
   if (mode === 'observe') {
+    if (!['submitted', 'partial-submitted', 'settled', 'partial-settled'].includes(report.status))
+      throw Error('Reconcile submitted receipts before observing settlement');
+    Object.assign(report, submissionEvidence(report));
+    const confirmed = report.confirmedTickets;
     const rid = BigInt(report.round),
       diagnostics = await engine.read.roundDiagnostics([rid]);
     const phase = await engine.read.roundPhase([rid]);
@@ -285,13 +409,13 @@ async function main() {
       const delta = after.reduce((sum, b, i) => sum + b - BigInt(report.walletBalancesBefore[i]), 0n);
       report.observation.walletDelta = delta;
       const paid = report.observation.market.bankPaidRunning;
-      if (paid < parseEther('9000')) throw Error('Ordinary payout total below swarm liability');
-      report.observation.externalTickets = report.observation.market.totals.betCount - 250n;
-      if (report.observation.externalTickets === 0n && paid !== parseEther('9000'))
+      if (paid < parseEther(String(confirmed * 36))) throw Error('Ordinary payout total below swarm liability');
+      report.observation.externalTickets = report.observation.market.totals.betCount - BigInt(confirmed);
+      if (report.observation.externalTickets < 0n) throw Error('Round has fewer tickets than confirmed receipts');
+      if (report.observation.externalTickets === 0n && paid !== parseEther(String(confirmed * 36)))
         throw Error('Unexpected ordinary payout total');
-      if (!diagnostics.jackpotDistributed && delta !== parseEther('-250')) throw Error('Unexpected wallet accounting');
-      if (report.wallets.reduce((n: number, w: any) => n + w.bets.filter((b: any) => b.confirmed).length, 0) !== 250)
-        throw Error('Incomplete ticket submission');
+      if (!diagnostics.jackpotDistributed && delta !== parseEther(String(-confirmed)))
+        throw Error('Unexpected wallet accounting');
       report.observation.roundDuration = await engine.read.ROUND_DURATION();
       if (report.observation.roundDuration !== 60) throw Error('Round duration changed');
       const activeFunder = await viem.getContractAt('BRBJackpotFunder', funder);
@@ -324,7 +448,14 @@ async function main() {
         hash: e.transactionHash,
         block: e.blockNumber,
       }));
-      const hashes = [...new Set(relevant.map((e) => e.transactionHash))];
+      const hashes = [
+        ...new Set(
+          relevant.map((e) => {
+            if (!e.transactionHash) throw Error('Missing mined automation transaction hash');
+            return e.transactionHash;
+          }),
+        ),
+      ];
       report.observation.automationTransactions = await Promise.all(
         hashes.map(async (hash) => {
           const [receipt, tx] = await Promise.all([pc.getTransactionReceipt({ hash }), pc.getTransaction({ hash })]);
@@ -340,7 +471,7 @@ async function main() {
         }),
       );
       report.observation.walletBalancesAfter = after;
-      report.status = 'settled';
+      report.status = report.fullSubmission ? 'settled' : 'partial-settled';
       report.observation.bankAssets = await bank.read.totalAssets();
       report.observation.bankShares = await bank.read.totalSupply();
     }
@@ -349,11 +480,11 @@ async function main() {
     return;
   }
   if (mode === 'cleanup') {
-    if (report.status !== 'settled' && report.status !== 'cleaning' && report.status !== 'cleaned')
+    if (!['settled', 'partial-settled', 'cleaning', 'cleaned'].includes(report.status))
       throw Error('Cleanup requires settled evidence');
     report.status = 'cleaning';
     save();
-    for (let i = 0; i < walletCount; i++) {
+    const recover = async (i: number) => {
       const balance = await brb.read.balanceOf([accounts[i].address]);
       if (balance > 0n) {
         const hash = await clients[i].writeContract({
@@ -386,6 +517,39 @@ async function main() {
           gas: 100000n,
         });
         report.transactions.push({ label: `recover ETH wallet ${i}`, hash });
+        save();
+        await wait(hash);
+      }
+    };
+    for (let group = 0; group < walletCount; group += 20) {
+      const outcomes = await Promise.allSettled(
+        Array.from({ length: Math.min(20, walletCount - group) }, (_, i) => recover(group + i)),
+      );
+      const failure = outcomes.find((r) => r.status === 'rejected');
+      if (failure?.status === 'rejected') throw failure.reason;
+    }
+    if (report.campaignFundingWallet) {
+      if (report.campaignFundingWallet !== campaignAccount.address) throw Error('Funding wallet identity mismatch');
+      const balance = await brb.read.balanceOf([campaignAccount.address]);
+      if (balance > 0n) {
+        const hash = await campaignWallet.writeContract({
+          address: brb.address,
+          abi: brb.abi,
+          functionName: 'transfer',
+          args: [admin.address, balance],
+        });
+        report.transactions.push({ label: 'recover isolated funding BRB', hash });
+        save();
+        await wait(hash);
+      }
+      const eth = await pc.getBalance({ address: campaignAccount.address });
+      if (eth > parseEther('0.0001')) {
+        const hash = await campaignWallet.sendTransaction({
+          to: admin.address,
+          value: eth - parseEther('0.0001'),
+          gas: 100000n,
+        });
+        report.transactions.push({ label: 'recover isolated funding ETH', hash });
         save();
         await wait(hash);
       }

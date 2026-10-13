@@ -2,7 +2,7 @@
 
 `yarn test:swarm:live-sepolia` runs a separate integration harness against the existing deployment manifest. It defaults to read-only preflight and rejects every network except Arbitrum Sepolia (421614). It does not deploy contracts, simulate VRF, force outcomes, or submit scheduler jobs. Real Chainlink VRF and the existing Goldsky/Cloudflare automation must complete the round.
 
-The fixed scenario is 250 tickets across 25 deterministic test wallets, each ticket covering all 37 numbers with 1 BRB per number: 9,250 BRB total stakes and 9,250 stored legs. A normal draw returns 9,000 BRB, so the wallets lose 250 BRB in aggregate before any naturally triggered jackpot. This is repeated wagering across 25 EOAs, not 250 simultaneous independent users. Jackpot-specific live coverage depends on real randomness and must be reported rather than assumed.
+The default scenario is 250 tickets across 25 deterministic test wallets, each ticket covering all 37 numbers with 1 BRB per number: 9,250 BRB total stakes and 9,250 stored legs. A normal draw returns 9,000 BRB, so the wallets lose 250 BRB in aggregate before any naturally triggered jackpot. This is repeated wagering across 25 EOAs, not 250 simultaneous independent users. Jackpot-specific live coverage depends on real randomness and must be reported rather than assumed.
 
 The signer must have at least 9,250 BRB and 0.15 test ETH. Preparation sends 370 BRB and 0.004 test ETH per wallet and approves exactly 370 BRB. Wallet keys are deterministically derived from secure Hardhat BRB_KEY with a test-specific HMAC domain, are never logged or saved, and must never be used on mainnet. Retain the original secure signer to recover test funds.
 
@@ -42,3 +42,28 @@ The round-lock workflow and two payout-drain wakes acknowledged cre_accepted, an
 Raw public transaction evidence is in live-sepolia-2026-10-10.json, with sanitized indexed-state and workflow-outcome snapshots in the adjacent -index.json and -workflows.json reports. Temporary raw CLI logs and private signing material are excluded from Git.
 
 Cleanup completed and was independently read-verified: all 25 wallets have zero BRB and zero bank allowance, excess test ETH was recovered, and the configured duration remains 60 seconds. Small ETH fee reserves remain in the recoverable test wallets.
+
+## Larger live campaigns
+
+Set LIVE_SWARM_TICKETS and LIVE_SWARM_WALLETS together; the confirmation string must match the ticket count. The runner validates equal ticket allocation and saves a separate default journal named with the ticket/wallet counts. For example:
+
+```sh
+LIVE_SWARM_TICKETS=1000 LIVE_SWARM_WALLETS=100 yarn test:swarm:live-sepolia
+LIVE_SWARM_TICKETS=1000 LIVE_SWARM_WALLETS=100 LIVE_SWARM_MODE=prepare CONFIRM_LIVE_SWARM=421614:1000x37x1BRB yarn test:swarm:live-sepolia
+LIVE_SWARM_TICKETS=1000 LIVE_SWARM_WALLETS=100 LIVE_SWARM_MODE=run CONFIRM_LIVE_SWARM=421614:1000x37x1BRB yarn test:swarm:live-sepolia
+LIVE_SWARM_TICKETS=1000 LIVE_SWARM_WALLETS=100 LIVE_SWARM_MODE=observe yarn test:swarm:live-sepolia
+LIVE_SWARM_TICKETS=1000 LIVE_SWARM_WALLETS=100 LIVE_SWARM_MODE=cleanup CONFIRM_LIVE_SWARM=421614:1000x37x1BRB yarn test:swarm:live-sepolia
+LIVE_SWARM_TICKETS=1000 LIVE_SWARM_WALLETS=100 LIVE_SWARM_MODE=verify-cleanup yarn test:swarm:live-sepolia
+```
+
+Preparation now uses a separately derived campaign funding EOA so bulk wallet funding does not contend with the hosted keeper's signer. Funds are seeded once from the configured administrator, then sent in bounded batches with explicit funding-wallet nonces. Wallet approvals and recovery run in bounded parallel batches. All submitted hashes remain journaled. The isolated funding account is recovered during cleanup as well. The configured secure signer remains necessary to rederive both funding and wagering keys; no private keys are saved to reports.
+
+Broadcasts are bounded to 25 wallets per batch; receipt reconciliation runs at most ten requests concurrently with a 1.5-second polling interval. After an interrupted run, use `LIVE_SWARM_MODE=reconcile` with the same campaign counts and journal. This only reads submitted transaction receipts and never resubmits a wager. Then run `observe` to verify settlement for the actual confirmed count. An incomplete campaign remains `partial-submitted` / `partial-settled` with `fullSubmission: false`; cleanup may recover a verified partial campaign without claiming the configured ticket target succeeded. Cleanup verification also checks that the isolated funding wallet has zero BRB.
+
+### Interrupted 1,000-ticket attempt, October 10
+
+Round 2146 contains **100 confirmed campaign tickets**, rather than the 1,000-ticket target. RPC rate limiting interrupted receipt polling after the first wave. The saved payment verification records successful target-round receipts and correct payment for all 100 wallets. The journal's receipts were reread from Sepolia on October 13 and reconciled as `partial-submitted`; this is not evidence of a successful 1,000-ticket campaign or completed wallet cleanup. No further wagers were placed during that reconciliation.
+
+Run the offline accounting and batch-failure regression checks with `node --test -r ts-node/register/transpile-only scripts/live-swarm-evidence.test.ts`, and type-check the runner with `tsc --project tsconfig.live-swarm.json`.
+
+Successful load testing does not establish recovery from missing webhooks, sustained RPC outages, depleted keeper ETH or shared-signer nonce contention. Production needs an independent reconciliation/watchdog path and serialized transaction ownership, and jackpot-specific hosted coverage. The deployed contract cursor checks prevent stale payout chunks from double-paying; an avoidable revert or exhausted workflow is still an operational failure worth detecting.

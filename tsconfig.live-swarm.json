@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true },
+  "include": [
+    "hardhat.config.ts",
+    "artifacts/**/*.d.ts",
+    "scripts/liveSepoliaSwarm.ts",
+    "scripts/utils/liveSwarmEvidence.ts",
+    "scripts/live-swarm-evidence.test.ts"
+  ],
+  "exclude": []
+}
