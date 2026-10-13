@@ -6,6 +6,8 @@
     "artifacts/**/*.d.ts",
     "scripts/liveSepoliaSwarm.ts",
     "scripts/utils/liveSwarmEvidence.ts",
+    "scripts/utils/rpcFallback.ts",
+    "scripts/rpc-fallback.test.ts",
     "scripts/live-swarm-evidence.test.ts"
   ],
   "exclude": []

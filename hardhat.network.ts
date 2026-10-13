@@ -1,16 +1,18 @@
 import { vars } from 'hardhat/config';
 import type { NetworksUserConfig } from 'hardhat/types';
+import { resolveSepoliaRpcUrls } from './scripts/utils/rpcFallback';
 
 /** Same default as Hardhat / MetaMask dev — keeps `getWalletClients()[0]` predictable. */
-const HARDHAT_TEST_MNEMONIC =
-  'test test test test test test test test test test test junk';
+const HARDHAT_TEST_MNEMONIC = 'test test test test test test test test test test test junk';
 
 /**
  * Hardhat’s built-in network only funds 20 signers by default.
  * Crowd / parallel-lane tests need 100+ distinct `viem.getWalletClients()` accounts.
  * Override with `HARDHAT_ACCOUNT_COUNT` (e.g. 256) if you need more headroom locally.
  */
-const HARDHAT_ACCOUNT_COUNT = Number(process.env.HARDHAT_ACCOUNT_COUNT ?? (process.env.RUN_ARBITRUM_FORK === '1' ? 4 : 128));
+const HARDHAT_ACCOUNT_COUNT = Number(
+  process.env.HARDHAT_ACCOUNT_COUNT ?? (process.env.RUN_ARBITRUM_FORK === '1' ? 4 : 128),
+);
 
 const networks: NetworksUserConfig = {};
 
@@ -127,9 +129,15 @@ if (vars.has('BRB_KEY')) {
     };
   }
 
-  if (vars.has('ARBITRUM_SEPOLIA_RPC_URL') || process.env.ARBITRUM_SEPOLIA_RPC_URL) {
+  if (
+    vars.has('ARBITRUM_SEPOLIA_RPC_URLS') ||
+    process.env.ARBITRUM_SEPOLIA_RPC_URLS ||
+    vars.has('ARBITRUM_SEPOLIA_RPC_URL') ||
+    process.env.ARBITRUM_SEPOLIA_RPC_URL
+  ) {
     networks.arbitrumsepolia = {
-      url: process.env.ARBITRUM_SEPOLIA_RPC_URL ?? vars.get('ARBITRUM_SEPOLIA_RPC_URL'),
+      // Hardhat needs one bootstrap URL; the live swarm uses the entire list through viem.
+      url: resolveSepoliaRpcUrls(process.env, (key) => (vars.has(key) ? vars.get(key) : undefined))[0],
       chainId: 421614,
       gasPrice: 'auto',
       accounts: [vars.get('BRB_KEY')],

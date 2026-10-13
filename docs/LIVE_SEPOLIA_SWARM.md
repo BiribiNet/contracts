@@ -10,7 +10,7 @@ An idle round with the existing 60-second duration is required. The harness neve
 
 ## Commands
 
-Use Node 22 and an available Sepolia RPC. Do not put private keys on command lines. Set ARBITRUM_SEPOLIA_RPC_URL through the environment or secure Hardhat configuration.
+Use Node 22 and available Sepolia RPCs. Do not put private keys on command lines. Set `ARBITRUM_SEPOLIA_RPC_URLS` to an ordered JSON array or comma/newline-separated list, through the environment or secure Hardhat configuration. For example: `["https://primary.example/rpc","https://backup.example/rpc"]`. The legacy `ARBITRUM_SEPOLIA_RPC_URL` remains supported. Environment configuration takes precedence over saved Hardhat settings, and the plural setting takes precedence within each source. Hardhat uses the first URL to bootstrap the network; the swarm explicitly binds all contract reads, funding, wagering and receipt checks to the complete viem fallback transport. Each endpoint's chain ID is checked before it can serve requests; wrong-chain endpoints fail over. Request errors/timeouts/rate limits try the next URL in order, while contract reverts remain failures. A transaction failover rebroadcasts the same signed bytes; an ambiguous failure still requires journal/nonce reconciliation rather than rerunning a wager. Endpoint URLs are never stored in public reports.
 
 ```sh
 yarn test:swarm:live-sepolia

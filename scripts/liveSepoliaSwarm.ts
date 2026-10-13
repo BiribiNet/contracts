@@ -3,10 +3,11 @@ import { vars } from 'hardhat/config';
 import { createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createWalletClient, http, parseEther, zeroAddress, parseEventLogs } from 'viem';
+import { createPublicClient, createWalletClient, parseEther, zeroAddress, parseEventLogs } from 'viem';
 import { arbitrumSepolia } from 'viem/chains';
 import { encodeMultiBet, straightLegs } from '../test/helpers/multiBetEncode';
 import { inBatches, submissionEvidence } from './utils/liveSwarmEvidence';
+import { createRpcFallback, resolveSepoliaRpcUrls } from './utils/rpcFallback';
 
 const stringify = (v: unknown) => JSON.stringify(v, (_, x) => (typeof x === 'bigint' ? x.toString() : x), 2);
 const count = Number(process.env.LIVE_SWARM_TICKETS || 250);
@@ -31,7 +32,9 @@ const path =
 const mode = process.env.LIVE_SWARM_MODE || 'preflight';
 async function main() {
   if (network.name !== 'arbitrumsepolia') throw Error('Live swarm requires arbitrumsepolia');
-  const pc = await viem.getPublicClient();
+  const rpcUrls = resolveSepoliaRpcUrls(process.env, (name) => (vars.has(name) ? vars.get(name) : undefined));
+  const transport = createRpcFallback(rpcUrls, arbitrumSepolia.id);
+  const pc = createPublicClient({ chain: arbitrumSepolia, transport, pollingInterval: 1500 });
   if ((await pc.getChainId()) !== 421614) throw Error('Wrong chain');
   if (!['preflight', 'prepare', 'run', 'reconcile', 'observe', 'cleanup', 'verify-cleanup'].includes(mode))
     throw Error('Unknown mode');
@@ -39,15 +42,15 @@ async function main() {
     throw Error('Explicit live testnet confirmation required');
   const key = vars.get('BRB_KEY');
   const admin = privateKeyToAccount((key.startsWith('0x') ? key : `0x${key}`) as `0x${string}`);
-  const [wallet] = await viem.getWalletClients();
-  if (wallet.account.address.toLowerCase() !== admin.address.toLowerCase()) throw Error('Signer mismatch');
+  const wallet = createWalletClient({ account: admin, chain: arbitrumSepolia, transport });
+  const contractClients = { client: { public: pc, wallet } };
   const deploy = JSON.parse(readFileSync('../subgraph/deployments/arbitrum-sepolia.json', 'utf8'));
-  const engine = await viem.getContractAt('RouletteEngine', deploy.addresses.roulette);
-  const registry = await viem.getContractAt('MarketRegistry', await engine.read.REGISTRY());
+  const engine = await viem.getContractAt('RouletteEngine', deploy.addresses.roulette, contractClients);
+  const registry = await viem.getContractAt('MarketRegistry', await engine.read.REGISTRY(), contractClients);
   const market = await registry.read.getMarket([3]);
-  const bank = await viem.getContractAt('BankVault4626', market.bank);
-  const brb = await viem.getContractAt('BRBToken', deploy.addresses.brb);
-  const scheduler = await viem.getContractAt('UpkeepScheduler', await engine.read.UPKEEP_SCHEDULER());
+  const bank = await viem.getContractAt('BankVault4626', market.bank, contractClients);
+  const brb = await viem.getContractAt('BRBToken', deploy.addresses.brb, contractClients);
+  const scheduler = await viem.getContractAt('UpkeepScheduler', await engine.read.UPKEEP_SCHEDULER(), contractClients);
   const funder = await engine.read.JACKPOT_FUNDER();
   if (
     market.asset.toLowerCase() !== brb.address.toLowerCase() ||
@@ -62,10 +65,6 @@ async function main() {
         .digest('hex')}`,
     ),
   );
-  const transport = http(process.env.ARBITRUM_SEPOLIA_RPC_URL || vars.get('ARBITRUM_SEPOLIA_RPC_URL'), {
-    retryCount: 0,
-    timeout: 20000,
-  });
   const clients = accounts.map((account) => createWalletClient({ account, chain: arbitrumSepolia, transport }));
   const campaignAccount = privateKeyToAccount(
     `0x${createHmac('sha256', Buffer.from(key.replace(/^0x/, ''), 'hex'))
@@ -418,7 +417,7 @@ async function main() {
         throw Error('Unexpected wallet accounting');
       report.observation.roundDuration = await engine.read.ROUND_DURATION();
       if (report.observation.roundDuration !== 60) throw Error('Round duration changed');
-      const activeFunder = await viem.getContractAt('BRBJackpotFunder', funder);
+      const activeFunder = await viem.getContractAt('BRBJackpotFunder', funder, contractClients);
       report.observation.fundingAccount = await activeFunder.read.fundingAccounts([3]);
       const names = [
         'VrfRequested',
