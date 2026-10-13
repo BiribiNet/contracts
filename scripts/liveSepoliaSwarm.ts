@@ -3,10 +3,10 @@ import { vars } from 'hardhat/config';
 import { createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createPublicClient, createWalletClient, parseEther, zeroAddress, parseEventLogs } from 'viem';
+import { createPublicClient, createWalletClient, parseAbi, parseEther, zeroAddress, parseEventLogs } from 'viem';
 import { arbitrumSepolia } from 'viem/chains';
 import { encodeMultiBet, straightLegs } from '../test/helpers/multiBetEncode';
-import { inBatches, submissionEvidence } from './utils/liveSwarmEvidence';
+import { inBatches, mapInBatches, submissionEvidence, walletPaymentEvidence } from './utils/liveSwarmEvidence';
 import { createRpcFallback, resolveSepoliaRpcUrls } from './utils/rpcFallback';
 
 const stringify = (v: unknown) => JSON.stringify(v, (_, x) => (typeof x === 'bigint' ? x.toString() : x), 2);
@@ -36,7 +36,11 @@ async function main() {
   const transport = createRpcFallback(rpcUrls, arbitrumSepolia.id);
   const pc = createPublicClient({ chain: arbitrumSepolia, transport, pollingInterval: 1500 });
   if ((await pc.getChainId()) !== 421614) throw Error('Wrong chain');
-  if (!['preflight', 'prepare', 'run', 'reconcile', 'observe', 'cleanup', 'verify-cleanup'].includes(mode))
+  if (
+    !['preflight', 'prepare', 'run', 'reconcile', 'observe', 'verify-payments', 'cleanup', 'verify-cleanup'].includes(
+      mode,
+    )
+  )
     throw Error('Unknown mode');
   if (['prepare', 'run', 'cleanup'].includes(mode) && process.env.CONFIRM_LIVE_SWARM !== `421614:${count}x37x1BRB`)
     throw Error('Explicit live testnet confirmation required');
@@ -145,7 +149,11 @@ async function main() {
       });
       const event = events.length === 1 ? events[0] : undefined;
       entry.actualRound = event?.args.roundId.toString();
-      entry.confirmed = entry.actualRound === String(report.round);
+      entry.confirmed =
+        entry.actualRound === String(report.round) &&
+        event?.args.amount === ticket &&
+        event?.args.data.toLowerCase() === encodeMultiBet(straightLegs(37, parseEther('1'))).toLowerCase() &&
+        (!entry.wallet || event?.args.user.toLowerCase() === entry.wallet.toLowerCase());
       const countdown = parseEventLogs({ abi: engine.abi, logs: receipt.logs, eventName: 'RoundCountdownStarted' })[0];
       if (countdown) report.lockAt = countdown.args.lockAt.toString();
       entry.confirmedAt = new Date().toISOString();
@@ -156,7 +164,9 @@ async function main() {
   if (mode === 'reconcile') {
     if (!['running', 'submitted', 'partial-submitted'].includes(report.status))
       throw Error('Reconciliation requires a submitted or interrupted campaign');
-    await confirmEntries(report.wallets.flatMap((w: any) => w.bets));
+    await confirmEntries(
+      report.wallets.flatMap((w: any) => w.bets.map((bet: any) => Object.assign(bet, { wallet: w.address }))),
+    );
     Object.assign(report, submissionEvidence(report));
     report.status = report.fullSubmission ? 'submitted' : 'partial-submitted';
     report.reconciledAt = new Date().toISOString();
@@ -166,14 +176,12 @@ async function main() {
   }
   if (mode === 'verify-cleanup') {
     if (report.status !== 'cleaned') throw Error('Cleanup has not finished');
-    const balances = await Promise.all(
-      accounts.map(async (a) => ({
-        address: a.address,
-        brb: await brb.read.balanceOf([a.address]),
-        allowance: await brb.read.allowance([a.address, bank.address]),
-        eth: await pc.getBalance({ address: a.address }),
-      })),
-    );
+    const balances = await mapInBatches(accounts, 10, async (a) => ({
+      address: a.address,
+      brb: await brb.read.balanceOf([a.address]),
+      allowance: await brb.read.allowance([a.address, bank.address]),
+      eth: await pc.getBalance({ address: a.address }),
+    }));
     if (balances.some((b) => b.brb !== 0n || b.allowance !== 0n)) throw Error('Test-wallet recovery incomplete');
     const campaignBrb = report.campaignFundingWallet ? await brb.read.balanceOf([campaignAccount.address]) : 0n;
     if (report.campaignFundingWallet && report.campaignFundingWallet !== campaignAccount.address)
@@ -215,7 +223,7 @@ async function main() {
   if (mode === 'prepare') {
     if (report.status !== 'created' && report.status !== 'preparing') throw Error('Preparation already finished');
     if (baseline.adminBrb < ticket * BigInt(count)) throw Error('Insufficient BRB for configured ticket count');
-    if (baseline.adminEth < parseEther(String(walletCount * 0.004 + 0.05))) throw Error('Insufficient test ETH budget');
+    if (baseline.adminEth < parseEther(String(walletCount * 0.008 + 0.05))) throw Error('Insufficient test ETH budget');
     if (
       (await pc.getTransactionCount({ address: admin.address, blockTag: 'pending' })) !==
       (await pc.getTransactionCount({ address: admin.address, blockTag: 'latest' }))
@@ -227,16 +235,14 @@ async function main() {
     await inBatches(report.transactions, 10, async (tx: any) => {
       await wait(tx.hash);
     });
-    const states = await Promise.all(
-      accounts.map(async (a) => ({
-        brb: await brb.read.balanceOf([a.address]),
-        eth: await pc.getBalance({ address: a.address }),
-      })),
-    );
+    const states = await mapInBatches(accounts, 10, async (a) => ({
+      brb: await brb.read.balanceOf([a.address]),
+      eth: await pc.getBalance({ address: a.address }),
+    }));
     const target = ticket * BigInt(perWallet);
     const neededBrb = states.reduce((sum, b) => sum + (b.brb < target ? target - b.brb : 0n), 0n);
     const neededEth = states.reduce(
-      (sum, b) => sum + (b.eth < parseEther('0.004') ? parseEther('0.004') - b.eth : 0n),
+      (sum, b) => sum + (b.eth < parseEther('0.008') ? parseEther('0.008') - b.eth : 0n),
       parseEther('0.01'),
     );
     report.campaignFundingWallet = campaignAccount.address;
@@ -278,10 +284,10 @@ async function main() {
           save();
           hashes.push(hash);
         }
-        if (state.eth < parseEther('0.004')) {
+        if (state.eth < parseEther('0.008')) {
           const hash = await campaignWallet.sendTransaction({
             to: a,
-            value: parseEther('0.004') - state.eth,
+            value: parseEther('0.008') - state.eth,
             gas: 100000n,
             gasPrice,
             nonce: nonce++,
@@ -331,46 +337,58 @@ async function main() {
         throw Error('Wait for a completely idle round');
     if ((await engine.read.ROUND_DURATION()) !== 60)
       throw Error('The live test requires the unchanged 60-second window');
-    const nonces = await Promise.all(
-      accounts.map((a) => pc.getTransactionCount({ address: a.address, blockTag: 'pending' })),
+    const nonces = await mapInBatches(accounts, 10, (a) =>
+      pc.getTransactionCount({ address: a.address, blockTag: 'pending' }),
     );
+    const minedNonces = await mapInBatches(accounts, 10, (a) =>
+      pc.getTransactionCount({ address: a.address, blockTag: 'latest' }),
+    );
+    if (nonces.some((nonce, i) => nonce !== minedNonces[i]))
+      throw Error('Test wallet has pending transactions; reconcile first');
     report.round = round.toString();
     report.originalDuration = 60;
     report.startBlock = (await pc.getBlockNumber()).toString();
-    report.walletBalancesBefore = await Promise.all(accounts.map((a) => brb.read.balanceOf([a.address])));
+    report.walletBalancesBefore = await mapInBatches(accounts, 10, (a) =>
+      brb.read.balanceOf([a.address], { blockNumber: BigInt(report.startBlock) }),
+    );
     report.bankAssetsBefore = await bank.read.totalAssets();
     report.status = 'running';
     save();
     const betData = encodeMultiBet(straightLegs(37, parseEther('1')));
-    const gasPrice = baseline.gasPrice * 2n;
     const started = Date.now();
     report.admissionStartedAt = new Date(started).toISOString();
     save();
-    // One in-flight transaction per EOA; cache fees/nonces and avoid per-wager
-    // estimation RPCs. Each wave waits for all receipts before another wave.
+    // One in-flight transaction per EOA; refresh fees per group under sustained load.
+    // Each wave waits for all receipts before another wave.
     for (let wave = 0; wave < perWallet; wave++) {
       if (Date.now() - started > 50_000) throw Error('Admission safety deadline reached; inspect partial journal');
       if ((await engine.read.currentGlobalRound()) !== round) throw Error('Round changed during admission');
       const entries: any[] = [];
       let sendFailure: unknown;
       try {
-        await inBatches(accounts, 25, async (_, i) => {
-          if (Date.now() - started > 50_000) throw Error('Admission safety deadline reached; inspect partial journal');
-          const hash = await clients[i].writeContract({
-            address: bank.address,
-            abi: bank.abi,
-            functionName: 'placeBet',
-            args: [ticket, betData, zeroAddress],
-            gas: 6_000_000n,
-            gasPrice,
-            nonce: nonces[i] + wave,
-            type: 'legacy',
+        for (let group = 0; group < walletCount; group += 25) {
+          const gasPrice = (await pc.getGasPrice()) * 2n;
+          if (gasPrice > 100_000_000n) throw Error('Gas price exceeds campaign fee ceiling; reconcile before retrying');
+          await inBatches(accounts.slice(group, group + 25), 25, async (_, offset) => {
+            const i = group + offset;
+            if (Date.now() - started > 50_000)
+              throw Error('Admission safety deadline reached; inspect partial journal');
+            const hash = await clients[i].writeContract({
+              address: bank.address,
+              abi: bank.abi,
+              functionName: 'placeBet',
+              args: [ticket, betData, zeroAddress],
+              gas: 6_000_000n,
+              gasPrice,
+              nonce: nonces[i] + wave,
+              type: 'legacy',
+            });
+            const entry: any = { hash, wallet: accounts[i].address, gasPrice: gasPrice.toString() };
+            report.wallets[i].bets.push(entry);
+            entries.push(entry);
+            save();
           });
-          const entry: any = { hash };
-          report.wallets[i].bets.push(entry);
-          entries.push(entry);
-          save();
-        });
+        }
       } catch (error) {
         sendFailure = error;
       }
@@ -404,7 +422,9 @@ async function main() {
       market: await engine.read.marketRoundStateByRound([rid, 3]),
     };
     if (current > rid && phase === 4 && diagnostics.fulfilled) {
-      const after = await Promise.all(accounts.map((a) => brb.read.balanceOf([a.address])));
+      const after = await mapInBatches(accounts, 10, (a) =>
+        brb.read.balanceOf([a.address], { blockNumber: report.observation.block }),
+      );
       const delta = after.reduce((sum, b, i) => sum + b - BigInt(report.walletBalancesBefore[i]), 0n);
       report.observation.walletDelta = delta;
       const paid = report.observation.market.bankPaidRunning;
@@ -478,12 +498,125 @@ async function main() {
     console.log(stringify({ status: report.status, ...report.observation }));
     return;
   }
+  if (mode === 'verify-payments') {
+    if (!['settled', 'partial-settled'].includes(report.status))
+      throw Error('Payment verification requires settled evidence before cleanup');
+    Object.assign(report, submissionEvidence(report));
+    const rid = BigInt(report.round);
+    const block = await pc.getBlockNumber();
+    const [phase, diagnostics, currentRound] = await Promise.all([
+      engine.read.roundPhase([rid]),
+      engine.read.roundDiagnostics([rid]),
+      engine.read.currentGlobalRound(),
+    ]);
+    if (phase !== 4 || !diagnostics.fulfilled || currentRound <= rid) throw Error('Round settlement is incomplete');
+    const transfers = await pc.getContractEvents({
+      address: brb.address,
+      abi: brb.abi,
+      eventName: 'Transfer',
+      fromBlock: BigInt(report.startBlock) + 1n,
+      toBlock: block,
+    });
+    const jackpotEvents = await pc.getContractEvents({
+      address: engine.address,
+      abi: parseAbi([
+        'event JackpotPayment(uint64 indexed roundId, address indexed recipient, address indexed token, uint256 amount)',
+      ]),
+      eventName: 'JackpotPayment',
+      args: { roundId: rid },
+      fromBlock: BigInt(report.startBlock),
+      toBlock: block,
+    });
+    const treasury = deploy.addresses.jackpotTreasury.toLowerCase();
+    const checks = await mapInBatches(report.wallets as any[], 10, async (w: any, i) => {
+      const address = w.address.toLowerCase();
+      let staked = 0n,
+        ordinaryPaid = 0n,
+        jackpotPaid = 0n,
+        otherNet = 0n;
+      for (const log of transfers) {
+        const { from, to, value } = log.args;
+        if (!from || !to || value === undefined) throw Error('Malformed token transfer evidence');
+        if (from.toLowerCase() === address) {
+          if (to.toLowerCase() === bank.address.toLowerCase()) staked += value;
+          else otherNet -= value;
+        }
+        if (to.toLowerCase() === address) {
+          if (from.toLowerCase() === bank.address.toLowerCase()) ordinaryPaid += value;
+          else if (from.toLowerCase() === treasury) jackpotPaid += value;
+          else otherNet += value;
+        }
+      }
+      const announcedJackpot = jackpotEvents
+        .filter((log) => log.args.recipient?.toLowerCase() === address)
+        .reduce((sum, log) => sum + (log.args.amount ?? 0n), 0n);
+      const after = await brb.read.balanceOf([w.address], { blockNumber: block });
+      const evidence = walletPaymentEvidence({
+        tickets: w.bets.length,
+        before: BigInt(report.walletBalancesBefore[i]),
+        after,
+        staked,
+        ordinaryPaid,
+        jackpotPaid,
+        otherNet,
+      });
+      return {
+        address: w.address,
+        tickets: w.bets.length,
+        before: report.walletBalancesBefore[i],
+        after,
+        staked,
+        ordinaryPaid,
+        jackpotPaid,
+        otherNet,
+        announcedJackpot,
+        ...evidence,
+        paidCorrectly: evidence.paidCorrectly && jackpotPaid === announcedJackpot,
+      };
+    });
+    report.paymentVerification = {
+      checkedAt: new Date().toISOString(),
+      block,
+      currentRound,
+      phase,
+      jackpotDistributed: diagnostics.jackpotDistributed,
+      confirmedTickets: report.confirmedTickets,
+      fullSubmission: report.fullSubmission,
+      allWalletsPaidCorrectly: checks.every((check) => check.paidCorrectly),
+      ordinaryPaid: checks.reduce((sum, check) => sum + check.ordinaryPaid, 0n),
+      jackpotPaid: checks.reduce((sum, check) => sum + check.jackpotPaid, 0n),
+      walletChecks: checks,
+    };
+    save();
+    if (!report.paymentVerification.allWalletsPaidCorrectly)
+      throw Error('At least one wallet payment or balance mismatched');
+    console.log(
+      stringify({
+        round: report.round,
+        wallets: checks.length,
+        confirmedTickets: report.confirmedTickets,
+        fullSubmission: report.fullSubmission,
+        allWalletsPaidCorrectly: true,
+        ordinaryPaid: report.paymentVerification.ordinaryPaid,
+        jackpotPaid: report.paymentVerification.jackpotPaid,
+      }),
+    );
+    return;
+  }
   if (mode === 'cleanup') {
     if (!['settled', 'partial-settled', 'cleaning', 'cleaned'].includes(report.status))
       throw Error('Cleanup requires settled evidence');
     report.status = 'cleaning';
     save();
+    await inBatches(
+      report.transactions.filter((tx: any) => /^(recover|revoke)/.test(tx.label)),
+      10,
+      async (tx: any) => {
+        await wait(tx.hash);
+      },
+    );
     const recover = async (i: number) => {
+      let nonce = await pc.getTransactionCount({ address: accounts[i].address, blockTag: 'pending' });
       const balance = await brb.read.balanceOf([accounts[i].address]);
       if (balance > 0n) {
         const hash = await clients[i].writeContract({
@@ -491,6 +624,7 @@ async function main() {
           abi: brb.abi,
           functionName: 'transfer',
           args: [admin.address, balance],
+          nonce: nonce++,
         });
         report.transactions.push({ label: `recover BRB wallet ${i}`, hash });
         save();
@@ -502,6 +636,7 @@ async function main() {
           abi: brb.abi,
           functionName: 'approve',
           args: [bank.address, 0n],
+          nonce: nonce++,
         });
         report.transactions.push({ label: `revoke wallet ${i}`, hash });
         save();
@@ -514,6 +649,7 @@ async function main() {
           to: admin.address,
           value: eth - parseEther('0.0001'),
           gas: 100000n,
+          nonce: nonce++,
         });
         report.transactions.push({ label: `recover ETH wallet ${i}`, hash });
         save();
@@ -529,6 +665,7 @@ async function main() {
     }
     if (report.campaignFundingWallet) {
       if (report.campaignFundingWallet !== campaignAccount.address) throw Error('Funding wallet identity mismatch');
+      let nonce = await pc.getTransactionCount({ address: campaignAccount.address, blockTag: 'pending' });
       const balance = await brb.read.balanceOf([campaignAccount.address]);
       if (balance > 0n) {
         const hash = await campaignWallet.writeContract({
@@ -536,6 +673,7 @@ async function main() {
           abi: brb.abi,
           functionName: 'transfer',
           args: [admin.address, balance],
+          nonce: nonce++,
         });
         report.transactions.push({ label: 'recover isolated funding BRB', hash });
         save();
@@ -547,6 +685,7 @@ async function main() {
           to: admin.address,
           value: eth - parseEther('0.0001'),
           gas: 100000n,
+          nonce: nonce++,
         });
         report.transactions.push({ label: 'recover isolated funding ETH', hash });
         save();

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { inBatches, submissionEvidence } from './utils/liveSwarmEvidence';
+import { inBatches, mapInBatches, submissionEvidence, walletPaymentEvidence } from './utils/liveSwarmEvidence';
 
 const receipt = () => ({ confirmed: true, receiptStatus: 'success', actualRound: '2146' });
 const report = (submitted = 100, target = 1000) => ({
@@ -56,4 +56,29 @@ test('a failed batch finishes its other journal writes and prevents the next bat
   );
   assert.deepEqual(started, [0, 1]);
   assert.deepEqual(finished, [1]);
+});
+
+test('per-wallet payment checks reject underpayment, overpayment and wrong final balances', () => {
+  const unit = 10n ** 18n;
+  const wallet = {
+    tickets: 10,
+    before: 370n * unit,
+    after: 360n * unit,
+    staked: 370n * unit,
+    ordinaryPaid: 360n * unit,
+    jackpotPaid: 0n,
+  };
+  assert.equal(walletPaymentEvidence(wallet).paidCorrectly, true);
+  for (const change of [
+    { ordinaryPaid: 359n * unit },
+    { ordinaryPaid: 361n * unit },
+    { staked: 369n * unit },
+    { after: 359n * unit },
+  ])
+    assert.equal(walletPaymentEvidence({ ...wallet, ...change }).paidCorrectly, false);
+  assert.equal(walletPaymentEvidence({ ...wallet, after: 365n * unit, jackpotPaid: 5n * unit }).paidCorrectly, true);
+});
+
+test('bounded reads preserve the wallet order used for balance comparison', async () => {
+  assert.deepEqual(await mapInBatches([1, 2, 3, 4], 2, async (value) => value * 2), [2, 4, 6, 8]);
 });

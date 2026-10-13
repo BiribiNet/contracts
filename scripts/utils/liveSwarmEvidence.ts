@@ -22,3 +22,39 @@ export async function inBatches<T>(items: T[], size: number, action: (item: T, i
     if (failure?.status === 'rejected') throw failure.reason;
   }
 }
+
+export async function mapInBatches<T, R>(
+  items: T[],
+  size: number,
+  action: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  await inBatches(items, size, async (item, index) => {
+    results[index] = await action(item, index);
+  });
+  return results;
+}
+
+/** Each campaign ticket covers all 37 numbers with 1 BRB each. Verify every wallet independently. */
+export function walletPaymentEvidence(input: {
+  tickets: number;
+  before: bigint;
+  after: bigint;
+  staked: bigint;
+  ordinaryPaid: bigint;
+  jackpotPaid: bigint;
+  otherNet?: bigint;
+}) {
+  const unit = 10n ** 18n;
+  const expectedStake = BigInt(input.tickets) * 37n * unit;
+  const expectedOrdinaryPaid = BigInt(input.tickets) * 36n * unit;
+  const expectedBalance =
+    input.before - expectedStake + expectedOrdinaryPaid + input.jackpotPaid + (input.otherNet ?? 0n);
+  return {
+    expectedStake,
+    expectedOrdinaryPaid,
+    expectedBalance,
+    paidCorrectly:
+      input.staked === expectedStake && input.ordinaryPaid === expectedOrdinaryPaid && input.after === expectedBalance,
+  };
+}
