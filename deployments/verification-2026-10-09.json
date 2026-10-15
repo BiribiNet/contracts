@@ -1,0 +1,38 @@
+[
+  {
+    "name": "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib",
+    "address": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+    "verified": true
+  },
+  {
+    "name": "contracts/libraries/RouletteBetLib.sol:RouletteBetLib",
+    "address": "0x2fC99B564d87ceE8eAb2f2e175a32A6Fe15A6814",
+    "verified": true
+  },
+  {
+    "name": "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib",
+    "address": "0x479354B0c2A6a1B79E404A0202cdF3C6dc786392",
+    "verified": true
+  },
+  {
+    "name": "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib",
+    "address": "0x6a6bF637875665A1fB8F8f15e99cCd4C6FEf5CCa",
+    "verified": true
+  },
+  {
+    "name": "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib",
+    "address": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+    "verified": true
+  },
+  {
+    "name": "contracts/RouletteLib.sol:RouletteLib",
+    "address": "0x01373E7760960f2B60f7EF50DDA5C69D04596C12",
+    "verified": false,
+    "error": "A network request failed. This is an error from the block explorer, not Hardhat. Error: Unexpected token '<', \"<html>\r"
+  },
+  {
+    "name": "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib",
+    "address": "0x527CfFfaf4Feb41768E3CD378773D1264A51db33",
+    "verified": true
+  }
+]

@@ -36,7 +36,7 @@ async function deployLib(
 ) {
     const live = hre.network.name !== "hardhat";
     const options = {
-        account,
+        client: { wallet: await viem.getWalletClient(account.address) },
         ...(live ? { gas: CREATE_GAS } : {}),
         ...(libraries !== undefined ? { libraries } : {}),
     };

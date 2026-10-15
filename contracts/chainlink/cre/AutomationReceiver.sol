@@ -8,9 +8,9 @@ import { ReceiverTemplate } from "./ReceiverTemplate.sol";
 contract AutomationReceiver is ReceiverTemplate {
     mapping(address target => mapping(bytes4 selector => bool allowed)) private s_callAllowed;
 
-    event CallExecuted(address indexed target, bytes4 indexed selector, bytes returnData);
-    event CallFailed(address indexed target, bytes4 indexed selector, bytes reason);
-    event CallAllowedSet(address indexed target, bytes4 indexed selector, bool allowed);
+    event CallExecuted(address target, bytes4 selector, bytes returnData);
+    event CallFailed(address target, bytes4 selector, bytes reason);
+    event CallAllowedSet(address target, bytes4 selector, bool allowed);
 
     error InvalidTargetAddress();
     error MissingSelector();

@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "hardhat.config.ts",
+    "artifacts/**/*.d.ts",
+    "scripts/deployProtocolArbitrum.ts",
+    "scripts/deployCloudflareRoundWatcherArbitrum.ts",
+    "scripts/verifyProtocolArbitrum.ts",
+    "test/CloudflareKeeperDeployment.test.ts",
+    "scripts/checkArbitrumDependencies.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cre"
+  ]
+}

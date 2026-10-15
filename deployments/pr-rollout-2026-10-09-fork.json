@@ -1,0 +1,185 @@
+{
+  "chainId": 31337,
+  "transactions": [
+    {
+      "label": "deploy contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib",
+      "hash": "0xff68a3be880325137499be5f1c5fd7cda8bb5368a2e998afa2898500cd3eb5e9",
+      "blockNumber": 317419004,
+      "status": 1
+    },
+    {
+      "label": "deploy RouletteEngine",
+      "hash": "0x5dc19e706c98d8f0ddaf4e437e390fa2d812156445a3cf0b22c83bff93006911",
+      "blockNumber": 317419005,
+      "status": 1
+    },
+    {
+      "label": "upgrade engine",
+      "hash": "0xd8ddf530e7b8deb4a3098d732a896cdcc17283d0efe92e9dfd93692e2d7f3d48",
+      "blockNumber": 317419006,
+      "status": 1
+    },
+    {
+      "label": "deploy BRBJackpotFunder",
+      "hash": "0x94eacf9f57250d6d584ef0331299e96560b760850d8934bc6c9057f7c918b2f5",
+      "blockNumber": 317419007,
+      "status": 1
+    },
+    {
+      "label": "wire new jackpot funder",
+      "hash": "0x4fb5e1c9260d583e37ac19c2923bf93a7b4171f115707052b9e2526fa6ee3455",
+      "blockNumber": 317419008,
+      "status": 1
+    }
+  ],
+  "deployments": {
+    "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": {
+      "address": "0x83C4Bc99c4792A848a1aBF065311821C9f70E0F1",
+      "args": [],
+      "libraries": {
+        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": "0x127EEb0Bc710bAd8E08740AeE83Fb7AC8f4340D8"
+      }
+    },
+    "RouletteEngine": {
+      "address": "0x9068051a185d18DC45368D834834c284b0c1992c",
+      "args": [
+        "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61",
+        "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+        "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+        "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+        "1",
+        "0x5b28b914881e069e72de8183D5b7aEc662Bf2905"
+      ],
+      "libraries": {
+        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+        "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": "0x479354B0c2A6a1B79E404A0202cdF3C6dc786392",
+        "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": "0x6a6bF637875665A1fB8F8f15e99cCd4C6FEf5CCa",
+        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+        "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": "0x527CfFfaf4Feb41768E3CD378773D1264A51db33",
+        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": "0x127EEb0Bc710bAd8E08740AeE83Fb7AC8f4340D8",
+        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": "0x83C4Bc99c4792A848a1aBF065311821C9f70E0F1"
+      }
+    },
+    "BRBJackpotFunder": {
+      "address": "0x8Ec2E0c49Fdb63D8b22F46b375DC75C2eb8348ae",
+      "args": [
+        "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+        "0xcd97563e22017462f35ba1e266e13f8f756a53c9",
+        "0xEEDA8616872ef6eA2F41A4A40aB240253cd5C4aC",
+        "0x89658247aB5A1D93830AECECc6674170D0D7081c",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+        "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4"
+      ],
+      "libraries": {}
+    }
+  },
+  "checks": [
+    "Engine upgrade preserves captured storage on pinned fork; SideBet and banks untouched"
+  ],
+  "signer": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "sourceBlock": 317419003,
+  "revision": "df898f08c8eb822dd772903f01d25fad6e5d251f",
+  "before": {
+    "banks": [
+      [
+        "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "10950000",
+        "10000000000000",
+        "0",
+        "1",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1"
+      ],
+      [
+        "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "4714136097310404432743999",
+        "4289616197442843190705557573851",
+        "0",
+        "2",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1"
+      ],
+      [
+        "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "1260024324449092859839096",
+        "1032528577526072647880413765279",
+        "53000000000000000000",
+        "3",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1"
+      ]
+    ],
+    "bets": "43",
+    "configs": "27",
+    "timeout": "2592000",
+    "engine": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+    "registry": "0xBB93AE01f205Ba4C9C9B32def71dc8F76c67F672",
+    "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+    "round": "2037",
+    "pending": false,
+    "reserved": [
+      "0",
+      "0",
+      "0"
+    ]
+  },
+  "reusedLibraries": {
+    "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+    "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": "0x2fC99B564d87ceE8eAb2f2e175a32A6Fe15A6814",
+    "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": "0x479354B0c2A6a1B79E404A0202cdF3C6dc786392",
+    "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": "0x6a6bF637875665A1fB8F8f15e99cCd4C6FEf5CCa",
+    "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+    "contracts/RouletteLib.sol:RouletteLib": "0x01373E7760960f2B60f7EF50DDA5C69D04596C12",
+    "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": "0x527CfFfaf4Feb41768E3CD378773D1264A51db33",
+    "contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib": "0x549165552cd95De54e8826DB89a1b452002aFE6D",
+    "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": "0x127EEb0Bc710bAd8E08740AeE83Fb7AC8f4340D8"
+  },
+  "migratedBalances": {
+    "0xcd97563e22017462f35ba1e266e13f8f756a53c9": "0",
+    "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d": "0",
+    "0xa64617abdca4477b17020a763f24bfe27046a752": "0"
+  },
+  "previousFunder": "0x6aF569259B87ef2AE4998436047fdFAfaEeDc7d9",
+  "after": {
+    "banks": [
+      [
+        "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "10950000",
+        "10000000000000",
+        "0",
+        "1",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1"
+      ],
+      [
+        "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "4714136097310404432743999",
+        "4289616197442843190705557573851",
+        "0",
+        "2",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1"
+      ],
+      [
+        "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "1260024324449092859839096",
+        "1032528577526072647880413765279",
+        "53000000000000000000",
+        "3",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1"
+      ]
+    ],
+    "bets": "43",
+    "configs": "27",
+    "timeout": "2592000",
+    "engine": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+    "registry": "0xBB93AE01f205Ba4C9C9B32def71dc8F76c67F672",
+    "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+    "round": "2037",
+    "pending": false,
+    "reserved": [
+      "0",
+      "0",
+      "0"
+    ]
+  },
+  "newFunder": "0x8Ec2E0c49Fdb63D8b22F46b375DC75C2eb8348ae",
+  "complete": true
+}

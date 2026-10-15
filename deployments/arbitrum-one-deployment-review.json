@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-15T14:37:53.874030+00:00",
+  "workerTests": {
+    "passed": 102,
+    "failed": 0
+  },
+  "releaseTests": {
+    "passed": 7,
+    "failed": 0
+  },
+  "mainnetFork": {
+    "passed": 2,
+    "failed": 0,
+    "sourceChainId": 42161,
+    "localChainId": 31337,
+    "pinnedBlock": 515087345,
+    "notes": "Actual external contracts read from fork; local fixture balances and simulated oracle delivery only."
+  },
+  "deploymentTypecheck": "passed",
+  "workerTypecheck": "passed",
+  "workerDryRun": "passed",
+  "dependencyCheck": "passed",
+  "repositoryWideTypecheck": "failed: existing CRE dependency/generated type errors and other repository errors; this is not a full release certification",
+  "workerProvisioned": true,
+  "workerActivated": false,
+  "protocolMainnetTransactionsSent": false,
+  "outstanding": [
+    "Choose marketing, infrastructure and dedicated keeper addresses",
+    "Provide and fund the dedicated keeper signing account",
+    "Deploy the reviewed mainnet protocol to obtain actual contract addresses",
+    "Fund bank vaults and provide DAI/BRB liquidity",
+    "Seed reviewed SideBet offers and complete remaining launch checks"
+  ]
+}

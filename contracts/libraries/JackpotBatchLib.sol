@@ -9,9 +9,9 @@ interface IVaultAssetView { function asset() external view returns (address); }
 
 /// @dev Linked library: keeps `RouletteEngine` deployed bytecode under EIP-170 without `viaIR`.
 library JackpotBatchLib {
-    event RoulettePayment(uint64 indexed roundId, uint32 indexed marketId, address indexed recipient, address token, uint256 amount);
+    event RoulettePayment(uint64 roundId, uint32 marketId, address recipient, address token, uint256 amount);
     // The jackpot is global: no invented attribution to the trigger market.
-    event JackpotPayment(uint64 indexed roundId, address indexed recipient, address indexed token, uint256 amount);
+    event JackpotPayment(uint64 roundId, address recipient, address token, uint256 amount);
     struct RoundDiagnostics {
         uint256 requestId;
         uint256 requestedAt;

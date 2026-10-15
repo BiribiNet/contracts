@@ -1,0 +1,252 @@
+{
+  "chainId": 421614,
+  "transactions": [
+    {
+      "label": "deploy contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib",
+      "hash": "0x270eb55cbe2edd1be897520a91c88c67e10719345f3579b84cf124325a9d17c3",
+      "blockNumber": 317413825,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RouletteBetLib.sol:RouletteBetLib",
+      "hash": "0x67d17a2b7858ca5915fc8a48062556c88542806ee81b751570ee087f52792feb",
+      "blockNumber": 317413828,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib",
+      "hash": "0x041187681cc1ba0acfdffeb855b245e7ab21ad5420dd4cba915365112be17c1e",
+      "blockNumber": 317413831,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib",
+      "hash": "0xa417ed629149aa4f71edc8f684efd7b97d1d5f4dd0c8efad9e647a31e1571cbb",
+      "blockNumber": 317413834,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib",
+      "hash": "0x717152efbeea7fe301ceeda45657388b1cb319754cb416c84d1b1abb1956f789",
+      "blockNumber": 317413837,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/RouletteLib.sol:RouletteLib",
+      "hash": "0xe75e62c5b8d04b2f9ffaa7c307a01a14c3cfe911befe7f03043995a7e1a36565",
+      "blockNumber": 317413840,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib",
+      "hash": "0x59a72a57a514d1c7cae2a0d9bc332156080b670596f03485391027bf7830363e",
+      "blockNumber": 317413843,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib",
+      "hash": "0xa3999fd41ace4c4e5cad0a2231dc5dded07db27ef050292dac8081562eea4f56",
+      "blockNumber": 317413846,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib",
+      "hash": "0x7fcaa1bbf266a6064b654b5634df9a4201f3fc216b5754b3ca4fa971d77a233d",
+      "blockNumber": 317413850,
+      "status": 1
+    },
+    {
+      "label": "deploy contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib",
+      "hash": "0xc73dc2663985aa0e4684dbe97a6071a931113f4a8a9b7d40db54c4f1baa4e76b",
+      "blockNumber": 317413853,
+      "status": 1
+    },
+    {
+      "label": "deploy RouletteEngine",
+      "hash": "0x183bf2b934b3be6a3ccbc17e1a738c6f861388e3519c15ba4167ca0421bde533",
+      "blockNumber": 317413858,
+      "status": 1
+    },
+    {
+      "label": "upgrade engine",
+      "hash": "0x0a79a223e119f38e8db11c6b68241be40eb9fbff1f2e87e346373fd2365ed883",
+      "blockNumber": 317413862,
+      "status": 1
+    },
+    {
+      "label": "deploy BankVault4626",
+      "hash": "0xbd1d541e0014cc2dbb2e2a6517825b1e860516584dfdaa4a6eda1b2a7cc09c5d",
+      "blockNumber": 317413866,
+      "status": 1
+    },
+    {
+      "label": "upgrade vault beacon",
+      "hash": "0xa27c0d9f985d74fc23b6397fc87174256c19118af6e986683b0855a1ac5e5289",
+      "blockNumber": 317413871,
+      "status": 1
+    },
+    {
+      "label": "deploy SideBet",
+      "hash": "0x4a4c1d600c0f0b27f5ae72f4c23d8f752a1257c703c1d7562d084c022ea13d24",
+      "blockNumber": 317414233,
+      "status": 1
+    },
+    {
+      "label": "upgrade SideBet code only",
+      "hash": "0xbb97dad335e6050f84000e9be98ed9521139d7d399155be7e702e241aa3a5284",
+      "blockNumber": 317414236,
+      "status": 1
+    },
+    {
+      "label": "deploy BRBJackpotFunder",
+      "hash": "0x9e51e4b323dbca3cabcc68353e98c06b44ce1e122a3d43bdd882ff43d897a2b0",
+      "blockNumber": 317414249,
+      "status": 1
+    },
+    {
+      "label": "wire new jackpot funder",
+      "hash": "0xf961b16b68eea0518bf7cdbb294cf6dbd2801f7660191e538d13377158aaf73b",
+      "blockNumber": 317414257,
+      "status": 1
+    },
+    {
+      "label": "deploy TipJar",
+      "hash": "0x09351673d1daae29b6df31c89c87d50e70f3bed670b792085bbd7595b6283eea",
+      "blockNumber": 317414260,
+      "status": 1
+    }
+  ],
+  "deployments": {
+    "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": {
+      "address": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+      "args": [],
+      "libraries": {}
+    },
+    "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": {
+      "address": "0x2fC99B564d87ceE8eAb2f2e175a32A6Fe15A6814",
+      "args": [],
+      "libraries": {}
+    },
+    "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": {
+      "address": "0x479354B0c2A6a1B79E404A0202cdF3C6dc786392",
+      "args": [],
+      "libraries": {
+        "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": "0x2fC99B564d87ceE8eAb2f2e175a32A6Fe15A6814"
+      }
+    },
+    "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": {
+      "address": "0x6a6bF637875665A1fB8F8f15e99cCd4C6FEf5CCa",
+      "args": [],
+      "libraries": {}
+    },
+    "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": {
+      "address": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+      "args": [],
+      "libraries": {}
+    },
+    "contracts/RouletteLib.sol:RouletteLib": {
+      "address": "0x01373E7760960f2B60f7EF50DDA5C69D04596C12",
+      "args": [],
+      "libraries": {}
+    },
+    "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": {
+      "address": "0x527CfFfaf4Feb41768E3CD378773D1264A51db33",
+      "args": [],
+      "libraries": {
+        "contracts/RouletteLib.sol:RouletteLib": "0x01373E7760960f2B60f7EF50DDA5C69D04596C12"
+      }
+    },
+    "contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib": {
+      "address": "0x549165552cd95De54e8826DB89a1b452002aFE6D",
+      "args": [],
+      "libraries": {}
+    },
+    "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": {
+      "address": "0x127EEb0Bc710bAd8E08740AeE83Fb7AC8f4340D8",
+      "args": [],
+      "libraries": {
+        "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": "0x2fC99B564d87ceE8eAb2f2e175a32A6Fe15A6814",
+        "contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib": "0x549165552cd95De54e8826DB89a1b452002aFE6D"
+      }
+    },
+    "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": {
+      "address": "0x3C91535a56ac14c43252981008437e95AB6eFe08",
+      "args": [],
+      "libraries": {
+        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": "0x127EEb0Bc710bAd8E08740AeE83Fb7AC8f4340D8"
+      }
+    },
+    "RouletteEngine": {
+      "address": "0x08b5C4E146b2dF4907c0ac27843d700281d1F8CD",
+      "args": [
+        "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61",
+        "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+        "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+        "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+        "1",
+        "0x5b28b914881e069e72de8183D5b7aEc662Bf2905"
+      ],
+      "libraries": {
+        "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": "0xe8de47796Ac92ca29f9844d94A3C825136225eb1",
+        "contracts/libraries/RouletteBetCodecLib.sol:RouletteBetCodecLib": "0x479354B0c2A6a1B79E404A0202cdF3C6dc786392",
+        "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib": "0x6a6bF637875665A1fB8F8f15e99cCd4C6FEf5CCa",
+        "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": "0x660AF3E4526C3dE369dE0E3E0228C4f6513D046D",
+        "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": "0x527CfFfaf4Feb41768E3CD378773D1264A51db33",
+        "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": "0x127EEb0Bc710bAd8E08740AeE83Fb7AC8f4340D8",
+        "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": "0x3C91535a56ac14c43252981008437e95AB6eFe08"
+      }
+    },
+    "BankVault4626": {
+      "address": "0xea45De4C6adD20979db76D13dCc56a3724e64CbA",
+      "args": [],
+      "libraries": {}
+    },
+    "SideBet": {
+      "address": "0xC2efc646F99588fe7C767Adb6f76b0544FC41E62",
+      "args": [],
+      "libraries": {}
+    },
+    "BRBJackpotFunder": {
+      "address": "0x6aF569259B87ef2AE4998436047fdFAfaEeDc7d9",
+      "args": [
+        "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+        "0xcd97563e22017462f35ba1e266e13f8f756a53c9",
+        "0xEEDA8616872ef6eA2F41A4A40aB240253cd5C4aC",
+        "0x89658247aB5A1D93830AECECc6674170D0D7081c",
+        "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+        "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4"
+      ],
+      "libraries": {}
+    },
+    "TipJar": {
+      "address": "0xD8B67354374c41E6ED7494D404b0e8D27167031D",
+      "args": [
+        "0xcd97563e22017462f35ba1e266e13f8f756a53c9",
+        "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+      ],
+      "libraries": {}
+    }
+  },
+  "checks": [
+    "Engine, SideBet and banks preserve captured state"
+  ],
+  "signer": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "sourceBlock": 317412036,
+  "revision": "a610335",
+  "challengeEvaluator": "0x276922aAa2573A3A934287Dec666C3494b8841eE",
+  "tipJar": {
+    "address": "0xD8B67354374c41E6ED7494D404b0e8D27167031D",
+    "token": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+    "recipient": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "engine": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+  },
+  "previousFunder": "0xd990413247611013161A7287D262664dF8dA7309",
+  "treasury": {
+    "address": "0x89658247aB5A1D93830AECECc6674170D0D7081c",
+    "pool": "57263656053924523444405",
+    "migrationRequired": true
+  },
+  "complete": true
+}

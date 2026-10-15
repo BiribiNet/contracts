@@ -1,0 +1,9 @@
+{
+  "chainId": 42161,
+  "block": "515015343",
+  "blockHash": "0x2a371d6fc06c62fc4b1563596f3376f2970aba942deaca9951227b107a426b69",
+  "token": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+  "tokenAddressIsBlacklistedRecipient": true,
+  "blacklister": "0xAC5b4946A8C29Eafb42e1742b3AB82e6D5771329",
+  "scope": "Read-only evidence of token blacklist state; local test separately reproduces choosing an already-blocked receiver"
+}

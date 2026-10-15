@@ -1,0 +1,21 @@
+{
+  "scope": "Local exact engine callback from impersonated configured coordinator; not a live DON delivery or full coordinator billing test",
+  "gasLimit": 2500000,
+  "laneCount": 10,
+  "measurements": [
+    {
+      "marketCount": 3,
+      "legsPerMarket": 100,
+      "totalWinningLegs": 300,
+      "callbackTransactionGasUsed": "1037644",
+      "fixedBudgetSucceeded": true
+    },
+    {
+      "marketCount": 3,
+      "legsPerMarket": 1000,
+      "totalWinningLegs": 3000,
+      "callbackTransactionGasUsed": "1037644",
+      "fixedBudgetSucceeded": true
+    }
+  ]
+}

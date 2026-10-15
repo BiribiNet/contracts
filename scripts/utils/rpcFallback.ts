@@ -1,5 +1,7 @@
 import { fallback, http, type Transport } from 'viem';
 
+import { ARBITRUM_RPC_URLS } from '../constants/arbitrumOne';
+
 /** JSON arrays or comma/newline-separated HTTP URLs, in operator-specified order. */
 export function parseRpcUrls(value: string): string[] {
   let entries: unknown;
@@ -32,6 +34,11 @@ export function resolveSepoliaRpcUrls(
     saved('ARBITRUM_SEPOLIA_RPC_URL')?.trim();
   if (!value) throw Error('Set ARBITRUM_SEPOLIA_RPC_URLS or ARBITRUM_SEPOLIA_RPC_URL');
   return parseRpcUrls(value);
+}
+
+/** Fixed public Arbitrum One endpoints from `scripts/constants/arbitrumOne.ts`. */
+export function resolveArbitrumRpcUrls(): string[] {
+  return [...ARBITRUM_RPC_URLS];
 }
 
 /** Verify each endpoint's chain before using it; share the check across public and signing clients. */

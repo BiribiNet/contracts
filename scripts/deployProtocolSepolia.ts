@@ -209,7 +209,7 @@ async function main() {
         {
             protocolPrefix: {
                 brb,
-                mockRouter: router,
+                router: router,
                 admin: deployer.account.address,
             },
             wireMockForwarder: false,

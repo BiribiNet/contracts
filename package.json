@@ -21,11 +21,13 @@
     "upgrade:vault:arbitrum-sepolia": "hardhat run scripts/upgradeBankVaultArbitrumSepolia.ts --network arbitrumsepolia",
     "seed:side-bets:arbitrum-sepolia": "hardhat run scripts/seedSideBetConfigs.ts --network arbitrumsepolia",
     "deploy:protocol:arbitrum": "hardhat run scripts/deployProtocolArbitrum.ts --network arbitrum",
+    "deploy:cloudflare:arbitrum": "hardhat run scripts/deployCloudflareRoundWatcherArbitrum.ts --network arbitrum",
     "verify:protocol:arbitrum-sepolia": "hardhat run scripts/verifyArbitrumSepoliaProtocol.ts --network arbitrumsepolia",
     "sync:vercel:env": "hardhat run scripts/syncVercelEnvFromDeploy.ts",
-    "coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
+    "coverage": "NODE_OPTIONS='--max-old-space-size=12288' SOLIDITY_COVERAGE=true hardhat coverage",
     "clean": "hardhat clean",
     "test": "hardhat test",
+    "generate:eth:wallet": "ts-node scripts/generateEthWallet.ts",
     "update:subgraph:abis": "node scripts/update-subgraph-abis.mjs",
     "update:frontend:abis": "node scripts/update-frontend-abis.mjs",
     "sync:subgraph:arbitrum-sepolia": "cd ../subgraph && DEPLOY_JSON=./deployments/arbitrum-sepolia.json yarn sync:pipeline",
@@ -43,7 +45,10 @@
     "test:fork:arbitrum": "RUN_ARBITRUM_FORK=1 REPORT_GAS=false hardhat test test/ArbitrumMainnet.fork.test.ts",
     "rehearse:engine:arbitrum-sepolia": "RUN_ARBITRUM_FORK=1 REPORT_GAS=false hardhat run scripts/rehearseEngineArbitrumSepolia.ts",
     "verify:engine-upgrade:arbitrum-sepolia": "REPORT_GAS=false hardhat run scripts/verifyEngineArbitrumSepoliaUpgrade.ts --network arbitrumsepolia",
-    "test:swarm:live-sepolia": "REPORT_GAS=false hardhat run scripts/liveSepoliaSwarm.ts --network arbitrumsepolia"
+    "test:swarm:live-sepolia": "REPORT_GAS=false hardhat run scripts/liveSepoliaSwarm.ts --network arbitrumsepolia",
+    "verify:protocol:arbitrum": "hardhat run scripts/verifyProtocolArbitrum.ts --network arbitrum",
+    "typecheck:deployment": "tsc -p tsconfig.deployment.json",
+    "check:dependencies:arbitrum": "ts-node --transpile-only scripts/checkArbitrumDependencies.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

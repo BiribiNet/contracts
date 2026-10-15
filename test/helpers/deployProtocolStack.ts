@@ -51,7 +51,7 @@ export async function deployProtocolStack(options: DeployProtocolStackOptions = 
             deployBrbReferral: options.deployBrbReferral,
             protocolPrefix: {
                 brb: brb.address,
-                mockRouter: router.address,
+                router: router.address,
                 admin,
             },
         },

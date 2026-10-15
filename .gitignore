@@ -43,3 +43,14 @@ gasReporterOutput.json
 
 # MacOS
 .DS_Store
+
+# Local credentials and generated audit build caches
+/scripts/constants/arbitrumOne.local.json
+__pycache__/
+*.pyc
+/deployments/verified-sources/
+/deployments/unindexed-upgrade-2026-10-15/*
+!/deployments/unindexed-upgrade-2026-10-15/README.md
+!/deployments/unindexed-upgrade-2026-10-15/build-summary.json
+!/deployments/unindexed-upgrade-2026-10-15/live-state.json
+!/deployments/unindexed-upgrade-2026-10-15/fork-rehearsal.json

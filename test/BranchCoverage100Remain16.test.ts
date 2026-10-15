@@ -30,6 +30,22 @@ const BetType = {
 } as const;
 
 describe("Branch coverage — last 16 arms", function () {
+    it("covers engine setUpkeepScheduler and SideBet setSettleTimeout", async function () {
+        const [admin, stranger] = await viem.getWalletClients();
+        const stack = await deployProtocolStack();
+        await expect(stack.engine.write.setUpkeepScheduler([zeroAddress], { account: admin.account })).to.be.rejected;
+        await expect(
+            stack.engine.write.setUpkeepScheduler([stranger.account.address], { account: stranger.account }),
+        ).to.be.rejected;
+        await stack.engine.write.setUpkeepScheduler([stranger.account.address], { account: admin.account });
+        expect((await stack.engine.read.UPKEEP_SCHEDULER()).toLowerCase()).to.equal(
+            stranger.account.address.toLowerCase(),
+        );
+
+        await stack.sideBet.write.setSettleTimeout([86_400n], { account: admin.account });
+        expect(await stack.sideBet.read.settleTimeout()).to.equal(86_400n);
+    });
+
     describe("BankVault4626", function () {
         function vaultInit(asset: Address, engine: Address, admin: Address): Hex {
             return encodeFunctionData({

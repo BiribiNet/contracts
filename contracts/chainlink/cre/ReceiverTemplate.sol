@@ -26,10 +26,10 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
     /// @dev CRE report metadata layout: 32-byte workflow id + 10-byte workflow name + 20-byte owner.
     uint256 private constant METADATA_MIN_LENGTH = 62;
 
-    event ForwarderAddressUpdated(address indexed previousForwarder, address indexed newForwarder);
-    event ExpectedAuthorUpdated(address indexed previousAuthor, address indexed newAuthor);
-    event ExpectedWorkflowNameUpdated(bytes10 indexed previousName, bytes10 indexed newName);
-    event ExpectedWorkflowIdUpdated(bytes32 indexed previousId, bytes32 indexed newId);
+    event ForwarderAddressUpdated(address previousForwarder, address newForwarder);
+    event ExpectedAuthorUpdated(address previousAuthor, address newAuthor);
+    event ExpectedWorkflowNameUpdated(bytes10 previousName, bytes10 newName);
+    event ExpectedWorkflowIdUpdated(bytes32 previousId, bytes32 newId);
 
     constructor(address _forwarderAddress) Ownable(msg.sender) {
         if (_forwarderAddress == address(0)) revert InvalidForwarderAddress();

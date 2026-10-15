@@ -12,6 +12,7 @@ import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/Reentran
 
 import { IBankVault } from "./interfaces/IBankVault.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
+import { IRouletteFeeConfig } from "./interfaces/IRouletteFeeConfig.sol";
 import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
 
@@ -108,7 +109,7 @@ contract BankVault4626 is
         return _s().assetDecimals;
     }
 
-    /// @notice Flat fee (1 whole token unit) charged on each processed queued withdrawal; retained in the vault for LPs.
+    /// @notice Flat fee (1 whole token unit) charged on each processed queued withdrawal; paid to `ENGINE.INFRA_RECIPIENT()`.
     function flatWithdrawFee() external view returns (uint256) {
         return _s().flatWithdrawFee;
     }
@@ -135,9 +136,12 @@ contract BankVault4626 is
     event BetsReleased(uint256 amount, uint256 newLockedTotal);
     event PayoutBatchProcessed(uint256 payoutCount, uint256 totalPaid);
     event FundsTransferred(address recipient, uint256 amount);
-    event WithdrawalRequested(address owner, uint16 bps, address receiver);
-    event WithdrawalIdentified(uint256 indexed requestId, address indexed owner, address receiver, uint16 bps);
-    event WithdrawalPaid(uint256 indexed requestId, address indexed owner, uint256 assetsPaid, uint256 sharesBurned);
+    event WithdrawalIdentified(uint256 requestId, address owner, address receiver, uint16 bps);
+    event WithdrawalProcessed(
+        uint256 requestId, address owner, address receiver, uint16 bps, uint256 assetsPaid, uint256 sharesBurned
+    );
+    /// @notice Transfer to `receiver` failed (e.g. USDC/DAI blacklist). Shares were not burned; owner may re-request.
+    event WithdrawalSkipped(uint256 requestId, address owner, address receiver, uint16 bps);
 
     function withdrawalReceipt(uint256 requestId) external view returns (WithdrawalReceipt memory) {
         return _s().withdrawalReceipts[requestId];
@@ -150,7 +154,6 @@ contract BankVault4626 is
         ahead = pending ? s._userQueueIndex[owner] - s._queueHead : 0;
     }
 
-    event WithdrawalProcessed(address owner, uint16 bps, address receiver, uint256 assetsPaid, uint256 sharesBurned);
     event SideBetControllerUpdated(address previousController, address newController);
     event SideBetStakeLocked(address player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
 
@@ -355,12 +358,14 @@ contract BankVault4626 is
         uint256 len = $._withdrawalQueue.length;
         IERC20 token = IERC20(asset());
         uint256 fee = $.flatWithdrawFee;
+        address infra = IRouletteFeeConfig(address($.ENGINE)).INFRA_RECIPIENT();
         address owner;
         QueuedWithdrawal memory q;
         uint256 shares;
         uint256 paid;
         uint256 gross;
         uint256 net;
+        uint256 requestId;
 
         while (processed < maxCount && head < len) {
             owner = $._withdrawalQueue[head];
@@ -375,24 +380,43 @@ contract BankVault4626 is
             paid = 0;
             if (shares != 0) {
                 gross = convertToAssets(shares);
-                _burn(owner, shares);
                 if (gross > fee) {
                     net = gross - fee;
+                    // Transfer before burn so a blacklisted/blocked receiver cannot stall the queue
+                    // or settlement: on failure we clear the slot, keep shares, and the owner re-requests.
+                    if (!token.trySafeTransfer(q.receiver, net)) {
+                        requestId = $.pendingWithdrawalId[owner];
+                        if (requestId != 0) {
+                            WithdrawalReceipt storage skipped = $.withdrawalReceipts[requestId];
+                            skipped.processedAt = block.timestamp;
+                            skipped.assetsPaid = 0;
+                            skipped.sharesBurned = 0;
+                            delete $.pendingWithdrawalId[owner];
+                            emit WithdrawalSkipped(requestId, owner, q.receiver, q.bps);
+                        }
+                        unchecked {
+                            ++processed;
+                        }
+                        continue;
+                    }
                     paid = net;
-                    token.safeTransfer(q.receiver, paid);
+                    _payWithdrawFeeToInfra(token, infra, fee);
+                } else if (gross != 0) {
+                    // Entire gross is consumed as the flat fee.
+                    _payWithdrawFeeToInfra(token, infra, gross);
                 }
+                _burn(owner, shares);
             }
 
-            uint256 requestId = $.pendingWithdrawalId[owner];
+            requestId = $.pendingWithdrawalId[owner];
             if (requestId != 0) {
                 WithdrawalReceipt storage receipt = $.withdrawalReceipts[requestId];
                 receipt.processedAt = block.timestamp;
                 receipt.assetsPaid = paid;
                 receipt.sharesBurned = shares;
                 delete $.pendingWithdrawalId[owner];
-                emit WithdrawalPaid(requestId, owner, paid, shares);
             }
-            emit WithdrawalProcessed(owner, q.bps, q.receiver, paid, shares);
+            emit WithdrawalProcessed(requestId, owner, q.receiver, q.bps, paid, shares);
 
             unchecked {
                 ++processed;
@@ -404,6 +428,12 @@ contract BankVault4626 is
             delete $._withdrawalQueue;
             $._queueHead = 0;
         }
+    }
+
+    /// @dev Best-effort; if infra cannot receive, the fee remains in the vault rather than reverting settlement.
+    function _payWithdrawFeeToInfra(IERC20 token, address infra, uint256 amount) private {
+        if (amount == 0 || infra == address(0)) return;
+        token.trySafeTransfer(infra, amount);
     }
 
     function _assertCanEnqueue(address owner) private view {
@@ -433,7 +463,6 @@ contract BankVault4626 is
         $.pendingWithdrawalId[owner] = requestId;
         $.withdrawalReceipts[requestId] = WithdrawalReceipt(owner, receiver, bps, block.timestamp, 0, 0, 0);
         emit WithdrawalIdentified(requestId, owner, receiver, bps);
-        emit WithdrawalRequested(owner, bps, receiver);
     }
 
     function _assetsToBps(address owner, uint256 assets) private view returns (uint16) {

@@ -151,8 +151,10 @@ describe("BankVault4626", function () {
         await mockEngine.write.processWithdrawals([vault.address, 10n]);
 
         const fee = 1_000_000n;
+        const infra = await mockEngine.read.INFRA_RECIPIENT();
         expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore + withdrawGross - fee);
-        expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultBefore - withdrawGross + fee);
+        expect(await usdc.read.balanceOf([vault.address])).to.equal(vaultBefore - withdrawGross);
+        expect(await usdc.read.balanceOf([infra])).to.equal(fee);
         expect(await vault.read.balanceOf([alice.account.address])).to.equal((sharesBefore * 8_000n) / 10_000n);
     });
 
@@ -180,11 +182,13 @@ describe("BankVault4626", function () {
 
         const fee = 1_000_000n;
         const expectedPayout = parseUnits("40", 6) - fee;
+        const infra = await mockEngine.read.INFRA_RECIPIENT();
         expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore + expectedPayout);
+        expect(await usdc.read.balanceOf([infra])).to.equal(fee);
         expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
     });
 
-    it("burns shares and pays zero when post-settlement gross is below flat fee", async function () {
+    it("burns shares and sends residual gross to infra when below flat fee", async function () {
         const [admin, alice] = await viem.getWalletClients();
         const usdc = await viem.deployContract("MockUSDC");
         const mockEngine = await viem.deployContract("MockEngine");
@@ -200,12 +204,55 @@ describe("BankVault4626", function () {
         await vault.write.deposit([parseUnits("2", 6), alice.account.address], { account: alice.account });
 
         const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
+        const infra = await mockEngine.read.INFRA_RECIPIENT();
         await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
         await mockEngine.write.transferOutFromVault([vault.address, admin.account.address, parseUnits("1.5", 6)]);
+        const residual = await usdc.read.balanceOf([vault.address]);
         await mockEngine.write.processWithdrawals([vault.address, 10n]);
 
         expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore);
+        expect(await usdc.read.balanceOf([infra])).to.equal(residual);
+        expect(await usdc.read.balanceOf([vault.address])).to.equal(0n);
         expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
+    });
+
+    it("skips blocked receiver without burning; continues queue and lets owner re-request", async function () {
+        const [admin, alice, bob, blocked] = await viem.getWalletClients();
+        const token = await viem.deployContract("MockBlockedRecipient");
+        const mockEngine = await viem.deployContract("MockEngine");
+        const impl = await viem.deployContract("BankVault4626");
+        const proxy = await viem.deployContract("ERC1967Proxy", [
+            impl.address,
+            vaultInitData(token.address, "Bank", "b", 1, mockEngine.address, admin.account.address, vaultInitMinBetUsdc6),
+        ]);
+        const vault = await viem.getContractAt("BankVault4626", proxy.address);
+
+        await token.write.mint([alice.account.address, parseUnits("100", 6)]);
+        await token.write.mint([bob.account.address, parseUnits("100", 6)]);
+        await token.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
+        await token.write.approve([vault.address, parseUnits("100", 6)], { account: bob.account });
+        await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
+        await vault.write.deposit([parseUnits("50", 6), bob.account.address], { account: bob.account });
+
+        await token.write.setBlocked([blocked.account.address, true]);
+        const aliceSharesBefore = await vault.read.balanceOf([alice.account.address]);
+        await vault.write.redeemBps([5_000, blocked.account.address, alice.account.address], {
+            account: alice.account,
+        });
+        await vault.write.redeemBps([5_000, bob.account.address, bob.account.address], { account: bob.account });
+
+        const bobBefore = await token.read.balanceOf([bob.account.address]);
+        await mockEngine.write.processWithdrawals([vault.address, 10n]);
+
+        expect((await vault.read.pendingWithdrawalStatus([alice.account.address]))[1]).to.equal(false);
+        expect(await vault.read.balanceOf([alice.account.address])).to.equal(aliceSharesBefore);
+        expect(await token.read.balanceOf([bob.account.address])).to.be.gt(bobBefore);
+        expect((await vault.read.pendingWithdrawalStatus([bob.account.address]))[1]).to.equal(false);
+
+        await vault.write.redeemBps([5_000, alice.account.address, alice.account.address], {
+            account: alice.account,
+        });
+        expect((await vault.read.pendingWithdrawalStatus([alice.account.address]))[1]).to.equal(true);
     });
 
     it("rejects zero-share withdrawal requests so sybils cannot fill the queue (H-2)", async function () {

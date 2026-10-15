@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 import { createPublicClient } from 'viem';
-import { createRpcFallback, parseRpcUrls, resolveSepoliaRpcUrls } from './utils/rpcFallback';
+import { createRpcFallback, parseRpcUrls, resolveArbitrumRpcUrls, resolveSepoliaRpcUrls } from './utils/rpcFallback';
+import { ARBITRUM_RPC_URLS } from './constants/arbitrumOne';
 
 async function endpoint(handler: (body: any) => { status?: number; result?: unknown; error?: unknown }) {
   const requests: any[] = [];
@@ -57,6 +58,14 @@ test('explicit environment URLs override saved settings and the legacy single UR
     ['https://a.example', 'https://b.example'],
   );
   assert.deepEqual(resolveSepoliaRpcUrls({}, saved), ['https://saved.example']);
+});
+
+test('Arbitrum One RPC list is fixed, ordered, and has failover depth', () => {
+  const urls = resolveArbitrumRpcUrls();
+  assert.deepEqual(urls, [...ARBITRUM_RPC_URLS]);
+  assert.ok(urls.length >= 2);
+  assert.match(urls[0]!, /biribi-rpc-fallback-arbitrum-one.*workers\.dev.*api_key=/);
+  assert.ok(urls.includes('https://arb1.arbitrum.io/rpc'));
 });
 
 for (const failure of [

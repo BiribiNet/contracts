@@ -40,6 +40,7 @@ export type EngineProxyInitConfig = {
 
 export async function readErc1967Implementation(publicClient: PublicClient, proxy: Address): Promise<Address> {
     const slot = await publicClient.getStorageAt({ address: proxy, slot: ERC1967_IMPLEMENTATION_SLOT });
+    if (!slot || BigInt(slot) === 0n) throw new Error(`No ERC1967 implementation configured at ${proxy}`);
     return (`0x${slot.slice(-40)}`) as Address;
 }
 

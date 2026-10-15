@@ -1,8 +1,7 @@
-import { viem } from "hardhat";
+import { network, viem } from "hardhat";
 import { encodeFunctionData, getContractAddress, zeroAddress, type Address, type Hex } from "viem";
 import { deployRouletteEngineLibraries } from "./deployRouletteEngineLibraries";
 import { predictRouletteStackAddresses } from "./predictDeployAddresses";
-import { wireTestSchedulerForwarder } from "../../test/helpers/wireTestSchedulerForwarder";
 
 const DEFAULT_SIDE_BET_MIN_MULTIPLIER_BPS = 50_000;
 const DEFAULT_SIDE_BET_MAX_MULTIPLIER_BPS = 5_000_000;
@@ -28,7 +27,7 @@ export type DeployRouletteEngineOptions = {
     /** When set, deploys treasury / funder / registry immediately before linked libraries using predicted proxy addresses. */
     protocolPrefix?: {
         brb: Address;
-        mockRouter: Address;
+        router: Address;
         admin: Address;
     };
 };
@@ -57,6 +56,9 @@ export async function deployRouletteEngine(
         );
     }
 
+    if (network.name !== "hardhat" && options.wireMockForwarder !== false) {
+        throw new Error("Live deployments must explicitly disable the test forwarder");
+    }
     const registryAddress = engineConstructorArgs[0] as Address;
     const sideBetMinMultiplierBps = options.sideBetMinMultiplierBps ?? DEFAULT_SIDE_BET_MIN_MULTIPLIER_BPS;
     const sideBetMaxMultiplierBps = options.sideBetMaxMultiplierBps ?? DEFAULT_SIDE_BET_MAX_MULTIPLIER_BPS;
@@ -77,17 +79,17 @@ export async function deployRouletteEngine(
         const jackpotTreasury = await viem.deployContract(
             "JackpotTreasury",
             [prefix.brb, engineProxy, prefix.admin],
-            { account },
+            { client: { wallet: deployer } },
         );
         const funder = await viem.deployContract(
             "BRBJackpotFunder",
-            [engineProxy, prefix.brb, prefix.mockRouter, jackpotTreasury.address, sideBetProxy, prefix.admin],
-            { account },
+            [engineProxy, prefix.brb, prefix.router, jackpotTreasury.address, sideBetProxy, prefix.admin],
+            { client: { wallet: deployer } },
         );
         const registry = await viem.deployContract(
             "MarketRegistry",
             [prefix.admin, engineProxy, sideBetProxy],
-            { account },
+            { client: { wallet: deployer } },
         );
 
         wiredRegistryAddress = registry.address;
@@ -98,7 +100,7 @@ export async function deployRouletteEngine(
     const { addresses: linkedLibraryAddresses, engineLinks: libraryLinks } =
         await deployRouletteEngineLibraries(account);
 
-    const vrfCoordinator = engineConstructorArgs[4];
+    const vrfCoordinator = engineConstructorArgs[4] as Address;
     const vrfConfirmations = Number(engineConstructorArgs[7]);
 
     const nonceBeforeImpl = BigInt(
@@ -113,7 +115,7 @@ export async function deployRouletteEngine(
 
     let brbReferral = options.brbReferral ?? zeroAddress;
     if (deployBrbReferral) {
-        const referralContract = await viem.deployContract("BRBReferal", [engineProxyForReferral], { account });
+        const referralContract = await viem.deployContract("BRBReferal", [engineProxyForReferral], { client: { wallet: deployer } });
         brbReferral = referralContract.address;
     }
 
@@ -128,7 +130,7 @@ export async function deployRouletteEngine(
             brbReferral,
         ] as never,
         {
-            account,
+            client: { wallet: deployer },
             libraries: libraryLinks,
         },
     );
@@ -149,21 +151,25 @@ export async function deployRouletteEngine(
                 registry: wiredRegistryAddress,
                 jackpotTreasury: jackpotTreasuryAddress,
                 jackpotFunder: jackpotFunderAddress,
-                infraRecipient: engineConstructorArgs[3],
-                subscriptionId: engineConstructorArgs[5],
-                callbackGasLimit: engineConstructorArgs[6],
-                roundDuration: engineConstructorArgs[8],
-                admin: engineConstructorArgs[9],
+                infraRecipient: engineConstructorArgs[3] as Address,
+                subscriptionId: engineConstructorArgs[5] as bigint,
+                callbackGasLimit: engineConstructorArgs[6] as number,
+                roundDuration: engineConstructorArgs[8] as number,
+                admin: engineConstructorArgs[9] as Address,
                 upkeepScheduler: upkeepSchedulerAddress,
             },
         ],
     });
 
-    const proxy = await viem.deployContract("ERC1967Proxy", [engineImplementation.address, initData], { account });
+    const proxy = await viem.deployContract("ERC1967Proxy", [engineImplementation.address, initData], { client: { wallet: deployer } });
 
+    if (proxy.address.toLowerCase() !== engineProxyAddress.toLowerCase() ||
+        (deployBrbReferral && proxy.address.toLowerCase() !== engineProxyForReferral.toLowerCase())) {
+        throw new Error("Engine proxy CREATE address changed during deployment; stop and inspect the nonce journal");
+    }
     const engine = await viem.getContractAt("RouletteEngine", proxy.address);
 
-    const sideBetImplementation = await viem.deployContract("SideBet", [], { account });
+    const sideBetImplementation = await viem.deployContract("SideBet", [], { client: { wallet: deployer } });
     const sideBetInitData = encodeFunctionData({
         abi: sideBetImplementation.abi,
         functionName: "initialize",
@@ -178,7 +184,7 @@ export async function deployRouletteEngine(
     const sideBetProxy = await viem.deployContract(
         "ERC1967Proxy",
         [sideBetImplementation.address, sideBetInitData],
-        { account },
+        { client: { wallet: deployer } },
     );
     const sideBet = await viem.getContractAt("SideBet", sideBetProxy.address);
 
@@ -195,7 +201,7 @@ export async function deployRouletteEngine(
     const schedulerContract = await viem.deployContract(
         "UpkeepScheduler",
         [engine.address, sideBet.address, scheduler.admin, scheduler.scanLimit, scheduler.maxPayoutsPerCall],
-        { account },
+        { client: { wallet: deployer } },
     );
 
     if (schedulerContract.address.toLowerCase() !== upkeepSchedulerAddress.toLowerCase()) {
@@ -205,9 +211,13 @@ export async function deployRouletteEngine(
     }
 
     const settlementRole = await sideBet.read.SETTLEMENT_ROLE();
-    await sideBet.write.grantRole([settlementRole, schedulerContract.address], { account });
+    const settlementHash = await sideBet.write.grantRole([settlementRole, schedulerContract.address], { account });
+    if ((await publicClient.waitForTransactionReceipt({ hash: settlementHash })).status !== "success") {
+        throw new Error("Scheduler settlement-role grant reverted");
+    }
 
     if (options.wireMockForwarder !== false) {
+        const { wireTestSchedulerForwarder } = await import("../../test/helpers/wireTestSchedulerForwarder");
         await wireTestSchedulerForwarder(schedulerContract, account);
     }
 
@@ -225,4 +235,36 @@ export async function deployRouletteEngine(
         funder: await viem.getContractAt("BRBJackpotFunder", jackpotFunderAddress),
         linkedLibraries: linkedLibraryAddresses,
     };
+}
+
+/** Production entrypoint: predicts real prefix addresses before the first CREATE. */
+export async function deployProductionRouletteEngine(params: {
+    brb: Address; router: Address; admin: Address; infraRecipient: Address;
+    coordinator: Address; subscriptionId: bigint; callbackGasLimit: number;
+    confirmations: number; roundDuration: number;
+    vrfKeyHashes: readonly [Hex, Hex, Hex]; scheduler: UpkeepSchedulerDeployConfig;
+}) {
+    const [wallet] = await viem.getWalletClients();
+    const client = await viem.getPublicClient();
+    if (wallet.account.address.toLowerCase() !== params.admin.toLowerCase()) throw new Error("Production bootstrap admin must be the deployment signer");
+    const nonce = BigInt(await client.getTransactionCount({ address: wallet.account.address, blockTag: "pending" }));
+    const treasury = getContractAddress({ from: wallet.account.address, nonce });
+    const funder = getContractAddress({ from: wallet.account.address, nonce: nonce + 1n });
+    const registry = getContractAddress({ from: wallet.account.address, nonce: nonce + 2n });
+    const stack = await deployRouletteEngine(params.vrfKeyHashes, [
+        registry, treasury, funder, params.infraRecipient, params.coordinator,
+        params.subscriptionId, params.callbackGasLimit, params.confirmations,
+        params.roundDuration, params.admin,
+    ], params.scheduler, {
+        protocolPrefix: { brb: params.brb, router: params.router, admin: params.admin },
+        deployBrbReferral: true, wireMockForwarder: false,
+    });
+    for (const [name, actual, expected] of [
+        ["registry", stack.registry.address, registry],
+        ["treasury", stack.jackpotTreasury.address, treasury],
+        ["funder", stack.funder.address, funder],
+    ]) {
+        if (actual.toLowerCase() !== expected.toLowerCase()) throw new Error(`${name} CREATE prediction mismatch`);
+    }
+    return stack;
 }

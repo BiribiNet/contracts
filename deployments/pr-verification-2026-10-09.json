@@ -1,0 +1,17 @@
+[
+  {
+    "name": "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib",
+    "address": "0xdB94aEF1e9ED5327FdFdfE18719a5e5fFc253F54",
+    "verified": true
+  },
+  {
+    "name": "RouletteEngine",
+    "address": "0x2bDeaA54d941BCF873C2e89fa74bDB3a1bc10a77",
+    "verified": true
+  },
+  {
+    "name": "BRBJackpotFunder",
+    "address": "0xfB5075174cb85aDfBf0A4E946840CbFD03bF48a2",
+    "verified": true
+  }
+]

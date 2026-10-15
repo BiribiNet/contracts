@@ -1,0 +1,85 @@
+{
+  "chainId": 421614,
+  "block": 317423499,
+  "transactionsConfirmed": 5,
+  "transactionFeesETH": "0.000577188710669367",
+  "postUpgradeActivity": [
+    {
+      "event": "VrfRequested",
+      "id": "2039",
+      "transactionHash": "0x81ded135ccb2a5cdaa074822768a4a111e29a387b44a03c437e16170230bc5fb",
+      "blockNumber": 317422735
+    },
+    {
+      "event": "VRFResult",
+      "id": "2039",
+      "transactionHash": "0x1a846c5430381daa319cef8785a1c4a7cb51f835b8e43202be35073479bcf2fa",
+      "blockNumber": 317422740
+    },
+    {
+      "event": "FundingAttemptCompleted",
+      "id": "1",
+      "transactionHash": "0x4a959b004137c5a94795c345571b7eeb37f28c39e9fc036bc2620fa9d7d05e2e",
+      "blockNumber": 317422755
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2039",
+      "transactionHash": "0x4a959b004137c5a94795c345571b7eeb37f28c39e9fc036bc2620fa9d7d05e2e",
+      "blockNumber": 317422755
+    }
+  ],
+  "funderChecks": {
+    "address": "0xfB5075174cb85aDfBf0A4E946840CbFD03bF48a2",
+    "policy": {
+      "swapAssetTotalBps": "300",
+      "slippageBps": "100",
+      "coldSlippageBps": "300",
+      "twapWindowSeconds": "1800",
+      "treasuryBrbNumerator": "250",
+      "treasuryBrbDenominator": "300",
+      "router": "0xEEDA8616872ef6eA2F41A4A40aB240253cd5C4aC",
+      "engine": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+      "sideBet": "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+      "jackpotTreasury": "0x89658247aB5A1D93830AECECc6674170D0D7081c"
+    },
+    "pendingTreasuryBRB": "0",
+    "pendingBurnBRB": "0",
+    "brbBalance": "0",
+    "fundingAttemptCount": "1",
+    "oldBalances": {
+      "0xcd97563e22017462f35ba1e266e13f8f756a53c9": "0",
+      "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d": "0",
+      "0xa64617abdca4477b17020a763f24bfe27046a752": "0"
+    }
+  },
+  "signerBalanceETH": "1.993100573196617413",
+  "engineProxy": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+  "sideBetProxy": "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+  "currentRound": "2040",
+  "pendingVrf": false,
+  "configCount": "27",
+  "betCount": "43",
+  "settleTimeout": "2592000",
+  "vrf": {
+    "link": "59.121882704271566372",
+    "nativeBalance": "0",
+    "requestCount": "2039",
+    "owner": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "engineRegistered": true
+  },
+  "receiverConfig": {
+    "address": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+    "owner": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "forwarder": "0x76c9cf548b4179F8901cda1f8623568b58215E62",
+    "expectedAuthor": "0x0000000000000000000000000000000000000000",
+    "expectedWorkflowId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "schedulerAllowed": true
+  },
+  "pending": [
+    "Treasury migration requires a reviewed mechanism to preserve the existing jackpot pool; current treasury retained",
+    "Receiver migration requires updating live CRE workflow receiver targets; current receiver retained",
+    "TipJar indexer and frontend activation pending; generated local indexer manifest is not deployed",
+    "X100 catalogue remains unseeded; dry run needs USDC liquidity and verified compatible frontend before activation"
+  ]
+}

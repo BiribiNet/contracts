@@ -49,7 +49,7 @@ describe("Coverage gaps", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -259,7 +259,7 @@ describe("Coverage gaps", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -317,7 +317,7 @@ describe("Coverage gaps", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -376,7 +376,7 @@ describe("Coverage gaps", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -458,7 +458,7 @@ describe("Coverage gaps", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -504,7 +504,7 @@ describe("Coverage gaps", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },

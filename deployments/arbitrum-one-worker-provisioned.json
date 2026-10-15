@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-15T14:34:08.857662+00:00",
+  "accountId": "565dcec5f878e204eb97f74b00e25a58",
+  "worker": "biribi-round-watcher-arbitrum-one",
+  "url": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
+  "versionId": "60a8ebd7-f463-47c0-bd6c-20dc8cf48086",
+  "durableObject": "MainnetKeeper",
+  "provisioned": true,
+  "activated": false,
+  "crons": [],
+  "healthHttpStatus": 503,
+  "health": {
+    "ok": false,
+    "configured": false,
+    "mode": "keeper",
+    "chainId": 42161,
+    "status": "awaiting-mainnet-deployment"
+  },
+  "note": "Actual keeper code deployed; no mainnet contract catalog or signer uploaded. No protocol mainnet transactions sent."
+}

@@ -1,0 +1,224 @@
+{
+  "revision": "7dc9bb6caa91242d9915ed1678a8af0148d22bf1",
+  "nodeVersion": "v22.13.0",
+  "scope": "Offline candidate validation, not mainnet authorization",
+  "contracts": [
+    {
+      "contract": "RouletteEngine",
+      "runtimeBytes": 22410,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 22975
+    },
+    {
+      "contract": "SideBet",
+      "runtimeBytes": 22197,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 28282
+    },
+    {
+      "contract": "BankVault4626",
+      "runtimeBytes": 15094,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 15122
+    },
+    {
+      "contract": "MarketRegistry",
+      "runtimeBytes": 5370,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 5878
+    },
+    {
+      "contract": "JackpotTreasury",
+      "runtimeBytes": 2092,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 2610
+    },
+    {
+      "contract": "BRBJackpotFunder",
+      "runtimeBytes": 16656,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 17562
+    },
+    {
+      "contract": "UpkeepScheduler",
+      "runtimeBytes": 8601,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 9311
+    },
+    {
+      "contract": "AutomationReceiver",
+      "runtimeBytes": 4419,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 4767
+    },
+    {
+      "contract": "CreExecutionAuthority",
+      "runtimeBytes": 1364,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 1736
+    },
+    {
+      "contract": "ProtocolTimelock",
+      "runtimeBytes": 2692,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 3193
+    },
+    {
+      "contract": "BRBToken",
+      "runtimeBytes": 3852,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 5301
+    },
+    {
+      "contract": "BRBReferal",
+      "runtimeBytes": 1878,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 2486
+    },
+    {
+      "contract": "LPVestingLock",
+      "runtimeBytes": 2104,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 2670
+    },
+    {
+      "contract": "TipJar",
+      "runtimeBytes": 1353,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 1882
+    },
+    {
+      "contract": "SideBetChallengeEvaluator",
+      "runtimeBytes": 7162,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 7190
+    },
+    {
+      "contract": "RouletteLib",
+      "runtimeBytes": 315,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 367
+    },
+    {
+      "contract": "RouletteBetLib",
+      "runtimeBytes": 2767,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 2819
+    },
+    {
+      "contract": "JackpotBatchLib",
+      "runtimeBytes": 3323,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 3375
+    },
+    {
+      "contract": "RouletteBetCodecLib",
+      "runtimeBytes": 933,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 985
+    },
+    {
+      "contract": "RoulettePayoutMulLib",
+      "runtimeBytes": 433,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 485
+    },
+    {
+      "contract": "RouletteLiabilityMathLib",
+      "runtimeBytes": 2317,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 2369
+    },
+    {
+      "contract": "RoulettePayoutSweepLib",
+      "runtimeBytes": 7434,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 7486
+    },
+    {
+      "contract": "RouletteJackpotCollectLib",
+      "runtimeBytes": 4502,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 4554
+    },
+    {
+      "contract": "RouletteExposureLib",
+      "runtimeBytes": 1857,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 1909
+    },
+    {
+      "contract": "RouletteUpkeepScanLib",
+      "runtimeBytes": 5880,
+      "eip170Limit": 24576,
+      "runtimeFits": true,
+      "initcodeBytesWithoutConstructorArgs": 5932
+    }
+  ],
+  "validations": [
+    {
+      "contract": "RouletteEngine",
+      "valid": true,
+      "exceptions": [
+        "constructor",
+        "state-variable-immutable",
+        "external-library-linking"
+      ],
+      "strictWithoutExceptions": false,
+      "strictError": "Error: Contract `contracts/RouletteEngine.sol:RouletteEngine` is not upgrade safe\n\ncontracts/RouletteEngine.sol:56: Variable `BRB_REFERRAL` is immutable and will be initialized on the implementation\n    If by design, annotate with '@custom:oz-upgrades-unsafe-allow state-variable-immutable'\nOtherwise, consider a constant variable or use a mutable variable instead\n    https://zpl.in/upgrades/error-005\n\ncontracts/RouletteEngine.sol:57: Variable `VRF_KEY_HASH_2_GWEI` is immutable and will be initialized on the implementation\n    If by design, annotate with '@custom:oz-upgrades-unsafe-allow state-variable-immutable'\nOtherwise, consider a constant variable or use a mutable variable instead\n    https://zpl.in/upgrades/error-005\n\ncontracts/RouletteEngine.sol:58: Variable `VRF_KEY_HASH_30_GWEI` is immutable and will be initialized on the implementation\n    If by design, annotate with '@custom:oz-upgrades-unsafe-allow state-variable-immutable'\nOtherwise, consider a constant variable or use a mutable variable instead\n    https://zpl.in/upgrades/error-005\n\ncontracts/RouletteEngine.sol:59: Variable `VRF_KEY_HASH_150_GWEI` is immutable and will be initialized on the implementation\n    If by design, annotate with '@custom:oz-upgrades-unsafe-allow state-variable-immutable'\nOtherwise, consider a constant variable or use a mutable variable instead\n    https://zpl.in/upgrades/error-005\n\ncontracts/RouletteEngine.sol:60: Variable `VRF_CONFIRMATIONS` is immutable and will be initialized on the implementation\n    If by design, annotate with '@custom:oz-upgrades-unsafe-allow state-variable-immutable'\nOtherwise, consider a constant variable or use a mutable variable instead\n    https://zpl.in/upgrades/error-005\n\ncontracts/libraries/JackpotBatchLib.sol: Linking external libraries like `JackpotBatchLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/libraries/RouletteBetCodecLib.sol: Linking external libraries like `RouletteBetCodecLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/libraries/RouletteExposureLib.sol: Linking external libraries like `RouletteExposureLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/libraries/RouletteJackpotCollectLib.sol: Linking external libraries like `RouletteJackpotCollectLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/libraries/RouletteLiabilityMathLib.sol: Linking external libraries like `RouletteLiabilityMathLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/libraries/RoulettePayoutSweepLib.sol: Linking external libraries like `RoulettePayoutSweepLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/libraries/RouletteUpkeepScanLib.sol: Linking external libraries like `RouletteUpkeepScanLib` is not yet supported\n    Use libraries with internal functions only, or skip this check with the `unsafeAllowLinkedLibraries` flag \n    if you have manually checked that the libraries are upgrade safe\n    https://zpl.in/upgrades/error-006\n\ncontracts/external/VRFConsumerBaseV2.sol:107: Contract `VRFConsumerBaseV2` has a constructor\n    Define an initializer instead\n    https://zpl.in/upgrades/error-001\n\ncontracts/external/VRFConsumerBaseV2.sol:102: Variable `_vrfCoordinator` is immutable and will be initialized on the implementation\n    If by design, annotate with '@custom:oz-upgrades-unsafe-allow state-variable-immutable'\nOtherwise, consider a constant variable or use a mutable variable instead\n    https://zpl.in/upgrades/error-005",
+      "limitation": "Library namespace requires auditStorageLayouts.py; immutable values and linked bytecode need separate review"
+    },
+    {
+      "contract": "SideBet",
+      "valid": true,
+      "exceptions": [],
+      "strictWithoutExceptions": true,
+      "limitation": "Does not prove application state migration or lock standalone implementation"
+    },
+    {
+      "contract": "BankVault4626",
+      "valid": true,
+      "exceptions": [],
+      "strictWithoutExceptions": true,
+      "limitation": "Does not prove application state migration or lock standalone implementation"
+    }
+  ],
+  "namespaces": [
+    {
+      "id": "biribi.storage.RouletteEngine",
+      "computedErc7201Root": "0x8a653c570a28b92a786a8846d2fb5907e111615753e347ab6161fea696c7eb00"
+    },
+    {
+      "id": "biribi.storage.SideBet",
+      "computedErc7201Root": "0x1846f22cbddf11ab4f03976bc184e4c229eb24d5ca6fd07bdce57e89b8a62c00"
+    },
+    {
+      "id": "biribi.storage.BankVault4626",
+      "computedErc7201Root": "0xb0c430920bd46af8c5ecb68ebf1a5f6f3805a863a6d4fa0fa5e65feb72f8e800"
+    }
+  ]
+}

@@ -49,7 +49,7 @@ async function deployE2EStack(params?: { marketCount?: number; maxPayoutsPerCall
         {
             protocolPrefix: {
                 brb: brb.address,
-                mockRouter: mockRouter.address,
+                router: mockRouter.address,
                 admin: admin.account.address,
             },
         },

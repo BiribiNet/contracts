@@ -100,7 +100,7 @@ async function deployEngineStack() {
         {
             protocolPrefix: {
                 brb: brb.address,
-                mockRouter: router.address,
+                router: router.address,
                 admin: admin.account.address,
             },
         },
@@ -508,7 +508,7 @@ describe("Contract coverage — 95% targets", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },

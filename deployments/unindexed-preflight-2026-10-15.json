@@ -1,0 +1,660 @@
+{
+  "chainId": 421614,
+  "block": 319376398,
+  "signer": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "balance": "1.653252031206587347",
+  "nonce": 8999,
+  "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "manifestScheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "infraRecipient": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "sideBetConfigCount": "159",
+  "rows": [
+    {
+      "name": "RouletteEngine",
+      "address": "0x4FFDD949820B8Cb358ab64985B436Cc8Dd4F68E8",
+      "matches": false,
+      "bytes": 22379,
+      "localBytes": 22410,
+      "codeHash": "0xcafa9b0fc666872516240f620bcffe0b75491e98c6b7c35ca2f786b95bf0f8fa",
+      "libraries": [
+        {
+          "library": "JackpotBatchLib",
+          "address": "0x139434a6ec3c495d5460b4d8b7aa08af011cde92"
+        },
+        {
+          "library": "RouletteBetCodecLib",
+          "address": "0x0160405180910390fd5b8115806138d65750600f"
+        },
+        {
+          "library": "RouletteExposureLib",
+          "address": "0xf0d7a8a96b2c4f86dec0f4364d5dd3aadbe2bd85"
+        },
+        {
+          "library": "RouletteJackpotCollectLib",
+          "address": "0x3e3d5ffd5b505050506040513d601f19601f8201"
+        },
+        {
+          "library": "RouletteLiabilityMathLib",
+          "address": "0xc31f1358bf90ecf9dac87997bfe4d65ff7587ec9"
+        },
+        {
+          "library": "RoulettePayoutSweepLib",
+          "address": "0x815dabd9f3225ce3f20697290cfdfc4d609251cf"
+        },
+        {
+          "library": "RouletteUpkeepScanLib",
+          "address": "0xfdbed43d7eecbee54d15ce1343bc628b9777f009"
+        }
+      ],
+      "immutables": [
+        {
+          "start": 11921,
+          "length": 32,
+          "value": "0x77f0099163f01fa5e891612eac918b918b918b916004016154d6565b60206040"
+        },
+        {
+          "start": 11962,
+          "length": 32,
+          "value": "0x8015612ec7573d5f5f3e3d5ffd5b505050506040513d601f19601f8201168201"
+        },
+        {
+          "start": 12254,
+          "length": 32,
+          "value": "0x68e86001600160a01b0316612ff061381b565b6001600160a01b031614155b15"
+        },
+        {
+          "start": 1546,
+          "length": 32,
+          "value": "0x0000000000000000000000005b28b914881e069e72de8183d5b7aec662bf2905"
+        },
+        {
+          "start": 9397,
+          "length": 32,
+          "value": "0x0000000000000000000000005b28b914881e069e72de8183d5b7aec662bf2905"
+        },
+        {
+          "start": 1891,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 10081,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 2270,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 10043,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 2432,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 10005,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 1425,
+          "length": 32,
+          "value": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "start": 10134,
+          "length": 32,
+          "value": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "start": 3653,
+          "length": 32,
+          "value": "0x0000000000000000000000005ce8d5a2bc84beb22a398cca51996f7930313d61"
+        },
+        {
+          "start": 3693,
+          "length": 32,
+          "value": "0x0000000000000000000000005ce8d5a2bc84beb22a398cca51996f7930313d61"
+        },
+        {
+          "start": 9924,
+          "length": 32,
+          "value": "0x0000000000000000000000005ce8d5a2bc84beb22a398cca51996f7930313d61"
+        },
+        {
+          "start": 7208,
+          "length": 20,
+          "value": "0x139434a6ec3c495d5460b4d8b7aa08af011cde92"
+        },
+        {
+          "start": 13768,
+          "length": 20,
+          "value": "0x3bebaa906135dd90889088908c906004016155d3"
+        },
+        {
+          "start": 14528,
+          "length": 20,
+          "value": "0x0160405180910390fd5b8115806138d65750600f"
+        },
+        {
+          "start": 15476,
+          "length": 20,
+          "value": "0x5163b398979f60e01b8152600401604051809103"
+        },
+        {
+          "start": 4148,
+          "length": 20,
+          "value": "0xf0d7a8a96b2c4f86dec0f4364d5dd3aadbe2bd85"
+        },
+        {
+          "start": 14773,
+          "length": 20,
+          "value": "0x516372ac654d60e11b8152600481018c90526001"
+        },
+        {
+          "start": 11488,
+          "length": 20,
+          "value": "0x3e3d5ffd5b505050506040513d601f19601f8201"
+        },
+        {
+          "start": 13147,
+          "length": 20,
+          "value": "0x6457613364615584565b60200260200101516138"
+        },
+        {
+          "start": 5477,
+          "length": 20,
+          "value": "0xc31f1358bf90ecf9dac87997bfe4d65ff7587ec9"
+        },
+        {
+          "start": 8960,
+          "length": 20,
+          "value": "0xc31f1358bf90ecf9dac87997bfe4d65ff7587ec9"
+        },
+        {
+          "start": 13664,
+          "length": 20,
+          "value": "0x528782208185168352909552959095205460608b"
+        },
+        {
+          "start": 9520,
+          "length": 20,
+          "value": "0x815dabd9f3225ce3f20697290cfdfc4d609251cf"
+        },
+        {
+          "start": 3053,
+          "length": 20,
+          "value": "0xfdbed43d7eecbee54d15ce1343bc628b9777f009"
+        },
+        {
+          "start": 5764,
+          "length": 20,
+          "value": "0xfdbed43d7eecbee54d15ce1343bc628b9777f009"
+        },
+        {
+          "start": 7606,
+          "length": 20,
+          "value": "0xfdbed43d7eecbee54d15ce1343bc628b9777f009"
+        },
+        {
+          "start": 11642,
+          "length": 20,
+          "value": "0x60ff1916600117855550505b63ffffffff811615"
+        },
+        {
+          "start": 14157,
+          "length": 20,
+          "value": "0x0160401b0387165f908152600d89016020908152"
+        }
+      ]
+    },
+    {
+      "name": "SideBet",
+      "address": "0xC2efc646F99588fe7C767Adb6f76b0544FC41E62",
+      "matches": false,
+      "bytes": 21914,
+      "localBytes": 22197,
+      "codeHash": "0x9b963705ac3121afdfab88dc0477c1bca68242f753699d8f138c0977df56aac9",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 7350,
+          "length": 32,
+          "value": "0xc646f99588fe7c767adb6f76b0544fc41e626001600160a01b03163003611ced"
+        },
+        {
+          "start": 7570,
+          "length": 32,
+          "value": "0xc646f99588fe7c767adb6f76b0544fc41e6216308114908115611f2f575b5061"
+        },
+        {
+          "start": 906,
+          "length": 32,
+          "value": "0x000000000000000000000000276922aaa2573a3a934287dec666c3494b8841ee"
+        },
+        {
+          "start": 2083,
+          "length": 32,
+          "value": "0x000000000000000000000000276922aaa2573a3a934287dec666c3494b8841ee"
+        },
+        {
+          "start": 6830,
+          "length": 32,
+          "value": "0x22aaa2573a3a934287dec666c3494b8841ee165afa908115611b22578d91611a"
+        },
+        {
+          "start": 15218,
+          "length": 32,
+          "value": "0x66c3494b8841ee6001600160a01b03165afa918215612416575f905f93613b97"
+        },
+        {
+          "start": 20061,
+          "length": 32,
+          "value": "0x0152a1600190565b505050505f90565b50614e84825f51602061548e5f395f51"
+        }
+      ]
+    },
+    {
+      "name": "BankVault4626",
+      "address": "0xea45De4C6adD20979db76D13dCc56a3724e64CbA",
+      "matches": false,
+      "bytes": 15094,
+      "localBytes": 15123,
+      "codeHash": "0x263172ce14a13d6e88172abcbab1564c574e319e7812d93eca76fbb55f8e7a7c",
+      "libraries": [],
+      "immutables": []
+    },
+    {
+      "name": "MarketRegistry",
+      "address": "0xbb93ae01f205ba4c9c9b32def71dc8f76c67f672",
+      "matches": true,
+      "bytes": 5370,
+      "localBytes": 5370,
+      "codeHash": "0x41fdeb38743ea8559ed0f3b85f5bc6991f1fc4e2aa09bb23c89c8e272a3ae70f",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 424,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1810,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 526,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 1946,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        }
+      ]
+    },
+    {
+      "name": "UpkeepScheduler",
+      "address": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+      "matches": true,
+      "bytes": 8601,
+      "localBytes": 8601,
+      "codeHash": "0xb5d232ee68133859b9c6608ed6d2ae64cc565396b9f5f9fed3e4f4e78a4d674d",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 483,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1129,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1780,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2408,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2678,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2853,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 3027,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 611,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 1979,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 2243,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 3306,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        }
+      ]
+    },
+    {
+      "name": "BRBToken",
+      "address": "0xcd97563e22017462f35ba1e266e13f8f756a53c9",
+      "matches": true,
+      "bytes": 3852,
+      "localBytes": 3852,
+      "codeHash": "0x5d235cb09bf9dcf22f7014f37cd134afb7a4afd1cc2f5e58eef7b29eb5fc8d1f",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1568,
+          "length": 32,
+          "value": "0x6c40217a1691eccced5d4872c106e56feffed526139a706cf9ac3e32fbea4f32"
+        },
+        {
+          "start": 1526,
+          "length": 32,
+          "value": "0x0000000000000000000000000000000000000000000000000000000000066eee"
+        },
+        {
+          "start": 1484,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 1649,
+          "length": 32,
+          "value": "0xdd911b8bbf0ac0c1bd3381ed5a98b973d2e658601020baa9adae0f01efb1cded"
+        },
+        {
+          "start": 1689,
+          "length": 32,
+          "value": "0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6"
+        },
+        {
+          "start": 1828,
+          "length": 32,
+          "value": "0x4249524942490000000000000000000000000000000000000000000000000006"
+        },
+        {
+          "start": 1873,
+          "length": 32,
+          "value": "0x3100000000000000000000000000000000000000000000000000000000000001"
+        }
+      ]
+    },
+    {
+      "name": "BRBReferal",
+      "address": "0x5b28b914881e069e72de8183d5b7aec662bf2905",
+      "matches": true,
+      "bytes": 1878,
+      "localBytes": 1878,
+      "codeHash": "0x49616f9bfb809b7f017dc4d716f97a3100638bf33610d283f4b13a5575a3c72d",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 583,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        }
+      ]
+    },
+    {
+      "name": "BRBJackpotFunder",
+      "address": "0xfB5075174cb85aDfBf0A4E946840CbFD03bF48a2",
+      "matches": false,
+      "bytes": 11890,
+      "localBytes": 16759,
+      "codeHash": "0x693aeec44d4f9ce1078c5e9aa0412c8234ee3733693faa09802a45abfb0737b2",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1685,
+          "length": 32,
+          "value": "0x2a67565b6040516370a0823160e01b81526001600160a01b037f000000000000"
+        },
+        {
+          "start": 3895,
+          "length": 32,
+          "value": "0x1b0316847f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540"
+        },
+        {
+          "start": 4893,
+          "length": 32,
+          "value": "0x5161132993929190612af8565b60405180910390a150505050505050565b6113"
+        },
+        {
+          "start": 1399,
+          "length": 32,
+          "value": "0x40253cd5c4ac81565b5f6001600160e01b03198216637965db0b60e01b148061"
+        },
+        {
+          "start": 3947,
+          "length": 32,
+          "value": "0x05af565b505f6105af565b5f610f808383610b0f565b15610f6e575f83815260"
+        },
+        {
+          "start": 4945,
+          "length": 32,
+          "value": "0x00000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac86611aab565b6040"
+        },
+        {
+          "start": 752,
+          "length": 32,
+          "value": "0xc561070881565b61032b61030436600461295a565b60076020525f9081526040"
+        },
+        {
+          "start": 1873,
+          "length": 32,
+          "value": "0x565b61075c8383610ee6565b50505050565b5f516020612e465f395f51905f52"
+        },
+        {
+          "start": 2418,
+          "length": 32,
+          "value": "0x90fd5b8181111561099557604051631e9acf1760e31b81526004016040518091"
+        },
+        {
+          "start": 3175,
+          "length": 32,
+          "value": "0x1764dd768d2792dd4c541ab9c3200e60b9ea8da78ac01d472a94b2bbee856001"
+        },
+        {
+          "start": 4677,
+          "length": 32,
+          "value": "0x5750806115ad565b6040805160028082526060820183525f9260208301908036"
+        },
+        {
+          "start": 5249,
+          "length": 32,
+          "value": "0x601f191682016040526114969190810190612ba0565b60015b6114cb575f5160"
+        },
+        {
+          "start": 5520,
+          "length": 32,
+          "value": "0x253cd5c4ac5f611aab565b83156115a9576115a987611af4565b5050505b805f"
+        },
+        {
+          "start": 5835,
+          "length": 32,
+          "value": "0xfa46e071723d6817e2486d003becc55f0090565b60405163a9059cbb60e01b5f"
+        },
+        {
+          "start": 8913,
+          "length": 32,
+          "value": "0x40513d601f19601f820116820180604052508101906122ef9190612a67565b95"
+        },
+        {
+          "start": 9399,
+          "length": 32,
+          "value": "0x701b0316846001600160701b03165b91509150815f14806124d5575080155b15"
+        },
+        {
+          "start": 9546,
+          "length": 32,
+          "value": "0x0401606060405180830381865afa158015612566573d5f5f3e3d5ffd5b505050"
+        },
+        {
+          "start": 9867,
+          "length": 32,
+          "value": "0x92565b612817565b9450505050505b95945050505050565b81515f9063ffffff"
+        },
+        {
+          "start": 10237,
+          "length": 32,
+          "value": "0xe01b03168a0260701c965050505b5050505095945050505050565b5f5f5f6128"
+        },
+        {
+          "start": 11132,
+          "length": 32,
+          "value": "0x830186612b22565b6001600160a01b0394909416606083015250608001529392"
+        },
+        {
+          "start": 11652,
+          "length": 32,
+          "value": "0x50565b80516001600160701b0381168114612d9c575f5ffd5b919050565b5f5f"
+        },
+        {
+          "start": 12123,
+          "length": 32,
+          "value": "0x"
+        },
+        {
+          "start": 1959,
+          "length": 32,
+          "value": "0x905560038290556040517faf8dce68382b5ea961454a6d3cc4b5aab15721594f"
+        },
+        {
+          "start": 9716,
+          "length": 32,
+          "value": "0x0160a01b0316896001600160a01b03161461260e5781612610565b825b600160"
+        },
+        {
+          "start": 10016,
+          "length": 32,
+          "value": "0x29573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052"
+        },
+        {
+          "start": 10543,
+          "length": 32,
+          "value": "0x5b5f6020828403121561293f575f5ffd5b5035919050565b6001600160a01b03"
+        },
+        {
+          "start": 11942,
+          "length": 32,
+          "value": "0x"
+        },
+        {
+          "start": 13194,
+          "length": 32,
+          "value": "0x"
+        },
+        {
+          "start": 1275,
+          "length": 32,
+          "value": "0x0244600b5481565b610239610510366004612983565b610b95565b6102446005"
+        },
+        {
+          "start": 11177,
+          "length": 32,
+          "value": "0x612bb0575f5ffd5b81516001600160401b03811115612bc5575f5ffd5b820160"
+        },
+        {
+          "start": 11372,
+          "length": 32,
+          "value": "0x158282048414176105af576105af612a7e565b634e487b7160e01b5f52601260"
+        },
+        {
+          "start": 11574,
+          "length": 32,
+          "value": "0x811682821603908111156105af576105af612a7e565b5f60208284031215612d"
+        }
+      ]
+    },
+    {
+      "name": "JackpotTreasury",
+      "address": "0x89658247ab5a1d93830aececc6674170d0d7081c",
+      "matches": false,
+      "bytes": 2062,
+      "localBytes": 2092,
+      "codeHash": "0x6969f3989dc564dede20bcd9355eb914a2a94473daee519122ab92e72833e347",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 376,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 657,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 447,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 870,
+          "length": 32,
+          "value": "0x563e22017462f35ba1e266e13f8f756a53c916848461057b565b610389828661"
+        },
+        {
+          "start": 1007,
+          "length": 32,
+          "value": "0x563e22017462f35ba1e266e13f8f756a53c916906370a0823190610416903090"
+        }
+      ]
+    },
+    {
+      "name": "CreExecutionAuthority",
+      "address": "0xb24093fd7cbca76c0a4098cdff5f27d0734a2a68",
+      "matches": false,
+      "bytes": 1364,
+      "localBytes": 1368,
+      "codeHash": "0xbbe7c4ae8d14150c7a4536a2afa176a4df88fb372f249625f4e7072babd09922",
+      "libraries": [],
+      "immutables": []
+    },
+    {
+      "name": "AutomationReceiver",
+      "address": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+      "matches": false,
+      "bytes": 4384,
+      "localBytes": 4433,
+      "codeHash": "0x2df693bb91537751c5c46b9f1bba9d3b7ba393cbf3db5eac2619b94a78b25c65",
+      "libraries": [],
+      "immutables": []
+    }
+  ]
+}

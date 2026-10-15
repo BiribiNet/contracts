@@ -163,6 +163,39 @@ describe("BRBJackpotFunder", function () {
         expect(await funder.read.twapWindowSeconds()).to.equal(1800);
     });
 
+    it("updates the pair observation immediately when the TWAP window is zero", async function () {
+        const [admin] = await viem.getWalletClients();
+        const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+        const treasury = await viem.deployContract("JackpotTreasury", [
+            brb.address,
+            admin.account.address,
+            admin.account.address,
+        ]);
+        const router = await viem.deployContract("MockUniswapV2Router");
+        const factory = await viem.deployContract("MockUniswapV2Factory");
+        await router.write.setFactory([factory.address]);
+        const usdc = await viem.deployContract("MockUSDC");
+        await seedCanonicalPairAtTwapAddress(
+            factory.address,
+            usdc.address,
+            brb.address,
+            1_000_000_000_000_000n,
+            1_000_000_000_000_000n * 1_000_000_000_000n,
+        );
+        const funder = await viem.deployContract("BRBJackpotFunderHarness", [
+            admin.account.address,
+            brb.address,
+            router.address,
+            treasury.address,
+            admin.account.address,
+            admin.account.address,
+        ]);
+        await funder.write.setTwapWindowSeconds([0], { account: admin.account });
+        await funder.write.harnessSnapshotPairObservation([usdc.address], { account: admin.account });
+        await funder.write.harnessSnapshotPairObservation([usdc.address], { account: admin.account });
+        expect(await funder.read.twapWindowSeconds()).to.equal(0);
+    });
+
     it("skips swap when quoted minOut exceeds mock router delivery", async function () {
         const { admin, brb, funder, router } = await deployFunder();
         await brb.write.transfer([router.address, parseUnits("100000", 18)], { account: admin.account });

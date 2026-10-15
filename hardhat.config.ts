@@ -92,6 +92,14 @@ const config: HardhatUserConfig = {
     apiKey: vars.has('ETHERSCAN_API_KEY') ? vars.get('ETHERSCAN_API_KEY') : '',
     customChains: [
       {
+        network: 'arbitrum',
+        chainId: 42161,
+        urls: {
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=42161',
+          browserURL: 'https://arbiscan.io',
+        },
+      },
+      {
         network: 'arbitrumsepolia',
         chainId: 421614,
         urls: {

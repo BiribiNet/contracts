@@ -37,7 +37,7 @@ async function deployReferralStack() {
         {
             protocolPrefix: {
                 brb: brb.address,
-                mockRouter: mockRouter.address,
+                router: mockRouter.address,
                 admin: admin.account.address,
             },
             deployBrbReferral: true,

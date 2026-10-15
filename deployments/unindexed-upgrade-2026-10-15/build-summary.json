@@ -1,0 +1,99 @@
+[
+  {
+    "name": "TipJar",
+    "sourcePath": "contracts/TipJar.sol",
+    "oldAddress": "0xD8B67354374c41E6ED7494D404b0e8D27167031D",
+    "compiler": "v0.8.27+commit.40a35a09",
+    "sourceFilesChanged": [
+      "contracts/TipJar.sol"
+    ],
+    "inputSha256": "6ad106def86096e6e0bb92f6077ec53ff19d0e6d2fcf2dd7bb9fe7ea36f5b565",
+    "oldRuntimeBytes": 1353,
+    "newRuntimeBytes": 1347,
+    "storageLayoutIdentical": true,
+    "originalLibraries": {}
+  },
+  {
+    "name": "BankVault4626",
+    "sourcePath": "contracts/BankVault4626.sol",
+    "oldAddress": "0xea45De4C6adD20979db76D13dCc56a3724e64CbA",
+    "compiler": "v0.8.27+commit.40a35a09",
+    "sourceFilesChanged": [
+      "contracts/BankVault4626.sol"
+    ],
+    "inputSha256": "1ecd9a27a56b0664ea16367b634bde41d6ccd2b4026d99db53c40124ac895bfe",
+    "oldRuntimeBytes": 15094,
+    "newRuntimeBytes": 15123,
+    "storageLayoutIdentical": true,
+    "originalLibraries": {}
+  },
+  {
+    "name": "BRBJackpotFunder",
+    "sourcePath": "contracts/BRBJackpotFunder.sol",
+    "oldAddress": "0x16aBfAB1E1c18C895EdCE0d6b8125AB451502fd3",
+    "compiler": "v0.8.27+commit.40a35a09",
+    "sourceFilesChanged": [
+      "contracts/BRBJackpotFunder.sol"
+    ],
+    "inputSha256": "50d4602323961255f9bcb1dd97d74929371c6e4cbbfa9de58fab1eff2bd2885e",
+    "oldRuntimeBytes": 16656,
+    "newRuntimeBytes": 16759,
+    "storageLayoutIdentical": true,
+    "originalLibraries": {}
+  },
+  {
+    "name": "RouletteEngine",
+    "sourcePath": "contracts/RouletteEngine.sol",
+    "oldAddress": "0x4FFDD949820B8Cb358ab64985B436Cc8Dd4F68E8",
+    "compiler": "v0.8.27+commit.40a35a09",
+    "sourceFilesChanged": [
+      "contracts/libraries/JackpotBatchLib.sol",
+      "contracts/libraries/RouletteJackpotCollectLib.sol",
+      "contracts/RouletteEngine.sol"
+    ],
+    "inputSha256": "bb5e4f0b067d0b202e76bb5e1e592e177845e934f5174cd306b1c7acaed6dd50",
+    "oldRuntimeBytes": 22379,
+    "newRuntimeBytes": 22379,
+    "storageLayoutIdentical": true,
+    "originalLibraries": {
+      "contracts/RouletteEngine.sol": {
+        "JackpotBatchLib": "0x139434a6ec3c495d5460b4d8b7aa08af011cde92",
+        "RouletteBetCodecLib": "0x98cacd14d87d28e1907d2071d55247d828cefd8a",
+        "RouletteExposureLib": "0xf0d7a8a96b2c4f86dec0f4364d5dd3aadbe2bd85",
+        "RouletteJackpotCollectLib": "0xdc4028418bce6db7413b51c2d8b984ff2dfc771b",
+        "RouletteLiabilityMathLib": "0xc31f1358bf90ecf9dac87997bfe4d65ff7587ec9",
+        "RoulettePayoutSweepLib": "0x815dabd9f3225ce3f20697290cfdfc4d609251cf",
+        "RouletteUpkeepScanLib": "0xfdbed43d7eecbee54d15ce1343bc628b9777f009"
+      }
+    }
+  },
+  {
+    "name": "CreExecutionAuthority",
+    "sourcePath": "contracts/CreExecutionAuthority.sol",
+    "oldAddress": "0xb24093fd7cbca76c0a4098cdff5f27d0734a2a68",
+    "compiler": "v0.8.27+commit.40a35a09",
+    "sourceFilesChanged": [
+      "contracts/CreExecutionAuthority.sol"
+    ],
+    "inputSha256": "055cd14a15645c762b20c10e8c62dfcd5d30949c9801b61ab18d994a647df42f",
+    "oldRuntimeBytes": 1364,
+    "newRuntimeBytes": 1368,
+    "storageLayoutIdentical": true,
+    "originalLibraries": {}
+  },
+  {
+    "name": "AutomationReceiver",
+    "sourcePath": "contracts/chainlink/cre/AutomationReceiver.sol",
+    "oldAddress": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+    "compiler": "v0.8.27+commit.40a35a09",
+    "sourceFilesChanged": [
+      "contracts/chainlink/cre/AutomationReceiver.sol",
+      "contracts/chainlink/cre/ReceiverTemplate.sol"
+    ],
+    "inputSha256": "f786e36cfecd564809ff9b42b3c93da79441015ad791c74722129933845c8266",
+    "oldRuntimeBytes": 4384,
+    "newRuntimeBytes": 4404,
+    "storageLayoutIdentical": true,
+    "originalLibraries": {}
+  }
+]

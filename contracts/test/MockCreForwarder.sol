@@ -8,4 +8,12 @@ contract MockCreForwarder {
     function deliverReport(AutomationReceiver receiver, bytes calldata report) external {
         receiver.onReport("", report);
     }
+
+    function deliverReportWithMetadata(
+        AutomationReceiver receiver,
+        bytes calldata metadata,
+        bytes calldata report
+    ) external {
+        receiver.onReport(metadata, report);
+    }
 }

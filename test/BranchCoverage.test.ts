@@ -356,7 +356,7 @@ describe("Branch coverage — RouletteEngine views & admin bounds", function () 
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -567,7 +567,7 @@ describe("Branch coverage — §4 matrix (doc checklist)", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -654,7 +654,7 @@ describe("Branch coverage — §4 matrix (doc checklist)", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: router.address,
+                    router: router.address,
                     admin: admin.account.address,
                 },
             },
@@ -766,7 +766,7 @@ async function deployMinimalSchedulerStack() {
         {
             protocolPrefix: {
                 brb: brb.address,
-                mockRouter: router.address,
+                router: router.address,
                 admin: admin.account.address,
             },
         },

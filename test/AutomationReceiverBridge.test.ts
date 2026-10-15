@@ -2,7 +2,15 @@ import { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { encodeAbiParameters, encodeFunctionData, getAddress, parseUnits, toFunctionSelector, zeroAddress } from "viem";
+import {
+    encodeAbiParameters,
+    encodeFunctionData,
+    encodePacked,
+    getAddress,
+    parseUnits,
+    toFunctionSelector,
+    zeroAddress,
+} from "viem";
 
 import { createMarketWithBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
@@ -152,5 +160,41 @@ describe("AutomationReceiver bridge", function () {
         const report = buildPerformUpkeepReport(scheduler.address, "0x");
         // MockCreForwarder delivers empty metadata: previously decoded out of bounds from adjacent memory.
         await expect(mockForwarder.write.deliverReport([receiver.address, report])).to.be.rejected;
+    });
+
+    it("covers workflow name pin, isCallAllowed view, IERC165, and mismatched report metadata", async function () {
+        const { admin, alice, receiver, mockForwarder, scheduler } = await deployBridgeStack();
+        const workflowName = "biribi-arbitrum-one-roulette-lane-0-production";
+        const workflowId = `0x${"ab".repeat(32)}` as const;
+
+        await receiver.write.setExpectedWorkflowName([workflowName], { account: admin.account });
+        await receiver.write.setExpectedWorkflowName([""], { account: admin.account });
+        await receiver.write.setExpectedWorkflowName([workflowName], { account: admin.account });
+        await receiver.write.setExpectedWorkflowId([workflowId], { account: admin.account });
+        await receiver.write.setExpectedAuthor([admin.account.address], { account: admin.account });
+
+        expect(await receiver.read.isCallAllowed([scheduler.address, PERFORM_UPKEEP_SELECTOR])).to.equal(true);
+        expect(await receiver.read.isCallAllowed([alice.account.address, PERFORM_UPKEEP_SELECTOR])).to.equal(false);
+        expect(await receiver.read.supportsInterface(["0x01ffc9a7"])).to.equal(true);
+        expect(await receiver.read.supportsInterface(["0xffffffff"])).to.equal(false);
+        expect(await receiver.read.getExpectedWorkflowName()).to.not.equal(`0x${"00".repeat(10)}`);
+
+        const expectedName = await receiver.read.getExpectedWorkflowName();
+        const report = buildPerformUpkeepReport(scheduler.address, "0x");
+        const badNameMeta = encodePacked(
+            ["bytes32", "bytes10", "address"],
+            [workflowId, `0x${"11".repeat(10)}` as `0x${string}`, admin.account.address],
+        );
+        await expect(
+            mockForwarder.write.deliverReportWithMetadata([receiver.address, badNameMeta, report]),
+        ).to.be.rejected;
+
+        const badIdMeta = encodePacked(
+            ["bytes32", "bytes10", "address"],
+            [`0x${"cd".repeat(32)}` as `0x${string}`, expectedName, admin.account.address],
+        );
+        await expect(
+            mockForwarder.write.deliverReportWithMetadata([receiver.address, badIdMeta, report]),
+        ).to.be.rejected;
     });
 });

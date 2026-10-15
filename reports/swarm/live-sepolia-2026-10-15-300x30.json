@@ -1,0 +1,4862 @@
+{
+  "chainId": 421614,
+  "engine": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+  "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+  "funder": "0x16aBfAB1E1c18C895EdCE0d6b8125AB451502fd3",
+  "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "admin": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "tickets": 300,
+  "legs": 11100,
+  "uniqueWallets": 30,
+  "round": "2527",
+  "phase": 1,
+  "duration": 60,
+  "adminEth": "1652766453033608921",
+  "adminBrb": "139361665118871874844620",
+  "bankAssets": "1054091097599055035350443",
+  "bankShares": "835468181127331281558443433225",
+  "gasPrice": "20034000",
+  "startBlock": "319396314",
+  "status": "cleaned",
+  "wallets": [
+    {
+      "address": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+      "bets": [
+        {
+          "hash": "0x91ede8c45c944ee4d50b100ba89a74c2ca8b8b5646f86b2ccc37d2208131d5da",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40000000",
+          "gas": "3862542",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.804Z"
+        },
+        {
+          "hash": "0xa861170890c7253bbb2040b0a3bd954c8ea53299da384a285dddf4e8372a146e",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396331",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.656Z"
+        },
+        {
+          "hash": "0x6bb98c97707a8540b2adc9f67134cfb021747eea6dfdc743b90107d391e8e80e",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.761Z"
+        },
+        {
+          "hash": "0xc5520947b7ec0be8485977735a3413496872f1c4b2069d9738be7b47b16cec4f",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.802Z"
+        },
+        {
+          "hash": "0x10c2763ccf56bf93cb6355ce4403dc3ff4b2cc12653056ec7888f114940234ee",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.102Z"
+        },
+        {
+          "hash": "0x6e6425918a7d7c4beb83ad0bc8d5ef243f853b599cd1b48e577b83aa98f03b8c",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396379",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.215Z"
+        },
+        {
+          "hash": "0x8be553d7ad29d015cb30021bbca3610d151b781aa9c3aa619e566cb24396fde5",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396389",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.042Z"
+        },
+        {
+          "hash": "0x51dd8cacc4d00bc945a279caa4590e2337f90fcebfdc217c66c8fb5ddb07b36a",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396400",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.824Z"
+        },
+        {
+          "hash": "0x844af1901f998ec852de0409fe750958627e5f7661352d0e59779bcb81643a76",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.850Z"
+        },
+        {
+          "hash": "0x9b74b59a0c6dfd84f11c5c7363bb7311bfc06797fc76005d191bc20dfb36baf4",
+          "wallet": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396423",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.844Z"
+        }
+      ]
+    },
+    {
+      "address": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+      "bets": [
+        {
+          "hash": "0x1b7bf87347ccedc6035d4cfd0bb189851f989f354a42b3c751e980a65868481b",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.786Z"
+        },
+        {
+          "hash": "0xfc1af6e7824d4aab00898b528f0afc28f4e901e7d8ed2c1ac0804a40fe859bc0",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396331",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.642Z"
+        },
+        {
+          "hash": "0x9d9dcbe91ab3335c07a142e5703f0d8107c2308f3bc16a1d3b74223a25775ea0",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.733Z"
+        },
+        {
+          "hash": "0xd5b6b3af6f99a4dd71b4ba590ce3a243aaf58de448bba03aa95a2a3b3095fed6",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.775Z"
+        },
+        {
+          "hash": "0x48cddeafdc372838d701ed2330e1cefec946c90402567c604db007a6c00f70f1",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.115Z"
+        },
+        {
+          "hash": "0x9220b98c7dfd2ff24b26c961d8db69a83b20dcd2ed09ed64753eb1d04f5f268b",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396379",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.210Z"
+        },
+        {
+          "hash": "0x071435e8a167c1c6a75d5e3f4eee7eb69a82ca9f615e4bd504e8c8a702286d42",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396389",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.049Z"
+        },
+        {
+          "hash": "0x256962c24a19722cbd2d3c94f9bb130267a54fcfc28c496f6b9ca68120b1a6dd",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396400",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.833Z"
+        },
+        {
+          "hash": "0x0386e0dd29d4b67bf083d2861f2ad508942c4cba545fd551ae5ad0d6e2636ff9",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.855Z"
+        },
+        {
+          "hash": "0xc8303cc3ae2910c2e1448246d202ca974ebd6629590721ca2ab518b05a7d0e11",
+          "wallet": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.881Z"
+        }
+      ]
+    },
+    {
+      "address": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+      "bets": [
+        {
+          "hash": "0x2d565fc3895c18e47c280e92c9776920fe1599ff997e122ed13e45d8cdfc5609",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.807Z"
+        },
+        {
+          "hash": "0x3868991318d584b4bb7bcf66672ef45e7c78d97cc1fdaadf3b650cdc25fa5178",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396331",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.673Z"
+        },
+        {
+          "hash": "0xcfdcff06c1f858fda9126f7bfff3c13b54aebf850c9a57567bcade0efeda3101",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.745Z"
+        },
+        {
+          "hash": "0xbe7291ad3b99515d7dde8fdcde5419c5278b62936f5680a3416b45855e2e04f6",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.808Z"
+        },
+        {
+          "hash": "0x5a73f41b020d3daacbec77fa68e4c0aaac1487f8a4447296d17864b229bf35b3",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.129Z"
+        },
+        {
+          "hash": "0x96cf2c9d53049e85b493aec39287d63dc0d0f54b8d4a8044c39ff7f91c7a0082",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396379",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.241Z"
+        },
+        {
+          "hash": "0x25edc93089a931a04a773e1d2178f2ef9bf6e4124561e0958b9b0b64d84cc277",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396389",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.053Z"
+        },
+        {
+          "hash": "0xa35646e5bd876f2a5ca4aaa0b955afdd9dccb6f6a694c7ef3d998f995be8b364",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396400",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.846Z"
+        },
+        {
+          "hash": "0xb078359da59239a3f21449423841d06fe41526f4e5cb903173c1f668e67e6ecd",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.890Z"
+        },
+        {
+          "hash": "0xbe9b9bc172fa5da34be15dfb6a2dcc5cfbfbe719923aaaae2b5df0cb35f04601",
+          "wallet": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.849Z"
+        }
+      ]
+    },
+    {
+      "address": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+      "bets": [
+        {
+          "hash": "0x2eff37ecde99d7fa7ef4d1502eee0c22b1347d3a5d98440e33d2fa9df3273818",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.781Z"
+        },
+        {
+          "hash": "0x25a37faf80b477084ddab9f1b14a985c6a64a06ecd08950ef1a207c037742d53",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.074Z"
+        },
+        {
+          "hash": "0x66c973dd43f8ba817aeff342f024d497cf6b44b1e3978bdb842cab934f2ed967",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.764Z"
+        },
+        {
+          "hash": "0xc02a2e76f3813ffc4297b2f05451c6163695672e532184b5794dc37e608ac232",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.796Z"
+        },
+        {
+          "hash": "0x61517c1aea30bdbf3f5bff7443b53d509d33ece9da2d37a7786832582b70a2a4",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.135Z"
+        },
+        {
+          "hash": "0x7950d6af5df6165a12be3a56efc8897742c584a3bbd9d351adddfad30e718baf",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.234Z"
+        },
+        {
+          "hash": "0xdcba75119390ed7cc409233a0260a672fdc7983d35665842265852e780214b39",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396389",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.083Z"
+        },
+        {
+          "hash": "0xff2c97372b7796a88139e8906903108552f155cfdf9d5b9a1dfb74272e7045db",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.863Z"
+        },
+        {
+          "hash": "0x60f584acad246b158cd9849948c9c69727091ba935ca2e8e028b8365c0584983",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.859Z"
+        },
+        {
+          "hash": "0xf3508dfae6bb4bff0f0bc1d0976140fe061f203f3340cd0496b5b69650e40e1b",
+          "wallet": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.854Z"
+        }
+      ]
+    },
+    {
+      "address": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+      "bets": [
+        {
+          "hash": "0x6e06059d76379b07b5d97b944334548c0e83bb5fadd120626c2813b1148efe7c",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.800Z"
+        },
+        {
+          "hash": "0x5d8594e6ee061605da0c2a3406aacd19d1ea53ed8d5ec75e1c2fb062c7f7b019",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.076Z"
+        },
+        {
+          "hash": "0x88342d8a07091d794419150e6346df77da44f07517d00d54498c5304308eb62a",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.738Z"
+        },
+        {
+          "hash": "0x0792f1823806c9051f738a60d422204b696f9e582eac09ac6f159b7746fcffaa",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.814Z"
+        },
+        {
+          "hash": "0x61c721cc8259ef9e6274fd28217538aa6f97af209157e4725ee71f51b85a3ce2",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.124Z"
+        },
+        {
+          "hash": "0x3ff1e2c9896b1fcfad8d1da3ae575308e872da96a324d967c66c05ad65b3cad2",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.620Z"
+        },
+        {
+          "hash": "0x0111a1c3aae1681a14c0fd9d30e8c31cc172a40998aa442cc84c73a2551eb522",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.057Z"
+        },
+        {
+          "hash": "0x00109547c39181bddbbb76ad0cdd09e9cf9044fb74fa0ad61b13c42c2836f878",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.859Z"
+        },
+        {
+          "hash": "0x36ec11fdd25ec2fb9a1c435644f8d59c71ef38606c7ae32f9da835a51c3cf352",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.887Z"
+        },
+        {
+          "hash": "0x369c56cab26e85ecd8e88d3b1b2edad3a2cc8a2bb4d62b02690a3113a50504b8",
+          "wallet": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.858Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+      "bets": [
+        {
+          "hash": "0x258009bd4347c8f80a8bd4c25193a7d96cde15002fdccb5793bef6b2ffa46a92",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.814Z"
+        },
+        {
+          "hash": "0x20d071d956e5026c5759ded4751cf75dcd43870d33489ad3a1c686d6464b39c2",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.104Z"
+        },
+        {
+          "hash": "0x4a7a3d7356a96138c2f8d3bab9728267a91ff097b4c3c2f65522e79a1312c7be",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.757Z"
+        },
+        {
+          "hash": "0x916dc52bbaf1740dea75d65e507c031b3a7745a3c2395f471c6983ecddb3c002",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.204Z"
+        },
+        {
+          "hash": "0xa26d157730e61169c1674b1bb17d158f5e34da21d4a0170dc5bbe31ec756414a",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.132Z"
+        },
+        {
+          "hash": "0x3e3356376fab564ff0eb5bab476be519fd2a04f745cf39d9d53ded12af055db1",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.232Z"
+        },
+        {
+          "hash": "0xea4acdea0ebaad45de105329cfd660116d4bd5c2b00030b6cc4d5ce30af86d04",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.460Z"
+        },
+        {
+          "hash": "0x2165eebc045470e022fbb8663f440a3ead6b0ae48a97a84bf74dc8ca2f9988dd",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.828Z"
+        },
+        {
+          "hash": "0xcc95395cdff938abfe49474b175c366a39767166f3210a82d6cb15da2a5a6b6b",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.870Z"
+        },
+        {
+          "hash": "0xb0dfb5bef5703dcf8d7b9fdd7e922aecf70ca9833dec2018d790ab862469d8ba",
+          "wallet": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.258Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+      "bets": [
+        {
+          "hash": "0x24d5aed6a92c6ddb09d435bf3435013269d2dff9694f418a99daa755fc9e1c21",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.796Z"
+        },
+        {
+          "hash": "0x6098d3c6073d26b38f2be5a999f91bcbda61abad815f8f7c81db07de0dd26698",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.679Z"
+        },
+        {
+          "hash": "0x3502c94d422b6a9ce0dc5866aebe1c4f7b853c522b37ec5efee28a70c650039e",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396342",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.753Z"
+        },
+        {
+          "hash": "0x78ea5ebfe36cf791a6d12fc07d489b180eabaa1cc8a99ab70c303bccdfc968ad",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.778Z"
+        },
+        {
+          "hash": "0xa99d0f7a8e3d767df8f17742514a456f330f5b7d47b55086d0183cd657b4b385",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.141Z"
+        },
+        {
+          "hash": "0xa9ae6dbbe6b306bd9fb06229de382553bab267ce2a90e9074a8a0dfdc393a26d",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.229Z"
+        },
+        {
+          "hash": "0x2bf023ea939e0e68498df6d10f7b0113c3205668f8801306048d636ded0e7ff8",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.074Z"
+        },
+        {
+          "hash": "0xce1ac63ca3f9ec77b00e8fda291e028a7bfd1ad8ba5ecfd6ab4551c2cf82b887",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.852Z"
+        },
+        {
+          "hash": "0x1ff662e2aea7ce2df19a8647988d11da83a8e2e49eb388f492348319ab2ceebf",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.875Z"
+        },
+        {
+          "hash": "0x2bc59664275603706abf33ca1edd783988b6ece1063111fe80a09df41c5c4dd6",
+          "wallet": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.869Z"
+        }
+      ]
+    },
+    {
+      "address": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+      "bets": [
+        {
+          "hash": "0x14dc19f7f019a595f07c2b7434fd680da268089e5eb715b75de80d229a0a59f6",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.793Z"
+        },
+        {
+          "hash": "0x08fae80ecf20cee510887bf2812b93b8c8346bdc1b8cb897b8529d5c2f8ddb63",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.670Z"
+        },
+        {
+          "hash": "0xf2f968473f6455b5cbde6f1be2a3853904a1fbaea4362d74aa1d28c2b7e6d61b",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.164Z"
+        },
+        {
+          "hash": "0xe9be568689d589c670c5df4657a5bb714a9c58ac536949d1a1bf96cb275590e6",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.793Z"
+        },
+        {
+          "hash": "0x7383c3f0af7cd33c4e1ad7711646847e11c5c37f0a23dd15592b5b1bbeab6b8a",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396365",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.121Z"
+        },
+        {
+          "hash": "0x739d4c3ae925e79f7e23378acc27bc27a779169c9e5e90e5d82620e3f25ab8ab",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.247Z"
+        },
+        {
+          "hash": "0xd920eecd29815cebb2afc8fab4d950fdead028023c334d19ba96b42a8d52344d",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.448Z"
+        },
+        {
+          "hash": "0xb0585eb72bc6e75c6479d04d41218db99d989480c74f85170c63bddb2f47bb5c",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.242Z"
+        },
+        {
+          "hash": "0x186fffffaafd85708bf6ea56c92895dd3629271320f22a8632eb97f6c832ad0f",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.880Z"
+        },
+        {
+          "hash": "0x315929a58cf0c41afd284bf0a8fda4b6566559b0a10c24bf6408c9f27849beb7",
+          "wallet": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.262Z"
+        }
+      ]
+    },
+    {
+      "address": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+      "bets": [
+        {
+          "hash": "0xd9470999a1abaddc9157a7617b02e6ee693cd41b879784f32640fbbe32d92969",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.818Z"
+        },
+        {
+          "hash": "0x83e5f1a906fad7279b6756f0d27033db05e7b34b30d0637902f703c9c70961c7",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.661Z"
+        },
+        {
+          "hash": "0xd3105e8230d2d70e417134341e97d3bc0ce36c6efe4a45ffbd501009ebc35a1a",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.183Z"
+        },
+        {
+          "hash": "0x0b72f493af4448604bf9694373bcd2c21dd7ce12024a156a44579d98e238629b",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.820Z"
+        },
+        {
+          "hash": "0xb4f438bdd18d9cc34714d2fdd5ed8bf6a259be5b400cc73a2de204782cfdef07",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.592Z"
+        },
+        {
+          "hash": "0xbf8d01d366ee72bdc21d6e59d6f58ecb30bb1c25ed6f022fce083cd9544c9e51",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.614Z"
+        },
+        {
+          "hash": "0x059b8a8c6c0b2ccccf8d73c5097e049b62c86de443dd91d62ecf38087bbad150",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.445Z"
+        },
+        {
+          "hash": "0x141bdf97a6be0b17f978093df40bbdbc6d2edff5853ab119f1c7578a2d87b067",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.225Z"
+        },
+        {
+          "hash": "0xe19091473cc58c1bad2ee5644ee1229df5eb4140f83664cc1163e8842cf6f989",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396412",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.883Z"
+        },
+        {
+          "hash": "0x9fc9b4aac96cf1b3680dbe052faa8362f2006c8e9a22cfadbe1448ad27440b73",
+          "wallet": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.873Z"
+        }
+      ]
+    },
+    {
+      "address": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+      "bets": [
+        {
+          "hash": "0x9c1117d574964f524428d9a8f5e7dd348e70c44de7e3a5b5620528b9b7a0a704",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396321",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:15.811Z"
+        },
+        {
+          "hash": "0xd3efa34303644e086b7dce40116f609eb19507d7ac40e136c3cff04abefc496e",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.682Z"
+        },
+        {
+          "hash": "0xbb25fc999764f54e06586677bed193ad9fee58fe45a524e84d7faf310be447f3",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.148Z"
+        },
+        {
+          "hash": "0xafcc7de282c95b87b6ef32d9baa114718992349edcbfbd57e94f173318e208f2",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.811Z"
+        },
+        {
+          "hash": "0x73058a818015215732fda8a603db9c7f067947a0a6b8e504d2f5a6bf9a7760f0",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.118Z"
+        },
+        {
+          "hash": "0xd13ff009a4ac8081d026d0a837241cc683ebbe3a70648f8f596a459405db10eb",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.238Z"
+        },
+        {
+          "hash": "0x4b924c336710fe72be1bb03ee12c6013fc46e3921b4a6e1c0af3e4478b9f9ec7",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.064Z"
+        },
+        {
+          "hash": "0xd9a6ee633ecdfa3a64bd44c152003f481546add39263ff5bf55f0c17a4f15315",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.842Z"
+        },
+        {
+          "hash": "0x04871f2cba0ccd38bd2ceff208ae5348d66c9a736ee260ebb2b1577e8e9a6b39",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.276Z"
+        },
+        {
+          "hash": "0x458a6db9b2790640d1de7b1bc3f0d607fdc157849e6fc73b85c6ec13c853446f",
+          "wallet": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.862Z"
+        }
+      ]
+    },
+    {
+      "address": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+      "bets": [
+        {
+          "hash": "0xb0037e599edfaf0cd1a64c3c7562ebf53707bd06aaa05518d55ad79698af4cef",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.234Z"
+        },
+        {
+          "hash": "0x93eab96cb3c251de549d0066b1eb0c38559909b8ca0c775dbed3cb7012047699",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.667Z"
+        },
+        {
+          "hash": "0xc905f1cb1642cb4f47f9bba3a7fb605e968588d20a449bb46bc288a95ae3ed96",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.177Z"
+        },
+        {
+          "hash": "0x004ae2ce588f81f06d4f6209d8847e02729142e9984e7c192d74d10b911f41a4",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396354",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:24.817Z"
+        },
+        {
+          "hash": "0x227d6ec1aa66ecad4b568a714cc3f267eea18c12a602cae39978b4690ec88d6a",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.607Z"
+        },
+        {
+          "hash": "0x2110687e4606ed9a34a49c35e441263a45d6598d29992221dea63080e06c65ff",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.250Z"
+        },
+        {
+          "hash": "0xed1bd740460301f84eb14c33e527000278543cb7ace5df92ce7571d00956e3d6",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.071Z"
+        },
+        {
+          "hash": "0xe6abd2c88ffacb025cbcdf923d9e91bb9c1c283fe059e4668c5973b69f21262e",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.839Z"
+        },
+        {
+          "hash": "0x81cb39171f4c2dbae68a488b3504f282a796575e59dd1696c9c78ef7dcbace28",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.272Z"
+        },
+        {
+          "hash": "0x3ead7dc509b5e62681d907c14e04ea208256750ddc5c537dd726fa31ed597244",
+          "wallet": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.839Z"
+        }
+      ]
+    },
+    {
+      "address": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+      "bets": [
+        {
+          "hash": "0xd767686ec08c7b418b1b0e9673eeb6d3514b27b2dfe799636b8447cdf0017d77",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.237Z"
+        },
+        {
+          "hash": "0xdf02f3bcb1eb542cd05d4789ffed78fd745206bd82471d70310997aaeefc0553",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.664Z"
+        },
+        {
+          "hash": "0x50afa3e4edbe9fc5cfb4e69515df54807315be51e74edade0557f2d2bc32010c",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.767Z"
+        },
+        {
+          "hash": "0x8dcfb25e25b0410bb0a6e2b9ad6e6fd49ea96aaf52479a5bcbb146eb1cd25aaf",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.221Z"
+        },
+        {
+          "hash": "0xfe291fc1e3ed41bec6f64f3e70bdbf1fbf47870e41cb352792e999764e1f96b5",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.614Z"
+        },
+        {
+          "hash": "0x026dbf2869d52f3832ad43c39fd6a62b06a30720e0306f33b7964ac7ae9247ab",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.244Z"
+        },
+        {
+          "hash": "0xb77d44fa48332e98ad0019b73b42c7341223971e037561e7287ef0cd23de55b0",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.067Z"
+        },
+        {
+          "hash": "0xfbad1b6fccc82d3a81f16a1094a3b218c30327239d116bc4634da200ecb471d7",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:36.849Z"
+        },
+        {
+          "hash": "0xf9c07b2d44dad43e87a9fe11cad9e8f7ea4679e7ecd8c7d4228dbb08d5142f12",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.288Z"
+        },
+        {
+          "hash": "0x3b94c5f41ac00329e36aad76cd43808eb52a508e4470541ef99c325b417f0865",
+          "wallet": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.275Z"
+        }
+      ]
+    },
+    {
+      "address": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+      "bets": [
+        {
+          "hash": "0x0c3b964819667e4c3a1934ee3b1cb79f185ac10fb1d8252905c8ef030db4e895",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.223Z"
+        },
+        {
+          "hash": "0x96af36e692c8d4a90239e9a4e3e26d7e5f92a843000ec1be788056c29ad1f3b3",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.094Z"
+        },
+        {
+          "hash": "0xa99491d56d743a86ef153f3b6854c97fb434b80451e92e2d5453a1ffdb8e5988",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.171Z"
+        },
+        {
+          "hash": "0xabf2f579b40e159223d62bbf6da72e8776bcdd3276f71672e89831e4506a2c09",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.201Z"
+        },
+        {
+          "hash": "0xc91b3c87316edb111f30e3c599856329a29de466495061607156a200ba40ec6f",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.604Z"
+        },
+        {
+          "hash": "0x95d51a93af2e7ed1327d9f7de9952ab3366bfa5e37121dfdf190821e01c12c3c",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396380",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.656Z"
+        },
+        {
+          "hash": "0x3333f8d4f01dbf97801c91284b5a5a5295e75ce961e8db1b0d00c4787cd3c17c",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.482Z"
+        },
+        {
+          "hash": "0xccd6d5e372272afefdd3c7902f4201f9e43405a3988ed98a5c9fb89622654cf8",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.250Z"
+        },
+        {
+          "hash": "0x1025d3b9ea31b52660f55dc2df17ad498443545095bad41bde1639a0e642aeee",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:39.863Z"
+        },
+        {
+          "hash": "0xeb84cbbb8e0c477c941c7ec3a7914462b934f44ee718b67321fdc95829831757",
+          "wallet": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396424",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:42.877Z"
+        }
+      ]
+    },
+    {
+      "address": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+      "bets": [
+        {
+          "hash": "0xcc6a59d4138af1076c755b0824db9a5102fcd9f458d587fd2e7022757ba92214",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.220Z"
+        },
+        {
+          "hash": "0x6f4b505f89ae270fb040972ef52d1548c4dfa95b20d8c86a91a590cda80e27e2",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396332",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:18.685Z"
+        },
+        {
+          "hash": "0xcbae6b10773c30b6c250391117223638d312d37c1708aa6adff9e049ca29d11c",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.186Z"
+        },
+        {
+          "hash": "0x242e01d3d68875e57439bec2ff74ff4d9790b95c35b71949f34846117c26f0c3",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.218Z"
+        },
+        {
+          "hash": "0x8cdca22eb8eaed29588664b2e21ccebddf87e1683a195198e392fbad25e2080e",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.617Z"
+        },
+        {
+          "hash": "0x188f47256e3c7a7f7d1bfa2c46997c41fd92663fd9657984ea646dae17c17143",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.663Z"
+        },
+        {
+          "hash": "0x5eb7e8c66b5fd86070656d3d24934facfd1f8ceb4904b17de757c08c6b65f679",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.469Z"
+        },
+        {
+          "hash": "0x7c3ccf214b1ced3fe4f4b68d3c92b4b31085650373d9157fffbe61ae944d4d22",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396401",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.230Z"
+        },
+        {
+          "hash": "0x479498e5abfac6082c97f9af9ed251be6ce7ce6b6920b8b934a2187fbbe35edc",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.284Z"
+        },
+        {
+          "hash": "0xf6dddb45744ab742289afb061af49b4eee09cc956f9508744e7a4bb19a90e961",
+          "wallet": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.681Z"
+        }
+      ]
+    },
+    {
+      "address": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+      "bets": [
+        {
+          "hash": "0xdaa138d987d74b302c5e556c6eccfab3bfba6f1ecbbe61fdc4e00406d57a7e1d",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.212Z"
+        },
+        {
+          "hash": "0xd35ecb40957f1df6f08459f05f023f33bddadbae45482bacb94d1e69b726a6e6",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.088Z"
+        },
+        {
+          "hash": "0x3befa700d623a4709bd0bd90577b9c877d03417306820647e8746d17a40058e5",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.155Z"
+        },
+        {
+          "hash": "0x83ada4f842804717b289aa016c36aed98f30612d6dd9239d273879d9ab49d126",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.198Z"
+        },
+        {
+          "hash": "0xc88a2820b2cb4c80c645f18fa64882684e0f8b35121636c93768791c7047022c",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.138Z"
+        },
+        {
+          "hash": "0xa0cb3aa6cc4443da5fae5a04261894a74878d49d12face576ef34d61000bdffe",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.660Z"
+        },
+        {
+          "hash": "0xb8091b91ecc9f0bf70df586e046ee04daa2f01c94bf5eff29be7a1350b608830",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.079Z"
+        },
+        {
+          "hash": "0xe35b8f2516ad084f2bb4d8100427e07cf4c2920e534543094203a040d876c133",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.254Z"
+        },
+        {
+          "hash": "0xd41f99373a09489ef8c78119ec8f3dd44ba150d151bf1073bda50a2dbbdb1566",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.267Z"
+        },
+        {
+          "hash": "0x2db074d35e199de5e392e32edd55d94c007ecdc35b4d71e30925f228c9bd1b13",
+          "wallet": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.288Z"
+        }
+      ]
+    },
+    {
+      "address": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+      "bets": [
+        {
+          "hash": "0x4c63a0dd0ce68d9ee2440a3f28fe00288d57803d172fa8689d3c146603a78dd3",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.182Z"
+        },
+        {
+          "hash": "0xf8463952a124a06505b6bc39c42464d92a71691d47253c971d7c8a1cdbbe13dd",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.502Z"
+        },
+        {
+          "hash": "0x314fa1a3f6ad60ab3a218ca400b0ee65feceb8b65197244df7f7a232ea70d71d",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.151Z"
+        },
+        {
+          "hash": "0x9dada41e6be99d4b05e6e4b9c54d33aae81682b526561fb3f6b017dcb1df0235",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.614Z"
+        },
+        {
+          "hash": "0xb9510ada2d54c71e92491ac5aa4aa59db7cc6d5424e09266f458ef965c4c3bfc",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.600Z"
+        },
+        {
+          "hash": "0xd14ff990033e510940e6068133f35a600dae9afd2b6717c0ce3da6d0aec096cc",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.078Z"
+        },
+        {
+          "hash": "0x4d4f026537a6b033acf8e667f72ab5b8f4cc6f386c25801a0b544d414049adf7",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396390",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.475Z"
+        },
+        {
+          "hash": "0x047476991444b77c7ed3856d78f9f8cd4392cd37c92de60c4547f1039c53d36d",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.238Z"
+        },
+        {
+          "hash": "0x3ec9e49a7ea1bf372b8629b43f1ec63355428a3fcae73226ec198f7e7ab00cfe",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.294Z"
+        },
+        {
+          "hash": "0x7c9a23d85d3d30021174118b463ab471ee9f35999806b81aecc506f76970e278",
+          "wallet": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.703Z"
+        }
+      ]
+    },
+    {
+      "address": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+      "bets": [
+        {
+          "hash": "0x932e1b60fdb798710255f2f6bdd783e623939693a05993aa1a6e825ab28dfb4e",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.186Z"
+        },
+        {
+          "hash": "0x60d312e5d4fd2f783c0b71320f5fcd6a3f2ac67adf40728c08859a93b194b2ed",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.111Z"
+        },
+        {
+          "hash": "0x1a273b1c06d920f3b5ccca6e1e63e2fdb3b307ee9413c4c0a7fddaef5b719d16",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.741Z"
+        },
+        {
+          "hash": "0xebc0f1d867a65125c3a0892f30b9e7bfce445b55999d2cfc04a0fffd1603289d",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.215Z"
+        },
+        {
+          "hash": "0x84980e3e6e6c617fde88a91ee0ca7aac5ccc97345d99f34f3430c74e68a8ad41",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.595Z"
+        },
+        {
+          "hash": "0x91a4e20a2bb35587761427201dd1ab80e4f05b2b93e80c35526917154423bf3b",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.644Z"
+        },
+        {
+          "hash": "0x725c823153032be1a82f751cd2d1b380eea446c10d94a6ebcf37dd61dccebd94",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.894Z"
+        },
+        {
+          "hash": "0x3e317b68f25aeb6d16355fa26564b25252a75a63104514be23f2979b7e811ffa",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.261Z"
+        },
+        {
+          "hash": "0x6fa4ebf6050621e257867be99e6fa874f5886fe5390425a1d6b20f9e0e21184d",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.281Z"
+        },
+        {
+          "hash": "0x298872e173f941d27ccef02ba0ae5c0fea80cd369a230c77c22fc7ab19d60982",
+          "wallet": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.283Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+      "bets": [
+        {
+          "hash": "0xbe4b2f3f06169bc2f46a15cc1f8d9004c449a89dbdfc67be58e3ae82d20766ab",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.216Z"
+        },
+        {
+          "hash": "0x947b8c01759878a4781baf0088a1898d73f2e705c34dcc0921a512ecca7c508e",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.083Z"
+        },
+        {
+          "hash": "0xd5c622d4807c7685f21f62ec0d79bc555f626a4d19416e7d94286acba6ef2981",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396343",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:21.750Z"
+        },
+        {
+          "hash": "0x0b5067ab771a05f6ff19d150425accabda6f8336487d530506095fd5008e8e63",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.207Z"
+        },
+        {
+          "hash": "0x8dcf76a48e7beceb98f02729313e027ede6b666a43d274cd85320ee7ae4477fa",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.585Z"
+        },
+        {
+          "hash": "0x6cafca5cfd967d832b0fda0a061bc33f4192a7d06670e729b2261a213d248db1",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.650Z"
+        },
+        {
+          "hash": "0xe8da1541b2877f9d705d9c2131143edace03979ec76693ac489757a690b8a17f",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.455Z"
+        },
+        {
+          "hash": "0x7ff5f9a223cba636db68dfb938672089704cdb98c879823262b786eceaaa1ed9",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.233Z"
+        },
+        {
+          "hash": "0x9b47adecd4bcf7993b38965936b69e7bda879bf63867bfd0179d36cd0cc356c1",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.261Z"
+        },
+        {
+          "hash": "0xc3391c26e2e22150cf9af96dc81edb274fa2fd4ede0f3360f7976f75d1e0dbd6",
+          "wallet": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.291Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+      "bets": [
+        {
+          "hash": "0xc6d3c5369d2becc77f59a71390057d73b08a360293ff20e0c5bd0dcaede6780b",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.737Z"
+        },
+        {
+          "hash": "0x564d5e6d7eb59a4671418fd2db838c3c0e6cddf1cda85b153f725596b90a2908",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.510Z"
+        },
+        {
+          "hash": "0x0ba60e1ea60d6b461d1cafdb108deb85f8e361529add0c237c4d5065f9db6295",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.661Z"
+        },
+        {
+          "hash": "0xa34277f84ce9b468a11b51c1c2e725b45bee3dd249adfd92be43cc706482def6",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.224Z"
+        },
+        {
+          "hash": "0xc7a8e23730ba82f40ca80d55c8a88541471696ddc262c4f366d5f3ba86a4647c",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396366",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.611Z"
+        },
+        {
+          "hash": "0xde61503aaed8e74aa16bbdbb46a8c93ac78b606f0c1af8e9c0eeda41363c8727",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.062Z"
+        },
+        {
+          "hash": "0xbe7f0c13e4d1ac8b3b5370e89ffc16927266f2c1a50b4cb2746712cdbab6b715",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.479Z"
+        },
+        {
+          "hash": "0xdb9f5640d39d20ee7e23304cab429f8de4c896364cc1af7ae4992ec13b9a350b",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.664Z"
+        },
+        {
+          "hash": "0x16b709738481861182a2da612be9b4d2eacc9cae5b5e04a40ffa6083cbc38f7e",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396413",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.301Z"
+        },
+        {
+          "hash": "0x0e425aab0e9e0e72bef836cca9ef1b7ce9131dd2596117870f56d43a06500730",
+          "wallet": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.295Z"
+        }
+      ]
+    },
+    {
+      "address": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+      "bets": [
+        {
+          "hash": "0x81160f7a54a510112f5a457406f2297989a0e9d8538bf1351ff28c2f1eb5dc92",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.714Z"
+        },
+        {
+          "hash": "0x8a5d70d31a018c58f3d14ae6f235c752db2baa2c9187dfa255c724620c367a45",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.097Z"
+        },
+        {
+          "hash": "0x264e6e4250eb95b364fe57e4b03d8fba9bdfb584a07779fc3694eb57e4a9df7c",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.641Z"
+        },
+        {
+          "hash": "0x6e2ff834191c2f4966fc7549b3fff1188ecb5189aef6b469a891749e71285458",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.230Z"
+        },
+        {
+          "hash": "0x07c5fa875c64a34653958a3f1eb348f0ccd3cd7d1f429925505516d616ade9a4",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396367",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.086Z"
+        },
+        {
+          "hash": "0xc0b0d0855cffeafe7c9b738c4ddfd4df30acb13dede5eeb7ea5585defe7816fc",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.057Z"
+        },
+        {
+          "hash": "0x02691d1106bb5dd97bd7415b212886962431fd23e587d3665cb9369ecd72226f",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.880Z"
+        },
+        {
+          "hash": "0x38f75fe20ed121dcfeb1055adceae1bcf5e48071dd16abd8ea032d699891702c",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.661Z"
+        },
+        {
+          "hash": "0x2f3212ba96fdfe89ba8752b4e8d488341d241010f5a9c4f55bb96440cb701f6d",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396414",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.713Z"
+        },
+        {
+          "hash": "0xc5102d25b4580e0c38e1fb8e78e8c3bbac2008ff6dbf30be84ea96ca13641121",
+          "wallet": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.271Z"
+        }
+      ]
+    },
+    {
+      "address": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+      "bets": [
+        {
+          "hash": "0xb69f427c53dc85a475cc49d6ec90cc1159652299fa910d65d38c0105a66c4302",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.730Z"
+        },
+        {
+          "hash": "0x1713556e2222b28edef91a114649c8fbc7b65c62e5ba7f3aeb8596772bc0254f",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.499Z"
+        },
+        {
+          "hash": "0xfaf7234f5731ea55403eb71a7ec6089d4c1b4a88d806d9288e5d4f6fa9fb201a",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.673Z"
+        },
+        {
+          "hash": "0xbdb50431880c307fbdd5e0b2fcc6c035a00df36ebd0131a78838cc60a8a5a46e",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.594Z"
+        },
+        {
+          "hash": "0xeaf50b38d7d807a91d2903e6463bfa99877806abb26a7f14b0ebd81587c0ab28",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396367",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.098Z"
+        },
+        {
+          "hash": "0x977d7fe12a3e3b5e9758c626f5624ce732823632287473394917d3e71fc99f28",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.075Z"
+        },
+        {
+          "hash": "0x1fdf0eb75172ef4f880c4057d6b35ede47eb2c948292c533427900ef63e1a42f",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.872Z"
+        },
+        {
+          "hash": "0xb8397930177c761c449b1c6da582d78b4007241c686b973de82eb193bf0fecc9",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.668Z"
+        },
+        {
+          "hash": "0xf7c501b4d00539c59b22d247481f2edc112840f89f4e698788060bb685f9bb2a",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396414",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.719Z"
+        },
+        {
+          "hash": "0x31ea8d396d1c712d8af20c60a875c15b50e9997e739f92bc7643e1644320cc3c",
+          "wallet": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.686Z"
+        }
+      ]
+    },
+    {
+      "address": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+      "bets": [
+        {
+          "hash": "0xf2df97cf4a938ca7061d0cdeee46185cb36ff91c863e998d8196e275fe22fa28",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.228Z"
+        },
+        {
+          "hash": "0x1ee52f45e1472938b4d34f288edfcf69fd64fda7433261fef0e1d8ef6df9e85a",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.100Z"
+        },
+        {
+          "hash": "0x9b43009684916eb73540496cfef65962f74a868bde40dc5c459c289683fa67f3",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.180Z"
+        },
+        {
+          "hash": "0xf0f4a7fd71956492aba8c8ee1a1a4eebecd3d8828cac0076902c44737169880b",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396355",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.227Z"
+        },
+        {
+          "hash": "0x7ad571729ecae652d4afbaa0f07006dfa3d3058d9bcbb3a2f4c08ad5a90a0fe7",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396367",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:28.588Z"
+        },
+        {
+          "hash": "0xec0005f855a7dc872bb14da46a82f72ca46ba01f726649e78b29a1accf731d26",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.647Z"
+        },
+        {
+          "hash": "0xa361be6e19ac2212d9414326b782b2f6e973be47604cfc8698c124c38263bc2b",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.464Z"
+        },
+        {
+          "hash": "0x16183df0ac121c909c4ecc1fa7cc136403457ce69aee64e8a1a90e31f78ec07f",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.246Z"
+        },
+        {
+          "hash": "0x308b234faea0aff0f97dbc95fe32af87a99eb3d5fb4a043d8063fa808343855c",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396414",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.297Z"
+        },
+        {
+          "hash": "0x655ec70053c2475d43bed0becf4cdac141f8bc263494d2f18784ff842e71f262",
+          "wallet": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.279Z"
+        }
+      ]
+    },
+    {
+      "address": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+      "bets": [
+        {
+          "hash": "0x520afb68a125c95f19d2cc1ba4d2b5aaca2439f78a3cbe31844344a684d101ab",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396322",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.231Z"
+        },
+        {
+          "hash": "0xf64af4c7159d79c14e27935e51fcd93dfe3fe11fa433d7e8cd564d39a0cf05be",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.487Z"
+        },
+        {
+          "hash": "0x63f58cd5c6e8b2bbd397fac0d36818dad63fd39473d6ca038b198ee7bd82a20d",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.655Z"
+        },
+        {
+          "hash": "0x71fdf4592d21e38245c38aefe42f51ed3a5acaf35ab121bb5e7a8fe944f879b2",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396356",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.618Z"
+        },
+        {
+          "hash": "0x7487153515275757279a49924a2b8334bfc17986eedb7185fa751d32623f733b",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396367",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.045Z"
+        },
+        {
+          "hash": "0x04ce64d39f7481c1036b84028b32e1b42c5a5a4d41787c65ffedf42b8de46b61",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.054Z"
+        },
+        {
+          "hash": "0x0e80f859da3e103b2708802bbfa8f695e52006eb6d9fb23330c4056be3ffea77",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.862Z"
+        },
+        {
+          "hash": "0x4b87958971dd76a70b51612905f5de616642a2f6b8db66a74ef80544902d14b8",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.633Z"
+        },
+        {
+          "hash": "0x11ee89ae3b15acfda456ead9837229add55e74d4822c8f9510837bd1782ca897",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396414",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.700Z"
+        },
+        {
+          "hash": "0x53259da8e67bea8e0d7629b6cdbc6be0194fbb8aefdcaa83dafbe03177bb7cb9",
+          "wallet": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396425",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.268Z"
+        }
+      ]
+    },
+    {
+      "address": "0x541e25F12601c4D21723808F573C2B70893553D2",
+      "bets": [
+        {
+          "hash": "0xe21bc39976607b802fd60e5e65f041efb2824ed88c301b6223f37f1d721dac36",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.705Z"
+        },
+        {
+          "hash": "0x26b82ffe15e7ae24f4e32170f5c0f651a0cb5448ba74513fed299cb0529316b7",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.483Z"
+        },
+        {
+          "hash": "0x5fafd281577c41e76f83949c17648ca148d2ff460eabcaa181bd8d40f25900e9",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.167Z"
+        },
+        {
+          "hash": "0xd034ada854feede93f07b63f33d6bc856ed895c8c035c51844790548defa7314",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396356",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.641Z"
+        },
+        {
+          "hash": "0x5bd7fcd26d32c5f3ac0b1f25d1b21026dcf04e1848f40a1c86742bd77c04c7b4",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396367",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.101Z"
+        },
+        {
+          "hash": "0xc1e6e3fff1d735b9ccf2ab52abdab5ad41169ce66c6ba2a012abb14c593ff8c8",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.653Z"
+        },
+        {
+          "hash": "0xc944f6c1a93f178dcddeaceb63d79c3d8c7cefe43fb81303021afede332ac8f7",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.866Z"
+        },
+        {
+          "hash": "0xe99c42c9c9edcf949948befbbae3c2689c7e123ee1adbc7513339367fa9a240d",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.639Z"
+        },
+        {
+          "hash": "0x47283e5f40980e42b401ef09ce6473cc84bb6bae1eda52395e0318eb096f7138",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396414",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.683Z"
+        },
+        {
+          "hash": "0xa22463c401b35dbd78eafc749972f6cb6dcf3fd5fc3af8b45df3278f736592e8",
+          "wallet": "0x541e25F12601c4D21723808F573C2B70893553D2",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396426",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.712Z"
+        }
+      ]
+    },
+    {
+      "address": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+      "bets": [
+        {
+          "hash": "0xb258a32acfb9f95867e0cd277cf4346c528709dcc79f8a82bf79a3e61be4574f",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396323",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.708Z"
+        },
+        {
+          "hash": "0x0202f66514c3313714d83509722b85055029567514af825e717ae4980fac7a10",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40200000",
+          "gas": "2461085",
+          "block": "319396333",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.080Z"
+        },
+        {
+          "hash": "0x01867fa7d7429d27af7a8635a628a1657e52eb49204e0eb22230f54237198d5c",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40164000",
+          "gas": "2461085",
+          "block": "319396344",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.637Z"
+        },
+        {
+          "hash": "0xad6e240165456673f69539df4e057cc1d9f4d6fd3a89acf9c8fa664fb301d468",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40220000",
+          "gas": "2461085",
+          "block": "319396356",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.629Z"
+        },
+        {
+          "hash": "0x7c7c5bbc1b00bed961244600dcd6299b21b1eb3ae2e5ce9fc64a05d672d9b645",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40304000",
+          "gas": "2461085",
+          "block": "319396367",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.080Z"
+        },
+        {
+          "hash": "0x43e37fc22eed34c142489cc7eb012bbbda7dea76777b99de2b413bd4fdb5ed53",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40628000",
+          "gas": "2461085",
+          "block": "319396381",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:31.639Z"
+        },
+        {
+          "hash": "0x8677fc27902d993bdef389c6fe42bf7374e67d5821f1c86820327fa72d88bbc7",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "41924000",
+          "gas": "2461085",
+          "block": "319396391",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.472Z"
+        },
+        {
+          "hash": "0x09bbf2b3a8c5eb73970b26c3e6b02819ecb4b6c838b9e078fc5ffa945c43aa28",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "40460000",
+          "gas": "2461085",
+          "block": "319396402",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.257Z"
+        },
+        {
+          "hash": "0x50e98a4e4485b2a728b9acf76c9b3d067ac36b9dbc959ff0c90a5eb0f12d5139",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "41244000",
+          "gas": "2461085",
+          "block": "319396414",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.688Z"
+        },
+        {
+          "hash": "0xcd456ad877d627a2ec884ce43d3dd8d5ec9b6b9346541d907142f41cd05a425f",
+          "wallet": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+          "gasPrice": "41412000",
+          "gas": "2451485",
+          "block": "319396426",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.695Z"
+        }
+      ]
+    },
+    {
+      "address": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+      "bets": [
+        {
+          "hash": "0x5b3e8eccb4802a9bb74464a6ef13377a9ac44b662adb40e09601999a85711e75",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396324",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.734Z"
+        },
+        {
+          "hash": "0x7189fb3c60543efdd8a1207659d2a0830939c954a726237f3682606f6c86aa81",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396335",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.513Z"
+        },
+        {
+          "hash": "0x671aac87541e93372d640e2603dc4ff727467e6b0521afce8d52dc99b47aa253",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396346",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.666Z"
+        },
+        {
+          "hash": "0x4743e9e0f4a36d64f80f988e402dea20785ad8970446ea03018a2e33a50dd0b5",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40092000",
+          "gas": "2461085",
+          "block": "319396358",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.634Z"
+        },
+        {
+          "hash": "0x8de09e8190b4d9cd3fd35cd1e9ec51907a50732ef91bd7c9c1d41434eb36231a",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40156000",
+          "gas": "2461085",
+          "block": "319396369",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.104Z"
+        },
+        {
+          "hash": "0x4df4c4c62380d8518725d701fcbbeb8f7feb847e6d2866a930f612b65568992d",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40500000",
+          "gas": "2461085",
+          "block": "319396383",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.051Z"
+        },
+        {
+          "hash": "0x96d42710a9f1699fdd5e328008be07297e186b4133c75d32142d77d5d1edc185",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "41408000",
+          "gas": "2461085",
+          "block": "319396393",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.884Z"
+        },
+        {
+          "hash": "0xb49b6a1b18735779fb81a41c9d1bdf7f5887f47644415039d7c282745057c09e",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40808000",
+          "gas": "2461085",
+          "block": "319396404",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.651Z"
+        },
+        {
+          "hash": "0xa9511b13caa330df7de80dc620c5eae644f015ef481ad35bd3cedd339d14a4c0",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40536000",
+          "gas": "2461085",
+          "block": "319396416",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.693Z"
+        },
+        {
+          "hash": "0xcd7ff7c1346288ff256366f870b688d75932c4445e31405151c753ef18a0c0a8",
+          "wallet": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+          "gasPrice": "40808000",
+          "gas": "2451485",
+          "block": "319396428",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.699Z"
+        }
+      ]
+    },
+    {
+      "address": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+      "bets": [
+        {
+          "hash": "0xa64d946b107e0c5da246dc482622eca8b1812daf847c2b144b29dda138780fb9",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396324",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.721Z"
+        },
+        {
+          "hash": "0xc86eaf3492f66b7c108dc51e7700cc078046b00ccdf808d016da94e63aaac422",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396335",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.506Z"
+        },
+        {
+          "hash": "0x4d393fd69aead2b6c2733cb05c5b92c5de1cb364c1080019eca55df9324e5c8b",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396346",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.676Z"
+        },
+        {
+          "hash": "0x1201c6c73b1633b2c85cc6a3f8de89796d97c0af36a4c016003257599041884a",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40092000",
+          "gas": "2461085",
+          "block": "319396358",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.631Z"
+        },
+        {
+          "hash": "0xaa16ecc6960ec633f06d3cc85d34495cd138fcd76e40bf23dc9b95369eeff8b2",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40156000",
+          "gas": "2461085",
+          "block": "319396369",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.088Z"
+        },
+        {
+          "hash": "0x38828bca5b554c65515101fc4044935a61d643a506e1c749d533b83081af9de4",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40500000",
+          "gas": "2461085",
+          "block": "319396383",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.082Z"
+        },
+        {
+          "hash": "0x16b63d8fc03a9881458f122e320f36729145a491034301646ae1bd2ad8ba5dfa",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "41408000",
+          "gas": "2461085",
+          "block": "319396393",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.888Z"
+        },
+        {
+          "hash": "0xaba6386c32366366bd6e8a27f23be51453910a89e0b35eee029d778931f7ab6e",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40808000",
+          "gas": "2461085",
+          "block": "319396404",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.656Z"
+        },
+        {
+          "hash": "0x074ef1bb6104632a7aa3b4231ceb83e9e360c520c579f91a0ce4ae6e5a90e641",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40536000",
+          "gas": "2461085",
+          "block": "319396416",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.716Z"
+        },
+        {
+          "hash": "0xf2653101641c167d1e6670fede779d2a035b6cab5f96872c6ffaa9afeb1ddcdc",
+          "wallet": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+          "gasPrice": "40808000",
+          "gas": "2451485",
+          "block": "319396428",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.716Z"
+        }
+      ]
+    },
+    {
+      "address": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+      "bets": [
+        {
+          "hash": "0xd82f264a1c7ad824107d2a6de734178cbb367e59189b7ace25fe0921283f6d7c",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396324",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.723Z"
+        },
+        {
+          "hash": "0xb3013ef533c53d993b891944fca1704d086fc585a497447d64e6d1f240c6963e",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396335",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.492Z"
+        },
+        {
+          "hash": "0xfde6778fe89014ae967fc0aec69f69f9057811bad0e626fad80611fe8cf36e50",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396346",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.649Z"
+        },
+        {
+          "hash": "0x9ecba3f466ec656ac1b84e3c08d1f9d32a3b955eff1f79e444bc6674b7f4ed50",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40092000",
+          "gas": "2461085",
+          "block": "319396358",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.637Z"
+        },
+        {
+          "hash": "0xc11c00db195a512aa511ba2491ab7f6b44c375e14ef976be2701e727bff2bf4b",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40156000",
+          "gas": "2461085",
+          "block": "319396369",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.083Z"
+        },
+        {
+          "hash": "0xae89bcb0178040d3adb079966a1db96ef2b9d93fb3ea3193d56aa5760064b9cb",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40500000",
+          "gas": "2461085",
+          "block": "319396383",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.069Z"
+        },
+        {
+          "hash": "0x643ac6bc3b79062d1228cfa219e40d54449362ce1ccfb106ffe29b9d398baeb1",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "41408000",
+          "gas": "2461085",
+          "block": "319396393",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.898Z"
+        },
+        {
+          "hash": "0x3cc798cf9104f07a2b9f4f65f3063be3bfa6b7795deff4c12b4cb294c362321f",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40808000",
+          "gas": "2461085",
+          "block": "319396404",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.644Z"
+        },
+        {
+          "hash": "0x7b1c784d58a512c91115cfef031dcbd8ee00e81d1881035704df68b04d14b65f",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40536000",
+          "gas": "2461085",
+          "block": "319396416",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.706Z"
+        },
+        {
+          "hash": "0x6da966ac7023e0681e129d91c604797015e99d4ad4e92a506949e196e29961c8",
+          "wallet": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+          "gasPrice": "40808000",
+          "gas": "2451485",
+          "block": "319396428",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.720Z"
+        }
+      ]
+    },
+    {
+      "address": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+      "bets": [
+        {
+          "hash": "0x95f2b37ecd2f2379a29abb79c5bde35502ae88c9f28ffbb34e765bf264c4c3f4",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396324",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.727Z"
+        },
+        {
+          "hash": "0x59ae6479e81fb1239fb7c60a30664390dbaf62d0641e9d98e6a30455a2075b36",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396335",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.548Z"
+        },
+        {
+          "hash": "0xf457767209207c4e6a2237e99479a4dafbf1e5570839ae2475f1c3489c1a9c46",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396346",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.664Z"
+        },
+        {
+          "hash": "0xfad67871db3fad28bfeb36cefc38988f4d4848a6cf2c269552c7d01f8635b2e0",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40092000",
+          "gas": "2461085",
+          "block": "319396358",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.611Z"
+        },
+        {
+          "hash": "0x83429275548421c11c03faf7740488cbea6b842f88a2b113ace782685339f59c",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40156000",
+          "gas": "2461085",
+          "block": "319396369",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.092Z"
+        },
+        {
+          "hash": "0x065d451ad63ce0f59c572c8b64d77a6258e9cf4ee31070d856b93bacce9fab42",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40500000",
+          "gas": "2461085",
+          "block": "319396383",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.072Z"
+        },
+        {
+          "hash": "0x165ed7ebf9910a3309dc9a9ca72c144241972b430dc15a4f1a4a62b6c3809a23",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "41408000",
+          "gas": "2461085",
+          "block": "319396393",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.876Z"
+        },
+        {
+          "hash": "0x4d717b0c8957906b0745cb916fbe519079732c1b4f03f2f079e2609d9aac98ce",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40808000",
+          "gas": "2461085",
+          "block": "319396404",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.671Z"
+        },
+        {
+          "hash": "0xd7ef6867e5204a95d880f84c4b6b42c0e19ae110210e4edd3671429969339d68",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40536000",
+          "gas": "2461085",
+          "block": "319396416",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.723Z"
+        },
+        {
+          "hash": "0xad584c91bbc47687756e3986ccf970e99d37d5e91cc568cc9a027d077b3aa487",
+          "wallet": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+          "gasPrice": "40808000",
+          "gas": "2451485",
+          "block": "319396428",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.690Z"
+        }
+      ]
+    },
+    {
+      "address": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+      "bets": [
+        {
+          "hash": "0x0f73a23dbafb8b717cb0414a2019ab46dc5d2ba54b269be55b42548ad6ed72cd",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40000000",
+          "gas": "2461085",
+          "block": "319396324",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:16.718Z"
+        },
+        {
+          "hash": "0x84ab5e6b1169c1421a18638479fd8435ac1a84262dab353729011b95608fb638",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396335",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:19.495Z"
+        },
+        {
+          "hash": "0xdc3ab11132d5d3787ea07962835381e5cfa71917e0520e9463cb06fda028b0fa",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40060000",
+          "gas": "2461085",
+          "block": "319396346",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:22.658Z"
+        },
+        {
+          "hash": "0xaf09a79c1df200c53f547dc8c8ae85faefee8cfd1a6c07fdf3b34e3ad357a52d",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40092000",
+          "gas": "2461085",
+          "block": "319396358",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:25.622Z"
+        },
+        {
+          "hash": "0xa69cf5ce040231c57e595deed9079651c87e998a9d00325f43b46996e2953b50",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40156000",
+          "gas": "2461085",
+          "block": "319396369",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:29.095Z"
+        },
+        {
+          "hash": "0x117654db34495c622a7f5e7e18e799194ef69f5e05efb049ebacf28160502a08",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40500000",
+          "gas": "2461085",
+          "block": "319396383",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:32.066Z"
+        },
+        {
+          "hash": "0x36bd5f5e932159c7c6b2f7828510ebcda7f0a4eb7ee7460e3236e77ecc862eb4",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "41408000",
+          "gas": "2461085",
+          "block": "319396393",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:34.890Z"
+        },
+        {
+          "hash": "0x0c9e686db5a84e943e285d40e793d9e26260a7de3a4a872c425d3fa77239f56d",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40808000",
+          "gas": "2461085",
+          "block": "319396404",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:37.647Z"
+        },
+        {
+          "hash": "0x4ff1b124cfd43801084c79cc065c0a6f439e7e53ae8e3f5ee654668507625f1f",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40536000",
+          "gas": "2461085",
+          "block": "319396416",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:40.709Z"
+        },
+        {
+          "hash": "0x07e3354e6946027d472dd7cfa882aef9938d4c78969081e4301b6311b8cfc8d4",
+          "wallet": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+          "gasPrice": "40808000",
+          "gas": "2451485",
+          "block": "319396428",
+          "receiptStatus": "success",
+          "actualRound": "2527",
+          "confirmed": true,
+          "confirmedAt": "2026-10-15T10:46:43.707Z"
+        }
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "label": "seed isolated funding wallet BRB",
+      "hash": "0x7fd4c6502eb001660e1c814ad94b7783afb2e8d406f66b8f4bb455c0843a5690"
+    },
+    {
+      "label": "seed isolated funding wallet ETH",
+      "hash": "0xd58d86e1e929772ba1001b58bf9d18f454eb096a95f84437c9d2bf34b4116948"
+    },
+    {
+      "label": "fund BRB wallet 0",
+      "hash": "0x01fd28cb84cde9b8fe8e6a1655cadb7fba87e43a63c766309319c2eabad72583"
+    },
+    {
+      "label": "fund ETH wallet 0",
+      "hash": "0x6b9d6bf9536451180d27ce6cf67a113bd33afdbc5b96a6493a307ee8ffd4b51a"
+    },
+    {
+      "label": "fund BRB wallet 1",
+      "hash": "0x5a95cc01b738405f30df21fb6245d9c3bdd7b1fe314a2363f94eb1959e4fbb63"
+    },
+    {
+      "label": "fund ETH wallet 1",
+      "hash": "0x0308fd8d02ad9fed2ff90d163a506f7690601387a0390822f2ac6cd699266ddb"
+    },
+    {
+      "label": "fund BRB wallet 2",
+      "hash": "0xa243497ce8511ad001bd4877d25f80cbb39e24eca12f97d32e8ca08e5108738d"
+    },
+    {
+      "label": "fund ETH wallet 2",
+      "hash": "0x3800a2c6f2fef9012f5f7282a83febfdd89653136f81536412a5752ded0bb01f"
+    },
+    {
+      "label": "fund BRB wallet 3",
+      "hash": "0x551f4005dc7141e3f1cebbccb35eb9b328e388163e4e7709551bd18066a480cb"
+    },
+    {
+      "label": "fund ETH wallet 3",
+      "hash": "0x33bfa77d13c482fc2fddefd50f662c4461953b6ce52051b95064846580ad2df1"
+    },
+    {
+      "label": "fund BRB wallet 4",
+      "hash": "0x05cf863294b6dc5597f7c82f4b316b02aec6ed3da19d7fcb47c80147ca86ef32"
+    },
+    {
+      "label": "fund ETH wallet 4",
+      "hash": "0xb5fa88f298f15759a002498ba25b7ece7fabb6e31c752c8ec6b89942c5504958"
+    },
+    {
+      "label": "fund BRB wallet 5",
+      "hash": "0x1045e3dca7a30e8d35f8e9dccf088a4d285a4f251dd4b14df145529d7588367f"
+    },
+    {
+      "label": "fund ETH wallet 5",
+      "hash": "0xd254ed27dc83a8dddf02443cbeaaca934c4e2118ed2cbb646543adaa5c6614a6"
+    },
+    {
+      "label": "fund BRB wallet 6",
+      "hash": "0x5c63c164ae82abe1475f74c6fb4135784c9ab4c44e83f52378a6828c341ab646"
+    },
+    {
+      "label": "fund ETH wallet 6",
+      "hash": "0x4a0ff5a4396a85fb3db859bebaedae3f5d8156d21c228f79cb016943a63a2a0c"
+    },
+    {
+      "label": "fund BRB wallet 7",
+      "hash": "0x6fb2922ba087dd710c14c9494501d8b459e7166cec3229529efabbb46102a584"
+    },
+    {
+      "label": "fund ETH wallet 7",
+      "hash": "0x7070f16c6146f16821a1a114e623df93e5f7b2d19b4b1efff741720d19417ee9"
+    },
+    {
+      "label": "fund BRB wallet 8",
+      "hash": "0x8990003213091f34cd08356e1a133e8fc14fa331176737ebd8183fcd98116e21"
+    },
+    {
+      "label": "fund ETH wallet 8",
+      "hash": "0xc02025a6babecf1fed902a86a5960df8947b13e6ab96a0d45de4a86b9f4de242"
+    },
+    {
+      "label": "fund BRB wallet 9",
+      "hash": "0xd58dd9fc4a09b59fb6b1782302bc8b7899b843bf400a0fb24314c33f2cb26a96"
+    },
+    {
+      "label": "fund ETH wallet 9",
+      "hash": "0x9df566fa48cd40b6598019a801869026b8f86e0d8940a255519ad66a26c19221"
+    },
+    {
+      "label": "fund BRB wallet 10",
+      "hash": "0x65a595538e79b74f0a70941a76d169c7aa5d711bcf9848a0cc850ef8b2797456"
+    },
+    {
+      "label": "fund ETH wallet 10",
+      "hash": "0x7ac049db7c1d72a6028d8d8c59d73e44229528c836725da3e7aeadcd5aeff7a4"
+    },
+    {
+      "label": "fund BRB wallet 11",
+      "hash": "0xf6526f7d7828da9085f43d87398f703897ce66a0ad409e29bc5af6cca190222f"
+    },
+    {
+      "label": "fund ETH wallet 11",
+      "hash": "0x553deca3786b61d8332b553de652df9fc8e92955463134377ca771874bd6981d"
+    },
+    {
+      "label": "fund BRB wallet 12",
+      "hash": "0x0f71322a399dad333f2fef6e1e7a747645d534889b2efe77b4034ecc7d97f02b"
+    },
+    {
+      "label": "fund ETH wallet 12",
+      "hash": "0x128b868b753a7c1f8fe8a3416db2d6c45d0a11b7b12ade35cf9e5abc7d77440d"
+    },
+    {
+      "label": "fund BRB wallet 13",
+      "hash": "0xb4f1998b9bedccc68e848414afeb3cf4aa064522c73365a2b3dd2d2537070a11"
+    },
+    {
+      "label": "fund ETH wallet 13",
+      "hash": "0xca6a730433512aa0604b6e9513c360a9c969ec80cf66415c90a24b4a55926e9e"
+    },
+    {
+      "label": "fund BRB wallet 14",
+      "hash": "0xf1fd8408825f5569b20b605664d043696ebbcedfe0beeb83b1090c657524e5e6"
+    },
+    {
+      "label": "fund ETH wallet 14",
+      "hash": "0xd77cb789770ffcccb99df8c27a3c596252212e1d56389e5f3e3ab09d7d1c839e"
+    },
+    {
+      "label": "fund BRB wallet 15",
+      "hash": "0x26f643f8ef746a88877bd22e2729739278d31e82da9b256a0172697bf546aa5b"
+    },
+    {
+      "label": "fund ETH wallet 15",
+      "hash": "0x02393fa873280ff0e69c3eed8fe50bf3cb12ba959a0f315c158b8855c2717aed"
+    },
+    {
+      "label": "fund BRB wallet 16",
+      "hash": "0x2e45a4595a94f52676e49e9c0b7cbe682767e0d9b33866025743121a74e7b4b0"
+    },
+    {
+      "label": "fund ETH wallet 16",
+      "hash": "0xf271bc86567d805602ae53fa554ec9620accd791961089c1ffe09c8922480e2b"
+    },
+    {
+      "label": "fund BRB wallet 17",
+      "hash": "0x3b2fb60b5122f8759cc3e5b2968e66337476b5853da17d0c259f93888660e950"
+    },
+    {
+      "label": "fund ETH wallet 17",
+      "hash": "0xe9fcf79baa674df7c3da41358c1e93d3dcac9d4d06db4a74539264d55a7473f8"
+    },
+    {
+      "label": "fund BRB wallet 18",
+      "hash": "0x9058f5c4654c2b0c3ca5a3557a1470224ee1a5b456032b229e11d35e2ddd1d96"
+    },
+    {
+      "label": "fund ETH wallet 18",
+      "hash": "0xc3bd134e328683c5cc5bd1cfd1ef63640c85036f8a0d9967ff92693601a2a52b"
+    },
+    {
+      "label": "fund BRB wallet 19",
+      "hash": "0x0c0711244877a5f4d947b97ed9b5c0812b609d2e14622d8c82f914c1457b7014"
+    },
+    {
+      "label": "fund ETH wallet 19",
+      "hash": "0x10f57c0396e9eb36206ce4da93b36dc5092980b748bd9abddfbc8bc7906998a7"
+    },
+    {
+      "label": "approve wallet 4",
+      "hash": "0xd485cf04b6638cddc06d13c66c526fa0baa9d6e430828db3ec8b72bbf2e1b943"
+    },
+    {
+      "label": "approve wallet 2",
+      "hash": "0x099f4ed643eddc3fdac7512cb0c1c1ddfac45ff901f8e5a74d60e9201ea0ddfb"
+    },
+    {
+      "label": "approve wallet 3",
+      "hash": "0xfe02c76a28f5f7d3c49a926c5e6e73353311c6eda63db0eaa9133d785ed020ba"
+    },
+    {
+      "label": "approve wallet 10",
+      "hash": "0x809350cf7af81d9405380d388666e425b2022768aa66b1ddb9f0733a984b0ec8"
+    },
+    {
+      "label": "approve wallet 6",
+      "hash": "0x17ca62d025e0fefacb383d027d27c154120da28dddaf030c43cd8efbd3523054"
+    },
+    {
+      "label": "approve wallet 8",
+      "hash": "0xa4805ec6ba530a2e5d6f644aa4861076d63645ce10541fb1207e4d2c08433def"
+    },
+    {
+      "label": "approve wallet 1",
+      "hash": "0xf48395a84ff9d9eca7f0c32e5abcc76f622abadca59f756fecaec1d9d5f82771"
+    },
+    {
+      "label": "approve wallet 11",
+      "hash": "0xab167b800537162a58e9b23aad7c9c8fc7a93fc112722019f7b10771c3efcfd9"
+    },
+    {
+      "label": "approve wallet 5",
+      "hash": "0x6d471a0701dd5428ace58bbadb5d38601ab4f988f51ce0590d3f0d57d0ea8b2a"
+    },
+    {
+      "label": "approve wallet 17",
+      "hash": "0x955cc857820cb4060e00c060d5c014fc32a2b3e6bd25e211cffa0f8d99237b75"
+    },
+    {
+      "label": "approve wallet 19",
+      "hash": "0xd3efb61c7835ed39c8dd74b60648faa729a15ba4c9abc1387e5c5c760104145d"
+    },
+    {
+      "label": "approve wallet 16",
+      "hash": "0xa0a44e5c4c2906aaa5e8959147f8b87c7102f6fefddb7f2bf4ea0dda4a3eb870"
+    },
+    {
+      "label": "approve wallet 13",
+      "hash": "0x1a04b2d098a33baf643b1b1edd8180e4e7e9f410abc7ebcdcef1a2efc1ac276f"
+    },
+    {
+      "label": "approve wallet 15",
+      "hash": "0x81d93e221f520e3317d7a5ef40f5ce0fe9be4c7b0c66865ea7731ec624c378a3"
+    },
+    {
+      "label": "approve wallet 9",
+      "hash": "0xe9e94bb1b7cfe2763d01c9587d681b2002764e1f79ec94396dce9a85b1658c85"
+    },
+    {
+      "label": "approve wallet 14",
+      "hash": "0x3122c7bea0eac348355ba7bfe940e311ca362b4413c58a5b79b49e35172ed72a"
+    },
+    {
+      "label": "approve wallet 18",
+      "hash": "0xf6ba430b90bac3e97116803c94cd34ac9a6db662f69e13f2b57265be874d4cac"
+    },
+    {
+      "label": "approve wallet 7",
+      "hash": "0xb2646d3c5328a7368b33b024f0abb96a1fca4324d37fd7b2b59b95303adab1aa"
+    },
+    {
+      "label": "approve wallet 0",
+      "hash": "0xc0a493e1ed8834209285460071337c7db58b7c81773882bed9de634d59f46094"
+    },
+    {
+      "label": "approve wallet 12",
+      "hash": "0xcfd5127bd441de50cf838d4a95e2b1c8ea9a69a3f8b022feee367cb751945246"
+    },
+    {
+      "label": "fund BRB wallet 20",
+      "hash": "0x2a6b3e4ffd1aa5642e2073587c44988f1f53f9412b328639e74368cb349b44d9"
+    },
+    {
+      "label": "fund ETH wallet 20",
+      "hash": "0xc441817c59308b1fe7288eafb46ca8c8cebeaa3a9a363058b7907233630d28c1"
+    },
+    {
+      "label": "fund BRB wallet 21",
+      "hash": "0x50f9f32d90118bc9bfe7645616cc958909fda364ca13beafa8d71e37fd3e7d6c"
+    },
+    {
+      "label": "fund ETH wallet 21",
+      "hash": "0x03df89931a2d1a797fdba403e711e9ba6706188820959c978d7df5aeac88f37e"
+    },
+    {
+      "label": "fund BRB wallet 22",
+      "hash": "0x09031cf8ab5d3b192bf347061a7b9a4ede8b80684d4d3e0bede8e319dc90b34b"
+    },
+    {
+      "label": "fund ETH wallet 22",
+      "hash": "0xa2f3fdde5be43b8a7f779cca40abca612973b875451efeac49405dd2b5893c39"
+    },
+    {
+      "label": "fund BRB wallet 23",
+      "hash": "0x648c891b0fcb9d131250d8349e83e48e139a14082e53eab9bbe0b8c88ff98a34"
+    },
+    {
+      "label": "fund ETH wallet 23",
+      "hash": "0xd0d412ef5565e03c185a11b8431784c517e16c3f15fa6eba510994a1648cc58d"
+    },
+    {
+      "label": "fund BRB wallet 24",
+      "hash": "0x7c1a10e27ab2bc211152a7087bcede92147b995011331313725804d2dcd21642"
+    },
+    {
+      "label": "fund ETH wallet 24",
+      "hash": "0x2c415220fc5fd2c0f488ab52d3a138e76dcfad24ad2f49e22b9a37f4899755d9"
+    },
+    {
+      "label": "fund BRB wallet 25",
+      "hash": "0x31414be65371d3fabb20e2bef9134a79e80a2f3a1867649a785496aa9c75a150"
+    },
+    {
+      "label": "fund ETH wallet 25",
+      "hash": "0x044537dcda08bbcf6f63ef6b6917130cb7800b85af702a5572cc8aed564e7de8"
+    },
+    {
+      "label": "fund BRB wallet 26",
+      "hash": "0x68efec9af8e562c9b64d5594d7f1eaf189a0518cbd689baae29f0514cbb470f7"
+    },
+    {
+      "label": "fund ETH wallet 26",
+      "hash": "0x3cdbf1fc720ec148360b3308585b9b691481e72a95d2854a08baf6e185b76be6"
+    },
+    {
+      "label": "fund BRB wallet 27",
+      "hash": "0xb65a379c0e3fddec0c3a93650c103996428301f1e0f884f2166aa549d624ecab"
+    },
+    {
+      "label": "fund ETH wallet 27",
+      "hash": "0x396ca656ba25007e910df3dc620688a0e18bbb9c49d533632e8566e2ba335737"
+    },
+    {
+      "label": "fund BRB wallet 28",
+      "hash": "0x38161c5b0dcfab3fe632e1a5e4d45d3683547f749132332725afa72f556a278f"
+    },
+    {
+      "label": "fund ETH wallet 28",
+      "hash": "0xe5b9ffee2b8f68c6dee1f36d9ec5cf16f19592b7b5221508c54afdd19f2f34ad"
+    },
+    {
+      "label": "fund BRB wallet 29",
+      "hash": "0x2daf032b9c869a9f0deaf7aab2aa849df9ea5a50ba1c9b0ab5192ffff2b77b33"
+    },
+    {
+      "label": "fund ETH wallet 29",
+      "hash": "0x199be1b53ec1f4c9efc896b728c1ca4cc81f1f016675cb893e11e9a836f8b462"
+    },
+    {
+      "label": "approve wallet 22",
+      "hash": "0x2a9d917364da9b8912aef2a29df93f0b491918ce3fe6ecb65b70621170ce14e1"
+    },
+    {
+      "label": "approve wallet 21",
+      "hash": "0x4c1b42f46615081b683ae9ef129c1b49fc02d493e7d1222115389168ce0758a9"
+    },
+    {
+      "label": "approve wallet 26",
+      "hash": "0xf41e711bd0c32adb1206bdc835ef246c11e6bd5e63dfe16a2fa9756bf744f68f"
+    },
+    {
+      "label": "approve wallet 27",
+      "hash": "0x072280831157daa278203635d1689723063b1cc674fceea6332f2c69ff0fce93"
+    },
+    {
+      "label": "approve wallet 24",
+      "hash": "0x914482c2293ecf0ca3fb4110f519d85f01c33b6f400c7189869519a40debaf4a"
+    },
+    {
+      "label": "approve wallet 23",
+      "hash": "0xaa70faeee4b07fc26761b997ed8a4ab042d2cc49c7db0def8d221ce664ced8f7"
+    },
+    {
+      "label": "approve wallet 28",
+      "hash": "0xf1f3ee1eef33cc9ff4cf183de55b8b4ad59264d8a8b63332f8155ba9fc194a5c"
+    },
+    {
+      "label": "approve wallet 20",
+      "hash": "0x1a95671ef683f150e28525dd60376aacb2cfe2404ea5991a101a0b33f8b31081"
+    },
+    {
+      "label": "approve wallet 29",
+      "hash": "0x95729efa794217aace1ca6d8edb5d710b59041757e0a73e5244ebae47a953fb1"
+    },
+    {
+      "label": "approve wallet 25",
+      "hash": "0xf059483d475ec477bb4cefb096127a292caec834b37a99af7a46698c47920e9c"
+    },
+    {
+      "label": "recover BRB wallet 13",
+      "hash": "0x80422c3d194de2e80213cc85647ccbb262a3b9636fefdd7061f34076b37f6df8"
+    },
+    {
+      "label": "recover BRB wallet 2",
+      "hash": "0x1481d140edc8943a4351fce1cec81b080c2c524439ebdc29e3c12a75ef3528cc"
+    },
+    {
+      "label": "recover BRB wallet 0",
+      "hash": "0x8de776c622eb88b1802eea3a2716488f0edd771c93aee33f665883020894e724"
+    },
+    {
+      "label": "recover BRB wallet 1",
+      "hash": "0x15579b6e0c91c2ff9e0f291bc4f4981a1645085dd93374fe9d15e4729145eab9"
+    },
+    {
+      "label": "recover BRB wallet 15",
+      "hash": "0x877c94270f574a9a79ea95f3548ee329fe57ab502706b4cc92fb8b54f630fc68"
+    },
+    {
+      "label": "recover BRB wallet 19",
+      "hash": "0x6d4a01979f6c072c7e0ba6d94d82cc31615c16e295bda7abfce3897c45cfebb5"
+    },
+    {
+      "label": "recover BRB wallet 16",
+      "hash": "0x52be8dec7e5d5886efa07726124377f39e0637026cefb1f2c0eabaed27d676cf"
+    },
+    {
+      "label": "recover BRB wallet 3",
+      "hash": "0x747b7932e9c7823bf2afec52920bc9c4e2314ce4f782e94c4686756a9a893382"
+    },
+    {
+      "label": "recover BRB wallet 17",
+      "hash": "0xd075fb3cdc58a49d16c52ed191c9ed8950aeae7aaaa7d380782345c424b0201f"
+    },
+    {
+      "label": "recover BRB wallet 4",
+      "hash": "0x9e668cf372b9af2d6ddf8ef2c191cd3a6eb4f310e0e2fd10a455ed43d283ee23"
+    },
+    {
+      "label": "recover BRB wallet 7",
+      "hash": "0x56cdb6454fcb694ac1538bfa24edbe5ad6d83d12696a8768bfcb856988080dd2"
+    },
+    {
+      "label": "recover BRB wallet 10",
+      "hash": "0xddf3dc08d0b8f3c3c25ee56e864814d3e5ab374686be0b7b50a7aa886863b9be"
+    },
+    {
+      "label": "recover BRB wallet 6",
+      "hash": "0x794da3a30cf33e9ac4da707086bd86da40e838444bdb02e27c7d04088196c5da"
+    },
+    {
+      "label": "recover BRB wallet 8",
+      "hash": "0xb3e03cc78b28f2c86c2b2d2638004526e7626e67740ea79fdcdffdedade2d010"
+    },
+    {
+      "label": "recover BRB wallet 18",
+      "hash": "0x4670a4fcb379bef7020706a097c6d18048a34a92b05ba9b1ad58cfc6e3d16f2f"
+    },
+    {
+      "label": "recover BRB wallet 5",
+      "hash": "0xed07f5bc1f8239e91c7932c88293bd8020b33f09fe21d7e3a2752643db40e35e"
+    },
+    {
+      "label": "recover BRB wallet 14",
+      "hash": "0xa6475cf90bf853f4f09eae85947149abae7d8adeaf3f973f3e75c3113e7c0e84"
+    },
+    {
+      "label": "recover BRB wallet 11",
+      "hash": "0x5c86d6785855cff0a3c8fb28c97eb043e987c796a818af50d901646f249129ff"
+    },
+    {
+      "label": "recover BRB wallet 12",
+      "hash": "0xa5e911bd80e48a615c21bd0d9ee6e4eb62f2c6493870ee3a5863bad96ff1e250"
+    },
+    {
+      "label": "recover BRB wallet 9",
+      "hash": "0xf5a1e8a6c1dd584a471e31736ee1f96df90377171d0935e85ff5636a318772c7"
+    },
+    {
+      "label": "recover ETH wallet 0",
+      "hash": "0x4fa1d30f10015a08e0c9fa40486aeb9bfcc8057805a2b06e969a78bfd14dbf3d"
+    },
+    {
+      "label": "recover ETH wallet 2",
+      "hash": "0xbebb14827cd1f0cc3eca3933d3d0b6c82636f8a12ea2ecd0c3e97e5a7432e727"
+    },
+    {
+      "label": "recover ETH wallet 13",
+      "hash": "0x495a1e588b6034c7e33d35ce8ceb5ebd89f9a3f4ac70fa73969f7fab1721297d"
+    },
+    {
+      "label": "recover ETH wallet 12",
+      "hash": "0x39c1869ad1c091b616ad9c65c86d737ecb109b51dedd18d92bdb98512f860db6"
+    },
+    {
+      "label": "recover ETH wallet 3",
+      "hash": "0xd7cbb16a89e90b510a4269ff11bfae736cbb1b9b77373b570e463439cc975b71"
+    },
+    {
+      "label": "recover ETH wallet 17",
+      "hash": "0x6397676411228929ed82c04af4a2b3b7669dec52d5d7305abb28ca4c53f93ad4"
+    },
+    {
+      "label": "recover ETH wallet 18",
+      "hash": "0x6a1865daea8a8a9785721177054b760e9d954fffe468972517f61b4665d48e92"
+    },
+    {
+      "label": "recover ETH wallet 11",
+      "hash": "0x4bafd733d7a2169cd36846794c6a62b7dff674a1cb1f0247a05f147bffa332eb"
+    },
+    {
+      "label": "recover ETH wallet 15",
+      "hash": "0x0e6e48dcb38deb6ca7555eeb24bd1041ab385278eb51789e7eeb4efa22f77bd5"
+    },
+    {
+      "label": "recover ETH wallet 16",
+      "hash": "0xa186cae6ecf599d1feb875ccfd06bde6321e3650d2aa201fab652b2cb6d8aff3"
+    },
+    {
+      "label": "recover ETH wallet 4",
+      "hash": "0x6cd122b5dd97e8382dc1638776553e79c674ab0e10a6450b1028c930f93551c6"
+    },
+    {
+      "label": "recover ETH wallet 9",
+      "hash": "0x168e7850ae61aff95ad0b0e032db81bc1357960e900dd8263eacad5b72c532f7"
+    },
+    {
+      "label": "recover ETH wallet 6",
+      "hash": "0xa773ac1ea97b8b2d7536d9b617d39488408b7f7891577dd187f1ce1a5fa702fd"
+    },
+    {
+      "label": "recover ETH wallet 8",
+      "hash": "0x36d59f53ecdfbec395fc0dfe576b014d6a7ebd5059d0afdbc689e944b401d80e"
+    },
+    {
+      "label": "recover ETH wallet 19",
+      "hash": "0x57feb0d7ebcd3bbc11f03eb9efa9535b1b861e7c98efcdf61cc60eb4fdd5d244"
+    },
+    {
+      "label": "recover ETH wallet 14",
+      "hash": "0x5d9e7c0d9f99ce35bef5073de9d49e6884f0100cbe2b83436dd99b61fd6d5525"
+    },
+    {
+      "label": "recover ETH wallet 1",
+      "hash": "0x61a3cf17ac3ee486b973ef225db39c8f59572b84dde27b9ffdacfa4a62df39ff"
+    },
+    {
+      "label": "recover ETH wallet 5",
+      "hash": "0xeadf18b563b8169dd46225052522f3bbf10609b17fef454103e240a5ca6600b7"
+    },
+    {
+      "label": "recover ETH wallet 7",
+      "hash": "0xb29a29a2ad549c88fc3253956084cb864aca0b2295fc6cc0d4bee10403bc51a6"
+    },
+    {
+      "label": "recover ETH wallet 10",
+      "hash": "0x5376aa5df0bef09fee18973dcd95cff07582c11bcb5282a0521ddde4bf929673"
+    },
+    {
+      "label": "recover BRB wallet 22",
+      "hash": "0x43aabecc5e6781bf8f534783586387123daeb9b9949b08a2588e7fc7cc62ead4"
+    },
+    {
+      "label": "recover BRB wallet 25",
+      "hash": "0x3a272a51636a5ca9d807c8b7a0af890bf518f9a2ae00245087422ceef37f56e7"
+    },
+    {
+      "label": "recover BRB wallet 20",
+      "hash": "0x2412e9bbc9bbbf57d44c1bda2bef653ab78f6fd8fcad099103a35973b024cc19"
+    },
+    {
+      "label": "recover BRB wallet 26",
+      "hash": "0xc4c180c1acb8707b9f310b584daf9d4d9612bf8b4d22c7451d224dacb8632413"
+    },
+    {
+      "label": "recover BRB wallet 21",
+      "hash": "0xa3be3da39dcd7fddd448cb1f5a9fcb95cbc386a71fef1a57a1e61f3e3c05a651"
+    },
+    {
+      "label": "recover BRB wallet 23",
+      "hash": "0x195e8ef8e186a9a6121937986340757bfd0c180a76da73e38227ef6810ff3bb5"
+    },
+    {
+      "label": "recover BRB wallet 28",
+      "hash": "0x4addacd5d210e0517e00096ae9a3698255a6d952acf215e2b14e6cea8860e7cf"
+    },
+    {
+      "label": "recover BRB wallet 29",
+      "hash": "0xe0ec852bcfe66b6a11e9323706c58faafc81ec614f55eca65e84ee9cc30e4608"
+    },
+    {
+      "label": "recover BRB wallet 24",
+      "hash": "0xe20a7e8eeba17c243877d36282eeb865b978569d9363e0bc7eabcee134d5b5f1"
+    },
+    {
+      "label": "recover BRB wallet 27",
+      "hash": "0xc734d0d72314ed26fbdf635658307ef4f1be94626eb54279d924f4fadbc3a3eb"
+    },
+    {
+      "label": "recover ETH wallet 24",
+      "hash": "0x1fd938224ec3e9081b177e70288c140d245389ada90cc2062374147429150438"
+    },
+    {
+      "label": "recover ETH wallet 20",
+      "hash": "0xdab64b1d09d1f2787b67684f85721f5ea3106c2db063a951b984dbb849aa467d"
+    },
+    {
+      "label": "recover ETH wallet 29",
+      "hash": "0x3579dce95856e67839e4cbe5c3b34c1215b8bb15e58fe42a3cc13ef35c4a9599"
+    },
+    {
+      "label": "recover ETH wallet 26",
+      "hash": "0xe82c874bafbed5c81f3c7a3f12b1f5f23db7ea54a4a9577dc9e75c9596073445"
+    },
+    {
+      "label": "recover ETH wallet 25",
+      "hash": "0xb7faf9cb661fa009826b610ac8083b6517a23b4498c27865229e2e9c034f0637"
+    },
+    {
+      "label": "recover ETH wallet 28",
+      "hash": "0x11fdf2f2b06bd7f36af96732d99d748359643a1a528fa2c8b4914f052a228a2c"
+    },
+    {
+      "label": "recover ETH wallet 27",
+      "hash": "0xb22ee6489e27e43562d593fce9355e39a4d3fc61a68904c3568bc59551388c80"
+    },
+    {
+      "label": "recover ETH wallet 22",
+      "hash": "0x6e0a76906ad1aafce5dff613082ebf7c3a5baca699e6b0f175c5d7d28f6d2f64"
+    },
+    {
+      "label": "recover ETH wallet 23",
+      "hash": "0x3728ee1d6a2bdb7be8b146e34e03f9cc79cfc4326ee941fa312bbc4d0cc52da9"
+    },
+    {
+      "label": "recover ETH wallet 21",
+      "hash": "0xe9c02adb6665415e82b898e7b846ac3246709168b58d05e5d0a60a74f871e385"
+    },
+    {
+      "label": "recover isolated funding ETH",
+      "hash": "0x2c99fba6ff12c4e4f7a60b953a4060729aa33c6915a458153b9dd3a3e749ddb0"
+    }
+  ],
+  "campaignFundingWallet": "0x749564CcF36299D77BffEE911148d95E204571d7",
+  "originalDuration": 60,
+  "walletBalancesBefore": [
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000"
+  ],
+  "bankAssetsBefore": "1054091097599055035350443",
+  "admissionStartedAt": "2026-10-15T10:46:13.734Z",
+  "lockAt": "1792061234",
+  "admissionSeconds": 29.988,
+  "admissionEndBlock": "319396429",
+  "confirmedTickets": 300,
+  "fullSubmission": true,
+  "observation": {
+    "block": "319396611",
+    "currentRound": "2528",
+    "phase": 4,
+    "diagnostics": {
+      "requestId": "59550016613104424322720183075014112850900239311705735801217296738112358465003",
+      "requestedAt": "1792061235",
+      "available": true,
+      "fulfilled": true,
+      "winningNumber": 19,
+      "jackpotNumber": 14,
+      "marketsParticipating": 1,
+      "marketsSettled": 1,
+      "jackpotCursor": 0,
+      "jackpotPaid": "0",
+      "jackpotDistributed": false
+    },
+    "market": {
+      "betsReleased": true,
+      "winningBetCount": "300",
+      "bankPaidRunning": "10800000000000000000000",
+      "settled": true,
+      "totals": {
+        "totalAmount": "11100000000000000000000",
+        "betCount": "300"
+      }
+    },
+    "walletDelta": "-300000000000000000000",
+    "externalTickets": "0",
+    "roundDuration": 60,
+    "fundingAccount": [
+      "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+      "348840000000000000000",
+      "348870000000000000000",
+      "30000000000000000",
+      "30000000000000000",
+      "25000000000000000",
+      "5000000000000000"
+    ],
+    "events": [
+      {
+        "name": "VrfRequested",
+        "args": {
+          "newRoundId": "2527",
+          "requestId": "59550016613104424322720183075014112850900239311705735801217296738112358465003",
+          "timestamp": "1792061235"
+        },
+        "hash": "0xa16dd89cc21f00a5f4b434525fc2325d78db861f8f0e63a039e08ee81b4dfb70",
+        "block": "319396555"
+      },
+      {
+        "name": "VRFResult",
+        "args": {
+          "roundId": "2527",
+          "winningNumber": 19,
+          "jackpotNumber": 14
+        },
+        "hash": "0x4c99a91e353b9a38beaa68af1d990ace0cce2adbe1893e76d4aca37532fd5ccc",
+        "block": "319396563"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "fromCursor": "0",
+          "toCursor": "60",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0x66f1a05997a2535dabf4f0600c936ac7953889eef5bc1b9feb26c78d4c0a4319",
+        "block": "319396589"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "fromCursor": "60",
+          "toCursor": "120",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0xa7cab34d07719727c3cb19af5be4f2a5f1eb48c407aef189fdf99cf70ec154c1",
+        "block": "319396592"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "fromCursor": "120",
+          "toCursor": "150",
+          "paidAmount": "1080000000000000000000"
+        },
+        "hash": "0x7d4196565ecb42240110c75e9d9d0a4f18d10caa934c4e9b47ca0a15f34ef80f",
+        "block": "319396594"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "fromCursor": "0",
+          "toCursor": "60",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0x4f66be5fe929fc27fb4f4aa46bb8a84764b22556658b94435d7ad578f370e56c",
+        "block": "319396597"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "fromCursor": "60",
+          "toCursor": "120",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0xdb3df0db8c342ec8602c25bddbd02856247f515f01f96ae4f09330e75f73a522",
+        "block": "319396600"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "fromCursor": "120",
+          "toCursor": "150",
+          "paidAmount": "1080000000000000000000"
+        },
+        "hash": "0x262462f4ebe7ec9cb9dff6357f1f8422c9b54d4b09861ed28b57e7d2e2039535",
+        "block": "319396602"
+      },
+      {
+        "name": "RoundResolved",
+        "args": {
+          "roundId": "2527"
+        },
+        "hash": "0x262462f4ebe7ec9cb9dff6357f1f8422c9b54d4b09861ed28b57e7d2e2039535",
+        "block": "319396602"
+      },
+      {
+        "name": "JackpotFunded",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "amount": "9000000000000000000"
+        },
+        "hash": "0x262462f4ebe7ec9cb9dff6357f1f8422c9b54d4b09861ed28b57e7d2e2039535",
+        "block": "319396602"
+      },
+      {
+        "name": "InfrastructureFeePaid",
+        "args": {
+          "globalRoundId": "2527",
+          "marketId": 3,
+          "amount": "6000000000000000000"
+        },
+        "hash": "0x262462f4ebe7ec9cb9dff6357f1f8422c9b54d4b09861ed28b57e7d2e2039535",
+        "block": "319396602"
+      }
+    ],
+    "automationTransactions": [
+      {
+        "hash": "0xa16dd89cc21f00a5f4b434525fc2325d78db861f8f0e63a039e08ee81b4dfb70",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "273244",
+        "gasUsed": "264590",
+        "status": "success",
+        "block": "319396555"
+      },
+      {
+        "hash": "0x4c99a91e353b9a38beaa68af1d990ace0cce2adbe1893e76d4aca37532fd5ccc",
+        "from": "0x4d055d83773aa9585b549f6acbdaa4e7c546ec59",
+        "to": "0x343300b5d84d444b2adc9116fef1bed02be49cf2",
+        "gasLimit": "3687200",
+        "gasUsed": "370044",
+        "status": "success",
+        "block": "319396563"
+      },
+      {
+        "hash": "0x66f1a05997a2535dabf4f0600c936ac7953889eef5bc1b9feb26c78d4c0a4319",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "1417025",
+        "gasUsed": "1371125",
+        "status": "success",
+        "block": "319396589"
+      },
+      {
+        "hash": "0xa7cab34d07719727c3cb19af5be4f2a5f1eb48c407aef189fdf99cf70ec154c1",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "926166",
+        "gasUsed": "895370",
+        "status": "success",
+        "block": "319396592"
+      },
+      {
+        "hash": "0x7d4196565ecb42240110c75e9d9d0a4f18d10caa934c4e9b47ca0a15f34ef80f",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "577215",
+        "gasUsed": "561492",
+        "status": "success",
+        "block": "319396594"
+      },
+      {
+        "hash": "0x4f66be5fe929fc27fb4f4aa46bb8a84764b22556658b94435d7ad578f370e56c",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "928841",
+        "gasUsed": "897963",
+        "status": "success",
+        "block": "319396597"
+      },
+      {
+        "hash": "0xdb3df0db8c342ec8602c25bddbd02856247f515f01f96ae4f09330e75f73a522",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "886553",
+        "gasUsed": "856975",
+        "status": "success",
+        "block": "319396600"
+      },
+      {
+        "hash": "0x262462f4ebe7ec9cb9dff6357f1f8422c9b54d4b09861ed28b57e7d2e2039535",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "738462",
+        "gasUsed": "713442",
+        "status": "success",
+        "block": "319396602"
+      }
+    ],
+    "walletBalancesAfter": [
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000"
+    ],
+    "bankAssets": "1054376097599055035350443",
+    "bankShares": "835468181127331281558443433225"
+  },
+  "paymentVerification": {
+    "checkedAt": "2026-10-15T10:47:42.405Z",
+    "block": "319396651",
+    "currentRound": "2528",
+    "phase": 4,
+    "jackpotDistributed": false,
+    "confirmedTickets": 300,
+    "fullSubmission": true,
+    "allWalletsPaidCorrectly": true,
+    "ordinaryPaid": "10800000000000000000000",
+    "jackpotPaid": "0",
+    "walletChecks": [
+      {
+        "address": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x541e25F12601c4D21723808F573C2B70893553D2",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x44Eb140Be79db43696Eba04a508aa1DDa03435B4",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x720078087adB2Dc17A8b50A19318eA046cd6170A",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x91eB31A357E55C458ad0202ab604E95bc7E69e9F",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0xD7E81d4dF5bfF49E59FA2B80e19F272fCf25f1a6",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      },
+      {
+        "address": "0x722d1a2a64d50807B71FE69fddaE0a04DE6Dd785",
+        "tickets": 10,
+        "before": "370000000000000000000",
+        "after": "360000000000000000000",
+        "staked": "370000000000000000000",
+        "ordinaryPaid": "360000000000000000000",
+        "jackpotPaid": "0",
+        "otherNet": "0",
+        "announcedJackpot": "0",
+        "expectedStake": "370000000000000000000",
+        "expectedOrdinaryPaid": "360000000000000000000",
+        "expectedBalance": "360000000000000000000",
+        "paidCorrectly": true
+      }
+    ]
+  }
+}

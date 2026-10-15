@@ -35,8 +35,6 @@ const encodeTopicValue = (t: Hex | Hex[] | null): string[] => {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type CallAllowedSetTopics = {
-  target?: `0x${string}`
-  selector?: `0x${string}`
 }
 
 /**
@@ -54,8 +52,6 @@ export type CallAllowedSetDecoded = {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type CallExecutedTopics = {
-  target?: `0x${string}`
-  selector?: `0x${string}`
 }
 
 /**
@@ -73,8 +69,6 @@ export type CallExecutedDecoded = {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type CallFailedTopics = {
-  target?: `0x${string}`
-  selector?: `0x${string}`
 }
 
 /**
@@ -92,8 +86,6 @@ export type CallFailedDecoded = {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type ExpectedAuthorUpdatedTopics = {
-  previousAuthor?: `0x${string}`
-  newAuthor?: `0x${string}`
 }
 
 /**
@@ -110,8 +102,6 @@ export type ExpectedAuthorUpdatedDecoded = {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type ExpectedWorkflowIdUpdatedTopics = {
-  previousId?: `0x${string}`
-  newId?: `0x${string}`
 }
 
 /**
@@ -128,8 +118,6 @@ export type ExpectedWorkflowIdUpdatedDecoded = {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type ExpectedWorkflowNameUpdatedTopics = {
-  previousName?: `0x${string}`
-  newName?: `0x${string}`
 }
 
 /**
@@ -146,8 +134,6 @@ export type ExpectedWorkflowNameUpdatedDecoded = {
  * Indexed string/bytes must be passed as keccak256 hash (Hex).
  */
 export type ForwarderAddressUpdatedTopics = {
-  previousForwarder?: `0x${string}`
-  newForwarder?: `0x${string}`
 }
 
 /**
@@ -177,7 +163,7 @@ export type OwnershipTransferredDecoded = {
 }
 
 
-export const AutomationReceiverABI = [{"type":"constructor","inputs":[{"name":"_forwarder","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"getExpectedAuthor","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"getExpectedWorkflowId","inputs":[],"outputs":[{"name":"","type":"bytes32","internalType":"bytes32"}],"stateMutability":"view"},{"type":"function","name":"getExpectedWorkflowName","inputs":[],"outputs":[{"name":"","type":"bytes10","internalType":"bytes10"}],"stateMutability":"view"},{"type":"function","name":"getForwarderAddress","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"isCallAllowed","inputs":[{"name":"target","type":"address","internalType":"address"},{"name":"selector","type":"bytes4","internalType":"bytes4"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"onReport","inputs":[{"name":"metadata","type":"bytes","internalType":"bytes"},{"name":"report","type":"bytes","internalType":"bytes"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"owner","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"renounceOwnership","inputs":[],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setCallAllowed","inputs":[{"name":"target","type":"address","internalType":"address"},{"name":"selector","type":"bytes4","internalType":"bytes4"},{"name":"allowed","type":"bool","internalType":"bool"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setExpectedAuthor","inputs":[{"name":"_author","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setExpectedWorkflowId","inputs":[{"name":"_id","type":"bytes32","internalType":"bytes32"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setExpectedWorkflowName","inputs":[{"name":"_name","type":"string","internalType":"string"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setForwarderAddress","inputs":[{"name":"_forwarder","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"supportsInterface","inputs":[{"name":"interfaceId","type":"bytes4","internalType":"bytes4"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"transferOwnership","inputs":[{"name":"newOwner","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"event","name":"CallAllowedSet","inputs":[{"name":"target","type":"address","indexed":true,"internalType":"address"},{"name":"selector","type":"bytes4","indexed":true,"internalType":"bytes4"},{"name":"allowed","type":"bool","indexed":false,"internalType":"bool"}],"anonymous":false},{"type":"event","name":"CallExecuted","inputs":[{"name":"target","type":"address","indexed":true,"internalType":"address"},{"name":"selector","type":"bytes4","indexed":true,"internalType":"bytes4"},{"name":"returnData","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false},{"type":"event","name":"CallFailed","inputs":[{"name":"target","type":"address","indexed":true,"internalType":"address"},{"name":"selector","type":"bytes4","indexed":true,"internalType":"bytes4"},{"name":"reason","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false},{"type":"event","name":"ExpectedAuthorUpdated","inputs":[{"name":"previousAuthor","type":"address","indexed":true,"internalType":"address"},{"name":"newAuthor","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"ExpectedWorkflowIdUpdated","inputs":[{"name":"previousId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"newId","type":"bytes32","indexed":true,"internalType":"bytes32"}],"anonymous":false},{"type":"event","name":"ExpectedWorkflowNameUpdated","inputs":[{"name":"previousName","type":"bytes10","indexed":true,"internalType":"bytes10"},{"name":"newName","type":"bytes10","indexed":true,"internalType":"bytes10"}],"anonymous":false},{"type":"event","name":"ForwarderAddressUpdated","inputs":[{"name":"previousForwarder","type":"address","indexed":true,"internalType":"address"},{"name":"newForwarder","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"name":"previousOwner","type":"address","indexed":true,"internalType":"address"},{"name":"newOwner","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"error","name":"CallNotAllowed","inputs":[{"name":"target","type":"address","internalType":"address"},{"name":"selector","type":"bytes4","internalType":"bytes4"}]},{"type":"error","name":"InvalidAuthor","inputs":[{"name":"received","type":"address","internalType":"address"},{"name":"expected","type":"address","internalType":"address"}]},{"type":"error","name":"InvalidForwarderAddress","inputs":[]},{"type":"error","name":"InvalidMetadataLength","inputs":[{"name":"received","type":"uint256","internalType":"uint256"},{"name":"expected","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"InvalidSender","inputs":[{"name":"sender","type":"address","internalType":"address"},{"name":"expected","type":"address","internalType":"address"}]},{"type":"error","name":"InvalidTargetAddress","inputs":[]},{"type":"error","name":"InvalidWorkflowId","inputs":[{"name":"received","type":"bytes32","internalType":"bytes32"},{"name":"expected","type":"bytes32","internalType":"bytes32"}]},{"type":"error","name":"InvalidWorkflowName","inputs":[{"name":"received","type":"bytes10","internalType":"bytes10"},{"name":"expected","type":"bytes10","internalType":"bytes10"}]},{"type":"error","name":"MissingSelector","inputs":[]},{"type":"error","name":"OwnableInvalidOwner","inputs":[{"name":"owner","type":"address","internalType":"address"}]},{"type":"error","name":"OwnableUnauthorizedAccount","inputs":[{"name":"account","type":"address","internalType":"address"}]},{"type":"error","name":"WorkflowNameRequiresAuthorValidation","inputs":[]}] as const
+export const AutomationReceiverABI = [{"inputs":[{"internalType":"address","name":"forwarder","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"target","type":"address"},{"internalType":"bytes4","name":"selector","type":"bytes4"}],"name":"CallNotAllowed","type":"error"},{"inputs":[{"internalType":"address","name":"received","type":"address"},{"internalType":"address","name":"expected","type":"address"}],"name":"InvalidAuthor","type":"error"},{"inputs":[],"name":"InvalidForwarderAddress","type":"error"},{"inputs":[{"internalType":"uint256","name":"received","type":"uint256"},{"internalType":"uint256","name":"expected","type":"uint256"}],"name":"InvalidMetadataLength","type":"error"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"expected","type":"address"}],"name":"InvalidSender","type":"error"},{"inputs":[],"name":"InvalidTargetAddress","type":"error"},{"inputs":[{"internalType":"bytes32","name":"received","type":"bytes32"},{"internalType":"bytes32","name":"expected","type":"bytes32"}],"name":"InvalidWorkflowId","type":"error"},{"inputs":[{"internalType":"bytes10","name":"received","type":"bytes10"},{"internalType":"bytes10","name":"expected","type":"bytes10"}],"name":"InvalidWorkflowName","type":"error"},{"inputs":[],"name":"MissingSelector","type":"error"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"inputs":[],"name":"WorkflowNameRequiresAuthorValidation","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"target","type":"address"},{"indexed":false,"internalType":"bytes4","name":"selector","type":"bytes4"},{"indexed":false,"internalType":"bool","name":"allowed","type":"bool"}],"name":"CallAllowedSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"target","type":"address"},{"indexed":false,"internalType":"bytes4","name":"selector","type":"bytes4"},{"indexed":false,"internalType":"bytes","name":"returnData","type":"bytes"}],"name":"CallExecuted","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"target","type":"address"},{"indexed":false,"internalType":"bytes4","name":"selector","type":"bytes4"},{"indexed":false,"internalType":"bytes","name":"reason","type":"bytes"}],"name":"CallFailed","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"previousAuthor","type":"address"},{"indexed":false,"internalType":"address","name":"newAuthor","type":"address"}],"name":"ExpectedAuthorUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes32","name":"previousId","type":"bytes32"},{"indexed":false,"internalType":"bytes32","name":"newId","type":"bytes32"}],"name":"ExpectedWorkflowIdUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes10","name":"previousName","type":"bytes10"},{"indexed":false,"internalType":"bytes10","name":"newName","type":"bytes10"}],"name":"ExpectedWorkflowNameUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"previousForwarder","type":"address"},{"indexed":false,"internalType":"address","name":"newForwarder","type":"address"}],"name":"ForwarderAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"inputs":[],"name":"getExpectedAuthor","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getExpectedWorkflowId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getExpectedWorkflowName","outputs":[{"internalType":"bytes10","name":"","type":"bytes10"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getForwarderAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"target","type":"address"},{"internalType":"bytes4","name":"selector","type":"bytes4"}],"name":"isCallAllowed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"metadata","type":"bytes"},{"internalType":"bytes","name":"report","type":"bytes"}],"name":"onReport","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"target","type":"address"},{"internalType":"bytes4","name":"selector","type":"bytes4"},{"internalType":"bool","name":"allowed","type":"bool"}],"name":"setCallAllowed","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_author","type":"address"}],"name":"setExpectedAuthor","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"_id","type":"bytes32"}],"name":"setExpectedWorkflowId","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"_name","type":"string"}],"name":"setExpectedWorkflowName","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_forwarder","type":"address"}],"name":"setForwarderAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}] as const
 
 export class AutomationReceiver {
   constructor(
@@ -552,8 +538,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        target: f.target,
-        selector: f.selector,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -564,8 +548,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          target: f.target,
-          selector: f.selector,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,
@@ -623,8 +605,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        target: f.target,
-        selector: f.selector,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -635,8 +615,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          target: f.target,
-          selector: f.selector,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,
@@ -694,8 +672,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        target: f.target,
-        selector: f.selector,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -706,8 +682,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          target: f.target,
-          selector: f.selector,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,
@@ -765,8 +739,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        previousAuthor: f.previousAuthor,
-        newAuthor: f.newAuthor,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -777,8 +749,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          previousAuthor: f.previousAuthor,
-          newAuthor: f.newAuthor,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,
@@ -836,8 +806,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        previousId: f.previousId,
-        newId: f.newId,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -848,8 +816,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          previousId: f.previousId,
-          newId: f.newId,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,
@@ -907,8 +873,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        previousName: f.previousName,
-        newName: f.newName,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -919,8 +883,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          previousName: f.previousName,
-          newName: f.newName,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,
@@ -978,8 +940,6 @@ export class AutomationReceiver {
     } else if (filters.length === 1) {
       const f = filters[0]
       const args = {
-        previousForwarder: f.previousForwarder,
-        newForwarder: f.newForwarder,
       }
       const encoded = encodeEventTopics({
         abi: AutomationReceiverABI,
@@ -990,8 +950,6 @@ export class AutomationReceiver {
     } else {
       const allEncoded = filters.map((f) => {
         const args = {
-          previousForwarder: f.previousForwarder,
-          newForwarder: f.newForwarder,
         }
         return encodeEventTopics({
           abi: AutomationReceiverABI,

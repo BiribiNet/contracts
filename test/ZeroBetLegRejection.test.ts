@@ -37,7 +37,7 @@ async function deployFixture() {
         {
             protocolPrefix: {
                 brb: brb.address,
-                mockRouter: mockRouter.address,
+                router: mockRouter.address,
                 admin: admin.account.address,
             },
         },

@@ -1,0 +1,20 @@
+[
+  {
+    "contract": "RouletteEngine",
+    "existingFields": 44,
+    "newFields": 44,
+    "compatible": true
+  },
+  {
+    "contract": "SideBet",
+    "existingFields": 11,
+    "newFields": 11,
+    "compatible": true
+  },
+  {
+    "contract": "BankVault4626",
+    "existingFields": 14,
+    "newFields": 14,
+    "compatible": true
+  }
+]

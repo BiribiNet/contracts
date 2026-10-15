@@ -1,0 +1,15 @@
+{
+  "sourceChainId": 42161,
+  "localChainId": 31337,
+  "pinnedBlock": 515087345,
+  "linkDrainedJuels": "7000000000000000000",
+  "tipJar": "0xefee320bab39dc8fc91fa9ca29251facd32fe057",
+  "usdcBrbPair": "0xAc015979d8ADE80E4471E676aeefA3446Da16fDd",
+  "lpHolder": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+  "lpBalance": "774596669241482377",
+  "usdcSeeded": "250000000000",
+  "brbSeeded": "2400000000000000000000000",
+  "marketingWallet": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+  "infraWallet": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+  "lpVestingLockDeployed": false
+}

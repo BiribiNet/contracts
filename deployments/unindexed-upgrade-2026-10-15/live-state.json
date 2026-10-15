@@ -1,0 +1,136 @@
+{
+  "chainId": 421614,
+  "block": 319378473,
+  "blockHash": "0x95af9d8aaf2bd5ea49efb1f77515171bbd5cd0ebce59b3d8dcd54847c0909654",
+  "signer": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "roles": {
+    "engineAdmin": true,
+    "engineFeeAdmin": true,
+    "beaconOwner": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "funderAdmin": true,
+    "schedulerAdmin": true,
+    "authorityAdmin": true,
+    "receiverOwner": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4"
+  },
+  "engine": {
+    "proxy": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+    "round": "2517",
+    "pendingVrf": false,
+    "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+    "constructorArguments": [
+      "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61",
+      "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+      "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+      "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+      "1",
+      "0x5b28b914881e069e72de8183D5b7aEc662Bf2905"
+    ]
+  },
+  "vaultBeacon": {
+    "address": "0xBd544E48c33582B07250C0A598a4592bf4318DB2",
+    "implementation": "0xea45De4C6adD20979db76D13dCc56a3724e64CbA"
+  },
+  "funder": {
+    "address": "0x16aBfAB1E1c18C895EdCE0d6b8125AB451502fd3",
+    "constructorArguments": [
+      "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+      "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+      "0xEEDA8616872ef6eA2F41A4A40aB240253cd5C4aC",
+      "0x89658247aB5A1D93830AECECc6674170D0D7081c",
+      "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+      "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4"
+    ],
+    "policies": {
+      "swapAssetTotalBps": "300",
+      "slippageBps": "100",
+      "coldSlippageBps": "300",
+      "twapWindowSeconds": "1800",
+      "treasuryBrbNumerator": "250",
+      "treasuryBrbDenominator": "300"
+    },
+    "maxSwapReserveBps": "100",
+    "pendingTreasuryBrb": "0",
+    "pendingBurnBrb": "0"
+  },
+  "receiver": {
+    "address": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+    "forwarder": "0x76c9cf548b4179F8901cda1f8623568b58215E62",
+    "expectedAuthor": "0x0000000000000000000000000000000000000000",
+    "expectedWorkflowId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "expectedWorkflowName": "0x00000000000000000000",
+    "schedulerAllowed": true
+  },
+  "authority": {
+    "address": "0xB24093FD7cbCA76C0A4098CdFF5F27d0734a2A68",
+    "oldReceiverApproved": false,
+    "operatorApproved": true
+  },
+  "banks": [
+    {
+      "id": 1,
+      "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+      "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+      "totalAssets": "10950000",
+      "totalSupply": "10000000000000",
+      "locked": "0",
+      "oldFunderAssetBalance": "0",
+      "queuedFunding": [
+        "0x0000000000000000000000000000000000000000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "pendingBrb": [
+        "0",
+        "0"
+      ]
+    },
+    {
+      "id": 2,
+      "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+      "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+      "totalAssets": "6042167253100490941204629",
+      "totalSupply": "5483204857737429927893883008469",
+      "locked": "118117400000000000000",
+      "oldFunderAssetBalance": "0",
+      "queuedFunding": [
+        "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "0",
+        "361350000000000000000",
+        "361350000000000000000",
+        "16820469852976810",
+        "14017058210814007",
+        "2803411642162803"
+      ],
+      "pendingBrb": [
+        "0",
+        "0"
+      ]
+    },
+    {
+      "id": 3,
+      "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+      "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+      "totalAssets": "1047298875599055035350443",
+      "totalSupply": "835468181127331281558443433225",
+      "locked": "0",
+      "oldFunderAssetBalance": "98550000000000000000",
+      "queuedFunding": [
+        "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "98550000000000000000",
+        "98580000000000000000",
+        "30000000000000000",
+        "30000000000000000",
+        "25000000000000000",
+        "5000000000000000"
+      ],
+      "pendingBrb": [
+        "0",
+        "0"
+      ]
+    }
+  ]
+}

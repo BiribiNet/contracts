@@ -1,0 +1,964 @@
+{
+  "revision": "a610335",
+  "chainId": 421614,
+  "block": 317415651,
+  "signer": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "balance": "1.99435784670417278",
+  "nonce": 7172,
+  "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "manifestScheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "infraRecipient": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "sideBetConfigCount": "27",
+  "rows": [
+    {
+      "name": "RouletteEngine",
+      "address": "0x08b5C4E146b2dF4907c0ac27843d700281d1F8CD",
+      "matches": true,
+      "bytes": 21817,
+      "localBytes": 21817,
+      "codeHash": "0x9e042d6e6abd08958ff90b0290a8178392d47f2a512b41e4805157fce4e0f0bd",
+      "libraries": [
+        {
+          "library": "JackpotBatchLib",
+          "address": "0xe8de47796ac92ca29f9844d94a3c825136225eb1"
+        },
+        {
+          "library": "RouletteBetCodecLib",
+          "address": "0x479354b0c2a6a1b79e404a0202cdf3c6dc786392"
+        },
+        {
+          "library": "RouletteExposureLib",
+          "address": "0x6a6bf637875665a1fb8f8f15e99ccd4c6fef5cca"
+        },
+        {
+          "library": "RouletteJackpotCollectLib",
+          "address": "0x660af3e4526c3de369de0e3e0228c4f6513d046d"
+        },
+        {
+          "library": "RouletteLiabilityMathLib",
+          "address": "0x527cfffaf4feb41768e3cd378773d1264a51db33"
+        },
+        {
+          "library": "RoulettePayoutSweepLib",
+          "address": "0x127eeb0bc710bad8e08740aee83fb7ac8f4340d8"
+        },
+        {
+          "library": "RouletteUpkeepScanLib",
+          "address": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        }
+      ],
+      "immutables": [
+        {
+          "start": 11864,
+          "length": 32,
+          "value": "0x00000000000000000000000008b5c4e146b2df4907c0ac27843d700281d1f8cd"
+        },
+        {
+          "start": 11905,
+          "length": 32,
+          "value": "0x00000000000000000000000008b5c4e146b2df4907c0ac27843d700281d1f8cd"
+        },
+        {
+          "start": 12197,
+          "length": 32,
+          "value": "0x00000000000000000000000008b5c4e146b2df4907c0ac27843d700281d1f8cd"
+        },
+        {
+          "start": 1546,
+          "length": 32,
+          "value": "0x0000000000000000000000005b28b914881e069e72de8183d5b7aec662bf2905"
+        },
+        {
+          "start": 9397,
+          "length": 32,
+          "value": "0x0000000000000000000000005b28b914881e069e72de8183d5b7aec662bf2905"
+        },
+        {
+          "start": 1891,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 10081,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 2270,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 10043,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 2432,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 10005,
+          "length": 32,
+          "value": "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be"
+        },
+        {
+          "start": 1425,
+          "length": 32,
+          "value": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "start": 10134,
+          "length": 32,
+          "value": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "start": 3653,
+          "length": 32,
+          "value": "0x0000000000000000000000005ce8d5a2bc84beb22a398cca51996f7930313d61"
+        },
+        {
+          "start": 3693,
+          "length": 32,
+          "value": "0x0000000000000000000000005ce8d5a2bc84beb22a398cca51996f7930313d61"
+        },
+        {
+          "start": 9924,
+          "length": 32,
+          "value": "0x0000000000000000000000005ce8d5a2bc84beb22a398cca51996f7930313d61"
+        },
+        {
+          "start": 7208,
+          "length": 20,
+          "value": "0xe8de47796ac92ca29f9844d94a3c825136225eb1"
+        },
+        {
+          "start": 13426,
+          "length": 20,
+          "value": "0xe8de47796ac92ca29f9844d94a3c825136225eb1"
+        },
+        {
+          "start": 14186,
+          "length": 20,
+          "value": "0x479354b0c2a6a1b79e404a0202cdf3c6dc786392"
+        },
+        {
+          "start": 15134,
+          "length": 20,
+          "value": "0x479354b0c2a6a1b79e404a0202cdf3c6dc786392"
+        },
+        {
+          "start": 4148,
+          "length": 20,
+          "value": "0x6a6bf637875665a1fb8f8f15e99ccd4c6fef5cca"
+        },
+        {
+          "start": 14431,
+          "length": 20,
+          "value": "0x6a6bf637875665a1fb8f8f15e99ccd4c6fef5cca"
+        },
+        {
+          "start": 11418,
+          "length": 20,
+          "value": "0x660af3e4526c3de369de0e3e0228c4f6513d046d"
+        },
+        {
+          "start": 5477,
+          "length": 20,
+          "value": "0x527cfffaf4feb41768e3cd378773d1264a51db33"
+        },
+        {
+          "start": 8960,
+          "length": 20,
+          "value": "0x527cfffaf4feb41768e3cd378773d1264a51db33"
+        },
+        {
+          "start": 13322,
+          "length": 20,
+          "value": "0x527cfffaf4feb41768e3cd378773d1264a51db33"
+        },
+        {
+          "start": 9520,
+          "length": 20,
+          "value": "0x127eeb0bc710bad8e08740aee83fb7ac8f4340d8"
+        },
+        {
+          "start": 3053,
+          "length": 20,
+          "value": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        },
+        {
+          "start": 5764,
+          "length": 20,
+          "value": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        },
+        {
+          "start": 7606,
+          "length": 20,
+          "value": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        },
+        {
+          "start": 11585,
+          "length": 20,
+          "value": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        },
+        {
+          "start": 13815,
+          "length": 20,
+          "value": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        }
+      ]
+    },
+    {
+      "name": "JackpotBatchLib",
+      "address": "0xe8de47796ac92ca29f9844d94a3c825136225eb1",
+      "matches": true,
+      "bytes": 3323,
+      "localBytes": 3323,
+      "codeHash": "0x02555727f001a6c07d540807d1b4a0f182c4b32bc77cc6c0db181cdbac0701ec",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0xe8de47796ac92ca29f9844d94a3c825136225eb1"
+        }
+      ]
+    },
+    {
+      "name": "RouletteBetCodecLib",
+      "address": "0x479354b0c2a6a1b79e404a0202cdf3c6dc786392",
+      "matches": true,
+      "bytes": 933,
+      "localBytes": 933,
+      "codeHash": "0x54b281a2722372c3b21eef2b69d8eb9a0ae4d7d9c35b16c5c9e56bcf581cd098",
+      "libraries": [
+        {
+          "library": "RouletteBetLib",
+          "address": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        }
+      ],
+      "immutables": [
+        {
+          "start": 213,
+          "length": 20,
+          "value": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        },
+        {
+          "start": 450,
+          "length": 20,
+          "value": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        },
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x479354b0c2a6a1b79e404a0202cdf3c6dc786392"
+        }
+      ]
+    },
+    {
+      "name": "RouletteBetLib",
+      "address": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814",
+      "matches": true,
+      "bytes": 2767,
+      "localBytes": 2767,
+      "codeHash": "0x2f38f3c08bfdd230d967c25086994e1a37c08aa5a6d0c71913c89df6d1ed963c",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        }
+      ]
+    },
+    {
+      "name": "RouletteExposureLib",
+      "address": "0x6a6bf637875665a1fb8f8f15e99ccd4c6fef5cca",
+      "matches": true,
+      "bytes": 1857,
+      "localBytes": 1857,
+      "codeHash": "0x2a5430f057649f785804c4149b9106205fefe6c426b10075c60de72d1bf38989",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x6a6bf637875665a1fb8f8f15e99ccd4c6fef5cca"
+        }
+      ]
+    },
+    {
+      "name": "RouletteJackpotCollectLib",
+      "address": "0x660af3e4526c3de369de0e3e0228c4f6513d046d",
+      "matches": true,
+      "bytes": 4502,
+      "localBytes": 4502,
+      "codeHash": "0xeacf5be1cb9ca7cb3eace0c3974408203a68b19491d71ae5588c5e93432cca5c",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x660af3e4526c3de369de0e3e0228c4f6513d046d"
+        }
+      ]
+    },
+    {
+      "name": "RouletteLiabilityMathLib",
+      "address": "0x527cfffaf4feb41768e3cd378773d1264a51db33",
+      "matches": true,
+      "bytes": 2317,
+      "localBytes": 2317,
+      "codeHash": "0x447de374d2997c7c4636a1786d6dc5488cab13d392d3f1a1aa768cf87216be11",
+      "libraries": [
+        {
+          "library": "RouletteLib",
+          "address": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        }
+      ],
+      "immutables": [
+        {
+          "start": 869,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        },
+        {
+          "start": 1012,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        },
+        {
+          "start": 1155,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        },
+        {
+          "start": 1298,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        },
+        {
+          "start": 1438,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        },
+        {
+          "start": 1600,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        },
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x527cfffaf4feb41768e3cd378773d1264a51db33"
+        }
+      ]
+    },
+    {
+      "name": "RouletteLib",
+      "address": "0x01373e7760960f2b60f7ef50dda5c69d04596c12",
+      "matches": true,
+      "bytes": 315,
+      "localBytes": 315,
+      "codeHash": "0x22382b194f136b04bf0c2db8e9f6992f2cd906d422923be6f2f3d3e1c2193b4b",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x01373e7760960f2b60f7ef50dda5c69d04596c12"
+        }
+      ]
+    },
+    {
+      "name": "RoulettePayoutSweepLib",
+      "address": "0x127eeb0bc710bad8e08740aee83fb7ac8f4340d8",
+      "matches": true,
+      "bytes": 7434,
+      "localBytes": 7434,
+      "codeHash": "0xf68d2f87348a8f9ee8e2f7f1399fb264c63976fee433b804c3430a11aab7761f",
+      "libraries": [
+        {
+          "library": "RouletteBetLib",
+          "address": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        },
+        {
+          "library": "RoulettePayoutMulLib",
+          "address": "0x549165552cd95de54e8826db89a1b452002afe6d"
+        }
+      ],
+      "immutables": [
+        {
+          "start": 494,
+          "length": 20,
+          "value": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        },
+        {
+          "start": 662,
+          "length": 20,
+          "value": "0x2fc99b564d87cee8eab2f2e175a32a6fe15a6814"
+        },
+        {
+          "start": 5377,
+          "length": 20,
+          "value": "0x549165552cd95de54e8826db89a1b452002afe6d"
+        },
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x127eeb0bc710bad8e08740aee83fb7ac8f4340d8"
+        }
+      ]
+    },
+    {
+      "name": "RoulettePayoutMulLib",
+      "address": "0x549165552cd95de54e8826db89a1b452002afe6d",
+      "matches": true,
+      "bytes": 433,
+      "localBytes": 433,
+      "codeHash": "0xe0047e7803a20e40f68610fe0f41ed89150aceb9866d58ac20181a31e608145b",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x549165552cd95de54e8826db89a1b452002afe6d"
+        }
+      ]
+    },
+    {
+      "name": "RouletteUpkeepScanLib",
+      "address": "0x3c91535a56ac14c43252981008437e95ab6efe08",
+      "matches": true,
+      "bytes": 5727,
+      "localBytes": 5727,
+      "codeHash": "0xd62673cc7560ef80cb194f9ff7700fd355f9be6e50e999df1e5bab7283b0a58d",
+      "libraries": [
+        {
+          "library": "JackpotBatchLib",
+          "address": "0xe8de47796ac92ca29f9844d94a3c825136225eb1"
+        },
+        {
+          "library": "RouletteJackpotCollectLib",
+          "address": "0x660af3e4526c3de369de0e3e0228c4f6513d046d"
+        },
+        {
+          "library": "RoulettePayoutSweepLib",
+          "address": "0x127eeb0bc710bad8e08740aee83fb7ac8f4340d8"
+        }
+      ],
+      "immutables": [
+        {
+          "start": 3116,
+          "length": 20,
+          "value": "0xe8de47796ac92ca29f9844d94a3c825136225eb1"
+        },
+        {
+          "start": 1509,
+          "length": 20,
+          "value": "0x660af3e4526c3de369de0e3e0228c4f6513d046d"
+        },
+        {
+          "start": 2657,
+          "length": 20,
+          "value": "0x660af3e4526c3de369de0e3e0228c4f6513d046d"
+        },
+        {
+          "start": 3546,
+          "length": 20,
+          "value": "0x127eeb0bc710bad8e08740aee83fb7ac8f4340d8"
+        },
+        {
+          "start": 1,
+          "length": 20,
+          "value": "0x3c91535a56ac14c43252981008437e95ab6efe08"
+        }
+      ]
+    },
+    {
+      "name": "SideBet",
+      "address": "0xC2efc646F99588fe7C767Adb6f76b0544FC41E62",
+      "matches": true,
+      "bytes": 21914,
+      "localBytes": 21914,
+      "codeHash": "0x9b963705ac3121afdfab88dc0477c1bca68242f753699d8f138c0977df56aac9",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 7336,
+          "length": 32,
+          "value": "0x000000000000000000000000c2efc646f99588fe7c767adb6f76b0544fc41e62"
+        },
+        {
+          "start": 7556,
+          "length": 32,
+          "value": "0x000000000000000000000000c2efc646f99588fe7c767adb6f76b0544fc41e62"
+        },
+        {
+          "start": 906,
+          "length": 32,
+          "value": "0x000000000000000000000000276922aaa2573a3a934287dec666c3494b8841ee"
+        },
+        {
+          "start": 2083,
+          "length": 32,
+          "value": "0x000000000000000000000000276922aaa2573a3a934287dec666c3494b8841ee"
+        },
+        {
+          "start": 6816,
+          "length": 32,
+          "value": "0x000000000000000000000000276922aaa2573a3a934287dec666c3494b8841ee"
+        },
+        {
+          "start": 15193,
+          "length": 32,
+          "value": "0x000000000000000000000000276922aaa2573a3a934287dec666c3494b8841ee"
+        }
+      ]
+    },
+    {
+      "name": "BankVault4626",
+      "address": "0xea45De4C6adD20979db76D13dCc56a3724e64CbA",
+      "matches": true,
+      "bytes": 15094,
+      "localBytes": 15094,
+      "codeHash": "0x263172ce14a13d6e88172abcbab1564c574e319e7812d93eca76fbb55f8e7a7c",
+      "libraries": [],
+      "immutables": []
+    },
+    {
+      "name": "MarketRegistry",
+      "address": "0xbb93ae01f205ba4c9c9b32def71dc8f76c67f672",
+      "matches": true,
+      "bytes": 5370,
+      "localBytes": 5370,
+      "codeHash": "0x41fdeb38743ea8559ed0f3b85f5bc6991f1fc4e2aa09bb23c89c8e272a3ae70f",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 424,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1810,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 526,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 1946,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        }
+      ]
+    },
+    {
+      "name": "UpkeepScheduler",
+      "address": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+      "matches": true,
+      "bytes": 8601,
+      "localBytes": 8601,
+      "codeHash": "0xb5d232ee68133859b9c6608ed6d2ae64cc565396b9f5f9fed3e4f4e78a4d674d",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 483,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1129,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1780,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2408,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2678,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2853,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 3027,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 611,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 1979,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 2243,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 3306,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        }
+      ]
+    },
+    {
+      "name": "BRBToken",
+      "address": "0xcd97563e22017462f35ba1e266e13f8f756a53c9",
+      "matches": true,
+      "bytes": 3852,
+      "localBytes": 3852,
+      "codeHash": "0x5d235cb09bf9dcf22f7014f37cd134afb7a4afd1cc2f5e58eef7b29eb5fc8d1f",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1568,
+          "length": 32,
+          "value": "0x6c40217a1691eccced5d4872c106e56feffed526139a706cf9ac3e32fbea4f32"
+        },
+        {
+          "start": 1526,
+          "length": 32,
+          "value": "0x0000000000000000000000000000000000000000000000000000000000066eee"
+        },
+        {
+          "start": 1484,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 1649,
+          "length": 32,
+          "value": "0xdd911b8bbf0ac0c1bd3381ed5a98b973d2e658601020baa9adae0f01efb1cded"
+        },
+        {
+          "start": 1689,
+          "length": 32,
+          "value": "0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6"
+        },
+        {
+          "start": 1828,
+          "length": 32,
+          "value": "0x4249524942490000000000000000000000000000000000000000000000000006"
+        },
+        {
+          "start": 1873,
+          "length": 32,
+          "value": "0x3100000000000000000000000000000000000000000000000000000000000001"
+        }
+      ]
+    },
+    {
+      "name": "BRBReferal",
+      "address": "0x5b28b914881e069e72de8183d5b7aec662bf2905",
+      "matches": true,
+      "bytes": 1878,
+      "localBytes": 1878,
+      "codeHash": "0x49616f9bfb809b7f017dc4d716f97a3100638bf33610d283f4b13a5575a3c72d",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 583,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        }
+      ]
+    },
+    {
+      "name": "BRBJackpotFunder",
+      "address": "0x6aF569259B87ef2AE4998436047fdFAfaEeDc7d9",
+      "matches": true,
+      "bytes": 10037,
+      "localBytes": 10037,
+      "codeHash": "0x906c6e4e32c0d7e8da5a6077eef3fd8186df705b5aba1d1c3ae6c25283f028af",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 1101,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 2737,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 1038,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 2789,
+          "length": 32,
+          "value": "0x000000000000000000000000a0dcb8fced50eed13899af86de70fce42897e8b1"
+        },
+        {
+          "start": 461,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 1196,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 1592,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 3058,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 3370,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 3956,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 4103,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 4333,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 4682,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 4970,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 5314,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 6683,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 1254,
+          "length": 32,
+          "value": "0x000000000000000000000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac"
+        },
+        {
+          "start": 4271,
+          "length": 32,
+          "value": "0x000000000000000000000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac"
+        },
+        {
+          "start": 4461,
+          "length": 32,
+          "value": "0x000000000000000000000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac"
+        },
+        {
+          "start": 4827,
+          "length": 32,
+          "value": "0x000000000000000000000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac"
+        },
+        {
+          "start": 6502,
+          "length": 32,
+          "value": "0x000000000000000000000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac"
+        },
+        {
+          "start": 6821,
+          "length": 32,
+          "value": "0x000000000000000000000000eeda8616872ef6ea2f41a4a40ab240253cd5c4ac"
+        },
+        {
+          "start": 915,
+          "length": 32,
+          "value": "0x00000000000000000000000089658247ab5a1d93830aececc6674170d0d7081c"
+        },
+        {
+          "start": 5015,
+          "length": 32,
+          "value": "0x00000000000000000000000089658247ab5a1d93830aececc6674170d0d7081c"
+        },
+        {
+          "start": 5136,
+          "length": 32,
+          "value": "0x00000000000000000000000089658247ab5a1d93830aececc6674170d0d7081c"
+        },
+        {
+          "start": 5227,
+          "length": 32,
+          "value": "0x00000000000000000000000089658247ab5a1d93830aececc6674170d0d7081c"
+        }
+      ]
+    },
+    {
+      "name": "JackpotTreasury",
+      "address": "0x89658247ab5a1d93830aececc6674170d0d7081c",
+      "matches": false,
+      "bytes": 2062,
+      "localBytes": 2092,
+      "codeHash": "0x6969f3989dc564dede20bcd9355eb914a2a94473daee519122ab92e72833e347",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 376,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 657,
+          "length": 32,
+          "value": "0x0000000000000000000000007eb8110d9e84d3c32fa6468d13ea2bc81544acf1"
+        },
+        {
+          "start": 447,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 870,
+          "length": 32,
+          "value": "0x563e22017462f35ba1e266e13f8f756a53c916848461057b565b610389828661"
+        },
+        {
+          "start": 1007,
+          "length": 32,
+          "value": "0x563e22017462f35ba1e266e13f8f756a53c916906370a0823190610416903090"
+        }
+      ]
+    },
+    {
+      "name": "CreExecutionAuthority",
+      "address": "0xb24093fd7cbca76c0a4098cdff5f27d0734a2a68",
+      "matches": true,
+      "bytes": 1364,
+      "localBytes": 1364,
+      "codeHash": "0xbbe7c4ae8d14150c7a4536a2afa176a4df88fb372f249625f4e7072babd09922",
+      "libraries": [],
+      "immutables": []
+    },
+    {
+      "name": "AutomationReceiver",
+      "address": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+      "matches": false,
+      "bytes": 4384,
+      "localBytes": 4419,
+      "codeHash": "0x2df693bb91537751c5c46b9f1bba9d3b7ba393cbf3db5eac2619b94a78b25c65",
+      "libraries": [],
+      "immutables": []
+    },
+    {
+      "name": "TipJar",
+      "address": "0xD8B67354374c41E6ED7494D404b0e8D27167031D",
+      "matches": true,
+      "bytes": 1353,
+      "localBytes": 1353,
+      "codeHash": "0x76cf1ba553d05a14fa1772b36778483f0c750ddde1052b0e2a2697ffbc19f873",
+      "libraries": [],
+      "immutables": [
+        {
+          "start": 133,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 304,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 467,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 564,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 811,
+          "length": 32,
+          "value": "0x000000000000000000000000cd97563e22017462f35ba1e266e13f8f756a53c9"
+        },
+        {
+          "start": 72,
+          "length": 32,
+          "value": "0x000000000000000000000000bbbbedc42dc53842141be8f70df9efe4d08538a4"
+        },
+        {
+          "start": 215,
+          "length": 32,
+          "value": "0x000000000000000000000000bbbbedc42dc53842141be8f70df9efe4d08538a4"
+        },
+        {
+          "start": 349,
+          "length": 32,
+          "value": "0x000000000000000000000000bbbbedc42dc53842141be8f70df9efe4d08538a4"
+        },
+        {
+          "start": 502,
+          "length": 32,
+          "value": "0x000000000000000000000000bbbbedc42dc53842141be8f70df9efe4d08538a4"
+        },
+        {
+          "start": 609,
+          "length": 32,
+          "value": "0x000000000000000000000000bbbbedc42dc53842141be8f70df9efe4d08538a4"
+        },
+        {
+          "start": 769,
+          "length": 32,
+          "value": "0x000000000000000000000000bbbbedc42dc53842141be8f70df9efe4d08538a4"
+        }
+      ]
+    },
+    {
+      "name": "SideBetChallengeEvaluator",
+      "address": "0x276922aAa2573A3A934287Dec666C3494b8841eE",
+      "matches": true,
+      "bytes": 5570,
+      "localBytes": 5570,
+      "codeHash": "0xa7d3467696707152714bdc8b170c90fb41adc1daa5da754b62085f64a4fa3db9",
+      "libraries": [],
+      "immutables": []
+    }
+  ]
+}

@@ -20,6 +20,22 @@ increasing market/lane/bet limits, profile the intended maximum and keep headroo
 the VRF callback allowance. Monitor subscription balance separately from wallet LINK.
 Escalate delayed fulfillment with its request ID and coordinator transaction history.
 
+## Event parameter layout
+
+Protocol-owned events have no `indexed` parameters, including their duplicate declarations
+in linked libraries and the CRE receiver events. All arguments are ABI-encoded in log data;
+non-anonymous logs have only the event signature in `topics[0]`. Inherited OpenZeppelin events
+and vendored Uniswap contracts keep their original indexed parameters.
+
+Removing `indexed` preserves the event signature hash but changes the topics/data layout.
+The regenerated frontend and subgraph ABIs describe the new layout only. Activate them with
+the corresponding upgraded/redeployed contracts. Historical indexed logs need their original
+ABI and a separate block-bounded indexer/version; do not replay them with the new ABI or mix
+both formats under one decoder. Record an exact activation block for every changed contract
+or proxy, including replacements for the non-upgradeable funder, TipJar and CRE receivers.
+Argument-based topic filters for these protocol events must be replaced with decoded-data
+filtering. No live contracts or indexer deployments are changed by regenerating these files.
+
 ## Payments
 
 `RoulettePayment` is emitted by delegatecall at the engine address after a successful

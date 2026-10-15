@@ -213,3 +213,37 @@ export async function vrfFundSubscriptionWithLink(
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error(`VRF transaction reverted: ${hash}`);
 }
+
+/**
+ * Reads the deployer's LINK balance and funds the VRF subscription with the entire amount.
+ * No-op when balance is zero. Used on Arbitrum One so the deploy wallet does not retain LINK.
+ */
+export async function vrfFundSubscriptionWithAllLink(
+    walletClient: WalletClient,
+    publicClient: PublicClient,
+    linkToken: Address,
+    coordinator: Address,
+    subId: bigint,
+): Promise<bigint> {
+    if (!walletClient.account) throw new Error("WalletClient must have an account");
+    const linkBalance = await publicClient.readContract({
+        address: linkToken,
+        abi: linkBalanceAbi,
+        functionName: "balanceOf",
+        args: [walletClient.account.address],
+    });
+    if (linkBalance === 0n) return 0n;
+    await vrfFundSubscriptionWithLink(walletClient, publicClient, linkToken, coordinator, subId, linkBalance);
+    const remaining = await publicClient.readContract({
+        address: linkToken,
+        abi: linkBalanceAbi,
+        functionName: "balanceOf",
+        args: [walletClient.account.address],
+    });
+    if (remaining !== 0n) {
+        throw new Error(
+            `Expected deployer LINK balance 0 after funding subscription ${subId.toString()}, still ${remaining.toString()} Juels`,
+        );
+    }
+    return linkBalance;
+}

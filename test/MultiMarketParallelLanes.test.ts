@@ -54,7 +54,7 @@ describe("Multi-market parallel lane assignment", function () {
             {
                 protocolPrefix: {
                     brb: brb.address,
-                    mockRouter: mockRouter.address,
+                    router: mockRouter.address,
                     admin: admin.account.address,
                 },
             },

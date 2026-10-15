@@ -1,0 +1,68 @@
+{
+  "chainId": 42161,
+  "blockNumber": "515006790",
+  "blockHash": "0x3ad1ed4104db10094db1e20102165212f4e89f30a2936cb0cabed82f35cb5612",
+  "timestamp": "1792053191",
+  "scope": "External dependency code/config only; no protocol mainnet manifest, subscription or pools verified",
+  "rows": [
+    {
+      "name": "coordinator",
+      "address": "0x3c0ca683b403e37668ae3dc4fb62f4b29b6f7a3e",
+      "codeBytes": 24094,
+      "codeHash": "0xada8afd360d6e5c2a2300adb9d94142b40e67fb362860facb90bd2ff69cd7117"
+    },
+    {
+      "name": "forwarder",
+      "address": "0xf8344cfd5c43616a4366c34e3eee75af79a74482",
+      "codeBytes": 8591,
+      "codeHash": "0x2b21870eb5ea9013a781ed3db7d5fab742b612b2ac8de0990ac9d95b22f795fc"
+    },
+    {
+      "name": "link",
+      "address": "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
+      "codeBytes": 760,
+      "codeHash": "0x9bb54fba14f3f66acb4acfdcb38af3737d65543274ad5e9bc794080b876ddf18"
+    },
+    {
+      "name": "usdc",
+      "address": "0xaf88d065e77c8cc2239327c2edb1ab17869ed1be",
+      "codeBytes": 0,
+      "codeHash": null
+    },
+    {
+      "name": "dai",
+      "address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+      "codeBytes": 4926,
+      "codeHash": "0xc98b96ae5d7eb1927fcc867d2d558f5e12503149075bebcc338316c7a5f0fe35"
+    },
+    {
+      "name": "officialUsdc",
+      "address": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+      "codeBytes": 1852,
+      "codeHash": "0xad30d819dbc47814b7e6cb837fd7cc57fcb591479a38596ee93de4fc52e8c435"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "usdc",
+      "valid": false,
+      "reason": "No contract code at configured address"
+    },
+    {
+      "name": "dai",
+      "decimals": 18
+    },
+    {
+      "name": "link",
+      "decimals": 18
+    },
+    {
+      "name": "officialUsdc",
+      "decimals": 6
+    }
+  ],
+  "vrf": {
+    "minimumConfirmations": 0,
+    "maximumCallbackGas": 2500000
+  }
+}

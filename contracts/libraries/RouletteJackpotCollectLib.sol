@@ -11,7 +11,7 @@ interface IJackpotTokenView { function brb() external view returns (address); }
 library RouletteJackpotCollectLib {
     error StaleJackpotChunk();
     uint256 private constant PREPARATION_STEPS = 32;
-    event JackpotPreparationProgress(uint64 indexed roundId, uint32 marketId, uint256 betCursor, bool ready);
+    event JackpotPreparationProgress(uint64 roundId, uint32 marketId, uint256 betCursor, bool ready);
 
     /// @dev Bound all state-changing collection work, including skipped dust and
     /// empty markets. Lane zero keeps reporting work until this snapshot is ready.
@@ -75,7 +75,7 @@ library RouletteJackpotCollectLib {
     function smallJackpot(RouletteEngineStorageLib.Layout storage $, uint64 roundId, uint8 number) external view returns (bool) {
         return _countEligible($, roundId, number) < PREPARATION_STEPS;
     }
-    event JackpotPayment(uint64 indexed roundId, address indexed recipient, address indexed token, uint256 amount);
+    event JackpotPayment(uint64 roundId, address recipient, address token, uint256 amount);
     function applyJackpotChunk(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,

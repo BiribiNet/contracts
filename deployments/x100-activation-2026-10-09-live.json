@@ -1,0 +1,5161 @@
+{
+  "chainId": 421614,
+  "catalogue": "x100",
+  "proxy": "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+  "implementation": "0xC2efc646F99588fe7C767Adb6f76b0544FC41E62",
+  "revision": "df898f08c8eb822dd772903f01d25fad6e5d251f",
+  "transactions": [
+    {
+      "hash": "0x458c641fa15a7237c00a091469f0f54f73bba01e65091cd9fbfee8eba3bb0ab4",
+      "label": "addConfig(market 1 USDC / X100_PERFECT_DOZEN_1_0)",
+      "blockNumber": "317441103",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61554001"
+    },
+    {
+      "hash": "0xc1cb5a9008a4217472aa35f4a87ab60b3d1d2cb19ec3bb7cabd1e5541ae0304e",
+      "label": "addConfig(market 1 USDC / X100_PERFECT_DOZEN_2_0)",
+      "blockNumber": "317441112",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61188001"
+    },
+    {
+      "hash": "0xcb4fe83a18653c44e5d72acb8a68a37f293e40b1bcd44222913cf29d03246f53",
+      "label": "addConfig(market 1 USDC / X100_PERFECT_DOZEN_3_0)",
+      "blockNumber": "317441118",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61624001"
+    },
+    {
+      "hash": "0xfb90bd097216789c4c96670faf03bb19cfadbf5db0cd71a88194d398f918a08a",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_0_0)",
+      "blockNumber": "317441126",
+      "status": "success",
+      "gasUsed": "83156",
+      "effectiveGasPrice": "61494001"
+    },
+    {
+      "hash": "0x5c30f4a3e3fbb53724e89fc42b49c3e245ff263a79a2a5c8107bf69799f37945",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_1_0)",
+      "blockNumber": "317441135",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61180001"
+    },
+    {
+      "hash": "0xfb6587dd9548c920924df1e3f604e2ded18f37b2a31d76789bda81eede15f6a0",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_2_0)",
+      "blockNumber": "317441142",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61180001"
+    },
+    {
+      "hash": "0x022a84db0958c7aa34b682b2fb4f2899eee5714411bb34c1514d02e96a07b6ab",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_3_0)",
+      "blockNumber": "317441151",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61318001"
+    },
+    {
+      "hash": "0xc79fea22927a40e7a64950c42cde75f4df58b01a5022f783d0d41b2477b4f41d",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_4_0)",
+      "blockNumber": "317441160",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61368001"
+    },
+    {
+      "hash": "0x0ff3a11203cb0c992ace7c7e0cb84ae108b49f9889426b3b8fc3313ff2919bee",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_5_0)",
+      "blockNumber": "317441168",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61578001"
+    },
+    {
+      "hash": "0x952fda09b5ec385809fad3c337ea96c4c104668e4fb73d76bf505ee4c670b0b1",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_6_0)",
+      "blockNumber": "317441177",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61806001"
+    },
+    {
+      "hash": "0x710735785bc4c91886a1c2fab953e4fa833a179fcc1d77f4db08f75acc1d46e4",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_7_0)",
+      "blockNumber": "317441185",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61612001"
+    },
+    {
+      "hash": "0xd5e2520c8cc45581d7eea21e0642bdb48afcff9bef251273a0bab72d188e00f6",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_8_0)",
+      "blockNumber": "317441193",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61176001"
+    },
+    {
+      "hash": "0x1144f6f367091edb8e9120c0b0150440124ae7b2193cf376c0a6987ae4ef6a7a",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_9_0)",
+      "blockNumber": "317441202",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61318001"
+    },
+    {
+      "hash": "0x45aa922f46b5b55b824302ffd47993ef5904e28497168efcd7a49cdaca429c2b",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_10_0)",
+      "blockNumber": "317441211",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61456001"
+    },
+    {
+      "hash": "0x212f78451a8cc1f54ee122edc1f95f3f3c910a5abb9ab4cf0bf524d0dc3c5400",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_11_0)",
+      "blockNumber": "317441220",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61368001"
+    },
+    {
+      "hash": "0x160121345995c57ca43d69efc97f6519606f4904bd03fa824e4109f277da4f5f",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_12_0)",
+      "blockNumber": "317441228",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61176001"
+    },
+    {
+      "hash": "0xb9e72586ee7a365d6c8e8da183692d222f2ed2af7131aa506334c5058be84f74",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_13_0)",
+      "blockNumber": "317441235",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61176001"
+    },
+    {
+      "hash": "0x0f1de8d5fc7592869d49dd4a40b8f639397eb01924dc15b33e16afd1c2dd0c4c",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_14_0)",
+      "blockNumber": "317441243",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61168001"
+    },
+    {
+      "hash": "0x5d39fe4593bdf150b891a06b4ce48d3134752b9c2b5efcf5f17a70ad85b3ee82",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_15_0)",
+      "blockNumber": "317441253",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61600001"
+    },
+    {
+      "hash": "0x866f8eee7921d281fe1e7283b714dd7c84bc0520d1e64fc720d28eca4a97f615",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_16_0)",
+      "blockNumber": "317441260",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61426001"
+    },
+    {
+      "hash": "0x8a9b7c387e14fe9d3e4b035026ac4aaf45dcbb7eefa27f3ca714201271bb7e00",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_17_0)",
+      "blockNumber": "317441268",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61276001"
+    },
+    {
+      "hash": "0x1de567c0581ef9903abd351ebfc81fc3bcc9dd634eb5f5664ed90c30acf7f0f7",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_18_0)",
+      "blockNumber": "317441277",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61594001"
+    },
+    {
+      "hash": "0xa82b60d03e00200352db5167c773bbefc6e59317c6c7d95c950282d75f04eba0",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_19_0)",
+      "blockNumber": "317441285",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61696001"
+    },
+    {
+      "hash": "0xec6b4ebc70e0fcd9116a1746a0604a768bbfd9f036e27b926bb8d27736be1ad1",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_20_0)",
+      "blockNumber": "317441293",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61606001"
+    },
+    {
+      "hash": "0xa6645885fb87bd0b9b463a61d59c94ccb079a4dfa0abbdeb933559f20899cbf5",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_21_0)",
+      "status": "success",
+      "blockNumber": "317441299",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "62260001"
+    },
+    {
+      "hash": "0x1005ef3885bef2f983549c73ebd4c848caab6c8b2a042715069eccc79b329a1b",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_22_0)",
+      "blockNumber": "317441513",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61420001"
+    },
+    {
+      "hash": "0x4b222725b41f2fc450377060d3755d55b57c381c7cab667ab5cab55cb432009e",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_23_0)",
+      "blockNumber": "317441522",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61246001"
+    },
+    {
+      "hash": "0x8955260aeb10f1be5d82c82f29b101b75fefa0802a53d1d9bc04d497ba1a3430",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_24_0)",
+      "blockNumber": "317441529",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61144001"
+    },
+    {
+      "hash": "0x0849d7236d4d31660d16281f7181fc3a3406b7204a248246897fd945f528c575",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_25_0)",
+      "blockNumber": "317441537",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61144001"
+    },
+    {
+      "hash": "0x4303546c867a6e19eceb8d610a19ce06b001cdfd4ed2da64157c3ded0d0d6c1b",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_26_0)",
+      "blockNumber": "317441544",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61144001"
+    },
+    {
+      "hash": "0x429bdedd4d8f05161d3ba73844b00b673377f96e91765cb1ec1d6bc4b6f3d17f",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_27_0)",
+      "blockNumber": "317441553",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61212001"
+    },
+    {
+      "hash": "0x6194acbe7884cd030c8ea393e87ba296e8e4d8ffb49c8822d1e661ea5fec34e0",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_28_0)",
+      "blockNumber": "317441559",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61414001"
+    },
+    {
+      "hash": "0xf27ebe1b8b09cccf6cc95e95f61816576d0f201446c14b49cf1252e2344a8747",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_29_0)",
+      "blockNumber": "317441567",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61144001"
+    },
+    {
+      "hash": "0x48a33bc61da6463e1b807b057295598035753e02130fa636b67c7320ccb16e06",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_30_0)",
+      "blockNumber": "317441576",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61420001"
+    },
+    {
+      "hash": "0x26464fea30026c84134c3b0a5eda6a1fc8b1f73930ee00aad7baaaca6af237d5",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_31_0)",
+      "blockNumber": "317441584",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61306001"
+    },
+    {
+      "hash": "0x343c66da2882dd4fd0754160515f479ddcee3149c194ad93b46b859b6d0dff56",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_32_0)",
+      "blockNumber": "317441590",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61214001"
+    },
+    {
+      "hash": "0x41e61e40f8778036ad3cc4f7593f9089c2a20e5c6e875ebe627f4cb8b328c342",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_33_0)",
+      "blockNumber": "317441604",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61642001"
+    },
+    {
+      "hash": "0x9f9721fd18a96728bc83cde400d8472af8cb2cb079c44c31e526672820a458b6",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_34_0)",
+      "blockNumber": "317441613",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61368001"
+    },
+    {
+      "hash": "0xa0878096719ba6d767397285f4c65bdaef6acd0d1ad5be50388a4f400cfed897",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_35_0)",
+      "blockNumber": "317441621",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61522001"
+    },
+    {
+      "hash": "0xe186c91311412d3ffec4734978e9ac7a55caa0105559c2c0842febc5e3d11639",
+      "label": "addConfig(market 1 USDC / X100_DOUBLE_NUMBER_36_0)",
+      "blockNumber": "317441628",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61486001"
+    },
+    {
+      "hash": "0x4d1bdf78e1e0026a9de4a095320adbf2e9fb6f88513f7dccd50f0417145c2f1d",
+      "label": "addConfig(market 1 USDC / X100_SEVEN_STREAK_0_0)",
+      "blockNumber": "317441637",
+      "status": "success",
+      "gasUsed": "83182",
+      "effectiveGasPrice": "61132001"
+    },
+    {
+      "hash": "0x40eb5492839b3fd77312ba0f2d7456e94ada7da243091d164a5cc07fb97f5943",
+      "label": "addConfig(market 1 USDC / X100_SEVEN_STREAK_0_1)",
+      "blockNumber": "317441643",
+      "status": "success",
+      "gasUsed": "83194",
+      "effectiveGasPrice": "61348001"
+    },
+    {
+      "hash": "0xf83777a54a28d5e383863e941f7686c183f5e4da5c8278f6019758b87edc147a",
+      "label": "addConfig(market 1 USDC / X100_NINE_OF_TEN_0_0)",
+      "blockNumber": "317441649",
+      "status": "success",
+      "gasUsed": "83142",
+      "effectiveGasPrice": "61132001"
+    },
+    {
+      "hash": "0xf919419f8c3290c6096fe28a231fda32c42dea94e6eaec4c65000855fb70cb59",
+      "label": "addConfig(market 1 USDC / X100_NINE_OF_TEN_0_1)",
+      "blockNumber": "317441657",
+      "status": "success",
+      "gasUsed": "83154",
+      "effectiveGasPrice": "61294001"
+    },
+    {
+      "hash": "0x8b5ce30be191dbb5202b38ebaf1241122a4ac76fd3ed7245cd284eb388039f3a",
+      "label": "addConfig(market 2 DAI / X100_PERFECT_DOZEN_1_0)",
+      "blockNumber": "317441663",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61132001"
+    },
+    {
+      "hash": "0xf4323918094e5a1e0a911fa817a4cdea51e8f908c62ddb48d334cee0d67cb3e9",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_PERFECT_DOZEN_1_0)",
+      "blockNumber": "317441672",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61192001"
+    },
+    {
+      "hash": "0x716665d934ea56f38e78e21195be8beaf5cb45bb665efd578e8f896defb9722b",
+      "label": "addConfig(market 2 DAI / X100_PERFECT_DOZEN_2_0)",
+      "blockNumber": "317441681",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61360001"
+    },
+    {
+      "hash": "0xc67612b41d6849b32c1cf1882bc5ab8ca10595951517e2e7704df29edb565703",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_PERFECT_DOZEN_2_0)",
+      "blockNumber": "317441688",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61444001"
+    },
+    {
+      "hash": "0x4ab0d55316610f31032ca7cf237925a167aea10417c2814293dcc7b9aab8f6af",
+      "label": "addConfig(market 2 DAI / X100_PERFECT_DOZEN_3_0)",
+      "blockNumber": "317441697",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61126001"
+    },
+    {
+      "hash": "0x91973fd902431f4ea1b38ca781057b86931c0d908315441e0f8c97806a5f5aba",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_PERFECT_DOZEN_3_0)",
+      "blockNumber": "317441704",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61474001"
+    },
+    {
+      "hash": "0x8aa91c4743f94a2dd04cb25de86181e45ebcbdd0cf7e9896e4e04f19d85765c1",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_0_0)",
+      "blockNumber": "317441712",
+      "status": "success",
+      "gasUsed": "83156",
+      "effectiveGasPrice": "61594001"
+    },
+    {
+      "hash": "0x5445f55eff95f9f759210a6037658f766e2eaf8a8d365de3f840cc9219be239a",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_0_0)",
+      "blockNumber": "317441723",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61480001"
+    },
+    {
+      "hash": "0xa33319f53844a78a1bce09e84928173bb2ce120250d32d41258411de35b9711e",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_1_0)",
+      "blockNumber": "317441732",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61120001"
+    },
+    {
+      "hash": "0x0395936fcb261264b1b644f849af616453237ff400fb5eb09d4183ec6464e55c",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_1_0)",
+      "blockNumber": "317441740",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61120001"
+    },
+    {
+      "hash": "0x5b9e094c3f20f6445171c185a4da35713866d1d63af2659207d3dc44917a57ce",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_2_0)",
+      "blockNumber": "317441748",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61120001"
+    },
+    {
+      "hash": "0x8c90d4cd0f8347f107cd0746b91400ed79d57c17e487289d8327b26ea2ba169b",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_2_0)",
+      "blockNumber": "317441754",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61474001"
+    },
+    {
+      "hash": "0x1974342c4fa147a0fb4f12f8676e909bec1e47385d22f43bdad522ce11383b9b",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_3_0)",
+      "blockNumber": "317441760",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61258001"
+    },
+    {
+      "hash": "0x94a155f7aae8839a1e3dc3fcc1575c1f1a09ebaa6464ed8ea1bddd68f34819ab",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_3_0)",
+      "blockNumber": "317441766",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "62260001"
+    },
+    {
+      "hash": "0x58b6594299015267e492a848a693d0e8e52f5afd7eef11c519626f6673eebf60",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_4_0)",
+      "blockNumber": "317441775",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61120001"
+    },
+    {
+      "hash": "0xa1b7c8b73504ea54acb94a2b38df5cf44d2b638b4746ab8f39378197e15fbde2",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_4_0)",
+      "blockNumber": "317441784",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61426001"
+    },
+    {
+      "hash": "0x2169ff7925f2b3443eb7add09b3b9cefcffb913abc7e4d311f308267a65cd8e8",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_5_0)",
+      "blockNumber": "317441792",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61368001"
+    },
+    {
+      "hash": "0x5e9423f97c9fdc0e5e70c686799cf6e8367faa4ba48f56635190a6066fa8ead6",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_5_0)",
+      "blockNumber": "317441799",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61120001"
+    },
+    {
+      "hash": "0x08d3356d78e0a7033cf29b30fa9be2e29ed0ebd05d80416d7f29d3f2d84ce13a",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_6_0)",
+      "blockNumber": "317441808",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61214001"
+    },
+    {
+      "hash": "0x6b3165757c6c42237add2f9c09995b4493222734c69a983cc34f1e564c7afe5c",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_6_0)",
+      "blockNumber": "317441815",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61120001"
+    },
+    {
+      "hash": "0x0344c645969d23508ba0bd38acd17384152931504ac5078f415927f643d28fc3",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_7_0)",
+      "blockNumber": "317441824",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61228001"
+    },
+    {
+      "hash": "0x185fb61b8d5bb02515c8197dfc88a94c4288cce66be72e5991471cae51560406",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_7_0)",
+      "blockNumber": "317441831",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61114001"
+    },
+    {
+      "hash": "0x4f8581a3b77898bf5fd6c3cc21a334342a689dbaea92b0040049b3009b2336d1",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_8_0)",
+      "blockNumber": "317441838",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61306001"
+    },
+    {
+      "hash": "0xf9775b8f9e2865a38b09ae16654e6cc80680316d0ef5d9b71558518f66f5d912",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_8_0)",
+      "blockNumber": "317441845",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61462001"
+    },
+    {
+      "hash": "0x660a0f3ae7c1e1ef1b3e8d2e9d03810440736b67af875f3fccafb6b7301c6a70",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_9_0)",
+      "blockNumber": "317441853",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61450001"
+    },
+    {
+      "hash": "0x747d2165064219d0e157ba86a3df33a258538337289c9ef85075f91db2dd32d5",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_9_0)",
+      "blockNumber": "317441860",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61880001"
+    },
+    {
+      "hash": "0xed2eff59e786b7f1f0b65ebc4d3483f49350e890a9e3c688b7fb631f417e458e",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_10_0)",
+      "blockNumber": "317441869",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "62272001"
+    },
+    {
+      "hash": "0x90cae62ecb984405127a76c3eaf27eb51e6dbdeec04bb65a2976ecd4ac3583f5",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_10_0)",
+      "blockNumber": "317441875",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61202001"
+    },
+    {
+      "hash": "0x6d4e97742806e1c39f58031815822ac63cc8ace3072dc635313b118aa10fd95e",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_11_0)",
+      "blockNumber": "317441882",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61402001"
+    },
+    {
+      "hash": "0xd1f7914be75709cba6f599b19ee53b48b42fcf273a345563d866b207e5ef5409",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_11_0)",
+      "blockNumber": "317441890",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61180001"
+    },
+    {
+      "hash": "0x387d7941c91c76a680c7e4b8da103b56051e9183a5a087d1cf48b6b52d778406",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_12_0)",
+      "blockNumber": "317441897",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61108001"
+    },
+    {
+      "hash": "0xc8c9cf472b72f468086ec86db9cc2a59d507eb5b2119175c599cab11e1a38698",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_12_0)",
+      "blockNumber": "317441905",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61360001"
+    },
+    {
+      "hash": "0x1fadde75a7a5cd2c1fa9c16fd1b26c96db9ed070925706ed00d6deed40b6a771",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_13_0)",
+      "blockNumber": "317441911",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61462001"
+    },
+    {
+      "hash": "0x104bc5f82c927960dd7716c6f9eb3fbe1f1de8e87d4d24eb779abd212106e449",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_13_0)",
+      "blockNumber": "317441917",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61318001"
+    },
+    {
+      "hash": "0xf6f9ec5c644dd3575ebf6fcd57dfc2960d97670265f462e82c506b0fe04b69b3",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_14_0)",
+      "blockNumber": "317441922",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61306001"
+    },
+    {
+      "hash": "0x136f6dddc23692c805b11ee3d0baf2e8e6175390bf78dec85cf41f1b4fce7e86",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_14_0)",
+      "blockNumber": "317441930",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61420001"
+    },
+    {
+      "hash": "0xa2689b5e658bf1529c13dd8c6c08e709684e946bac58a0d97568f73df834a375",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_15_0)",
+      "blockNumber": "317441937",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61336001"
+    },
+    {
+      "hash": "0x76fd0b05601b5f2148b122c9591bbc3f245a99d78ecfa5eebefac94460d4f29c",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_15_0)",
+      "blockNumber": "317441946",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61102001"
+    },
+    {
+      "hash": "0x1d0ec057f2a093b4fe1c075862d7e8e80df8691f6483c46a194c037fd211845b",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_16_0)",
+      "blockNumber": "317441954",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61102001"
+    },
+    {
+      "hash": "0x0412bf7c130429b4bda03899d2574629a004c37af965c3956343353fcc57558e",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_16_0)",
+      "blockNumber": "317441960",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61318001"
+    },
+    {
+      "hash": "0xa0e9f7abc65361b7524e021a68f46d080ad27abe8ffe8624c9f2dd8b03aeceea",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_17_0)",
+      "blockNumber": "317441968",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61528001"
+    },
+    {
+      "hash": "0x13ea5d3f4e27b923479ddd788d7ac6db3445f9c4561fd34f00a036f73a9e498a",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_17_0)",
+      "blockNumber": "317441978",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61176001"
+    },
+    {
+      "hash": "0x5e0c2cb2b096433cf616b4008ccad8d92ebf04a0a870573776f787c53f10be2c",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_18_0)",
+      "blockNumber": "317441986",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61212001"
+    },
+    {
+      "hash": "0xe56a03faf997a76c4385f44992bb179aa4f56579292b59d5c67c92d801cbd88d",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_18_0)",
+      "blockNumber": "317441994",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61380001"
+    },
+    {
+      "hash": "0x23fedaafa9c8f0d837516cfbc85916d62b53d64dd710fad2d354ebe4d304494e",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_19_0)",
+      "blockNumber": "317442002",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "62048001"
+    },
+    {
+      "hash": "0x2679a4af7f42111104ba207eabc648f5ea444fd32e3cc3cea6f7ed4b8dda6618",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_19_0)",
+      "blockNumber": "317442011",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "62132001"
+    },
+    {
+      "hash": "0x3c56b320d10b7dd473c6c8aee81830042431456800ca0c36d066546b1dc5b1be",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_20_0)",
+      "blockNumber": "317442019",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61588001"
+    },
+    {
+      "hash": "0xa1651911885733e783b79798d2dab8ebae18d855191fab7c6ade133e756e3609",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_20_0)",
+      "blockNumber": "317442027",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61096001"
+    },
+    {
+      "hash": "0xabc2c9f602eb2a5221e21232b133fca1fb26d42e06da7b9a47507355f555fb58",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_21_0)",
+      "blockNumber": "317442036",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61258001"
+    },
+    {
+      "hash": "0xf5125bf491f5601a20685966c4ee377863a7e7ba8eb836c89db69671783bef5c",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_21_0)",
+      "blockNumber": "317442045",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61518001"
+    },
+    {
+      "hash": "0xda800921b13e1e62c728f39b3281b810b3165d9b703c6c5deb1416fe65b90cd8",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_22_0)",
+      "blockNumber": "317442054",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61722001"
+    },
+    {
+      "hash": "0x7f2876150412a610921ca4e271e535a136981812de96b27e40279f0e04c643b6",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_22_0)",
+      "blockNumber": "317442063",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61096001"
+    },
+    {
+      "hash": "0xf8d44fb8271259b5b6338caee7c1912c0646b4d11fd0d53d6ae421485ba16ec6",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_23_0)",
+      "blockNumber": "317442071",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61324001"
+    },
+    {
+      "hash": "0xd8a1c90c47b2cc8395c5926ead80f08854526f4509c38b3a211c937626ea4cd2",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_23_0)",
+      "blockNumber": "317442080",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61214001"
+    },
+    {
+      "hash": "0x46f3bb39f379b5780c5449973bc098ba039cde85692077443e7fab31114eb5fc",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_24_0)",
+      "blockNumber": "317442089",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61812001"
+    },
+    {
+      "hash": "0x148a1fff575f90032ba5f39e3c40d693e0e2200e310f1ddeb6faa949d5349726",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_24_0)",
+      "blockNumber": "317442095",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61212001"
+    },
+    {
+      "hash": "0x94ab1e48e6cb38ae6ff2d65c42e84ad948b7105184805eb92d442abeb00fda04",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_25_0)",
+      "blockNumber": "317442101",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61554001"
+    },
+    {
+      "hash": "0x16e3c960ce32d146a960b84911342e0dfd441a988c9ef0d873561d6e11bdb0c5",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_25_0)",
+      "blockNumber": "317442109",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61090001"
+    },
+    {
+      "hash": "0xc97bcdb4975fa1b631d87566f625fe43376aec8618bbfe2e9a1deae4693a8178",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_26_0)",
+      "blockNumber": "317442117",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61090001"
+    },
+    {
+      "hash": "0x01530b19e906da79b59881e5818dba8a67348b9bdee60ebeb5bbd58a57354887",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_26_0)",
+      "blockNumber": "317442125",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61090001"
+    },
+    {
+      "hash": "0x42ef365ac58a38ad0a90e18e2b97b2162064f56510b3027436ba8069c6e992eb",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_27_0)",
+      "blockNumber": "317442135",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61234001"
+    },
+    {
+      "hash": "0x63f493f027dc7c7e709733b4ddebebdad2951f59c72597581e725ef0747b3b27",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_27_0)",
+      "blockNumber": "317442143",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61336001"
+    },
+    {
+      "hash": "0x6a77eec4897a95cdd096ce1897344af04c216d4e8e3aee3c5dfa3b72d2099e04",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_28_0)",
+      "blockNumber": "317442149",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61150001"
+    },
+    {
+      "hash": "0x50c880072352abcdeae4137257edadf01bf240d4a9f78677cb784bc691a5939c",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_28_0)",
+      "blockNumber": "317442157",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61306001"
+    },
+    {
+      "hash": "0x6639f6b36ad78009ca384525a9e10c1e1bba4ddb786ae44bca597aa7e5cc80d6",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_29_0)",
+      "blockNumber": "317442166",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61402001"
+    },
+    {
+      "hash": "0x627ecc0d739c62da3d01d8fee108151c22d88887721302bce825887383616749",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_29_0)",
+      "blockNumber": "317442175",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61084001"
+    },
+    {
+      "hash": "0x72366d826c6d8728f0c4e02deb35a2c3305d49c5a37d5cd98fbe2464d3e6b02e",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_30_0)",
+      "blockNumber": "317442183",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61084001"
+    },
+    {
+      "hash": "0xfab0c735f2aecc6fad7f5720cf682d74c0dc605a33f0ce62de200f42ce3223bb",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_30_0)",
+      "blockNumber": "317442192",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61176001"
+    },
+    {
+      "hash": "0x3625461a5fe33e9768c9586bea94dfd4b1e09b94a9a3625004b25953530a3b0e",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_31_0)",
+      "blockNumber": "317442197",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61078001"
+    },
+    {
+      "hash": "0xe7cbf38ebd3c55683ea9b92a795515d39b0ce8638833ea08edda1474ffdf8a3a",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_31_0)",
+      "blockNumber": "317442206",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61150001"
+    },
+    {
+      "hash": "0xdb764e2dcc6a7a73ffe669e265a3c064dbe88dda72bdad741c767f5c16f595fe",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_32_0)",
+      "blockNumber": "317442215",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61584001"
+    },
+    {
+      "hash": "0xa7f42b7c7824c527d4aa1e9c488cd8a8db61add65787047ee2b8a7677e16dea9",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_32_0)",
+      "blockNumber": "317442223",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61672001"
+    },
+    {
+      "hash": "0x7f360d0ad3ff7d3d95357c610ea99d205177194c7d33d02c5e6233bb9a87d032",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_33_0)",
+      "blockNumber": "317442230",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "62298001"
+    },
+    {
+      "hash": "0xac930812bb21c15bfeee44fdc74ee1950960469988d2f8611fb21724b36b0314",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_33_0)",
+      "blockNumber": "317442239",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61870001"
+    },
+    {
+      "hash": "0xa7661ab26d7963012268211c38517e21bf913bf55abdfae4350e322bd1c40f28",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_34_0)",
+      "blockNumber": "317442248",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61078001"
+    },
+    {
+      "hash": "0x98844db94dceb9e89ef1ec9e613445320f10cb8918e150aceb6041b41065021e",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_34_0)",
+      "blockNumber": "317442256",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61078001"
+    },
+    {
+      "hash": "0x70f86d52efdfd0c9150b81d6eb45e43150aef46a0ac710e707ea5cfda17b6267",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_35_0)",
+      "blockNumber": "317442264",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61294001"
+    },
+    {
+      "hash": "0x9b71e80013446ef3268e51608224e992e47c811a445550c3086c649d2c4efd4f",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_35_0)",
+      "blockNumber": "317442271",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61078001"
+    },
+    {
+      "hash": "0x4228ecc8e41277e335f9baa85ed6d687f90ab382315a735f2d09d51a4d04ab71",
+      "label": "addConfig(market 2 DAI / X100_DOUBLE_NUMBER_36_0)",
+      "blockNumber": "317442278",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61078001"
+    },
+    {
+      "hash": "0x9ce875f018652106a2078cec7ff41725ca20acaa7f05c45d37644e8b3bce545d",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_DOUBLE_NUMBER_36_0)",
+      "blockNumber": "317442284",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61420001"
+    },
+    {
+      "hash": "0xe2cbc9db2ed7d3deb188537584f917626f5e507513fb20251475e4b7070716ae",
+      "label": "addConfig(market 2 DAI / X100_SEVEN_STREAK_0_0)",
+      "blockNumber": "317442292",
+      "status": "success",
+      "gasUsed": "83182",
+      "effectiveGasPrice": "61368001"
+    },
+    {
+      "hash": "0x67ce2e3ee36463a67d9228ce0844894cfaddfe3a09b9890854b488064a555ae5",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_SEVEN_STREAK_0_0)",
+      "blockNumber": "317442299",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61188001"
+    },
+    {
+      "hash": "0x5a073877953651852ae7f9456109c81d118b2271699ca4f487b50d311706dbb6",
+      "label": "addConfig(market 2 DAI / X100_SEVEN_STREAK_0_1)",
+      "blockNumber": "317442308",
+      "status": "success",
+      "gasUsed": "83194",
+      "effectiveGasPrice": "61554001"
+    },
+    {
+      "hash": "0xc483fda2b73882d460a13d408f1bb005d5c17ef5a54e0e396e67956549e8972d",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_SEVEN_STREAK_0_1)",
+      "blockNumber": "317442317",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61800001"
+    },
+    {
+      "hash": "0xed3a6a833b2d95f191baf28b393414a6922c343897c55d9fc54cd304dc3b3c1c",
+      "label": "addConfig(market 2 DAI / X100_NINE_OF_TEN_0_0)",
+      "blockNumber": "317442326",
+      "status": "success",
+      "gasUsed": "83142",
+      "effectiveGasPrice": "61072001"
+    },
+    {
+      "hash": "0xed50d524ace8d5b637657248fe08e7897fa778bb674d5b7fa82e634650d4767b",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_NINE_OF_TEN_0_0)",
+      "blockNumber": "317442333",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61330001"
+    },
+    {
+      "hash": "0x2c622a2ad3cfe4d56fca9a6bf81fa11b7caa0d68c33526cfb37e565a61cd62c7",
+      "label": "addConfig(market 2 DAI / X100_NINE_OF_TEN_0_1)",
+      "blockNumber": "317442342",
+      "status": "success",
+      "gasUsed": "83154",
+      "effectiveGasPrice": "61072001"
+    },
+    {
+      "hash": "0x29a162192c87c13f26fe3b0ba5e606654734a7fc770277765b66a27d069f0525",
+      "label": "setConfigStakeLimits(market 2 DAI / X100_NINE_OF_TEN_0_1)",
+      "blockNumber": "317442348",
+      "status": "success",
+      "gasUsed": "79689",
+      "effectiveGasPrice": "61522001"
+    },
+    {
+      "hash": "0x82d8a82843f529006a8680bf3f86da40d375882e4f216e4392a21fb7570ff33d",
+      "label": "addConfig(market 3 BRB / X100_PERFECT_DOZEN_1_0)",
+      "blockNumber": "317442354",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61108001"
+    },
+    {
+      "hash": "0x801d92e02bd3fe0b58a905ced730be71121eaaeae7fb96165b564217ac3b9dfc",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_PERFECT_DOZEN_1_0)",
+      "blockNumber": "317442362",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61114001"
+    },
+    {
+      "hash": "0x6f0611e51482f1f1159494a2f18606aa0494972aabbb1cb2a4bc50c6db0eeb26",
+      "label": "addConfig(market 3 BRB / X100_PERFECT_DOZEN_2_0)",
+      "blockNumber": "317442370",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61534001"
+    },
+    {
+      "hash": "0x7a150f7f1b4963eb393bad4cfb15672e1b06d53fe4eeb75dd3e838795024823e",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_PERFECT_DOZEN_2_0)",
+      "blockNumber": "317442378",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61578001"
+    },
+    {
+      "hash": "0x8a209a30ebb229931ba06cf5d3c3064f8961d6d730a2a7ee228044a9e02fa298",
+      "label": "addConfig(market 3 BRB / X100_PERFECT_DOZEN_3_0)",
+      "blockNumber": "317442385",
+      "status": "success",
+      "gasUsed": "83538",
+      "effectiveGasPrice": "61800001"
+    },
+    {
+      "hash": "0x01b9f3ced42558f54f0d702e90f763bc0fff8e9e6b3450d7f72a95d950d5c208",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_PERFECT_DOZEN_3_0)",
+      "blockNumber": "317442394",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61716001"
+    },
+    {
+      "hash": "0xdcbe9c26a0a3267952ba5e24893af8191cfa115e411824fecbb8948bdee10c4f",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_0_0)",
+      "blockNumber": "317442401",
+      "status": "success",
+      "gasUsed": "83156",
+      "effectiveGasPrice": "61546001"
+    },
+    {
+      "hash": "0x22e571e970a90ca282b844c074f5bcfd50851453bfe9b04d4295c2586fcf2171",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_0_0)",
+      "blockNumber": "317442409",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61324001"
+    },
+    {
+      "hash": "0xb8d08cc8d44bd48e4dc85d93516b26eec36b961d0c097be5aa28ab33e12a0500",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_1_0)",
+      "blockNumber": "317442417",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61126001"
+    },
+    {
+      "hash": "0x81ff35fede0784f6a41458d547c9881421c5f0d181d4fc80f70618e73c2c4a73",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_1_0)",
+      "blockNumber": "317442424",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61096001"
+    },
+    {
+      "hash": "0xb20da4dd865e1be2ecda9443109b9f557e9d3cd061533ecfa2231c06ce4df226",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_2_0)",
+      "blockNumber": "317442433",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61746001"
+    },
+    {
+      "hash": "0x12e3ab77c6ce270f1ca4913fc9113f00b2faa5d4e558657391935d80c49e6993",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_2_0)",
+      "blockNumber": "317442440",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61600001"
+    },
+    {
+      "hash": "0x2bac94a94adbd9246fac17662818d2eb792d4f1511f81e0f046e4d8df525d12b",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_3_0)",
+      "blockNumber": "317442447",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61214001"
+    },
+    {
+      "hash": "0x16cf25434af74a4b2bec57d21e3ad855cdca5e95e14bb12dde89aa57a73831b3",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_3_0)",
+      "blockNumber": "317442456",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61402001"
+    },
+    {
+      "hash": "0x71fbb7fb8158b6b7964d8b5666615c18865be536435f465bdb45b98eff769dcb",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_4_0)",
+      "blockNumber": "317442462",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61950001"
+    },
+    {
+      "hash": "0x0f763c2e009287e1c2c217ea2b09f81704f07f041b5d0ce6034d3b55e6003b92",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_4_0)",
+      "blockNumber": "317442470",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61264001"
+    },
+    {
+      "hash": "0xbdd523f427863e5a6584a0e6d369956dc1c77715176eb8d654fb6d4f0da80301",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_5_0)",
+      "blockNumber": "317442479",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "62340001"
+    },
+    {
+      "hash": "0x1ebd0c878eb99ebd169d6ddb3ce97873ca999a0d98cff994605a4f429744dbf9",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_5_0)",
+      "blockNumber": "317442492",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61806001"
+    },
+    {
+      "hash": "0xad405ee133eeb612ec8a347a4d3eb704e691f32c8084f80b18cbd188802e496e",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_6_0)",
+      "blockNumber": "317442501",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61062001"
+    },
+    {
+      "hash": "0x63019a664172159dc6eb838d28c2b08d04a55b55fb7a1414930be7435fcdf30c",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_6_0)",
+      "blockNumber": "317442509",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61108001"
+    },
+    {
+      "hash": "0x62d02c25015293c85532c68664534af3a72cc25948b0262c0760b487a7c989da",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_7_0)",
+      "blockNumber": "317442518",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61444001"
+    },
+    {
+      "hash": "0xd5895ef878734088a17f625484a000a52bd6e124c3c8f60475db061676f51bc2",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_7_0)",
+      "blockNumber": "317442525",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61200001"
+    },
+    {
+      "hash": "0xbd8c77cf18ec3ec523f9b9ac92024e6ed7b1115e575f0bac1fc0740390b66fcc",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_8_0)",
+      "blockNumber": "317442533",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61318001"
+    },
+    {
+      "hash": "0x2358ed7214b3e198f531beac0e4130b930dc86429fa9c079344f4d0608117944",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_8_0)",
+      "blockNumber": "317442539",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61062001"
+    },
+    {
+      "hash": "0x783053bf8558f32b3dba6fc9b156dc31a89c3d2ca3903fc147d4b46796015bd2",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_9_0)",
+      "blockNumber": "317442545",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61396001"
+    },
+    {
+      "hash": "0x6ed773a17f615d3bd1f7c6c7592500953260df916acc07f7170b683ff94ba5dd",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_9_0)",
+      "blockNumber": "317442551",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61056001"
+    },
+    {
+      "hash": "0xf95ce018f9742829d273b0d7431e70ad87018c8e5c9e1a7ec263d1dafe8a91eb",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_10_0)",
+      "blockNumber": "317442557",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61306001"
+    },
+    {
+      "hash": "0x178eced0b1cfd2084aecfb5e861e3ab4ae7277537c7be82ee8547b8c76dd7de0",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_10_0)",
+      "blockNumber": "317442565",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61594001"
+    },
+    {
+      "hash": "0x7dca57e019870c04cb921f34fe41d0c16478d160ac1c8665e03319a9c4875c3f",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_11_0)",
+      "blockNumber": "317442571",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61150001"
+    },
+    {
+      "hash": "0x7d4213d4207ab7ea152b2379bc00862618d0ad26e6a49f38a10e99940b240125",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_11_0)",
+      "blockNumber": "317442580",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61402001"
+    },
+    {
+      "hash": "0x88f01748106c0210edc1766ed4c75a5586b6fab1fde47c1cb1def2939ae0b9c0",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_12_0)",
+      "blockNumber": "317442586",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61056001"
+    },
+    {
+      "hash": "0x5a8e78fff946158ab4cd122670e2cfbb61c0664c1e7831d5cf3a98c2fc0473c6",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_12_0)",
+      "blockNumber": "317442593",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61056001"
+    },
+    {
+      "hash": "0x9df5cb668ff0cc32f228de9bb082e72443e5d7d95fed34ad9d79c9e6fbf69f79",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_13_0)",
+      "blockNumber": "317442599",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61252001"
+    },
+    {
+      "hash": "0x5e5c692cf25032d21faac2d44984a1d1c7c3f117294aa581e80319c158a49875",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_13_0)",
+      "blockNumber": "317442608",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61050001"
+    },
+    {
+      "hash": "0x778498ed502107c5f2e93123dacf02c93d8b018da07f8c9bf65e07f5f414eba8",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_14_0)",
+      "blockNumber": "317442615",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61306001"
+    },
+    {
+      "hash": "0x1399886edc7a431a32f5749cc96ad8f72a81b8417ed5a818e27bb967facec929",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_14_0)",
+      "blockNumber": "317442624",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61144001"
+    },
+    {
+      "hash": "0x59d3fbeb5d9379b19a357e8b3e15610df507106cb319f1ef36443b58c3a9b394",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_15_0)",
+      "blockNumber": "317442631",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61050001"
+    },
+    {
+      "hash": "0xd0f8d3a97284de7926b1bec426f4825c92ab6af9bf8ac3dde4831990c5f1952f",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_15_0)",
+      "blockNumber": "317442638",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61510001"
+    },
+    {
+      "hash": "0xfb3e5d4cd06cb46f774f4954b3ff3f28334bad6ad4fbeacea7e53a838a3f42fe",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_16_0)",
+      "blockNumber": "317442650",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61050001"
+    },
+    {
+      "hash": "0xe2978de614b15661a19c48aafdad4cf2e57b9e17437e652dc30390b0a876629b",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_16_0)",
+      "blockNumber": "317442659",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61238001"
+    },
+    {
+      "hash": "0xf5eb2e1e6843666858a03b838331c2bab3f260f3dcc0db7223a25e954e9e1ed3",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_17_0)",
+      "blockNumber": "317442666",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61050001"
+    },
+    {
+      "hash": "0x375d4f6bb56fd57050dfda24abad61b1e8cc2881643f2a7d948a871f24e143fa",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_17_0)",
+      "blockNumber": "317442675",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61258001"
+    },
+    {
+      "hash": "0xff3df9211b5793b2c7006ea039d9779534f57dd669b8cdc376ab45812ad7f41b",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_18_0)",
+      "blockNumber": "317442681",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61770001"
+    },
+    {
+      "hash": "0xf9289c1c0d0e591a464e4b7725cbf7f4c3d2608dcbc9b5581dabfd52390b5d7c",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_18_0)",
+      "blockNumber": "317442690",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61044001"
+    },
+    {
+      "hash": "0x908577a32407a8a82e8f617373fb2d2ec0b1af1adb059cd992b4181fc716c910",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_19_0)",
+      "blockNumber": "317442699",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61498001"
+    },
+    {
+      "hash": "0xb431773a7c1f09147a9f3bcfd758e3f4af2b7ebcbc6d4a4bf86ccfd35fedd162",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_19_0)",
+      "blockNumber": "317442709",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "62248001"
+    },
+    {
+      "hash": "0xb1e99f5bb5280d963a0dd5af71b89411824486951d833339453ea05277d96748",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_20_0)",
+      "blockNumber": "317442718",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61258001"
+    },
+    {
+      "hash": "0x00489721b833badffde0a42d84a65eef61a24fce37041d9e92056e4137980d17",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_20_0)",
+      "blockNumber": "317442724",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61522001"
+    },
+    {
+      "hash": "0xa39421ff35e3a48c014cd9d75152dc577d9729ceffa50a0c0170b9049cde2478",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_21_0)",
+      "blockNumber": "317442731",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61414001"
+    },
+    {
+      "hash": "0x6c0eb3e8c69cefad47c6ca3ecba2c00978fb7f75eabca35242e10eb484362bfd",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_21_0)",
+      "blockNumber": "317442740",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61518001"
+    },
+    {
+      "hash": "0xe8638ea1a85faf86b8ecb48866d92c6f26adb199d1af4649d1baed0847b9cfe3",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_22_0)",
+      "blockNumber": "317442749",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61258001"
+    },
+    {
+      "hash": "0xf7032d50a12c507d48b2dd1ac41f4ebca62420346e18435bd25b28f83fb6b016",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_22_0)",
+      "blockNumber": "317442755",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61468001"
+    },
+    {
+      "hash": "0xbac10aa4c5d864cd9582e15cca69d810e8290e80ffffa8cb7cec430f4a0d29fe",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_23_0)",
+      "blockNumber": "317442764",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61056001"
+    },
+    {
+      "hash": "0x5e5aaf073b82564ecf00f6e6338f6c2e161292ef1474be1203adec3fb6036b93",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_23_0)",
+      "blockNumber": "317442771",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61044001"
+    },
+    {
+      "hash": "0x94af65191848f9c8c2541b9a3c8381b8a15e42015d3ff44a74e435ded26b5d30",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_24_0)",
+      "blockNumber": "317442779",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61038001"
+    },
+    {
+      "hash": "0xbd92e318c53753d0a486a805fd83e048d1b8e8402bb7a10a3ee11793c6dff57d",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_24_0)",
+      "blockNumber": "317442787",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61108001"
+    },
+    {
+      "hash": "0x512dc6a149dabd10c1224bc4cf6d5fd9aa91bd83b1a159a39ae3c843d5c32c0e",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_25_0)",
+      "blockNumber": "317442796",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61740001"
+    },
+    {
+      "hash": "0x3020dc3938e14572f3415caef4d393aba685bff569ba13e8be88f55be6e95eb9",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_25_0)",
+      "blockNumber": "317442805",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61542001"
+    },
+    {
+      "hash": "0x3763ab4f8327a5c83c38d56922ac19b928414f9f1482f5ac94151c58864e9566",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_26_0)",
+      "blockNumber": "317442814",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61038001"
+    },
+    {
+      "hash": "0xe65a6d6cc39192e02e9f4d95909d3fd72a11b8c696b2ee492bc4abbe297712f8",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_26_0)",
+      "blockNumber": "317442822",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61038001"
+    },
+    {
+      "hash": "0x657245e2e875a19bf0775b53a01e2f2e2161744d4cd11861241f0bb1e7791e05",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_27_0)",
+      "blockNumber": "317442831",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61192001"
+    },
+    {
+      "hash": "0x8ad570991b25ff6af247a8828ac798e0339925f928495c8a008d38ded2d2de56",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_27_0)",
+      "blockNumber": "317442838",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61038001"
+    },
+    {
+      "hash": "0xa8c41ca0ec8e4e7bd7f414ae0be3f6f999409732037f0618f76da70df27178ae",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_28_0)",
+      "blockNumber": "317442847",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61138001"
+    },
+    {
+      "hash": "0xa963ba772444c9ad8812cd103654a6d9397ee72199819c14eac58a89e0eb7a68",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_28_0)",
+      "blockNumber": "317442856",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61288001"
+    },
+    {
+      "hash": "0x2a1bffd4c159dcc3eb2fdf72b8eb98617d603f38acef90fe34298a868012df74",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_29_0)",
+      "blockNumber": "317442865",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61880001"
+    },
+    {
+      "hash": "0xef8d6f79dd988ffa61ef9d29dfbb1329fa428439f948c876737f7a3ed3233006",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_29_0)",
+      "blockNumber": "317442874",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61030001"
+    },
+    {
+      "hash": "0x27633ac610b3b00108b62f70eaf1a87d9cfde0d082289149a49a007d891d972f",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_30_0)",
+      "blockNumber": "317442884",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61456001"
+    },
+    {
+      "hash": "0x03524e33f9d364f6ec3c4124d7e4f33f60bf3ca7c35654e4fdfd52148c3e8120",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_30_0)",
+      "blockNumber": "317442893",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61030001"
+    },
+    {
+      "hash": "0x422428de6bf3108eb6dfea1ce3f4a7db089a79edfba6c3dea33c06ad0205c939",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_31_0)",
+      "blockNumber": "317442899",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61312001"
+    },
+    {
+      "hash": "0x60c897854ab846c866afd20f5c1c32375199e473f8f0de19b359d78ef5cf5eb1",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_31_0)",
+      "blockNumber": "317442906",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61072001"
+    },
+    {
+      "hash": "0x0a567a36c2c88f00076a994c2daae957ce4b9049325da5fa23cd2e795f4a9d64",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_32_0)",
+      "blockNumber": "317442914",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61764001"
+    },
+    {
+      "hash": "0xe1cf372854083d5141d9ce67158fb8e7d2295b01fe6013cbd8ac57d12dcd428a",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_32_0)",
+      "blockNumber": "317442920",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61030001"
+    },
+    {
+      "hash": "0x9a2370b4cb161bdbe1db15693ef998f1e505adc4682f22f16d4d3aa11396d9b2",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_33_0)",
+      "blockNumber": "317442929",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61200001"
+    },
+    {
+      "hash": "0x4ba9c0c545e85b79feb447ba4b4fab3f0f4ba3717bcc869eedd5ccb8fd39f2fa",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_33_0)",
+      "blockNumber": "317442937",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "62108001"
+    },
+    {
+      "hash": "0xc633e98bb6678dc6baccac0196dd14eec372f6fc9f95f6038f4818bb450c0bc9",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_34_0)",
+      "blockNumber": "317442945",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "62090001"
+    },
+    {
+      "hash": "0x1c56217401f185c735262bd28dcf2bd6bdc92e3ce0fa8b6ce2ab0c35f816b90b",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_34_0)",
+      "blockNumber": "317442954",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61312001"
+    },
+    {
+      "hash": "0x73ee41162c4ed990496e1761502774cd26b81eb8cd5fe8327f8fbfc75be61a5b",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_35_0)",
+      "blockNumber": "317442965",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61324001"
+    },
+    {
+      "hash": "0xcee401ed91f4084dd9777f9b43ddbb563c45445d76ed3e8c67bdb8440af02e9a",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_35_0)",
+      "blockNumber": "317442974",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61026001"
+    },
+    {
+      "hash": "0x577433ed9ef64353adfe77d8dcb200bb003df0e16f152a61221dcca78acb8238",
+      "label": "addConfig(market 3 BRB / X100_DOUBLE_NUMBER_36_0)",
+      "blockNumber": "317442982",
+      "status": "success",
+      "gasUsed": "83168",
+      "effectiveGasPrice": "61026001"
+    },
+    {
+      "hash": "0x5c9ef65528eeb0f980b419dfc15b21b2013442ec58ca3ba9eb9ee831ee3cf715",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_DOUBLE_NUMBER_36_0)",
+      "blockNumber": "317442989",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61026001"
+    },
+    {
+      "hash": "0xf2b08bf7d0fee7b4b522d34ae0466863cb0850452cbcdd9c07b04d697876a773",
+      "label": "addConfig(market 3 BRB / X100_SEVEN_STREAK_0_0)",
+      "blockNumber": "317442998",
+      "status": "success",
+      "gasUsed": "83182",
+      "effectiveGasPrice": "61300001"
+    },
+    {
+      "hash": "0x0a09fd9a696d40967b0c05dac3ea22938981f8655e60dac0dd83c9868d52c8df",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_SEVEN_STREAK_0_0)",
+      "blockNumber": "317443007",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61474001"
+    },
+    {
+      "hash": "0xd4129cbe8fda64ed95c2f89186690feaa052957688a66e3907ba6892b8c64a0f",
+      "label": "addConfig(market 3 BRB / X100_SEVEN_STREAK_0_1)",
+      "blockNumber": "317443016",
+      "status": "success",
+      "gasUsed": "83194",
+      "effectiveGasPrice": "61554001"
+    },
+    {
+      "hash": "0x1f5a08dde7fe5b4a07f883c9774d58dd02d0d8e226c99c18386f0fea04858b1f",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_SEVEN_STREAK_0_1)",
+      "blockNumber": "317443025",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61018001"
+    },
+    {
+      "hash": "0x8b3d0a00f4aed807560eaa5c6e929d5c29bdce2ea8bead85ac250e2e6aaf6f97",
+      "label": "addConfig(market 3 BRB / X100_NINE_OF_TEN_0_0)",
+      "blockNumber": "317443034",
+      "status": "success",
+      "gasUsed": "83142",
+      "effectiveGasPrice": "61138001"
+    },
+    {
+      "hash": "0x36d4905e747b4bfa11dac97f6ada29b136d96af35c6f056b5e129f34e51261de",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_NINE_OF_TEN_0_0)",
+      "blockNumber": "317443041",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61018001"
+    },
+    {
+      "hash": "0x070403810aa7b211498046cd29ed65246b74e23eeb2b789dc4088429d662caf9",
+      "label": "addConfig(market 3 BRB / X100_NINE_OF_TEN_0_1)",
+      "blockNumber": "317443050",
+      "status": "success",
+      "gasUsed": "83154",
+      "effectiveGasPrice": "61214001"
+    },
+    {
+      "hash": "0x74d88ca3034e4b90c73868b1913d040376cbe57df96ab769019881419a6432fc",
+      "label": "setConfigStakeLimits(market 3 BRB / X100_NINE_OF_TEN_0_1)",
+      "blockNumber": "317443056",
+      "status": "success",
+      "gasUsed": "79677",
+      "effectiveGasPrice": "61528001"
+    }
+  ],
+  "startedAt": "2026-10-09T15:40:24.375Z",
+  "sourceBlock": "317441054",
+  "signer": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+  "beforeConfigCount": "27",
+  "plan": [
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_1_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 1,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "25806",
+      "existingConfigId": 27,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.025806 \u2014 below the 1 minimum at 85.8628x. Deposit at least ~424.314 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_2_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 2,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "25806",
+      "existingConfigId": 28,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.025806 \u2014 below the 1 minimum at 85.8628x. Deposit at least ~424.314 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_3_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 3,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "25806",
+      "existingConfigId": 29,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.025806 \u2014 below the 1 minimum at 85.8628x. Deposit at least ~424.314 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_0_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 30,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_1_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 1,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 31,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_2_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 2,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 32,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_3_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 3,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 33,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_4_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 4,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 34,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_5_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 5,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 35,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_6_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 6,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 36,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_7_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 7,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 37,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_8_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 8,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 38,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_9_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 9,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 39,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_10_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 10,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 40,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_11_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 11,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 41,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_12_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 12,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 42,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_13_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 13,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 43,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_14_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 14,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 44,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_15_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 15,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 45,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_16_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 16,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 46,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_17_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 17,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 47,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_18_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 18,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 48,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_19_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 19,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 49,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_20_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 20,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 50,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_21_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 21,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "existingConfigId": 51,
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_22_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 22,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_23_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 23,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_24_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 24,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_25_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 25,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_26_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 26,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_27_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 27,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_28_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 28,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_29_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 29,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_30_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 30,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_31_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 31,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_32_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 32,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_33_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 33,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_34_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 34,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_35_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 35,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_36_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 36,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "23747",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.023747 \u2014 below the 1 minimum at 93.2205x. Deposit at least ~461.1025 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_SEVEN_STREAK_0_0",
+        "betType": 2,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 7,
+        "redRatioBps": 0,
+        "windowSpins": 8,
+        "multiplierBps": 973289,
+        "winProbability": 0.009760718102913946,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "22734",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.022734 \u2014 below the 1 minimum at 97.3289x. Deposit at least ~481.6445 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_SEVEN_STREAK_0_1",
+        "betType": 2,
+        "color": 1,
+        "targetNumber": 0,
+        "targetCount": 7,
+        "redRatioBps": 0,
+        "windowSpins": 8,
+        "multiplierBps": 973289,
+        "winProbability": 0.009760718102913946,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "22734",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.022734 \u2014 below the 1 minimum at 97.3289x. Deposit at least ~481.6445 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_NINE_OF_TEN_0_0",
+        "betType": 0,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 9,
+        "redRatioBps": 0,
+        "windowSpins": 10,
+        "multiplierBps": 1107197,
+        "winProbability": 0.00858022428247387,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "19959",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.019959 \u2014 below the 1 minimum at 110.7197x. Deposit at least ~548.5985 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_NINE_OF_TEN_0_1",
+        "betType": 0,
+        "color": 1,
+        "targetNumber": 0,
+        "targetCount": 9,
+        "redRatioBps": 0,
+        "windowSpins": 10,
+        "multiplierBps": 1107197,
+        "winProbability": 0.00858022428247387,
+        "marketId": 1
+      },
+      "market": {
+        "marketId": 1,
+        "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec",
+        "symbol": "USDC",
+        "decimals": 6,
+        "availableLiquidity": "10950000"
+      },
+      "minStake": "1000000",
+      "maxStake": "19959",
+      "skipReason": "vault holds 10.95 USDC, which backs a max stake of 0.019959 \u2014 below the 1 minimum at 110.7197x. Deposit at least ~548.5985 USDC and re-run.",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_1_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 1,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "11110017810655327028436",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_2_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 2,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "11110017810655327028436",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_3_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 3,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "11110017810655327028436",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_0_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_1_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 1,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_2_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 2,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_3_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 3,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_4_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 4,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_5_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 5,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_6_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 6,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_7_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 7,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_8_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 8,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_9_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 9,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_10_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 10,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_11_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 11,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_12_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 12,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_13_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 13,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_14_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 14,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_15_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 15,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_16_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 16,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_17_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 17,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_18_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 18,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_19_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 19,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_20_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 20,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_21_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 21,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_22_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 22,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_23_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 23,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_24_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 24,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_25_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 25,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_26_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 26,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_27_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 27,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_28_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 28,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_29_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 29,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_30_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 30,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_31_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 31,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_32_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 32,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_33_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 33,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_34_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 34,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_35_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 35,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_36_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 36,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "10223618603912154960651",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_SEVEN_STREAK_0_0",
+        "betType": 2,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 7,
+        "redRatioBps": 0,
+        "windowSpins": 8,
+        "multiplierBps": 973289,
+        "winProbability": 0.009760718102913946,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "9787584198117915667559",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_SEVEN_STREAK_0_1",
+        "betType": 2,
+        "color": 1,
+        "targetNumber": 0,
+        "targetCount": 7,
+        "redRatioBps": 0,
+        "windowSpins": 8,
+        "multiplierBps": 973289,
+        "winProbability": 0.009760718102913946,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "9787584198117915667559",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_NINE_OF_TEN_0_0",
+        "betType": 0,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 9,
+        "redRatioBps": 0,
+        "windowSpins": 10,
+        "multiplierBps": 1107197,
+        "winProbability": 0.00858022428247387,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "8593053202497645240998",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_NINE_OF_TEN_0_1",
+        "betType": 0,
+        "color": 1,
+        "targetNumber": 0,
+        "targetCount": 9,
+        "redRatioBps": 0,
+        "windowSpins": 10,
+        "multiplierBps": 1107197,
+        "winProbability": 0.00858022428247387,
+        "marketId": 2
+      },
+      "market": {
+        "marketId": 2,
+        "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+        "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7",
+        "symbol": "DAI",
+        "decimals": 18,
+        "availableLiquidity": "4714136097310404432743999"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "8593053202497645240998",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_1_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 1,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "3040585362576269393691",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_2_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 2,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "3040585362576269393691",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_PERFECT_DOZEN_3_0",
+        "betType": 6,
+        "color": 0,
+        "targetNumber": 3,
+        "targetCount": 4,
+        "redRatioBps": 0,
+        "windowSpins": 4,
+        "multiplierBps": 858628,
+        "winProbability": 0.011064150838695289,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "3040585362576269393691",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_0_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_1_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 1,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_2_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 2,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_3_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 3,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_4_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 4,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_5_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 5,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_6_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 6,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_7_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 7,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_8_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 8,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_9_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 9,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_10_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 10,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_11_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 11,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_12_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 12,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_13_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 13,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_14_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 14,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_15_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 15,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_16_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 16,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_17_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 17,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_18_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 18,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_19_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 19,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_20_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 20,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_21_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 21,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_22_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 22,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_23_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 23,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_24_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 24,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_25_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 25,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_26_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 26,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_27_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 27,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_28_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 28,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_29_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 29,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_30_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 30,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_31_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 31,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_32_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 32,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_33_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 33,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_34_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 34,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_35_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 35,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_DOUBLE_NUMBER_36_0",
+        "betType": 1,
+        "color": 0,
+        "targetNumber": 36,
+        "targetCount": 2,
+        "redRatioBps": 0,
+        "windowSpins": 6,
+        "multiplierBps": 932205,
+        "winProbability": 0.010190882748948624,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2797995971689997715290",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_SEVEN_STREAK_0_0",
+        "betType": 2,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 7,
+        "redRatioBps": 0,
+        "windowSpins": 8,
+        "multiplierBps": 973289,
+        "winProbability": 0.009760718102913946,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2678662244738987306020",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_SEVEN_STREAK_0_1",
+        "betType": 2,
+        "color": 1,
+        "targetNumber": 0,
+        "targetCount": 7,
+        "redRatioBps": 0,
+        "windowSpins": 8,
+        "multiplierBps": 973289,
+        "winProbability": 0.009760718102913946,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2678662244738987306020",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_NINE_OF_TEN_0_0",
+        "betType": 0,
+        "color": 0,
+        "targetNumber": 0,
+        "targetCount": 9,
+        "redRatioBps": 0,
+        "windowSpins": 10,
+        "multiplierBps": 1107197,
+        "winProbability": 0.00858022428247387,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2351743465460053520953",
+      "retireIds": []
+    },
+    {
+      "entry": {
+        "key": "X100_NINE_OF_TEN_0_1",
+        "betType": 0,
+        "color": 1,
+        "targetNumber": 0,
+        "targetCount": 9,
+        "redRatioBps": 0,
+        "windowSpins": 10,
+        "multiplierBps": 1107197,
+        "winProbability": 0.00858022428247387,
+        "marketId": 3
+      },
+      "market": {
+        "marketId": 3,
+        "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+        "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+        "symbol": "BRB",
+        "decimals": 18,
+        "availableLiquidity": "1290162937536187171514806"
+      },
+      "minStake": "1000000000000000000",
+      "maxStake": "2351743465460053520953",
+      "retireIds": []
+    }
+  ],
+  "complete": true,
+  "completedAt": "2026-10-09T15:48:59.894Z",
+  "afterConfigCount": "159",
+  "summary": {
+    "created": 107,
+    "activated": 88,
+    "alreadyPresent": 25,
+    "skipped": 44
+  },
+  "aggregateSummary": {
+    "created": 132,
+    "activated": 88,
+    "leftClosedUSDC": 44,
+    "originalConfigsPreserved": 27,
+    "totalSuccessfulTransactions": 220
+  },
+  "verificationFile": "x100-activation-2026-10-09-verification.json"
+}

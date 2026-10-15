@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-10-15T15:08:40.953023+00:00",
+  "scope": "Source push readiness; not mainnet launch approval",
+  "contractSuite": {
+    "command": "hardhat test --config hardhat.audit.config.ts",
+    "passed": 479,
+    "failed": 2,
+    "pending": 10,
+    "failures": "Two observability invariants omitted infrastructure withdrawal fees"
+  },
+  "failureResolution": {
+    "change": "Include the configured infrastructure recipient in total token conservation",
+    "command": "hardhat test --no-compile --config hardhat.audit.config.ts test/ProtocolObservability.test.ts",
+    "passed": 5,
+    "failed": 0,
+    "note": "Both previously failing tests pass. Contract production source did not change after the full run."
+  },
+  "workerSuite": {
+    "passed": 122,
+    "failed": 0,
+    "skipped": 1,
+    "note": "Passed after origin/main synchronization; worker source has not changed since that run"
+  },
+  "rpcWorkerSuite": {
+    "passed": 27,
+    "failed": 0
+  },
+  "deploymentRpcAndEvidenceTests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "deploymentTypecheck": "passed",
+  "workerTypecheck": "passed",
+  "rpcWorkerTypecheck": "passed",
+  "cleanCheckoutPublicRpcCatalog": "passed without the ignored local proxy credential",
+  "credentialScan": "passed; real proxy credential moved to an ignored mode-0600 local file",
+  "excludedFromGit": [
+    "local credentials",
+    "Python bytecode",
+    "downloaded verified sources",
+    "generated compiler input/output bundles"
+  ],
+  "launchApproved": false,
+  "remainingLaunchRequirements": [
+    "Verify control of the configured recipient and keeper addresses",
+    "Funded mainnet protocol and dedicated keeper",
+    "Bank bankroll and DAI/BRB liquidity",
+    "Reviewed SideBet offers, frontend/indexer compatibility and live acceptance checks",
+    "Repository-wide TypeScript/CRE issues remain outside the focused deployment check"
+  ],
+  "configuredWalletAddresses": "Marketing, infrastructure and keeper addresses were entered during the push review and pass address validation; ownership/funding are not certified"
+}

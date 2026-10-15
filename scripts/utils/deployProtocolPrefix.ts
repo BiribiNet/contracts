@@ -5,7 +5,7 @@ import { predictRouletteStackAddresses, type PredictRouletteStackOptions } from 
 export type DeployProtocolPrefixParams = {
     admin: Address;
     brb: Address;
-    mockRouter: Address;
+    router: Address;
 } & PredictRouletteStackOptions;
 
 /**
@@ -31,7 +31,7 @@ export async function deployProtocolPrefix(params: DeployProtocolPrefixParams) {
     const funder = await viem.deployContract("BRBJackpotFunder", [
         engineProxy,
         params.brb,
-        params.mockRouter,
+        params.router,
         jackpotTreasury.address,
         sideBetProxy,
         params.admin,

@@ -1,0 +1,1170 @@
+{
+  "storage": [
+    {
+      "astId": 23611,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "REGISTRY",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_contract(IMarketRegistry)21213"
+    },
+    {
+      "astId": 23614,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "JACKPOT_TREASURY",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_contract(IJackpotTreasury)21135"
+    },
+    {
+      "astId": 23617,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "JACKPOT_FUNDER",
+      "offset": 0,
+      "slot": "2",
+      "type": "t_contract(IBRBJackpotFunder)20957"
+    },
+    {
+      "astId": 23619,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "VRF_SUBSCRIPTION_ID",
+      "offset": 0,
+      "slot": "3",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 23621,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "VRF_CALLBACK_GAS_LIMIT",
+      "offset": 0,
+      "slot": "4",
+      "type": "t_uint32"
+    },
+    {
+      "astId": 23623,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "ROUND_DURATION",
+      "offset": 4,
+      "slot": "4",
+      "type": "t_uint32"
+    },
+    {
+      "astId": 23625,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_globalRound",
+      "offset": 8,
+      "slot": "4",
+      "type": "t_uint64"
+    },
+    {
+      "astId": 23627,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_pendingRequestId",
+      "offset": 0,
+      "slot": "5",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 23629,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "withdrawalQueueBatchSize",
+      "offset": 0,
+      "slot": "6",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 23631,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "maxWithdrawalQueueLength",
+      "offset": 0,
+      "slot": "7",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 23633,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "payoutLaneCount",
+      "offset": 0,
+      "slot": "8",
+      "type": "t_uint32"
+    },
+    {
+      "astId": 23635,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "INFRA_RECIPIENT",
+      "offset": 4,
+      "slot": "8",
+      "type": "t_address"
+    },
+    {
+      "astId": 23637,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "UPKEEP_SCHEDULER",
+      "offset": 0,
+      "slot": "9",
+      "type": "t_address"
+    },
+    {
+      "astId": 23642,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "globalRoundState",
+      "offset": 0,
+      "slot": "10",
+      "type": "t_mapping(t_uint64,t_struct(GlobalRoundState)23553_storage)"
+    },
+    {
+      "astId": 23649,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "marketRoundStateByRound",
+      "offset": 0,
+      "slot": "11",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)23565_storage))"
+    },
+    {
+      "astId": 23658,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "payoutCursorByShard",
+      "offset": 0,
+      "slot": "12",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+    },
+    {
+      "astId": 23667,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "winningBetCountByShard",
+      "offset": 0,
+      "slot": "13",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+    },
+    {
+      "astId": 23675,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundStraightBetsSum",
+      "offset": 0,
+      "slot": "14",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+    },
+    {
+      "astId": 23681,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundMaxStraightBet",
+      "offset": 0,
+      "slot": "15",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23687,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundMaxStreetBet",
+      "offset": 0,
+      "slot": "16",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23695,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundStreetBetsTotal",
+      "offset": 0,
+      "slot": "17",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+    },
+    {
+      "astId": 23701,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundRedBetsSum",
+      "offset": 0,
+      "slot": "18",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23707,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundBlackBetsSum",
+      "offset": 0,
+      "slot": "19",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23713,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundOddBetsSum",
+      "offset": 0,
+      "slot": "20",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23719,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundEvenBetsSum",
+      "offset": 0,
+      "slot": "21",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23725,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundLowBetsSum",
+      "offset": 0,
+      "slot": "22",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23731,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundHighBetsSum",
+      "offset": 0,
+      "slot": "23",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23739,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundDozenBetsSum",
+      "offset": 0,
+      "slot": "24",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+    },
+    {
+      "astId": 23747,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundColumnBetsSum",
+      "offset": 0,
+      "slot": "25",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+    },
+    {
+      "astId": 23753,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundOtherBetsWeightedPayout",
+      "offset": 0,
+      "slot": "26",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+    },
+    {
+      "astId": 23765,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundNumberedBets",
+      "offset": 0,
+      "slot": "27",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage))))"
+    },
+    {
+      "astId": 23775,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundFlatBets",
+      "offset": 0,
+      "slot": "28",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage)))"
+    },
+    {
+      "astId": 23779,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_roundMarketParticipantCount",
+      "offset": 0,
+      "slot": "29",
+      "type": "t_mapping(t_uint64,t_uint32)"
+    },
+    {
+      "astId": 23783,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_roundMarketsSettledCount",
+      "offset": 0,
+      "slot": "30",
+      "type": "t_mapping(t_uint64,t_uint32)"
+    },
+    {
+      "astId": 23789,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_roundHasMarket",
+      "offset": 0,
+      "slot": "31",
+      "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))"
+    },
+    {
+      "astId": 23793,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_roundTriggerMarket",
+      "offset": 0,
+      "slot": "32",
+      "type": "t_mapping(t_uint64,t_uint32)"
+    },
+    {
+      "astId": 23797,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_roundLockAt",
+      "offset": 0,
+      "slot": "33",
+      "type": "t_mapping(t_uint64,t_uint256)"
+    },
+    {
+      "astId": 23801,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "_roundPhase",
+      "offset": 0,
+      "slot": "34",
+      "type": "t_enum(RoundPhase)23588"
+    },
+    {
+      "astId": 23805,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "requestIdToGlobalRound",
+      "offset": 0,
+      "slot": "35",
+      "type": "t_mapping(t_uint256,t_uint64)"
+    },
+    {
+      "astId": 23809,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "referrerOf",
+      "offset": 0,
+      "slot": "36",
+      "type": "t_mapping(t_address,t_address)"
+    },
+    {
+      "astId": 23813,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundRequestId",
+      "offset": 0,
+      "slot": "37",
+      "type": "t_mapping(t_uint64,t_uint256)"
+    },
+    {
+      "astId": 23817,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundRequestedAt",
+      "offset": 0,
+      "slot": "38",
+      "type": "t_mapping(t_uint64,t_uint256)"
+    },
+    {
+      "astId": 23821,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "roundJackpotNumber",
+      "offset": 0,
+      "slot": "39",
+      "type": "t_mapping(t_uint64,t_uint8)"
+    },
+    {
+      "astId": 23825,
+      "contract": "StorageProbe.sol:StorageProbe",
+      "label": "diagnosticsAvailable",
+      "offset": 0,
+      "slot": "40",
+      "type": "t_mapping(t_uint64,t_bool)"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_struct(BetEntry)23527_storage)dyn_storage": {
+      "base": "t_struct(BetEntry)23527_storage",
+      "encoding": "dynamic_array",
+      "label": "struct RouletteEngineStorageLib.BetEntry[]",
+      "numberOfBytes": "32"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_contract(IBRBJackpotFunder)20957": {
+      "encoding": "inplace",
+      "label": "contract IBRBJackpotFunder",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IJackpotTreasury)21135": {
+      "encoding": "inplace",
+      "label": "contract IJackpotTreasury",
+      "numberOfBytes": "20"
+    },
+    "t_contract(IMarketRegistry)21213": {
+      "encoding": "inplace",
+      "label": "contract IMarketRegistry",
+      "numberOfBytes": "20"
+    },
+    "t_enum(RoundPhase)23588": {
+      "encoding": "inplace",
+      "label": "enum RouletteEngineStorageLib.RoundPhase",
+      "numberOfBytes": "1"
+    },
+    "t_mapping(t_address,t_address)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => address)",
+      "numberOfBytes": "32",
+      "value": "t_address"
+    },
+    "t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[])",
+      "numberOfBytes": "32",
+      "value": "t_array(t_struct(BetEntry)23527_storage)dyn_storage"
+    },
+    "t_mapping(t_uint256,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_uint256,t_uint64)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => uint64)",
+      "numberOfBytes": "32",
+      "value": "t_uint64"
+    },
+    "t_mapping(t_uint32,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_uint32,t_mapping(t_uint256,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => mapping(uint256 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_uint256)"
+    },
+    "t_mapping(t_uint32,t_mapping(t_uint32,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => mapping(uint32 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_uint256)"
+    },
+    "t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage))": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[]))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage)"
+    },
+    "t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage)))": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[])))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage))"
+    },
+    "t_mapping(t_uint32,t_struct(MarketRoundState)23565_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState)",
+      "numberOfBytes": "32",
+      "value": "t_struct(MarketRoundState)23565_storage"
+    },
+    "t_mapping(t_uint32,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint32",
+      "label": "mapping(uint32 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_uint64,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => bool))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_bool)"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_mapping(t_uint256,t_uint256))"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => mapping(uint32 => uint256)))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_mapping(t_uint32,t_uint256))"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage)))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage))"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage))))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage)))"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)23565_storage))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_struct(MarketRoundState)23565_storage)"
+    },
+    "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => mapping(uint32 => uint256))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint32,t_uint256)"
+    },
+    "t_mapping(t_uint64,t_struct(GlobalRoundState)23553_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => struct RouletteEngineStorageLib.GlobalRoundState)",
+      "numberOfBytes": "32",
+      "value": "t_struct(GlobalRoundState)23553_storage"
+    },
+    "t_mapping(t_uint64,t_uint256)": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => uint256)",
+      "numberOfBytes": "32",
+      "value": "t_uint256"
+    },
+    "t_mapping(t_uint64,t_uint32)": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => uint32)",
+      "numberOfBytes": "32",
+      "value": "t_uint32"
+    },
+    "t_mapping(t_uint64,t_uint8)": {
+      "encoding": "mapping",
+      "key": "t_uint64",
+      "label": "mapping(uint64 => uint8)",
+      "numberOfBytes": "32",
+      "value": "t_uint8"
+    },
+    "t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint8",
+      "label": "mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])",
+      "numberOfBytes": "32",
+      "value": "t_array(t_struct(BetEntry)23527_storage)dyn_storage"
+    },
+    "t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage))": {
+      "encoding": "mapping",
+      "key": "t_uint8",
+      "label": "mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))",
+      "numberOfBytes": "32",
+      "value": "t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage)"
+    },
+    "t_struct(BetEntry)23527_storage": {
+      "encoding": "inplace",
+      "label": "struct RouletteEngineStorageLib.BetEntry",
+      "members": [
+        {
+          "astId": 23520,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "player",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_address"
+        },
+        {
+          "astId": 23522,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "amount",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint128"
+        },
+        {
+          "astId": 23524,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "betType",
+          "offset": 16,
+          "slot": "1",
+          "type": "t_uint8"
+        },
+        {
+          "astId": 23526,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "number",
+          "offset": 17,
+          "slot": "1",
+          "type": "t_uint16"
+        }
+      ],
+      "numberOfBytes": "64"
+    },
+    "t_struct(GlobalRoundState)23553_storage": {
+      "encoding": "inplace",
+      "label": "struct RouletteEngineStorageLib.GlobalRoundState",
+      "members": [
+        {
+          "astId": 23529,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "vrfRequested",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_bool"
+        },
+        {
+          "astId": 23531,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "vrfFulfilled",
+          "offset": 1,
+          "slot": "0",
+          "type": "t_bool"
+        },
+        {
+          "astId": 23533,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "randomWord",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23535,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "winningNumber",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint8"
+        },
+        {
+          "astId": 23537,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotTriggered",
+          "offset": 1,
+          "slot": "2",
+          "type": "t_bool"
+        },
+        {
+          "astId": 23539,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotDistributed",
+          "offset": 2,
+          "slot": "2",
+          "type": "t_bool"
+        },
+        {
+          "astId": 23541,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotCursor",
+          "offset": 3,
+          "slot": "2",
+          "type": "t_uint32"
+        },
+        {
+          "astId": 23543,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotPaid",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23545,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotPoolSnapshot",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23547,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotTotalStake",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23549,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "jackpotWinnerCount",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint32"
+        },
+        {
+          "astId": 23552,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "vrfRequestedAt",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_uint256"
+        }
+      ],
+      "numberOfBytes": "256"
+    },
+    "t_struct(Layout)23826_storage": {
+      "encoding": "inplace",
+      "label": "struct RouletteEngineStorageLib.Layout",
+      "members": [
+        {
+          "astId": 23611,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "REGISTRY",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_contract(IMarketRegistry)21213"
+        },
+        {
+          "astId": 23614,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "JACKPOT_TREASURY",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_contract(IJackpotTreasury)21135"
+        },
+        {
+          "astId": 23617,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "JACKPOT_FUNDER",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_contract(IBRBJackpotFunder)20957"
+        },
+        {
+          "astId": 23619,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "VRF_SUBSCRIPTION_ID",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23621,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "VRF_CALLBACK_GAS_LIMIT",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_uint32"
+        },
+        {
+          "astId": 23623,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "ROUND_DURATION",
+          "offset": 4,
+          "slot": "4",
+          "type": "t_uint32"
+        },
+        {
+          "astId": 23625,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_globalRound",
+          "offset": 8,
+          "slot": "4",
+          "type": "t_uint64"
+        },
+        {
+          "astId": 23627,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_pendingRequestId",
+          "offset": 0,
+          "slot": "5",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23629,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "withdrawalQueueBatchSize",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23631,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "maxWithdrawalQueueLength",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23633,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "payoutLaneCount",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_uint32"
+        },
+        {
+          "astId": 23635,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "INFRA_RECIPIENT",
+          "offset": 4,
+          "slot": "8",
+          "type": "t_address"
+        },
+        {
+          "astId": 23637,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "UPKEEP_SCHEDULER",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_address"
+        },
+        {
+          "astId": 23642,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "globalRoundState",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_mapping(t_uint64,t_struct(GlobalRoundState)23553_storage)"
+        },
+        {
+          "astId": 23649,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "marketRoundStateByRound",
+          "offset": 0,
+          "slot": "11",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)23565_storage))"
+        },
+        {
+          "astId": 23658,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "payoutCursorByShard",
+          "offset": 0,
+          "slot": "12",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+        },
+        {
+          "astId": 23667,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "winningBetCountByShard",
+          "offset": 0,
+          "slot": "13",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+        },
+        {
+          "astId": 23675,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundStraightBetsSum",
+          "offset": 0,
+          "slot": "14",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+        },
+        {
+          "astId": 23681,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundMaxStraightBet",
+          "offset": 0,
+          "slot": "15",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23687,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundMaxStreetBet",
+          "offset": 0,
+          "slot": "16",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23695,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundStreetBetsTotal",
+          "offset": 0,
+          "slot": "17",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+        },
+        {
+          "astId": 23701,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundRedBetsSum",
+          "offset": 0,
+          "slot": "18",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23707,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundBlackBetsSum",
+          "offset": 0,
+          "slot": "19",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23713,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundOddBetsSum",
+          "offset": 0,
+          "slot": "20",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23719,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundEvenBetsSum",
+          "offset": 0,
+          "slot": "21",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23725,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundLowBetsSum",
+          "offset": 0,
+          "slot": "22",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23731,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundHighBetsSum",
+          "offset": 0,
+          "slot": "23",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23739,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundDozenBetsSum",
+          "offset": 0,
+          "slot": "24",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+        },
+        {
+          "astId": 23747,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundColumnBetsSum",
+          "offset": 0,
+          "slot": "25",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+        },
+        {
+          "astId": 23753,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundOtherBetsWeightedPayout",
+          "offset": 0,
+          "slot": "26",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+        },
+        {
+          "astId": 23765,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundNumberedBets",
+          "offset": 0,
+          "slot": "27",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)23527_storage)dyn_storage))))"
+        },
+        {
+          "astId": 23775,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundFlatBets",
+          "offset": 0,
+          "slot": "28",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)23527_storage)dyn_storage)))"
+        },
+        {
+          "astId": 23779,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_roundMarketParticipantCount",
+          "offset": 0,
+          "slot": "29",
+          "type": "t_mapping(t_uint64,t_uint32)"
+        },
+        {
+          "astId": 23783,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_roundMarketsSettledCount",
+          "offset": 0,
+          "slot": "30",
+          "type": "t_mapping(t_uint64,t_uint32)"
+        },
+        {
+          "astId": 23789,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_roundHasMarket",
+          "offset": 0,
+          "slot": "31",
+          "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))"
+        },
+        {
+          "astId": 23793,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_roundTriggerMarket",
+          "offset": 0,
+          "slot": "32",
+          "type": "t_mapping(t_uint64,t_uint32)"
+        },
+        {
+          "astId": 23797,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_roundLockAt",
+          "offset": 0,
+          "slot": "33",
+          "type": "t_mapping(t_uint64,t_uint256)"
+        },
+        {
+          "astId": 23801,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "_roundPhase",
+          "offset": 0,
+          "slot": "34",
+          "type": "t_enum(RoundPhase)23588"
+        },
+        {
+          "astId": 23805,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "requestIdToGlobalRound",
+          "offset": 0,
+          "slot": "35",
+          "type": "t_mapping(t_uint256,t_uint64)"
+        },
+        {
+          "astId": 23809,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "referrerOf",
+          "offset": 0,
+          "slot": "36",
+          "type": "t_mapping(t_address,t_address)"
+        },
+        {
+          "astId": 23813,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundRequestId",
+          "offset": 0,
+          "slot": "37",
+          "type": "t_mapping(t_uint64,t_uint256)"
+        },
+        {
+          "astId": 23817,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundRequestedAt",
+          "offset": 0,
+          "slot": "38",
+          "type": "t_mapping(t_uint64,t_uint256)"
+        },
+        {
+          "astId": 23821,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "roundJackpotNumber",
+          "offset": 0,
+          "slot": "39",
+          "type": "t_mapping(t_uint64,t_uint8)"
+        },
+        {
+          "astId": 23825,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "diagnosticsAvailable",
+          "offset": 0,
+          "slot": "40",
+          "type": "t_mapping(t_uint64,t_bool)"
+        }
+      ],
+      "numberOfBytes": "1312"
+    },
+    "t_struct(MarketRoundState)23565_storage": {
+      "encoding": "inplace",
+      "label": "struct RouletteEngineStorageLib.MarketRoundState",
+      "members": [
+        {
+          "astId": 23555,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "betsReleased",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_bool"
+        },
+        {
+          "astId": 23557,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "winningBetCount",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23559,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "bankPaidRunning",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 23561,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "settled",
+          "offset": 0,
+          "slot": "3",
+          "type": "t_bool"
+        },
+        {
+          "astId": 23564,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "totals",
+          "offset": 0,
+          "slot": "4",
+          "type": "t_struct(RoundTotals)21971_storage"
+        }
+      ],
+      "numberOfBytes": "192"
+    },
+    "t_struct(RoundTotals)21971_storage": {
+      "encoding": "inplace",
+      "label": "struct BetStorageLib.RoundTotals",
+      "members": [
+        {
+          "astId": 21968,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "totalAmount",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 21970,
+          "contract": "StorageProbe.sol:StorageProbe",
+          "label": "betCount",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        }
+      ],
+      "numberOfBytes": "64"
+    },
+    "t_uint128": {
+      "encoding": "inplace",
+      "label": "uint128",
+      "numberOfBytes": "16"
+    },
+    "t_uint16": {
+      "encoding": "inplace",
+      "label": "uint16",
+      "numberOfBytes": "2"
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint32": {
+      "encoding": "inplace",
+      "label": "uint32",
+      "numberOfBytes": "4"
+    },
+    "t_uint64": {
+      "encoding": "inplace",
+      "label": "uint64",
+      "numberOfBytes": "8"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

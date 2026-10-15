@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-15",
+  "chainId": 421614,
+  "upgrades": {
+    "engine": {
+      "proxy": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+      "newImplementation": "0x4762e767fc05c2b857b586c47b1469a05fafd1b9",
+      "tx": "0x6a5b67f2e653edbb03bfeda5420d148b3eae06408d85406e6e2107b6bb3bb007",
+      "sweepLib": "0x7d614d953eb23db4a6c94af332e9dcfe0a23a120"
+    },
+    "vault": {
+      "beacon": "0xBd544E48c33582B07250C0A598a4592bf4318DB2",
+      "newImplementation": "0xbc22ce7e640db0681c304413043968cd571f4fdc",
+      "tx": "0x8ce150e0cf5cb7a405849ded05d26d0bd588e888394b38a7a57ebf51474ebfa9"
+    }
+  },
+  "brbCampaigns": [
+    {
+      "tickets": 300,
+      "round": 2527,
+      "vrfGasUsed": 370044,
+      "allWalletsPaidCorrectly": true,
+      "ordinaryPaidBRB": "10800",
+      "walletDeltaBRB": "-300",
+      "journal": "live-sepolia-2026-10-15-300x30.json"
+    },
+    {
+      "tickets": 1000,
+      "round": 2531,
+      "vrfGasUsed": 374024,
+      "allWalletsPaidCorrectly": true,
+      "ordinaryPaidBRB": "36000",
+      "walletDeltaBRB": "-1000",
+      "admissionSeconds": 72.5,
+      "roundDurationTemporarily": 120,
+      "roundDurationRestored": 60,
+      "journal": "live-sepolia-2026-10-15-1000x100-full.json"
+    }
+  ],
+  "daiCampaign": {
+    "tickets": 50,
+    "round": 2532,
+    "vrfGasUsed": 368523,
+    "ordinaryPayoutDAI": "1800",
+    "fundingSwapTx": "0xf6cdb8e99cca4cea6c3418b41b9690f43207f64adf1042aed4b5f7d64288357c",
+    "daiIntoPair": "1.5",
+    "treasuryBrbReceived": "56771595560961",
+    "journal": "live-sepolia-2026-10-15-dai.json"
+  }
+}

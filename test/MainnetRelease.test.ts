@@ -1,7 +1,7 @@
 import hre, { viem } from "hardhat";
 import { expect } from "chai";
 import { encodeAbiParameters, encodeFunctionData, encodePacked } from "viem";
-import { boundedInteger, checkProductionArtifacts, handoffProtocolRoles } from "../scripts/utils/mainnetRelease";
+import { assertProtocolRoleHandoff, boundedInteger, checkProductionArtifacts, handoffProtocolRoles } from "../scripts/utils/mainnetRelease";
 import { deployCreAutomation } from "../scripts/utils/deployCreAutomation";
 import { vrfKeyHashTriple } from "../scripts/utils/protocolDeployEnv";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
@@ -53,8 +53,10 @@ describe("Mainnet release safeguards", function () {
             const hashes = ["0x" + "11".repeat(32), "0x" + "22".repeat(32), "0x" + "33".repeat(32)] as const;
             expect(vrfKeyHashTriple(hashes as any)).to.deep.equal(hashes);
         } finally { names.forEach((name, i) => saved[i] === undefined ? delete process.env[name] : process.env[name] = saved[i]); }
-        const sizes = await checkProductionArtifacts();
-        expect(sizes.RouletteEngine).to.be.lessThan(24577);
+        if (process.env.SOLIDITY_COVERAGE !== "true") {
+            const sizes = await checkProductionArtifacts();
+            expect(sizes.RouletteEngine).to.be.lessThan(24577);
+        }
     });
 
     it("binds CRE reports before approving the bridge and transfers ownership/roles to a distinct admin", async function () {
@@ -78,22 +80,16 @@ describe("Mainnet release safeguards", function () {
         await expect(receiver.write.setExpectedAuthor([stranger.account.address], { account: bootstrap.account })).to.be.rejected;
         const authority = await viem.getContractAt("CreExecutionAuthority", bridge.creExecutionAuthority);
         const roleSets = [
-            { contract: engine, roles: ["DEFAULT_ADMIN_ROLE", "ENGINE_WITHDRAWAL_ROLE", "ENGINE_PAYOUT_ROLE", "ENGINE_ROUND_ROLE", "ENGINE_FEE_ROLE"] },
-            { contract: sideBet, roles: ["DEFAULT_ADMIN_ROLE", "SIDE_BET_CONFIG_ROLE", "SIDE_BET_LIMITS_ROLE"] },
-            { contract: registry, roles: ["DEFAULT_ADMIN_ROLE", "MARKET_FACTORY_ROLE"] },
-            { contract: scheduler, roles: ["DEFAULT_ADMIN_ROLE", "SCHEDULER_ADMIN_ROLE"] },
-            { contract: funder, roles: ["DEFAULT_ADMIN_ROLE", "FUNDER_ADMIN_ROLE"] },
-            { contract: treasury, roles: ["DEFAULT_ADMIN_ROLE", "TREASURY_ADMIN_ROLE"] },
-            { contract: authority, roles: ["DEFAULT_ADMIN_ROLE", "EXECUTOR_ADMIN_ROLE"] },
+            { contract: engine, roles: ["DEFAULT_ADMIN_ROLE", "ENGINE_WITHDRAWAL_ROLE", "ENGINE_PAYOUT_ROLE", "ENGINE_ROUND_ROLE", "ENGINE_FEE_ROLE"], label: "RouletteEngine" },
+            { contract: sideBet, roles: ["DEFAULT_ADMIN_ROLE", "SIDE_BET_CONFIG_ROLE", "SIDE_BET_LIMITS_ROLE"], label: "SideBet" },
+            { contract: registry, roles: ["DEFAULT_ADMIN_ROLE", "MARKET_FACTORY_ROLE"], label: "MarketRegistry" },
+            { contract: scheduler, roles: ["DEFAULT_ADMIN_ROLE", "SCHEDULER_ADMIN_ROLE"], label: "UpkeepScheduler" },
+            { contract: funder, roles: ["DEFAULT_ADMIN_ROLE", "FUNDER_ADMIN_ROLE"], label: "BRBJackpotFunder" },
+            { contract: treasury, roles: ["DEFAULT_ADMIN_ROLE", "TREASURY_ADMIN_ROLE"], label: "JackpotTreasury" },
+            { contract: authority, roles: ["DEFAULT_ADMIN_ROLE", "EXECUTOR_ADMIN_ROLE"], label: "CreExecutionAuthority" },
         ];
         await handoffProtocolRoles(roleSets, bootstrap.account.address, admin.account.address, waitWrite);
-        for (const { contract, roles } of roleSets) {
-            for (const getter of roles) {
-                const role = await (contract as any).read[getter]();
-                expect(await (contract as any).read.hasRole([role, admin.account.address])).to.equal(true);
-                expect(await (contract as any).read.hasRole([role, bootstrap.account.address])).to.equal(false);
-            }
-        }
+        await assertProtocolRoleHandoff(roleSets, bootstrap.account.address, admin.account.address);
         expect(await sideBet.read.hasRole([await sideBet.read.SETTLEMENT_ROLE(), scheduler.address])).to.equal(true);
         await expect(scheduler.write.setForwarderAuthority([stranger.account.address], { account: bootstrap.account })).to.be.rejected;
     });

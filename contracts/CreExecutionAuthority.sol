@@ -12,7 +12,7 @@ contract CreExecutionAuthority is AccessControl, IUpkeepForwarderAuthority {
 
     error ZeroAddress();
 
-    event ExecutorApprovalUpdated(address indexed executor, bool approved);
+    event ExecutorApprovalUpdated(address executor, bool approved);
 
     constructor(address admin) {
         if (admin == address(0)) revert ZeroAddress();

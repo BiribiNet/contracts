@@ -27,6 +27,11 @@ export type SeedBrbPoolParams = {
     assetLabel: string;
     /** When true, call `mint(deployer, assetAmount)` if the asset contract exposes it (e.g. MockDAI). */
     mintAssetToDeployer?: boolean;
+    /**
+     * Recipient of minted LP tokens. Defaults to the deployer.
+     * Leave as deployer when LP will be transferred to `LPVestingLock` in a later step.
+     */
+    lpRecipient?: `0x${string}`;
 };
 
 async function ensureAllowance(
@@ -94,7 +99,7 @@ export async function seedBrbAssetPool(
     publicClient: PublicClient,
     params: SeedBrbPoolParams,
     waitWrite: (hashPromise: Promise<`0x${string}`>) => Promise<void>,
-): Promise<{ pair: `0x${string}`; liquidity: bigint }> {
+): Promise<{ pair: `0x${string}`; liquidity: bigint; lpRecipient: `0x${string}` }> {
     if (!deployer.account) throw new Error("deployer has no account");
 
     const router = getContract({ address: params.router, abi: routerAbi, client: publicClient });
@@ -140,6 +145,7 @@ export async function seedBrbAssetPool(
     const deadline = BigInt(block.timestamp) + 3600n;
     const amountAMin = (params.assetAmount * 95n) / 100n;
     const amountBMin = (params.brbAmount * 95n) / 100n;
+    const lpRecipient = params.lpRecipient ?? deployer.account.address;
 
     const hash = await deployer.writeContract({
         address: params.router,
@@ -152,7 +158,7 @@ export async function seedBrbAssetPool(
             params.brbAmount,
             amountAMin,
             amountBMin,
-            deployer.account.address,
+            lpRecipient,
             deadline,
         ],
         account: deployer.account,
@@ -162,11 +168,11 @@ export async function seedBrbAssetPool(
 
     const pairAbi = parseAbi(["function balanceOf(address account) external view returns (uint256)"]);
     const pairContract = getContract({ address: pair, abi: pairAbi, client: publicClient });
-    const liquidity = await pairContract.read.balanceOf([deployer.account.address]);
+    const liquidity = await pairContract.read.balanceOf([lpRecipient]);
 
     console.log(
-        `Seeded ${params.assetLabel}/BRB liquidity: ${params.assetAmount.toString()} asset wei + ${params.brbAmount.toString()} BRB wei (LP balance ${liquidity.toString()})`,
+        `Seeded ${params.assetLabel}/BRB liquidity: ${params.assetAmount.toString()} asset wei + ${params.brbAmount.toString()} BRB wei (LP balance ${liquidity.toString()} at ${lpRecipient})`,
     );
 
-    return { pair, liquidity };
+    return { pair, liquidity, lpRecipient };
 }

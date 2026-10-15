@@ -12,7 +12,8 @@ describe('Protocol observability', function () {
   for (const [name, decimals] of [['MockUSDC', 6], ['MockDAI', 18]] as const) {
     it(`conserves assets and shares through seeded deposit/withdrawal sequences (${decimals} decimals)`, async function () {
       const [admin, alice] = await viem.getWalletClients();
-      const { registry } = await deployProtocolStack();
+      const { registry, engine } = await deployProtocolStack();
+      const infra = await engine.read.INFRA_RECIPIENT();
       const token = await viem.deployContract(name);
       const bank = await createMarketWithBeacon(registry, admin.account.address, token.address);
       const initial = parseUnits('10000', decimals);
@@ -39,7 +40,10 @@ describe('Protocol observability', function () {
           await token.write.transfer([bank.address, unit], { account: alice.account });
         }
         const vaultBalance = await token.read.balanceOf([bank.address]);
-        expect(vaultBalance + await token.read.balanceOf([alice.account.address])).to.equal(initial);
+        const playerBalance = await token.read.balanceOf([alice.account.address]);
+        const infraBalance = await token.read.balanceOf([infra]);
+        // Withdrawal fees leave the vault for the configured infrastructure recipient.
+        expect(vaultBalance + playerBalance + infraBalance).to.equal(initial);
         expect(await bank.read.totalAssets()).to.equal(vaultBalance);
         expect(await bank.read.totalSupply()).to.equal(await bank.read.balanceOf([alice.account.address]));
       }
@@ -108,10 +112,16 @@ describe('Protocol observability', function () {
     const fromBlock = await client.getBlockNumber();
     await runParallelLanesUntilIdle(scheduler, { reverseSweep: true });
     const logs = await client.getLogs({ address: engine.address, fromBlock, toBlock: 'latest' });
-    const abi = parseAbi(['event RoulettePayment(uint64 indexed roundId, uint32 indexed marketId, address indexed recipient, address token, uint256 amount)']);
+    const abi = parseAbi(['event RoulettePayment(uint64 roundId, uint32 marketId, address recipient, address token, uint256 amount)']);
     let paid = 0n;
     for (const log of logs) {
-      try { const event = decodeEventLog({ abi, data: log.data, topics: log.topics }); paid += event.args.amount; } catch { /* Other engine events */ }
+      let event;
+      try { event = decodeEventLog({ abi, data: log.data, topics: log.topics }); } catch { continue; /* Other engine events */ }
+      expect(log.topics).to.have.length(1);
+      expect(event.args.roundId).to.equal(round);
+      expect(event.args.recipient.toLowerCase()).to.equal(alice.account.address.toLowerCase());
+      expect(event.args.token.toLowerCase()).to.equal(token.address.toLowerCase());
+      paid += event.args.amount;
     }
     expect(paid).to.equal(parseUnits('360', 6));
     expect(paid).to.equal((await token.read.balanceOf([alice.account.address])) - before);

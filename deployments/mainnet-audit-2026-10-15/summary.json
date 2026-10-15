@@ -1,0 +1,182 @@
+{
+  "decision": "NO_GO",
+  "date": "2026-10-15",
+  "revision": "7dc9bb6caa91242d9915ed1678a8af0148d22bf1",
+  "productionCodeModified": false,
+  "publicTransactionsSent": false,
+  "tests": {
+    "fullSuite": {
+      "node": "23.10.0 (unsupported by installed Hardhat)",
+      "passed": 446,
+      "failed": 3,
+      "skipped": 4
+    },
+    "node22FailureReproduction": {
+      "passed": 29,
+      "failed": 3,
+      "skipped": 1
+    },
+    "node22ProtocolRegressions": {
+      "passed": 143,
+      "failed": 0
+    },
+    "node22AuditProbes": {
+      "passed": 6,
+      "failed": 0,
+      "meaning": "Confirms current vulnerabilities and same-version local upgrade continuity; vulnerabilities are not fixed"
+    },
+    "worker": {
+      "passed": 96,
+      "failed": 0
+    },
+    "rpc": {
+      "passed": 27,
+      "failed": 0
+    },
+    "preflight": {
+      "passed": 7,
+      "failed": 0
+    }
+  },
+  "typechecks": {
+    "worker": "PASS",
+    "rpc": "PASS",
+    "contractsAndCre": "FAIL"
+  },
+  "storage": {
+    "baseline": "df898f08c8eb822dd772903f01d25fad6e5d251f",
+    "engineFields": [
+      44,
+      44
+    ],
+    "sideBetFields": [
+      11,
+      11
+    ],
+    "sideBetOrdinarySlots": [
+      0,
+      1
+    ],
+    "vaultFields": [
+      14,
+      14
+    ],
+    "compatible": true,
+    "scope": "Source comparison, not a fresh live code match"
+  },
+  "limitations": [
+    "No complete target mainnet protocol deployment manifest/subscription/pool configuration",
+    "No pinned live-fork future-version transition performed",
+    "Synthetic large default-lane bucket stress exceeded local Node heap; no certified traffic threshold"
+  ],
+  "logs": [
+    {
+      "file": "full-contract-tests.log",
+      "bytes": 179479,
+      "sha256": "f389af68fa4d75ac9b5caab53ca11ea989248be1e366b51b6f1c0b7814b86287"
+    },
+    {
+      "file": "node22-failure-reproduction.log",
+      "bytes": 19994,
+      "sha256": "30a01dc2daaeb6cd16629212622335ac294c42d57a488c528cb85cd5fd0161fe"
+    },
+    {
+      "file": "node22-protocol-regressions.log",
+      "bytes": 12114,
+      "sha256": "d88086b6824f9a3b59b72ac08b812bd1ee0c594e0fb343844843ae2c487a66a6"
+    },
+    {
+      "file": "node22-audit-probes.log",
+      "bytes": 741,
+      "sha256": "bfcb0cff25175201373da66aff33336da91ea6dfde352133e8de66febfa89620"
+    },
+    {
+      "file": "force-compile.log",
+      "bytes": 6390,
+      "sha256": "e93c537c2d24004d98d6d68c34a341c50d50553fed0db36c83edd52e32c67cb5"
+    },
+    {
+      "file": "storage-comparison.log",
+      "bytes": 306,
+      "sha256": "b0ae26353e7720473b3aa2b0adedab30c0d579f0a7b056aae27786c3f374d371"
+    },
+    {
+      "file": "preflight-tests.log",
+      "bytes": 1379,
+      "sha256": "00bb081c82986cc5237ea7208e745055d1fc767aab4dd7757e392b81cbe55d96"
+    },
+    {
+      "file": "worker-tests.log",
+      "bytes": 6265,
+      "sha256": "d8fb831be090cb6260d6a839d95a6193042d5fdb77993ee69a42045032f9a6b5"
+    },
+    {
+      "file": "rpc-tests.log",
+      "bytes": 1410,
+      "sha256": "5777150cbd5db55839d36a49ebd86f35dde2f33478ad824c34c728ce0d39dfd7"
+    },
+    {
+      "file": "worker-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "rpc-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "contracts-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "followupReview": {
+    "scope": "User-requested reachability and authorization review",
+    "normalTenLaneCallbacks": {
+      "scope": "Local exact engine callback from impersonated configured coordinator; not a live DON delivery or full coordinator billing test",
+      "gasLimit": 2500000,
+      "laneCount": 10,
+      "measurements": [
+        {
+          "marketCount": 3,
+          "legsPerMarket": 110,
+          "totalWinningLegs": 330,
+          "callbackTransactionGasUsed": "1089118",
+          "fixedBudgetSucceeded": true
+        },
+        {
+          "marketCount": 3,
+          "legsPerMarket": 1000,
+          "totalWinningLegs": 3000,
+          "callbackTransactionGasUsed": "1545688",
+          "fixedBudgetSucceeded": true
+        }
+      ]
+    },
+    "usdcBlacklist": {
+      "chainId": 42161,
+      "block": "515015343",
+      "blockHash": "0x2a371d6fc06c62fc4b1563596f3376f2970aba942deaca9951227b107a426b69",
+      "token": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+      "tokenAddressIsBlacklistedRecipient": true,
+      "blacklister": "0xAC5b4946A8C29Eafb42e1742b3AB82e6D5771329",
+      "scope": "Read-only evidence of token blacklist state; local test separately reproduces choosing an already-blocked receiver"
+    },
+    "findingsRefined": [
+      "M01: conditional on DON-valid delivery; forwarder/admin controls verified, no EOA bypass",
+      "M05: normal ten-lane measurements pass; 2000-lane failure is privileged misconfiguration",
+      "M07: immutable references to upgradeable proxies are fine; directly deployed modules have replacement constraints"
+    ],
+    "tests": {
+      "initialFollowup": {
+        "passed": 9,
+        "failed": 0
+      },
+      "updatedAuthorizationBoundarySuite": {
+        "passed": 7,
+        "failed": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,4213 @@
+{
+  "referenceCommit": "df898f08c8eb822dd772903f01d25fad6e5d251f",
+  "candidateCommit": "7dc9bb6caa91242d9915ed1678a8af0148d22bf1",
+  "scope": "Offline source comparison; not proof of current deployed bytecode or a fork rehearsal",
+  "contracts": [
+    {
+      "contract": "RouletteEngine",
+      "compatible": true,
+      "namespaceRoot": "0x8a653c570a28b92a786a8846d2fb5907e111615753e347ab6161fea696c7eb00",
+      "existingFields": 44,
+      "candidateFields": 44,
+      "ordinaryFields": [],
+      "referenceReconstructedFromGit": true,
+      "dependencyLockfileUnchanged": true,
+      "sourceSha256": "8f48265689375bfa0387643ce462f31df171fa5a248142f805a49e5076fb57b6",
+      "layouts": {
+        "reference": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 7671,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IMarketRegistry)5799"
+              },
+              {
+                "astId": 7674,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "JACKPOT_TREASURY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IJackpotTreasury)5721"
+              },
+              {
+                "astId": 7677,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "JACKPOT_FUNDER",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_contract(IBRBJackpotFunder)5564"
+              },
+              {
+                "astId": 7679,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "VRF_SUBSCRIPTION_ID",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7681,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "VRF_CALLBACK_GAS_LIMIT",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7683,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "ROUND_DURATION",
+                "offset": 4,
+                "slot": "4",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7685,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_globalRound",
+                "offset": 8,
+                "slot": "4",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 7687,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_pendingRequestId",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7689,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "withdrawalQueueBatchSize",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7691,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "maxWithdrawalQueueLength",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7693,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "payoutLaneCount",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7695,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "INFRA_RECIPIENT",
+                "offset": 4,
+                "slot": "8",
+                "type": "t_address"
+              },
+              {
+                "astId": 7697,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "UPKEEP_SCHEDULER",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_address"
+              },
+              {
+                "astId": 7702,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "globalRoundState",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_mapping(t_uint64,t_struct(GlobalRoundState)7613_storage)"
+              },
+              {
+                "astId": 7709,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "marketRoundStateByRound",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)7625_storage))"
+              },
+              {
+                "astId": 7718,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "payoutCursorByShard",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+              },
+              {
+                "astId": 7727,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "winningBetCountByShard",
+                "offset": 0,
+                "slot": "13",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+              },
+              {
+                "astId": 7735,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundStraightBetsSum",
+                "offset": 0,
+                "slot": "14",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7741,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundMaxStraightBet",
+                "offset": 0,
+                "slot": "15",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7747,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundMaxStreetBet",
+                "offset": 0,
+                "slot": "16",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7755,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundStreetBetsTotal",
+                "offset": 0,
+                "slot": "17",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7761,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundRedBetsSum",
+                "offset": 0,
+                "slot": "18",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7767,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundBlackBetsSum",
+                "offset": 0,
+                "slot": "19",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7773,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundOddBetsSum",
+                "offset": 0,
+                "slot": "20",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7779,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundEvenBetsSum",
+                "offset": 0,
+                "slot": "21",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7785,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundLowBetsSum",
+                "offset": 0,
+                "slot": "22",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7791,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundHighBetsSum",
+                "offset": 0,
+                "slot": "23",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7799,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundDozenBetsSum",
+                "offset": 0,
+                "slot": "24",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7807,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundColumnBetsSum",
+                "offset": 0,
+                "slot": "25",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7813,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundOtherBetsWeightedPayout",
+                "offset": 0,
+                "slot": "26",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7825,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundNumberedBets",
+                "offset": 0,
+                "slot": "27",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage))))"
+              },
+              {
+                "astId": 7835,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundFlatBets",
+                "offset": 0,
+                "slot": "28",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage)))"
+              },
+              {
+                "astId": 7839,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundMarketParticipantCount",
+                "offset": 0,
+                "slot": "29",
+                "type": "t_mapping(t_uint64,t_uint32)"
+              },
+              {
+                "astId": 7843,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundMarketsSettledCount",
+                "offset": 0,
+                "slot": "30",
+                "type": "t_mapping(t_uint64,t_uint32)"
+              },
+              {
+                "astId": 7849,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundHasMarket",
+                "offset": 0,
+                "slot": "31",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))"
+              },
+              {
+                "astId": 7853,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundTriggerMarket",
+                "offset": 0,
+                "slot": "32",
+                "type": "t_mapping(t_uint64,t_uint32)"
+              },
+              {
+                "astId": 7857,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundLockAt",
+                "offset": 0,
+                "slot": "33",
+                "type": "t_mapping(t_uint64,t_uint256)"
+              },
+              {
+                "astId": 7861,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundPhase",
+                "offset": 0,
+                "slot": "34",
+                "type": "t_enum(RoundPhase)7648"
+              },
+              {
+                "astId": 7865,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "requestIdToGlobalRound",
+                "offset": 0,
+                "slot": "35",
+                "type": "t_mapping(t_uint256,t_uint64)"
+              },
+              {
+                "astId": 7869,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "referrerOf",
+                "offset": 0,
+                "slot": "36",
+                "type": "t_mapping(t_address,t_address)"
+              },
+              {
+                "astId": 7873,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundRequestId",
+                "offset": 0,
+                "slot": "37",
+                "type": "t_mapping(t_uint64,t_uint256)"
+              },
+              {
+                "astId": 7877,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundRequestedAt",
+                "offset": 0,
+                "slot": "38",
+                "type": "t_mapping(t_uint64,t_uint256)"
+              },
+              {
+                "astId": 7881,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundJackpotNumber",
+                "offset": 0,
+                "slot": "39",
+                "type": "t_mapping(t_uint64,t_uint8)"
+              },
+              {
+                "astId": 7885,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "diagnosticsAvailable",
+                "offset": 0,
+                "slot": "40",
+                "type": "t_mapping(t_uint64,t_bool)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_struct(BetEntry)7587_storage)dyn_storage": {
+                "base": "t_struct(BetEntry)7587_storage",
+                "encoding": "dynamic_array",
+                "label": "struct RouletteEngineStorageLib.BetEntry[]",
+                "numberOfBytes": "32"
+              },
+              "t_bool": {
+                "encoding": "inplace",
+                "label": "bool",
+                "numberOfBytes": "1"
+              },
+              "t_contract(IBRBJackpotFunder)5564": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IJackpotTreasury)5721": {
+                "encoding": "inplace",
+                "label": "contract IJackpotTreasury",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IMarketRegistry)5799": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_enum(RoundPhase)7648": {
+                "encoding": "inplace",
+                "label": "enum RouletteEngineStorageLib.RoundPhase",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_address)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => address)",
+                "numberOfBytes": "32",
+                "value": "t_address"
+              },
+              "t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_struct(BetEntry)7587_storage)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_uint64)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => uint64)",
+                "numberOfBytes": "32",
+                "value": "t_uint64"
+              },
+              "t_mapping(t_uint32,t_bool)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => bool)",
+                "numberOfBytes": "32",
+                "value": "t_bool"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint256,t_uint256))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint256 => uint256))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint256,t_uint256)"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint32,t_uint256))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint32 => uint256))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_uint256)"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[]))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage)"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage)))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[])))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage))"
+              },
+              "t_mapping(t_uint32,t_struct(MarketRoundState)7625_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState)",
+                "numberOfBytes": "32",
+                "value": "t_struct(MarketRoundState)7625_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint64,t_bool)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => bool)",
+                "numberOfBytes": "32",
+                "value": "t_bool"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => bool))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_bool)"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint256,t_uint256))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint32 => uint256)))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint32,t_uint256))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage)))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage))))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage)))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)7625_storage))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_struct(MarketRoundState)7625_storage)"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => uint256))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_uint256)"
+              },
+              "t_mapping(t_uint64,t_struct(GlobalRoundState)7613_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => struct RouletteEngineStorageLib.GlobalRoundState)",
+                "numberOfBytes": "32",
+                "value": "t_struct(GlobalRoundState)7613_storage"
+              },
+              "t_mapping(t_uint64,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint64,t_uint32)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => uint32)",
+                "numberOfBytes": "32",
+                "value": "t_uint32"
+              },
+              "t_mapping(t_uint64,t_uint8)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => uint8)",
+                "numberOfBytes": "32",
+                "value": "t_uint8"
+              },
+              "t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint8",
+                "label": "mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_struct(BetEntry)7587_storage)dyn_storage"
+              },
+              "t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage))": {
+                "encoding": "mapping",
+                "key": "t_uint8",
+                "label": "mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage)"
+              },
+              "t_struct(BetEntry)7587_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.BetEntry",
+                "members": [
+                  {
+                    "astId": 7580,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7582,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "amount",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint128"
+                  },
+                  {
+                    "astId": 7584,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betType",
+                    "offset": 16,
+                    "slot": "1",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7586,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "number",
+                    "offset": 17,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  }
+                ],
+                "numberOfBytes": "64"
+              },
+              "t_struct(GlobalRoundState)7613_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.GlobalRoundState",
+                "members": [
+                  {
+                    "astId": 7589,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "vrfRequested",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7591,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "vrfFulfilled",
+                    "offset": 1,
+                    "slot": "0",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7593,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "randomWord",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7595,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "winningNumber",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7597,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotTriggered",
+                    "offset": 1,
+                    "slot": "2",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7599,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotDistributed",
+                    "offset": 2,
+                    "slot": "2",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7601,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotCursor",
+                    "offset": 3,
+                    "slot": "2",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7603,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotPaid",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7605,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotPoolSnapshot",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7607,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotTotalStake",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7609,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotWinnerCount",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7612,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "vrfRequestedAt",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "256"
+              },
+              "t_struct(Layout)7886_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.Layout",
+                "members": [
+                  {
+                    "astId": 7671,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "REGISTRY",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_contract(IMarketRegistry)5799"
+                  },
+                  {
+                    "astId": 7674,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "JACKPOT_TREASURY",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_contract(IJackpotTreasury)5721"
+                  },
+                  {
+                    "astId": 7677,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "JACKPOT_FUNDER",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_contract(IBRBJackpotFunder)5564"
+                  },
+                  {
+                    "astId": 7679,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "VRF_SUBSCRIPTION_ID",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7681,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "VRF_CALLBACK_GAS_LIMIT",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7683,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "ROUND_DURATION",
+                    "offset": 4,
+                    "slot": "4",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7685,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_globalRound",
+                    "offset": 8,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 7687,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_pendingRequestId",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7689,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "withdrawalQueueBatchSize",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7691,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "maxWithdrawalQueueLength",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7693,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "payoutLaneCount",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7695,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "INFRA_RECIPIENT",
+                    "offset": 4,
+                    "slot": "8",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7697,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "UPKEEP_SCHEDULER",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7702,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "globalRoundState",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_mapping(t_uint64,t_struct(GlobalRoundState)7613_storage)"
+                  },
+                  {
+                    "astId": 7709,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketRoundStateByRound",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)7625_storage))"
+                  },
+                  {
+                    "astId": 7718,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "payoutCursorByShard",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+                  },
+                  {
+                    "astId": 7727,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "winningBetCountByShard",
+                    "offset": 0,
+                    "slot": "13",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+                  },
+                  {
+                    "astId": 7735,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundStraightBetsSum",
+                    "offset": 0,
+                    "slot": "14",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7741,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundMaxStraightBet",
+                    "offset": 0,
+                    "slot": "15",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7747,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundMaxStreetBet",
+                    "offset": 0,
+                    "slot": "16",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7755,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundStreetBetsTotal",
+                    "offset": 0,
+                    "slot": "17",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7761,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundRedBetsSum",
+                    "offset": 0,
+                    "slot": "18",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7767,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundBlackBetsSum",
+                    "offset": 0,
+                    "slot": "19",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7773,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundOddBetsSum",
+                    "offset": 0,
+                    "slot": "20",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7779,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundEvenBetsSum",
+                    "offset": 0,
+                    "slot": "21",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7785,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundLowBetsSum",
+                    "offset": 0,
+                    "slot": "22",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7791,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundHighBetsSum",
+                    "offset": 0,
+                    "slot": "23",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7799,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundDozenBetsSum",
+                    "offset": 0,
+                    "slot": "24",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7807,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundColumnBetsSum",
+                    "offset": 0,
+                    "slot": "25",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7813,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundOtherBetsWeightedPayout",
+                    "offset": 0,
+                    "slot": "26",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7825,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundNumberedBets",
+                    "offset": 0,
+                    "slot": "27",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7587_storage)dyn_storage))))"
+                  },
+                  {
+                    "astId": 7835,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundFlatBets",
+                    "offset": 0,
+                    "slot": "28",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7587_storage)dyn_storage)))"
+                  },
+                  {
+                    "astId": 7839,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundMarketParticipantCount",
+                    "offset": 0,
+                    "slot": "29",
+                    "type": "t_mapping(t_uint64,t_uint32)"
+                  },
+                  {
+                    "astId": 7843,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundMarketsSettledCount",
+                    "offset": 0,
+                    "slot": "30",
+                    "type": "t_mapping(t_uint64,t_uint32)"
+                  },
+                  {
+                    "astId": 7849,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundHasMarket",
+                    "offset": 0,
+                    "slot": "31",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))"
+                  },
+                  {
+                    "astId": 7853,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundTriggerMarket",
+                    "offset": 0,
+                    "slot": "32",
+                    "type": "t_mapping(t_uint64,t_uint32)"
+                  },
+                  {
+                    "astId": 7857,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundLockAt",
+                    "offset": 0,
+                    "slot": "33",
+                    "type": "t_mapping(t_uint64,t_uint256)"
+                  },
+                  {
+                    "astId": 7861,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundPhase",
+                    "offset": 0,
+                    "slot": "34",
+                    "type": "t_enum(RoundPhase)7648"
+                  },
+                  {
+                    "astId": 7865,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "requestIdToGlobalRound",
+                    "offset": 0,
+                    "slot": "35",
+                    "type": "t_mapping(t_uint256,t_uint64)"
+                  },
+                  {
+                    "astId": 7869,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "referrerOf",
+                    "offset": 0,
+                    "slot": "36",
+                    "type": "t_mapping(t_address,t_address)"
+                  },
+                  {
+                    "astId": 7873,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundRequestId",
+                    "offset": 0,
+                    "slot": "37",
+                    "type": "t_mapping(t_uint64,t_uint256)"
+                  },
+                  {
+                    "astId": 7877,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundRequestedAt",
+                    "offset": 0,
+                    "slot": "38",
+                    "type": "t_mapping(t_uint64,t_uint256)"
+                  },
+                  {
+                    "astId": 7881,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundJackpotNumber",
+                    "offset": 0,
+                    "slot": "39",
+                    "type": "t_mapping(t_uint64,t_uint8)"
+                  },
+                  {
+                    "astId": 7885,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "diagnosticsAvailable",
+                    "offset": 0,
+                    "slot": "40",
+                    "type": "t_mapping(t_uint64,t_bool)"
+                  }
+                ],
+                "numberOfBytes": "1312"
+              },
+              "t_struct(MarketRoundState)7625_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.MarketRoundState",
+                "members": [
+                  {
+                    "astId": 7615,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betsReleased",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7617,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "winningBetCount",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7619,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bankPaidRunning",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7621,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "settled",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7624,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "totals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_struct(RoundTotals)6031_storage"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_struct(RoundTotals)6031_storage": {
+                "encoding": "inplace",
+                "label": "struct BetStorageLib.RoundTotals",
+                "members": [
+                  {
+                    "astId": 6028,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "totalAmount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6030,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "64"
+              },
+              "t_uint128": {
+                "encoding": "inplace",
+                "label": "uint128",
+                "numberOfBytes": "16"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        },
+        "candidate": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 7713,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IMarketRegistry)5809"
+              },
+              {
+                "astId": 7716,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "JACKPOT_TREASURY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IJackpotTreasury)5731"
+              },
+              {
+                "astId": 7719,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "JACKPOT_FUNDER",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_contract(IBRBJackpotFunder)5574"
+              },
+              {
+                "astId": 7721,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "VRF_SUBSCRIPTION_ID",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7723,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "VRF_CALLBACK_GAS_LIMIT",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7725,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "ROUND_DURATION",
+                "offset": 4,
+                "slot": "4",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7727,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_globalRound",
+                "offset": 8,
+                "slot": "4",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 7729,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_pendingRequestId",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7731,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "withdrawalQueueBatchSize",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7733,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "maxWithdrawalQueueLength",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7735,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "payoutLaneCount",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7737,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "INFRA_RECIPIENT",
+                "offset": 4,
+                "slot": "8",
+                "type": "t_address"
+              },
+              {
+                "astId": 7739,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "UPKEEP_SCHEDULER",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_address"
+              },
+              {
+                "astId": 7744,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "globalRoundState",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_mapping(t_uint64,t_struct(GlobalRoundState)7655_storage)"
+              },
+              {
+                "astId": 7751,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "marketRoundStateByRound",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)7667_storage))"
+              },
+              {
+                "astId": 7760,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "payoutCursorByShard",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+              },
+              {
+                "astId": 7769,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "winningBetCountByShard",
+                "offset": 0,
+                "slot": "13",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+              },
+              {
+                "astId": 7777,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundStraightBetsSum",
+                "offset": 0,
+                "slot": "14",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7783,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundMaxStraightBet",
+                "offset": 0,
+                "slot": "15",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7789,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundMaxStreetBet",
+                "offset": 0,
+                "slot": "16",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7797,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundStreetBetsTotal",
+                "offset": 0,
+                "slot": "17",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7803,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundRedBetsSum",
+                "offset": 0,
+                "slot": "18",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7809,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundBlackBetsSum",
+                "offset": 0,
+                "slot": "19",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7815,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundOddBetsSum",
+                "offset": 0,
+                "slot": "20",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7821,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundEvenBetsSum",
+                "offset": 0,
+                "slot": "21",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7827,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundLowBetsSum",
+                "offset": 0,
+                "slot": "22",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7833,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundHighBetsSum",
+                "offset": 0,
+                "slot": "23",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7841,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundDozenBetsSum",
+                "offset": 0,
+                "slot": "24",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7849,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundColumnBetsSum",
+                "offset": 0,
+                "slot": "25",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+              },
+              {
+                "astId": 7855,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundOtherBetsWeightedPayout",
+                "offset": 0,
+                "slot": "26",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+              },
+              {
+                "astId": 7867,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundNumberedBets",
+                "offset": 0,
+                "slot": "27",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage))))"
+              },
+              {
+                "astId": 7877,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundFlatBets",
+                "offset": 0,
+                "slot": "28",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage)))"
+              },
+              {
+                "astId": 7881,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundMarketParticipantCount",
+                "offset": 0,
+                "slot": "29",
+                "type": "t_mapping(t_uint64,t_uint32)"
+              },
+              {
+                "astId": 7885,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundMarketsSettledCount",
+                "offset": 0,
+                "slot": "30",
+                "type": "t_mapping(t_uint64,t_uint32)"
+              },
+              {
+                "astId": 7891,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundHasMarket",
+                "offset": 0,
+                "slot": "31",
+                "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))"
+              },
+              {
+                "astId": 7895,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundTriggerMarket",
+                "offset": 0,
+                "slot": "32",
+                "type": "t_mapping(t_uint64,t_uint32)"
+              },
+              {
+                "astId": 7899,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundLockAt",
+                "offset": 0,
+                "slot": "33",
+                "type": "t_mapping(t_uint64,t_uint256)"
+              },
+              {
+                "astId": 7903,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_roundPhase",
+                "offset": 0,
+                "slot": "34",
+                "type": "t_enum(RoundPhase)7690"
+              },
+              {
+                "astId": 7907,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "requestIdToGlobalRound",
+                "offset": 0,
+                "slot": "35",
+                "type": "t_mapping(t_uint256,t_uint64)"
+              },
+              {
+                "astId": 7911,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "referrerOf",
+                "offset": 0,
+                "slot": "36",
+                "type": "t_mapping(t_address,t_address)"
+              },
+              {
+                "astId": 7915,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundRequestId",
+                "offset": 0,
+                "slot": "37",
+                "type": "t_mapping(t_uint64,t_uint256)"
+              },
+              {
+                "astId": 7919,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundRequestedAt",
+                "offset": 0,
+                "slot": "38",
+                "type": "t_mapping(t_uint64,t_uint256)"
+              },
+              {
+                "astId": 7923,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "roundJackpotNumber",
+                "offset": 0,
+                "slot": "39",
+                "type": "t_mapping(t_uint64,t_uint8)"
+              },
+              {
+                "astId": 7927,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "diagnosticsAvailable",
+                "offset": 0,
+                "slot": "40",
+                "type": "t_mapping(t_uint64,t_bool)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_struct(BetEntry)7629_storage)dyn_storage": {
+                "base": "t_struct(BetEntry)7629_storage",
+                "encoding": "dynamic_array",
+                "label": "struct RouletteEngineStorageLib.BetEntry[]",
+                "numberOfBytes": "32"
+              },
+              "t_bool": {
+                "encoding": "inplace",
+                "label": "bool",
+                "numberOfBytes": "1"
+              },
+              "t_contract(IBRBJackpotFunder)5574": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IJackpotTreasury)5731": {
+                "encoding": "inplace",
+                "label": "contract IJackpotTreasury",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IMarketRegistry)5809": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_enum(RoundPhase)7690": {
+                "encoding": "inplace",
+                "label": "enum RouletteEngineStorageLib.RoundPhase",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_address)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => address)",
+                "numberOfBytes": "32",
+                "value": "t_address"
+              },
+              "t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_struct(BetEntry)7629_storage)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_uint64)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => uint64)",
+                "numberOfBytes": "32",
+                "value": "t_uint64"
+              },
+              "t_mapping(t_uint32,t_bool)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => bool)",
+                "numberOfBytes": "32",
+                "value": "t_bool"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint256,t_uint256))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint256 => uint256))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint256,t_uint256)"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint32,t_uint256))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint32 => uint256))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_uint256)"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[]))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage)"
+              },
+              "t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage)))": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[])))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage))"
+              },
+              "t_mapping(t_uint32,t_struct(MarketRoundState)7667_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState)",
+                "numberOfBytes": "32",
+                "value": "t_struct(MarketRoundState)7667_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint64,t_bool)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => bool)",
+                "numberOfBytes": "32",
+                "value": "t_bool"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => bool))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_bool)"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint256 => uint256)))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint256,t_uint256))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint32 => uint256)))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint32,t_uint256))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage)))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage))))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage)))"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)7667_storage))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => struct RouletteEngineStorageLib.MarketRoundState))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_struct(MarketRoundState)7667_storage)"
+              },
+              "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => mapping(uint32 => uint256))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint32,t_uint256)"
+              },
+              "t_mapping(t_uint64,t_struct(GlobalRoundState)7655_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => struct RouletteEngineStorageLib.GlobalRoundState)",
+                "numberOfBytes": "32",
+                "value": "t_struct(GlobalRoundState)7655_storage"
+              },
+              "t_mapping(t_uint64,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint64,t_uint32)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => uint32)",
+                "numberOfBytes": "32",
+                "value": "t_uint32"
+              },
+              "t_mapping(t_uint64,t_uint8)": {
+                "encoding": "mapping",
+                "key": "t_uint64",
+                "label": "mapping(uint64 => uint8)",
+                "numberOfBytes": "32",
+                "value": "t_uint8"
+              },
+              "t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint8",
+                "label": "mapping(uint8 => struct RouletteEngineStorageLib.BetEntry[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_struct(BetEntry)7629_storage)dyn_storage"
+              },
+              "t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage))": {
+                "encoding": "mapping",
+                "key": "t_uint8",
+                "label": "mapping(uint8 => mapping(uint256 => struct RouletteEngineStorageLib.BetEntry[]))",
+                "numberOfBytes": "32",
+                "value": "t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage)"
+              },
+              "t_struct(BetEntry)7629_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.BetEntry",
+                "members": [
+                  {
+                    "astId": 7622,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7624,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "amount",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint128"
+                  },
+                  {
+                    "astId": 7626,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betType",
+                    "offset": 16,
+                    "slot": "1",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7628,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "number",
+                    "offset": 17,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  }
+                ],
+                "numberOfBytes": "64"
+              },
+              "t_struct(GlobalRoundState)7655_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.GlobalRoundState",
+                "members": [
+                  {
+                    "astId": 7631,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "vrfRequested",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7633,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "vrfFulfilled",
+                    "offset": 1,
+                    "slot": "0",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7635,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "randomWord",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7637,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "winningNumber",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7639,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotTriggered",
+                    "offset": 1,
+                    "slot": "2",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7641,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotDistributed",
+                    "offset": 2,
+                    "slot": "2",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7643,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotCursor",
+                    "offset": 3,
+                    "slot": "2",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7645,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotPaid",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7647,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotPoolSnapshot",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7649,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotTotalStake",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7651,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotWinnerCount",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7654,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "vrfRequestedAt",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "256"
+              },
+              "t_struct(Layout)7928_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.Layout",
+                "members": [
+                  {
+                    "astId": 7713,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "REGISTRY",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_contract(IMarketRegistry)5809"
+                  },
+                  {
+                    "astId": 7716,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "JACKPOT_TREASURY",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_contract(IJackpotTreasury)5731"
+                  },
+                  {
+                    "astId": 7719,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "JACKPOT_FUNDER",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_contract(IBRBJackpotFunder)5574"
+                  },
+                  {
+                    "astId": 7721,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "VRF_SUBSCRIPTION_ID",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7723,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "VRF_CALLBACK_GAS_LIMIT",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7725,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "ROUND_DURATION",
+                    "offset": 4,
+                    "slot": "4",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7727,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_globalRound",
+                    "offset": 8,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 7729,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_pendingRequestId",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7731,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "withdrawalQueueBatchSize",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7733,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "maxWithdrawalQueueLength",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7735,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "payoutLaneCount",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7737,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "INFRA_RECIPIENT",
+                    "offset": 4,
+                    "slot": "8",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7739,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "UPKEEP_SCHEDULER",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7744,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "globalRoundState",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_mapping(t_uint64,t_struct(GlobalRoundState)7655_storage)"
+                  },
+                  {
+                    "astId": 7751,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketRoundStateByRound",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_struct(MarketRoundState)7667_storage))"
+                  },
+                  {
+                    "astId": 7760,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "payoutCursorByShard",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+                  },
+                  {
+                    "astId": 7769,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "winningBetCountByShard",
+                    "offset": 0,
+                    "slot": "13",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint32,t_uint256)))"
+                  },
+                  {
+                    "astId": 7777,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundStraightBetsSum",
+                    "offset": 0,
+                    "slot": "14",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7783,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundMaxStraightBet",
+                    "offset": 0,
+                    "slot": "15",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7789,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundMaxStreetBet",
+                    "offset": 0,
+                    "slot": "16",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7797,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundStreetBetsTotal",
+                    "offset": 0,
+                    "slot": "17",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7803,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundRedBetsSum",
+                    "offset": 0,
+                    "slot": "18",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7809,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundBlackBetsSum",
+                    "offset": 0,
+                    "slot": "19",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7815,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundOddBetsSum",
+                    "offset": 0,
+                    "slot": "20",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7821,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundEvenBetsSum",
+                    "offset": 0,
+                    "slot": "21",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7827,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundLowBetsSum",
+                    "offset": 0,
+                    "slot": "22",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7833,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundHighBetsSum",
+                    "offset": 0,
+                    "slot": "23",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7841,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundDozenBetsSum",
+                    "offset": 0,
+                    "slot": "24",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7849,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundColumnBetsSum",
+                    "offset": 0,
+                    "slot": "25",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint256,t_uint256)))"
+                  },
+                  {
+                    "astId": 7855,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundOtherBetsWeightedPayout",
+                    "offset": 0,
+                    "slot": "26",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_uint256))"
+                  },
+                  {
+                    "astId": 7867,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundNumberedBets",
+                    "offset": 0,
+                    "slot": "27",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_mapping(t_uint256,t_array(t_struct(BetEntry)7629_storage)dyn_storage))))"
+                  },
+                  {
+                    "astId": 7877,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundFlatBets",
+                    "offset": 0,
+                    "slot": "28",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_mapping(t_uint8,t_array(t_struct(BetEntry)7629_storage)dyn_storage)))"
+                  },
+                  {
+                    "astId": 7881,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundMarketParticipantCount",
+                    "offset": 0,
+                    "slot": "29",
+                    "type": "t_mapping(t_uint64,t_uint32)"
+                  },
+                  {
+                    "astId": 7885,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundMarketsSettledCount",
+                    "offset": 0,
+                    "slot": "30",
+                    "type": "t_mapping(t_uint64,t_uint32)"
+                  },
+                  {
+                    "astId": 7891,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundHasMarket",
+                    "offset": 0,
+                    "slot": "31",
+                    "type": "t_mapping(t_uint64,t_mapping(t_uint32,t_bool))"
+                  },
+                  {
+                    "astId": 7895,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundTriggerMarket",
+                    "offset": 0,
+                    "slot": "32",
+                    "type": "t_mapping(t_uint64,t_uint32)"
+                  },
+                  {
+                    "astId": 7899,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundLockAt",
+                    "offset": 0,
+                    "slot": "33",
+                    "type": "t_mapping(t_uint64,t_uint256)"
+                  },
+                  {
+                    "astId": 7903,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_roundPhase",
+                    "offset": 0,
+                    "slot": "34",
+                    "type": "t_enum(RoundPhase)7690"
+                  },
+                  {
+                    "astId": 7907,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "requestIdToGlobalRound",
+                    "offset": 0,
+                    "slot": "35",
+                    "type": "t_mapping(t_uint256,t_uint64)"
+                  },
+                  {
+                    "astId": 7911,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "referrerOf",
+                    "offset": 0,
+                    "slot": "36",
+                    "type": "t_mapping(t_address,t_address)"
+                  },
+                  {
+                    "astId": 7915,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundRequestId",
+                    "offset": 0,
+                    "slot": "37",
+                    "type": "t_mapping(t_uint64,t_uint256)"
+                  },
+                  {
+                    "astId": 7919,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundRequestedAt",
+                    "offset": 0,
+                    "slot": "38",
+                    "type": "t_mapping(t_uint64,t_uint256)"
+                  },
+                  {
+                    "astId": 7923,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "roundJackpotNumber",
+                    "offset": 0,
+                    "slot": "39",
+                    "type": "t_mapping(t_uint64,t_uint8)"
+                  },
+                  {
+                    "astId": 7927,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "diagnosticsAvailable",
+                    "offset": 0,
+                    "slot": "40",
+                    "type": "t_mapping(t_uint64,t_bool)"
+                  }
+                ],
+                "numberOfBytes": "1312"
+              },
+              "t_struct(MarketRoundState)7667_storage": {
+                "encoding": "inplace",
+                "label": "struct RouletteEngineStorageLib.MarketRoundState",
+                "members": [
+                  {
+                    "astId": 7657,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betsReleased",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7659,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "winningBetCount",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7661,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bankPaidRunning",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7663,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "settled",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_bool"
+                  },
+                  {
+                    "astId": 7666,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "totals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_struct(RoundTotals)6041_storage"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_struct(RoundTotals)6041_storage": {
+                "encoding": "inplace",
+                "label": "struct BetStorageLib.RoundTotals",
+                "members": [
+                  {
+                    "astId": 6038,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "totalAmount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6040,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "64"
+              },
+              "t_uint128": {
+                "encoding": "inplace",
+                "label": "uint128",
+                "numberOfBytes": "16"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        }
+      }
+    },
+    {
+      "contract": "SideBet",
+      "compatible": true,
+      "namespaceRoot": "0x1846f22cbddf11ab4f03976bc184e4c229eb24d5ca6fd07bdce57e89b8a62c00",
+      "existingFields": 11,
+      "candidateFields": 11,
+      "ordinaryFields": [
+        {
+          "astId": 2667,
+          "contract": "contracts/SideBet.sol:SideBet",
+          "label": "ENGINE",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_contract(IRouletteEngine)6762"
+        },
+        {
+          "astId": 2670,
+          "contract": "contracts/SideBet.sol:SideBet",
+          "label": "REGISTRY",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_contract(IMarketRegistry)6573"
+        }
+      ],
+      "referenceReconstructedFromGit": true,
+      "dependencyLockfileUnchanged": true,
+      "sourceSha256": "2dd75c791f5df47b3b7160db29f3a399efda4f509d94b21e8d8d83553da436d5",
+      "layouts": {
+        "reference": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 2673,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "configCount",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2678,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "configs",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_mapping(t_uint256,t_struct(SideBetConfig)6694_storage)"
+              },
+              {
+                "astId": 2680,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "betCount",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2685,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "bets",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_mapping(t_uint256,t_struct(Bet)6726_storage)"
+              },
+              {
+                "astId": 2690,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "playerBets",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+              },
+              {
+                "astId": 2692,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "minMultiplierBps",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2694,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "maxMultiplierBps",
+                "offset": 4,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2697,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "jackpotFunder",
+                "offset": 8,
+                "slot": "5",
+                "type": "t_contract(IBRBJackpotFunder)6228"
+              },
+              {
+                "astId": 2699,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "infraRecipient",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_address"
+              },
+              {
+                "astId": 2702,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "settleTimeout",
+                "offset": 20,
+                "slot": "6",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 2707,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "reservedByMarket",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_mapping(t_uint32,t_uint256)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_uint256)dyn_storage": {
+                "base": "t_uint256",
+                "encoding": "dynamic_array",
+                "label": "uint256[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IBRBJackpotFunder)6228": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_enum(SideBetColor)6665": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetColor",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetStatus)6671": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetStatus",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetType)6662": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetType",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_uint256)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_struct(Bet)6726_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.Bet)",
+                "numberOfBytes": "32",
+                "value": "t_struct(Bet)6726_storage"
+              },
+              "t_mapping(t_uint256,t_struct(SideBetConfig)6694_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.SideBetConfig)",
+                "numberOfBytes": "32",
+                "value": "t_struct(SideBetConfig)6694_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_struct(Bet)6726_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.Bet",
+                "members": [
+                  {
+                    "astId": 6696,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 6698,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketId",
+                    "offset": 20,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6700,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "stake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6702,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "payout",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6704,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "startGlobalRound",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 6706,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 8,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6709,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betType",
+                    "offset": 10,
+                    "slot": "3",
+                    "type": "t_enum(SideBetType)6662"
+                  },
+                  {
+                    "astId": 6712,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "color",
+                    "offset": 11,
+                    "slot": "3",
+                    "type": "t_enum(SideBetColor)6665"
+                  },
+                  {
+                    "astId": 6714,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 12,
+                    "slot": "3",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6716,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetCount",
+                    "offset": 13,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6718,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 15,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6721,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "status",
+                    "offset": 17,
+                    "slot": "3",
+                    "type": "t_enum(SideBetStatus)6671"
+                  },
+                  {
+                    "astId": 6723,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "placedAt",
+                    "offset": 18,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 6725,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "resolvedAt",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  }
+                ],
+                "numberOfBytes": "160"
+              },
+              "t_struct(SideBetConfig)6694_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.SideBetConfig",
+                "members": [
+                  {
+                    "astId": 6673,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6676,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betType",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_enum(SideBetType)6662"
+                  },
+                  {
+                    "astId": 6679,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "color",
+                    "offset": 5,
+                    "slot": "0",
+                    "type": "t_enum(SideBetColor)6665"
+                  },
+                  {
+                    "astId": 6681,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 6,
+                    "slot": "0",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6683,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetCount",
+                    "offset": 7,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6685,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 9,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6687,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 11,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6689,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "multiplierBps",
+                    "offset": 13,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6691,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "minStake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6693,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "maxStake",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "96"
+              },
+              "t_struct(SideBetData)2708_storage": {
+                "encoding": "inplace",
+                "label": "struct SideBet.SideBetData",
+                "members": [
+                  {
+                    "astId": 2673,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "configCount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2678,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "configs",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_mapping(t_uint256,t_struct(SideBetConfig)6694_storage)"
+                  },
+                  {
+                    "astId": 2680,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2685,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bets",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_mapping(t_uint256,t_struct(Bet)6726_storage)"
+                  },
+                  {
+                    "astId": 2690,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "playerBets",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+                  },
+                  {
+                    "astId": 2692,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "minMultiplierBps",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2694,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "maxMultiplierBps",
+                    "offset": 4,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2697,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotFunder",
+                    "offset": 8,
+                    "slot": "5",
+                    "type": "t_contract(IBRBJackpotFunder)6228"
+                  },
+                  {
+                    "astId": 2699,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "infraRecipient",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 2702,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "settleTimeout",
+                    "offset": 20,
+                    "slot": "6",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 2707,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "reservedByMarket",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_mapping(t_uint32,t_uint256)"
+                  }
+                ],
+                "numberOfBytes": "256"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [
+              {
+                "astId": 2667,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "ENGINE",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)6620"
+              },
+              {
+                "astId": 2670,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IMarketRegistry)6431"
+              }
+            ],
+            "types": {
+              "t_contract(IMarketRegistry)6431": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IRouletteEngine)6620": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              }
+            }
+          }
+        },
+        "candidate": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 2673,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "configCount",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2678,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "configs",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_mapping(t_uint256,t_struct(SideBetConfig)6836_storage)"
+              },
+              {
+                "astId": 2680,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "betCount",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2685,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "bets",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_mapping(t_uint256,t_struct(Bet)6868_storage)"
+              },
+              {
+                "astId": 2690,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "playerBets",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+              },
+              {
+                "astId": 2692,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "minMultiplierBps",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2694,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "maxMultiplierBps",
+                "offset": 4,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2697,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "jackpotFunder",
+                "offset": 8,
+                "slot": "5",
+                "type": "t_contract(IBRBJackpotFunder)6370"
+              },
+              {
+                "astId": 2699,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "infraRecipient",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_address"
+              },
+              {
+                "astId": 2702,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "settleTimeout",
+                "offset": 20,
+                "slot": "6",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 2707,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "reservedByMarket",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_mapping(t_uint32,t_uint256)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_uint256)dyn_storage": {
+                "base": "t_uint256",
+                "encoding": "dynamic_array",
+                "label": "uint256[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IBRBJackpotFunder)6370": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_enum(SideBetColor)6807": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetColor",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetStatus)6813": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetStatus",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetType)6804": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetType",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_uint256)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_struct(Bet)6868_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.Bet)",
+                "numberOfBytes": "32",
+                "value": "t_struct(Bet)6868_storage"
+              },
+              "t_mapping(t_uint256,t_struct(SideBetConfig)6836_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.SideBetConfig)",
+                "numberOfBytes": "32",
+                "value": "t_struct(SideBetConfig)6836_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_struct(Bet)6868_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.Bet",
+                "members": [
+                  {
+                    "astId": 6838,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 6840,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketId",
+                    "offset": 20,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6842,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "stake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6844,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "payout",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6846,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "startGlobalRound",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 6848,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 8,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6851,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betType",
+                    "offset": 10,
+                    "slot": "3",
+                    "type": "t_enum(SideBetType)6804"
+                  },
+                  {
+                    "astId": 6854,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "color",
+                    "offset": 11,
+                    "slot": "3",
+                    "type": "t_enum(SideBetColor)6807"
+                  },
+                  {
+                    "astId": 6856,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 12,
+                    "slot": "3",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6858,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetCount",
+                    "offset": 13,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6860,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 15,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6863,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "status",
+                    "offset": 17,
+                    "slot": "3",
+                    "type": "t_enum(SideBetStatus)6813"
+                  },
+                  {
+                    "astId": 6865,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "placedAt",
+                    "offset": 18,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 6867,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "resolvedAt",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  }
+                ],
+                "numberOfBytes": "160"
+              },
+              "t_struct(SideBetConfig)6836_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.SideBetConfig",
+                "members": [
+                  {
+                    "astId": 6815,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6818,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betType",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_enum(SideBetType)6804"
+                  },
+                  {
+                    "astId": 6821,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "color",
+                    "offset": 5,
+                    "slot": "0",
+                    "type": "t_enum(SideBetColor)6807"
+                  },
+                  {
+                    "astId": 6823,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 6,
+                    "slot": "0",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6825,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "targetCount",
+                    "offset": 7,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6827,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 9,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6829,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 11,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6831,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "multiplierBps",
+                    "offset": 13,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6833,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "minStake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6835,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "maxStake",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "96"
+              },
+              "t_struct(SideBetData)2708_storage": {
+                "encoding": "inplace",
+                "label": "struct SideBet.SideBetData",
+                "members": [
+                  {
+                    "astId": 2673,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "configCount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2678,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "configs",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_mapping(t_uint256,t_struct(SideBetConfig)6836_storage)"
+                  },
+                  {
+                    "astId": 2680,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2685,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bets",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_mapping(t_uint256,t_struct(Bet)6868_storage)"
+                  },
+                  {
+                    "astId": 2690,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "playerBets",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+                  },
+                  {
+                    "astId": 2692,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "minMultiplierBps",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2694,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "maxMultiplierBps",
+                    "offset": 4,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2697,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "jackpotFunder",
+                    "offset": 8,
+                    "slot": "5",
+                    "type": "t_contract(IBRBJackpotFunder)6370"
+                  },
+                  {
+                    "astId": 2699,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "infraRecipient",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 2702,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "settleTimeout",
+                    "offset": 20,
+                    "slot": "6",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 2707,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "reservedByMarket",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_mapping(t_uint32,t_uint256)"
+                  }
+                ],
+                "numberOfBytes": "256"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [
+              {
+                "astId": 2667,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "ENGINE",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)6762"
+              },
+              {
+                "astId": 2670,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IMarketRegistry)6573"
+              }
+            ],
+            "types": {
+              "t_contract(IMarketRegistry)6573": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IRouletteEngine)6762": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "contract": "BankVault4626",
+      "compatible": true,
+      "namespaceRoot": "0xb0c430920bd46af8c5ecb68ebf1a5f6f3805a863a6d4fa0fa5e65feb72f8e800",
+      "existingFields": 14,
+      "candidateFields": 14,
+      "ordinaryFields": [],
+      "referenceReconstructedFromGit": true,
+      "dependencyLockfileUnchanged": true,
+      "sourceSha256": "a158571647c8c2e078a68527f75aca8b5ed5b5869f86813b6cf138a43c07eb31",
+      "layouts": {
+        "reference": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 7547,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "marketId",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7550,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "ENGINE",
+                "offset": 4,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)9777"
+              },
+              {
+                "astId": 7552,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "lockedBetLiquidity",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7554,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "sideBetController",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_address"
+              },
+              {
+                "astId": 7556,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "minBet",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7558,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "assetDecimals",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint8"
+              },
+              {
+                "astId": 7560,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "flatWithdrawFee",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7563,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_withdrawalQueue",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_array(t_address)dyn_storage"
+              },
+              {
+                "astId": 7565,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_queueHead",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7570,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_pendingWithdrawal",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9455_storage)"
+              },
+              {
+                "astId": 7574,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_userQueueIndex",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7576,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "nextWithdrawalId",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7580,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "pendingWithdrawalId",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7585,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "withdrawalReceipts",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7544_storage)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_address)dyn_storage": {
+                "base": "t_address",
+                "encoding": "dynamic_array",
+                "label": "address[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IRouletteEngine)9777": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              },
+              "t_mapping(t_address,t_struct(QueuedWithdrawal)9455_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => struct IBankVault.QueuedWithdrawal)",
+                "numberOfBytes": "32",
+                "value": "t_struct(QueuedWithdrawal)9455_storage"
+              },
+              "t_mapping(t_address,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7544_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct BankVault4626.WithdrawalReceipt)",
+                "numberOfBytes": "32",
+                "value": "t_struct(WithdrawalReceipt)7544_storage"
+              },
+              "t_struct(BankVaultStorage)7586_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.BankVaultStorage",
+                "members": [
+                  {
+                    "astId": 7547,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7550,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "ENGINE",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_contract(IRouletteEngine)9777"
+                  },
+                  {
+                    "astId": 7552,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "lockedBetLiquidity",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7554,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "sideBetController",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7556,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "minBet",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7558,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "assetDecimals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7560,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "flatWithdrawFee",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7563,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_withdrawalQueue",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_array(t_address)dyn_storage"
+                  },
+                  {
+                    "astId": 7565,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_queueHead",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7570,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_pendingWithdrawal",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9455_storage)"
+                  },
+                  {
+                    "astId": 7574,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_userQueueIndex",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7576,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "nextWithdrawalId",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7580,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "pendingWithdrawalId",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7585,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "withdrawalReceipts",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7544_storage)"
+                  }
+                ],
+                "numberOfBytes": "416"
+              },
+              "t_struct(QueuedWithdrawal)9455_storage": {
+                "encoding": "inplace",
+                "label": "struct IBankVault.QueuedWithdrawal",
+                "members": [
+                  {
+                    "astId": 9452,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bps",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 9454,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "receiver",
+                    "offset": 2,
+                    "slot": "0",
+                    "type": "t_address"
+                  }
+                ],
+                "numberOfBytes": "32"
+              },
+              "t_struct(WithdrawalReceipt)7544_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.WithdrawalReceipt",
+                "members": [
+                  {
+                    "astId": 7531,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "owner",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7533,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "receiver",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7535,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bps",
+                    "offset": 20,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7537,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "requestedAt",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7539,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "processedAt",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7541,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "assetsPaid",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7543,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "sharesBurned",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        },
+        "candidate": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 7547,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "marketId",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7550,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "ENGINE",
+                "offset": 4,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)9777"
+              },
+              {
+                "astId": 7552,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "lockedBetLiquidity",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7554,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "sideBetController",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_address"
+              },
+              {
+                "astId": 7556,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "minBet",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7558,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "assetDecimals",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint8"
+              },
+              {
+                "astId": 7560,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "flatWithdrawFee",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7563,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_withdrawalQueue",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_array(t_address)dyn_storage"
+              },
+              {
+                "astId": 7565,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_queueHead",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7570,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_pendingWithdrawal",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9455_storage)"
+              },
+              {
+                "astId": 7574,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "_userQueueIndex",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7576,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "nextWithdrawalId",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7580,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "pendingWithdrawalId",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7585,
+                "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                "label": "withdrawalReceipts",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7544_storage)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_address)dyn_storage": {
+                "base": "t_address",
+                "encoding": "dynamic_array",
+                "label": "address[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IRouletteEngine)9777": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              },
+              "t_mapping(t_address,t_struct(QueuedWithdrawal)9455_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => struct IBankVault.QueuedWithdrawal)",
+                "numberOfBytes": "32",
+                "value": "t_struct(QueuedWithdrawal)9455_storage"
+              },
+              "t_mapping(t_address,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7544_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct BankVault4626.WithdrawalReceipt)",
+                "numberOfBytes": "32",
+                "value": "t_struct(WithdrawalReceipt)7544_storage"
+              },
+              "t_struct(BankVaultStorage)7586_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.BankVaultStorage",
+                "members": [
+                  {
+                    "astId": 7547,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7550,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "ENGINE",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_contract(IRouletteEngine)9777"
+                  },
+                  {
+                    "astId": 7552,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "lockedBetLiquidity",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7554,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "sideBetController",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7556,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "minBet",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7558,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "assetDecimals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7560,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "flatWithdrawFee",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7563,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_withdrawalQueue",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_array(t_address)dyn_storage"
+                  },
+                  {
+                    "astId": 7565,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_queueHead",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7570,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_pendingWithdrawal",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9455_storage)"
+                  },
+                  {
+                    "astId": 7574,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "_userQueueIndex",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7576,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "nextWithdrawalId",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7580,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "pendingWithdrawalId",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7585,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "withdrawalReceipts",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7544_storage)"
+                  }
+                ],
+                "numberOfBytes": "416"
+              },
+              "t_struct(QueuedWithdrawal)9455_storage": {
+                "encoding": "inplace",
+                "label": "struct IBankVault.QueuedWithdrawal",
+                "members": [
+                  {
+                    "astId": 9452,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bps",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 9454,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "receiver",
+                    "offset": 2,
+                    "slot": "0",
+                    "type": "t_address"
+                  }
+                ],
+                "numberOfBytes": "32"
+              },
+              "t_struct(WithdrawalReceipt)7544_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.WithdrawalReceipt",
+                "members": [
+                  {
+                    "astId": 7531,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "owner",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7533,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "receiver",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7535,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "bps",
+                    "offset": 20,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7537,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "requestedAt",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7539,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "processedAt",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7541,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "assetsPaid",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7543,
+                    "contract": "MainnetStorageProbe.sol:MainnetStorageProbe",
+                    "label": "sharesBurned",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        }
+      }
+    }
+  ]
+}

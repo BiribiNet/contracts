@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const targets = {
   rouletteDiagnosticsAbi: ['RouletteEngine', ['roundDiagnostics', 'RoulettePayment', 'JackpotPayment']],
-  withdrawalReceiptsAbi: ['BankVault4626', ['withdrawalReceipt', 'pendingWithdrawalStatus', 'WithdrawalIdentified', 'WithdrawalPaid']],
+  withdrawalReceiptsAbi: ['BankVault4626', ['withdrawalReceipt', 'pendingWithdrawalStatus', 'WithdrawalIdentified', 'WithdrawalProcessed']],
   fundingDiagnosticsAbi: ['BRBJackpotFunder', ['pendingFundingBalances', 'fundingAttemptCount', 'FundingAttemptStarted', 'FundingAttemptCompleted']],
 };
 let output = '// Generated from BiribiNet/contracts; run scripts/export-protocol-observability.mjs.\n';

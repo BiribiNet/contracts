@@ -26,6 +26,10 @@ export type DeployCreAutomationParams = {
     scheduler: Address;
     admin: Address;
     expectedWorkflowOwner?: Address;
+    /** Optional hosted workflow id pin; set before receiver ownership leaves the deployer. */
+    expectedWorkflowId?: `0x${string}`;
+    /** Optional hosted workflow name pin (hashed on-chain to bytes10). */
+    expectedWorkflowName?: string;
     receiverOwner?: Address;
     keystoneForwarder: Address;
     wallet: WalletClient;
@@ -65,6 +69,15 @@ export async function deployCreAutomation(params: DeployCreAutomationParams): Pr
     if (params.expectedWorkflowOwner) {
         await waitWrite(receiver.write.setExpectedAuthor([params.expectedWorkflowOwner], { account }));
     }
+    if (params.expectedWorkflowId) {
+        if (!/^0x[0-9a-fA-F]{64}$/.test(params.expectedWorkflowId)) {
+            throw new Error("expectedWorkflowId must be a 32-byte hex string");
+        }
+        await waitWrite(receiver.write.setExpectedWorkflowId([params.expectedWorkflowId], { account }));
+    }
+    if (params.expectedWorkflowName?.trim()) {
+        await waitWrite(receiver.write.setExpectedWorkflowName([params.expectedWorkflowName.trim()], { account }));
+    }
 
     await waitWrite(authority.write.setExecutorApproved([receiver.address, true], { account }));
 
@@ -77,6 +90,9 @@ export async function deployCreAutomation(params: DeployCreAutomationParams): Pr
     }
 
     if (params.expectedWorkflowOwner && (await receiver.read.getExpectedAuthor()).toLowerCase() !== params.expectedWorkflowOwner.toLowerCase()) throw new Error("CRE workflow owner binding failed");
+    if (params.expectedWorkflowId && (await receiver.read.getExpectedWorkflowId()).toLowerCase() !== params.expectedWorkflowId.toLowerCase()) {
+        throw new Error("CRE workflow id binding failed");
+    }
     if ((await receiver.read.owner()).toLowerCase() !== (params.receiverOwner ?? account.address).toLowerCase()) throw new Error("CRE receiver ownership handoff failed");
 
     return {

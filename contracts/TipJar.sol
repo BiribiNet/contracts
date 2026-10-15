@@ -21,7 +21,7 @@ contract TipJar is ReentrancyGuard {
     error InvalidAmount();
     error UnexpectedReceivedAmount();
 
-    event TipSent(address indexed sender, address indexed token, address indexed recipient, uint256 amount);
+    event TipSent(address sender, address token, address recipient, uint256 amount);
 
     constructor(address token, address engine) {
         if (token.code.length == 0 || engine.code.length == 0) revert InvalidConfiguration();

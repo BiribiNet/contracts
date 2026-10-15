@@ -222,6 +222,8 @@ library RoulettePayoutSweepLib {
         mr.winningBetCount = total;
     }
 
+    /// @dev Same lane assignment as `_consumeBucket` (`gPos % laneCount`), without walking entries.
+    /// Consecutive indices `[gPos, gPos+len)` map to lanes by modulo; counts are closed-form.
     function _accumulateBucketShards(
         RouletteEngineStorageLib.Layout storage,
         uint64,
@@ -232,12 +234,22 @@ library RoulettePayoutSweepLib {
         uint32 laneCount
     ) private view returns (uint256) {
         uint256 len = bucket.length;
+        if (len == 0) return gPos;
         unchecked {
-            for (uint256 i; i < len; ) {
-                shards[gPos % laneCount]++;
-                ++gPos;
+            uint256 base = len / laneCount;
+            uint256 rem = len % laneCount;
+            uint256 offset = gPos % laneCount;
+            if (base != 0) {
+                for (uint256 lane; lane < laneCount; ) {
+                    shards[lane] += base;
+                    ++lane;
+                }
+            }
+            for (uint256 i; i < rem; ) {
+                shards[(offset + i) % laneCount]++;
                 ++i;
             }
+            gPos += len;
         }
         return gPos;
     }

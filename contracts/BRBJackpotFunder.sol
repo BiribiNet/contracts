@@ -83,22 +83,55 @@ contract BRBJackpotFunder is AccessControl, ReentrancyGuard, IBRBJackpotFunder {
         uint256 treasuryPaid;
         uint256 burned;
     }
+
+    struct PendingBrb {
+        uint256 treasury;
+        uint256 burn;
+    }
+
     mapping(uint32 => FundingAccount) public fundingAccounts;
     mapping(address => uint256) public queuedAssetTotals;
     mapping(uint32 => uint8) public consecutiveFailures;
     mapping(uint32 => uint256) public nextAttemptAt;
+    mapping(uint32 => PendingBrb) public pendingBrbByMarket;
+
     uint256 public constant RETRY_DELAY = 60;
     uint8 public constant MAX_FAILURES = 5;
     uint256 public constant ATTEMPT_GAS = 500_000;
     uint256 public maxSwapReserveBps = 100; // At most 1% of the current input reserve.
-    event FundingQueued(uint32 indexed marketId, address indexed asset, uint256 amount, uint256 pending);
-    event FundingRetryScheduled(uint32 indexed marketId, uint8 failures, uint256 nextAttemptAt, bool stopped);
-    event FundingRetryReset(uint32 indexed marketId);
-    event FundingImported(uint32 indexed marketId, address indexed asset, uint256 amount, bytes32 sourceTransaction);
+    uint256 public pendingTreasuryBrb;
+    uint256 public pendingBurnBrb;
+    uint256 public fundingAttemptCount;
+
+    event FundingQueued(uint32 marketId, address asset, uint256 amount, uint256 pending);
+    event FundingRetryScheduled(uint32 marketId, uint8 failures, uint256 nextAttemptAt, bool stopped);
+    event FundingRetryReset(uint32 marketId);
+    event FundingImported(uint32 marketId, address asset, uint256 amount, bytes32 sourceTransaction);
     event MaxSwapReserveBpsUpdated(uint256 bps);
-    event FundingReconciled(uint32 indexed marketId, address indexed asset, uint256 credited, uint256 processed,
+    event FundingReconciled(uint32 marketId, address asset, uint256 credited, uint256 processed,
         uint256 queued, uint256 brbProduced, uint256 treasuryPaid, uint256 burned,
         uint256 pendingTreasury, uint256 pendingBurn);
+    event SwapAssetBpsUpdated(uint256 totalBps);
+    event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
+    event SlippageBpsUpdated(uint256 slippageBps);
+    event ColdSlippageBpsUpdated(uint256 coldSlippageBps);
+    event TwapWindowUpdated(uint32 twapWindowSeconds);
+    event PairObservationUpdated(address pair, uint32 timestamp);
+    event FundFromMarketSkipped(uint32 marketId, address asset, uint8 reason);
+    event JackpotTreasuryTransferFailed(uint32 marketId, address treasury, uint256 amount);
+    event JackpotBurnFailed(uint32 marketId, uint256 amount);
+    event TokenSwept(address asset, address to, uint256 amount);
+    event FundedFromMarket(
+        uint32 marketId,
+        address asset,
+        uint256 assetSwapped,
+        uint256 brbOut,
+        uint256 brbToTreasury,
+        uint256 brbBurned
+    );
+    event PendingBrbDistributed(uint32 marketId, uint256 treasuryAmount, uint256 burnedAmount);
+    event FundingAttemptStarted(uint256 attemptId, uint32 marketId, address asset, uint256 inputBalance, uint256 brbBalance);
+    event FundingAttemptCompleted(uint256 attemptId, uint256 remainingInput, uint256 remainingBrb);
 
     /// @notice Pure bookkeeping after the collector transfers the exact fee. No router/token calls.
     /// @dev Collectors must transfer standard, non-rebasing, non-fee-on-transfer assets atomically.
@@ -206,25 +239,6 @@ contract BRBJackpotFunder is AccessControl, ReentrancyGuard, IBRBJackpotFunder {
         return a.queued < beforeQueued || pendingBrbByMarket[marketId].treasury + pendingBrbByMarket[marketId].burn < beforePending;
     }
 
-    event SwapAssetBpsUpdated(uint256 totalBps);
-    event TreasuryBrbSplitUpdated(uint256 numerator, uint256 denominator);
-    event SlippageBpsUpdated(uint256 slippageBps);
-    event ColdSlippageBpsUpdated(uint256 coldSlippageBps);
-    event TwapWindowUpdated(uint32 twapWindowSeconds);
-    event PairObservationUpdated(address pair, uint32 timestamp);
-    event FundFromMarketSkipped(uint32 marketId, address asset, uint8 reason);
-    event JackpotTreasuryTransferFailed(uint32 marketId, address treasury, uint256 amount);
-    event JackpotBurnFailed(uint32 marketId, uint256 amount);
-    event TokenSwept(address asset, address to, uint256 amount);
-    event FundedFromMarket(
-        uint32 marketId,
-        address asset,
-        uint256 assetSwapped,
-        uint256 brbOut,
-        uint256 brbToTreasury,
-        uint256 brbBurned
-    );
-
     constructor(
         address engine_,
         address brb_,
@@ -308,12 +322,6 @@ contract BRBJackpotFunder is AccessControl, ReentrancyGuard, IBRBJackpotFunder {
         emit TokenSwept(asset, to, xfer);
     }
 
-    struct PendingBrb { uint256 treasury; uint256 burn; }
-    mapping(uint32 => PendingBrb) public pendingBrbByMarket;
-    uint256 public pendingTreasuryBrb;
-    uint256 public pendingBurnBrb;
-    event PendingBrbDistributed(uint32 indexed marketId, uint256 treasuryAmount, uint256 burnedAmount);
-
     function retryPendingBrb(uint32 marketId) external onlyRole(FUNDER_ADMIN_ROLE) nonReentrant {
         _retryPendingBrb(marketId);
         _reconcile(marketId);
@@ -328,10 +336,6 @@ contract BRBJackpotFunder is AccessControl, ReentrancyGuard, IBRBJackpotFunder {
         (uint256 sent, uint256 burned) = _distributeBrb(marketId, owed.treasury, owed.burn);
         emit PendingBrbDistributed(marketId, sent, burned);
     }
-
-    uint256 public fundingAttemptCount;
-    event FundingAttemptStarted(uint256 indexed attemptId, uint32 indexed marketId, address indexed asset, uint256 inputBalance, uint256 brbBalance);
-    event FundingAttemptCompleted(uint256 indexed attemptId, uint256 remainingInput, uint256 remainingBrb);
 
     /// @notice Raw balances retained here, not an attribution to a single round.
     function pendingFundingBalances(address asset) external view returns (uint256 inputBalance, uint256 brbBalance) {

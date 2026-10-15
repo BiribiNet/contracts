@@ -1,0 +1,169 @@
+{
+  "chainId": 421614,
+  "block": 317415975,
+  "transactionsConfirmed": 19,
+  "transactionFeesETH": "0.00153871738415322",
+  "postUpgradeActivity": [
+    {
+      "event": "VrfRequested",
+      "id": "2027",
+      "transactionHash": "0xa45650181c50e09dfafca33cb402f377d1e262bae101f6c43d4938ebf367405b",
+      "blockNumber": 317413977
+    },
+    {
+      "event": "VRFResult",
+      "id": "2027",
+      "transactionHash": "0xf918f3cb49cab28ddf48ce1f4a39c7165c760eaf0a53fa014ecc071b8736edf6",
+      "blockNumber": 317413982
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2027",
+      "transactionHash": "0xc844409ce3e5110a749c78cea4fd04697db6e26d3b0d3dc66a99de716eb34191",
+      "blockNumber": 317414006
+    },
+    {
+      "event": "VrfRequested",
+      "id": "2028",
+      "transactionHash": "0x61840c781ce26f74ff24e0a99b0d5198ba8675b6e34e425120a072962defc054",
+      "blockNumber": 317414325
+    },
+    {
+      "event": "VRFResult",
+      "id": "2028",
+      "transactionHash": "0x47f7bdd18eddb4e8d22f5eb01a3dd28dc3dc3681460b096a45f2c861b10c422d",
+      "blockNumber": 317414331
+    },
+    {
+      "event": "FundingAttemptCompleted",
+      "id": "1",
+      "transactionHash": "0xa4a67c2c298e54184e550086aab1d1c1a858efbe45ed6d132c45b07f962289c9",
+      "blockNumber": 317414351
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2028",
+      "transactionHash": "0xa4a67c2c298e54184e550086aab1d1c1a858efbe45ed6d132c45b07f962289c9",
+      "blockNumber": 317414351
+    },
+    {
+      "event": "VrfRequested",
+      "id": "2029",
+      "transactionHash": "0xeb3116372d303822375d2a97038cf9833287707d266aa1b5eae3e543842b3c09",
+      "blockNumber": 317414655
+    },
+    {
+      "event": "VRFResult",
+      "id": "2029",
+      "transactionHash": "0x211af717eedcf961203c9cf52d80d5b4c2ef06ece7c69e8cfdc21e1f8aa557c7",
+      "blockNumber": 317414661
+    },
+    {
+      "event": "FundingAttemptCompleted",
+      "id": "2",
+      "transactionHash": "0x10cd5d2f99aa8254159396c18eba2be97d9f651c37fe45ff743dc9247fe732ad",
+      "blockNumber": 317414691
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2029",
+      "transactionHash": "0x10cd5d2f99aa8254159396c18eba2be97d9f651c37fe45ff743dc9247fe732ad",
+      "blockNumber": 317414691
+    },
+    {
+      "event": "VrfRequested",
+      "id": "2030",
+      "transactionHash": "0xcaf217221f59547c033d8bac6c15227642c932d772efeca84ab78bc5a54fa84e",
+      "blockNumber": 317415031
+    },
+    {
+      "event": "VRFResult",
+      "id": "2030",
+      "transactionHash": "0x094d98cbf0ba3c5237d2632c7e0a6c5153f9e4bdcbd0f776f01fe4daedc8838f",
+      "blockNumber": 317415038
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2030",
+      "transactionHash": "0x35b429f177f661d0ff25f4bc1102e05caf02c8a3af627505aaa96de307f14980",
+      "blockNumber": 317415062
+    },
+    {
+      "event": "VrfRequested",
+      "id": "2031",
+      "transactionHash": "0x95bfcfd0664902fc1709cdef3d2c184fcacc118811ce4cc230dd9d7e986298ab",
+      "blockNumber": 317415395
+    },
+    {
+      "event": "VRFResult",
+      "id": "2031",
+      "transactionHash": "0x9938bc43b6b3f1b6232317cfb67d9cd798b4b19525ae19ca3b91b45e3f1ea03c",
+      "blockNumber": 317415401
+    },
+    {
+      "event": "FundingAttemptCompleted",
+      "id": "3",
+      "transactionHash": "0x93e1a35a5d6444b011ac1e59b1780cacc5384e5ad116c9e24f433f5c580fc2c3",
+      "blockNumber": 317415423
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2031",
+      "transactionHash": "0x93e1a35a5d6444b011ac1e59b1780cacc5384e5ad116c9e24f433f5c580fc2c3",
+      "blockNumber": 317415423
+    },
+    {
+      "event": "VrfRequested",
+      "id": "2032",
+      "transactionHash": "0xa6b45f8863468b965876e815f513814c6a7b5bd78e4406c14f386b71b18a5ad8",
+      "blockNumber": 317415749
+    },
+    {
+      "event": "VRFResult",
+      "id": "2032",
+      "transactionHash": "0x5fb83289a1780d51b20873b01003123b81a117987e56f0b080a84ffb02c7ce7d",
+      "blockNumber": 317415756
+    },
+    {
+      "event": "FundingAttemptCompleted",
+      "id": "4",
+      "transactionHash": "0xb248420d7aaf067a2c3e8e338657578caf04d4e14fd2160c78aae25f75d0c440",
+      "blockNumber": 317415778
+    },
+    {
+      "event": "RoundResolved",
+      "id": "2032",
+      "transactionHash": "0xb248420d7aaf067a2c3e8e338657578caf04d4e14fd2160c78aae25f75d0c440",
+      "blockNumber": 317415778
+    }
+  ],
+  "signerBalanceETH": "1.99410974837281678",
+  "engineProxy": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+  "sideBetProxy": "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+  "currentRound": "2033",
+  "pendingVrf": false,
+  "configCount": "27",
+  "betCount": "43",
+  "settleTimeout": "2592000",
+  "vrf": {
+    "link": "59.191195104088706307",
+    "nativeBalance": "0",
+    "requestCount": "2032",
+    "owner": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "engineRegistered": true
+  },
+  "receiverConfig": {
+    "address": "0xfda0edcbcf2c6360279cf10ec079d56d43795a86",
+    "owner": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "forwarder": "0x76c9cf548b4179F8901cda1f8623568b58215E62",
+    "expectedAuthor": "0x0000000000000000000000000000000000000000",
+    "expectedWorkflowId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "schedulerAllowed": true
+  },
+  "pending": [
+    "Treasury migration requires a reviewed mechanism to preserve the existing jackpot pool; current treasury retained",
+    "Receiver migration requires updating live CRE workflow receiver targets; current receiver retained",
+    "TipJar indexer and frontend activation pending; generated local indexer manifest is not deployed",
+    "X100 catalogue remains unseeded; dry run needs USDC liquidity and verified compatible frontend before activation"
+  ]
+}

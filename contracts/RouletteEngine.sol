@@ -159,8 +159,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
 
     event VrfRequested(uint64 newRoundId, uint256 requestId, uint256 timestamp);
     event VRFResult(uint64 roundId, uint8 winningNumber, uint8 jackpotNumber);
-    event RoulettePayment(uint64 indexed roundId, uint32 indexed marketId, address indexed recipient, address token, uint256 amount);
-    event JackpotPayment(uint64 indexed roundId, address indexed recipient, address indexed token, uint256 amount);
+    event RoulettePayment(uint64 roundId, uint32 marketId, address recipient, address token, uint256 amount);
+    event JackpotPayment(uint64 roundId, address recipient, address token, uint256 amount);
     event RoundResolved(uint64 roundId);
 
     /// @dev One log per `recordBet` call; decode `betData` as `(uint256[] betTypes, uint256[] numbers, uint256[] amounts)`.

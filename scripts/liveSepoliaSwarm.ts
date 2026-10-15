@@ -24,6 +24,13 @@ if (
   throw Error('Use 201–2000 tickets, 25–200 wallets, and an equal integer ticket count per wallet');
 const perWallet = count / walletCount;
 if (perWallet > 10) throw Error('Use at most 10 tickets per wallet for a 60-second campaign');
+/** Optional longer window for heavy admission (e.g. LIVE_SWARM_ROUND_DURATION=120 LIVE_SWARM_ADMISSION_MS=110000). */
+const requiredDuration = Number(process.env.LIVE_SWARM_ROUND_DURATION || 60);
+const admissionDeadlineMs = Number(process.env.LIVE_SWARM_ADMISSION_MS || 50_000);
+if (!Number.isSafeInteger(requiredDuration) || requiredDuration < 60 || requiredDuration > 300)
+  throw Error('LIVE_SWARM_ROUND_DURATION must be 60–300');
+if (!Number.isSafeInteger(admissionDeadlineMs) || admissionDeadlineMs < 50_000 || admissionDeadlineMs > 280_000)
+  throw Error('LIVE_SWARM_ADMISSION_MS must be 50000–280000');
 const path =
   process.env.LIVE_SWARM_JOURNAL ||
   (count === 250 && walletCount === 25
@@ -187,7 +194,7 @@ async function main() {
     if (report.campaignFundingWallet && report.campaignFundingWallet !== campaignAccount.address)
       throw Error('Funding wallet identity mismatch');
     if (campaignBrb !== 0n) throw Error('Funding-wallet BRB recovery incomplete');
-    if ((await engine.read.ROUND_DURATION()) !== 60) throw Error('Round duration changed');
+    if (Number(await engine.read.ROUND_DURATION()) !== requiredDuration) throw Error('Round duration changed');
     const blocks = report.wallets.flatMap((w: any) => w.bets.map((b: any) => BigInt(b.block)));
     const first = blocks.reduce((a: bigint, b: bigint) => (a < b ? a : b)),
       last = blocks.reduce((a: bigint, b: bigint) => (a > b ? a : b));
@@ -206,8 +213,8 @@ async function main() {
       adminBrb: await brb.read.balanceOf([admin.address]),
       verifiedAt: new Date().toISOString(),
     };
-    if (report.cleanupVerification.chainAdmissionSeconds >= 60n)
-      throw Error('Tickets exceeded 60-second admission window');
+    if (report.cleanupVerification.chainAdmissionSeconds >= BigInt(requiredDuration))
+      throw Error(`Tickets exceeded ${requiredDuration}-second admission window`);
     save();
     console.log(
       stringify({
@@ -215,7 +222,7 @@ async function main() {
         allWalletBrbRecovered: true,
         allAllowancesZero: true,
         chainAdmissionSeconds: report.cleanupVerification.chainAdmissionSeconds,
-        roundDuration: 60,
+        roundDuration: requiredDuration,
       }),
     );
     return;
@@ -335,8 +342,8 @@ async function main() {
     for (let id = 1; id <= Number(await registry.read.marketCount()); id++)
       if ((await engine.read.marketRoundStateByRound([round, id])).totals.betCount !== 0n)
         throw Error('Wait for a completely idle round');
-    if ((await engine.read.ROUND_DURATION()) !== 60)
-      throw Error('The live test requires the unchanged 60-second window');
+    if (Number(await engine.read.ROUND_DURATION()) !== requiredDuration)
+      throw Error(`The live test requires ROUND_DURATION=${requiredDuration}`);
     const nonces = await mapInBatches(accounts, 10, (a) =>
       pc.getTransactionCount({ address: a.address, blockTag: 'pending' }),
     );
@@ -346,7 +353,7 @@ async function main() {
     if (nonces.some((nonce, i) => nonce !== minedNonces[i]))
       throw Error('Test wallet has pending transactions; reconcile first');
     report.round = round.toString();
-    report.originalDuration = 60;
+    report.originalDuration = requiredDuration;
     report.startBlock = (await pc.getBlockNumber()).toString();
     report.walletBalancesBefore = await mapInBatches(accounts, 10, (a) =>
       brb.read.balanceOf([a.address], { blockNumber: BigInt(report.startBlock) }),
@@ -361,7 +368,7 @@ async function main() {
     // One in-flight transaction per EOA; refresh fees per group under sustained load.
     // Each wave waits for all receipts before another wave.
     for (let wave = 0; wave < perWallet; wave++) {
-      if (Date.now() - started > 50_000) throw Error('Admission safety deadline reached; inspect partial journal');
+      if (Date.now() - started > admissionDeadlineMs) throw Error('Admission safety deadline reached; inspect partial journal');
       if ((await engine.read.currentGlobalRound()) !== round) throw Error('Round changed during admission');
       const entries: any[] = [];
       let sendFailure: unknown;
@@ -371,7 +378,7 @@ async function main() {
           if (gasPrice > 100_000_000n) throw Error('Gas price exceeds campaign fee ceiling; reconcile before retrying');
           await inBatches(accounts.slice(group, group + 25), 25, async (_, offset) => {
             const i = group + offset;
-            if (Date.now() - started > 50_000)
+            if (Date.now() - started > admissionDeadlineMs)
               throw Error('Admission safety deadline reached; inspect partial journal');
             const hash = await clients[i].writeContract({
               address: bank.address,
@@ -436,7 +443,7 @@ async function main() {
       if (!diagnostics.jackpotDistributed && delta !== parseEther(String(-confirmed)))
         throw Error('Unexpected wallet accounting');
       report.observation.roundDuration = await engine.read.ROUND_DURATION();
-      if (report.observation.roundDuration !== 60) throw Error('Round duration changed');
+      if (Number(report.observation.roundDuration) !== requiredDuration) throw Error('Round duration changed');
       const activeFunder = await viem.getContractAt('BRBJackpotFunder', funder, contractClients);
       report.observation.fundingAccount = await activeFunder.read.fundingAccounts([3]);
       const names = [

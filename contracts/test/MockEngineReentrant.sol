@@ -7,6 +7,7 @@ import { IBankVault } from "../interfaces/IBankVault.sol";
 contract MockEngineReentrant {
     address public vault;
     bool public reenter;
+    address public INFRA_RECIPIENT = address(0xfee);
 
     function setVault(address vault_) external {
         vault = vault_;

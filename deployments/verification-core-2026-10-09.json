@@ -1,0 +1,27 @@
+[
+  {
+    "name": "RouletteEngine",
+    "address": "0x08b5C4E146b2dF4907c0ac27843d700281d1F8CD",
+    "verified": true
+  },
+  {
+    "name": "BankVault4626",
+    "address": "0xea45De4C6adD20979db76D13dCc56a3724e64CbA",
+    "verified": true
+  },
+  {
+    "name": "SideBet",
+    "address": "0xC2efc646F99588fe7C767Adb6f76b0544FC41E62",
+    "verified": true
+  },
+  {
+    "name": "BRBJackpotFunder",
+    "address": "0x6aF569259B87ef2AE4998436047fdFAfaEeDc7d9",
+    "verified": true
+  },
+  {
+    "name": "TipJar",
+    "address": "0xD8B67354374c41E6ED7494D404b0e8D27167031D",
+    "verified": true
+  }
+]

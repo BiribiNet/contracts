@@ -4,11 +4,18 @@ import { expect } from "chai";
 import { createPublicClient, http, parseAbi, parseEther, parseUnits, zeroAddress } from "viem";
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
-import { vrfCreateSubscription, vrfAddConsumerIfNeeded, vrfFundSubscriptionWithLink } from "../scripts/utils/vrfSubscription";
+import { deployProductionRouletteEngine, deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
+import {
+  vrfCreateSubscription,
+  vrfAddConsumerIfNeeded,
+  vrfFundSubscriptionWithLink,
+  vrfFundSubscriptionWithAllLink,
+} from "../scripts/utils/vrfSubscription";
+import { seedBrbAssetPool } from "../scripts/utils/seedUniswapV2BrbPools";
 import { encodeMultiBet, straightLegs, encodeSingleBet } from "./helpers/multiBetEncode";
 import { createMarketWithBeacon } from "./helpers/createMarket";
 import { runParallelLanesUntilIdle, runParallelLanesUntilVrfPending } from "./helpers/parallelUpkeep";
+import { deployKeeperAutomation } from "../scripts/utils/deployKeeperAutomation";
 import { checkProductionArtifacts } from "../scripts/utils/mainnetRelease";
 
 const USDC = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as const;
@@ -23,6 +30,7 @@ const KEYS = ["0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a3889
 (process.env.RUN_ARBITRUM_FORK === "1" ? describe : describe.skip)("Arbitrum One isolated deployment rehearsal", function () {
   this.timeout(900_000);
   let pinnedBlock: number;
+  let fixtureSnapshot: string;
   before(async () => {
     if (network.name !== "hardhat" || await (await viem.getPublicClient()).getChainId() !== 31337) throw new Error("Fork writes require the isolated Hardhat chain 31337");
     const url = process.env.ARBITRUM_FORK_URL || (vars.has("ARBITRUM_RPC_URL") ? vars.get("ARBITRUM_RPC_URL") : "https://arb1.arbitrum.io/rpc");
@@ -33,6 +41,13 @@ const KEYS = ["0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a3889
     if (!Number.isSafeInteger(pinnedBlock) || pinnedBlock < 1) throw new Error("Invalid fork block");
     console.log(`Read-only Arbitrum source pinned at block ${pinnedBlock}; all transactions remain on local chain 31337.`);
     await network.provider.request({ method: "hardhat_reset", params: [{ forking: { jsonRpcUrl: url, blockNumber: pinnedBlock } }] });
+    fixtureSnapshot = await network.provider.request({ method: "evm_snapshot", params: [] }) as string;
+  });
+  beforeEach(async () => {
+    // Each rehearsal starts at the same pinned chain state, including token balances and nonces.
+    const reverted = await network.provider.request({ method: "evm_revert", params: [fixtureSnapshot] });
+    if (!reverted) throw new Error("Could not restore the isolated mainnet fork fixture");
+    fixtureSnapshot = await network.provider.request({ method: "evm_snapshot", params: [] }) as string;
   });
   after(async () => { await network.provider.request({ method: "hardhat_reset", params: [] }); });
 
@@ -64,8 +79,17 @@ const KEYS = ["0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a3889
     await network.provider.request({ method: "hardhat_setBalance", params: [COORDINATOR, "0x56bc75e2d63100000"] });
     await wallet.writeContract({ address: LINK, abi: tokenAbi, functionName: "transfer", args: [admin, parseEther("10")], account: COORDINATOR });
     await vrfFundSubscriptionWithLink(wallet as any, pc as any, LINK, COORDINATOR, subId, parseEther("10"));
-    const stack = await deployRouletteEngine(KEYS, [zeroAddress, zeroAddress, zeroAddress, admin, COORDINATOR, subId, 2_500_000, 3, 100_000, admin],
-      { admin, scanLimit: 25, maxPayoutsPerCall: 60 }, { protocolPrefix: { brb: brb.address, mockRouter: ROUTER, admin } });
+    const stack = await deployProductionRouletteEngine({
+      brb: brb.address, router: ROUTER, admin, infraRecipient: admin,
+      coordinator: COORDINATOR, subscriptionId: subId, callbackGasLimit: 2_500_000,
+      confirmations: 3, roundDuration: 100_000, vrfKeyHashes: KEYS,
+      scheduler: { admin, scanLimit: 25, maxPayoutsPerCall: 60 },
+    });
+    // The local fork signer is the executor for this isolated rehearsal only.
+    await deployKeeperAutomation({ scheduler: stack.scheduler.address, admin, keeper: admin,
+      wallet, publicClient: pc, waitWrite: async hash => {
+        expect((await pc.waitForTransactionReceipt({ hash: await hash })).status).to.equal("success");
+      } });
     const { engine, scheduler, registry, funder, jackpotTreasury } = stack;
     await vrfAddConsumerIfNeeded(wallet as any, pc as any, COORDINATOR, subId, engine.address);
     const bank = await createMarketWithBeacon(registry as any, admin, USDC);
@@ -123,9 +147,144 @@ const KEYS = ["0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a3889
     expect(await engine.read.currentGlobalRound()).to.equal(3n);
     const report = { sourceChainId: 42161, localChainId: 31337, pinnedBlock, router: ROUTER, factory: FACTORY, usdc: USDC, dai: DAI,
       coordinator: COORDINATOR, sizes, realCoordinatorRequest: true, realUsdcVault: true, realV2FundingSwap: true, vaultUpgrade: true,
-      limitations: ["USDC minted and LINK borrowed only in local fixture", "oracle fulfillment simulated by local coordinator impersonation", "DAI market registered/read-checked, not wagered", "mock scheduler authority; hosted CRE and live admin credentials not rehearsed", "Hardhat EVM does not model Arbitrum sequencer or L1 fee behavior"] };
+      limitations: ["USDC minted and LINK borrowed only in local fixture", "oracle fulfillment simulated by local coordinator impersonation", "DAI market registered/read-checked, not wagered", "real keeper authority with a local fork signer; hosted execution and live admin credentials not rehearsed", "Hardhat EVM does not model Arbitrum sequencer or L1 fee behavior"] };
     mkdirSync("reports/fork", { recursive: true });
     writeFileSync("reports/fork/arbitrum-one.json", JSON.stringify(report, null, 2) + "\n");
+    console.log(JSON.stringify(report));
+  });
+
+  it("rehearses mainnet deploy gates: drain all LINK, TipJar, USDC/BRB LP on deployer (no vesting lock)", async () => {
+    const pc = await viem.getPublicClient();
+    expect(await pc.getChainId()).to.equal(31337);
+    const [wallet, marketing, infra] = await viem.getWalletClients();
+    const admin = wallet.account.address;
+    const marketingWallet = marketing.account.address;
+    const infraWallet = infra.account.address;
+    const waitWrite = async (hashPromise: Promise<`0x${string}`>) => {
+      const hash = await hashPromise;
+      const receipt = await pc.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error(`tx reverted ${hash}`);
+    };
+
+    const tokenAbi = parseAbi([
+      "function balanceOf(address) view returns (uint256)",
+      "function approve(address,uint256) returns (bool)",
+      "function transfer(address,uint256) returns (bool)",
+    ]);
+    const usdcAdminAbi = parseAbi([
+      "function masterMinter() view returns (address)",
+      "function configureMinter(address,uint256) returns (bool)",
+      "function mint(address,uint256) returns (bool)",
+    ]);
+    const minter = await pc.readContract({ address: USDC, abi: usdcAdminAbi, functionName: "masterMinter" });
+    await network.provider.request({ method: "hardhat_impersonateAccount", params: [minter] });
+    await network.provider.request({ method: "hardhat_setBalance", params: [minter, "0x56bc75e2d63100000"] });
+    await wallet.writeContract({
+      address: USDC,
+      abi: usdcAdminAbi,
+      functionName: "configureMinter",
+      args: [admin, parseUnits("1000000", 6)],
+      account: minter,
+    });
+    const usdcSeed = parseUnits("250000", 6);
+    await wallet.writeContract({
+      address: USDC,
+      abi: usdcAdminAbi,
+      functionName: "mint",
+      args: [admin, usdcSeed],
+    });
+
+    const brbLp = parseEther("2400000");
+    const brbMarketing = parseEther("300000");
+    const brbInfra = parseEther("300000");
+    const brb = await viem.deployContract("BRBToken", [admin]);
+    expect(await brb.read.balanceOf([admin])).to.equal(brbLp + brbMarketing + brbInfra);
+
+    const subId = await vrfCreateSubscription(wallet as any, pc as any, COORDINATOR);
+
+    await network.provider.request({ method: "hardhat_impersonateAccount", params: [COORDINATOR] });
+    await network.provider.request({ method: "hardhat_setBalance", params: [COORDINATOR, "0x56bc75e2d63100000"] });
+    await wallet.writeContract({
+      address: LINK,
+      abi: tokenAbi,
+      functionName: "transfer",
+      args: [admin, parseEther("7")],
+      account: COORDINATOR,
+    });
+    expect(await pc.readContract({ address: LINK, abi: tokenAbi, functionName: "balanceOf", args: [admin] })).to.equal(
+      parseEther("7"),
+    );
+
+    const funded = await vrfFundSubscriptionWithAllLink(wallet as any, pc as any, LINK, COORDINATOR, subId);
+    expect(funded).to.equal(parseEther("7"));
+    expect(await pc.readContract({ address: LINK, abi: tokenAbi, functionName: "balanceOf", args: [admin] })).to.equal(0n);
+
+    const stack = await deployRouletteEngine(
+      KEYS,
+      [zeroAddress, zeroAddress, zeroAddress, admin, COORDINATOR, subId, 2_500_000, 3, 100_000, admin],
+      { admin, scanLimit: 25, maxPayoutsPerCall: 60 },
+      { protocolPrefix: { brb: brb.address, router: ROUTER, admin } },
+    );
+    await vrfAddConsumerIfNeeded(wallet as any, pc as any, COORDINATOR, subId, stack.engine.address);
+
+    const tipJar = await viem.deployContract("TipJar", [brb.address, stack.engine.address]);
+    expect((await tipJar.read.TOKEN()).toLowerCase()).to.equal(brb.address.toLowerCase());
+
+    await brb.write.transfer([marketingWallet, brbMarketing]);
+    await brb.write.transfer([infraWallet, brbInfra]);
+    expect(await brb.read.balanceOf([marketingWallet])).to.equal(brbMarketing);
+    expect(await brb.read.balanceOf([infraWallet])).to.equal(brbInfra);
+    expect(await brb.read.balanceOf([admin])).to.equal(brbLp);
+
+    const usdcBalance = await pc.readContract({
+      address: USDC,
+      abi: tokenAbi,
+      functionName: "balanceOf",
+      args: [admin],
+    });
+    expect(usdcBalance).to.equal(usdcSeed);
+
+    const seeded = await seedBrbAssetPool(
+      wallet as any,
+      pc as any,
+      {
+        router: ROUTER,
+        brb: brb.address,
+        asset: USDC,
+        assetAmount: usdcBalance,
+        brbAmount: brbLp,
+        assetLabel: "USDC",
+      },
+      waitWrite,
+    );
+    expect(seeded.lpRecipient.toLowerCase()).to.equal(admin.toLowerCase());
+    expect(seeded.liquidity).to.be.gt(0n);
+    expect(seeded.pair).to.not.equal(zeroAddress);
+    expect(await brb.read.balanceOf([admin])).to.equal(0n);
+    expect(
+      await pc.readContract({ address: USDC, abi: tokenAbi, functionName: "balanceOf", args: [admin] }),
+    ).to.equal(0n);
+
+    const factory = await viem.getContractAt("UniswapV2Factory", FACTORY);
+    expect((await factory.read.getPair([USDC, brb.address])).toLowerCase()).to.equal(seeded.pair.toLowerCase());
+
+    const report = {
+      sourceChainId: 42161,
+      localChainId: 31337,
+      pinnedBlock,
+      linkDrainedJuels: funded.toString(),
+      tipJar: tipJar.address,
+      usdcBrbPair: seeded.pair,
+      lpHolder: seeded.lpRecipient,
+      lpBalance: seeded.liquidity.toString(),
+      usdcSeeded: usdcBalance.toString(),
+      brbSeeded: brbLp.toString(),
+      marketingWallet,
+      infraWallet,
+      lpVestingLockDeployed: false,
+    };
+    mkdirSync("reports/fork", { recursive: true });
+    writeFileSync("reports/fork/arbitrum-one-deploy-gates.json", JSON.stringify(report, null, 2) + "\n");
     console.log(JSON.stringify(report));
   });
 });

@@ -4,6 +4,13 @@ pragma solidity ^0.8.27;
 import { IBankVault } from "../interfaces/IBankVault.sol";
 
 contract MockEngine {
+    /// @dev Default infra sink for vault flat-withdraw-fee unit tests (`address(0xfee)`).
+    address public INFRA_RECIPIENT = address(0xfee);
+
+    function setInfraRecipient(address recipient) external {
+        INFRA_RECIPIENT = recipient;
+    }
+
     function recordBet(uint32, address, uint256, bytes calldata, address) external pure {}
 
     /// @dev Stub for legacy-shaped `BetPlaced` emission in {BankVault4626}.

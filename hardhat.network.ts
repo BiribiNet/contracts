@@ -1,6 +1,7 @@
 import { vars } from 'hardhat/config';
 import type { NetworksUserConfig } from 'hardhat/types';
-import { resolveSepoliaRpcUrls } from './scripts/utils/rpcFallback';
+import { ARBITRUM_RPC_URL } from './scripts/constants/arbitrumOne';
+import { resolveArbitrumRpcUrls, resolveSepoliaRpcUrls } from './scripts/utils/rpcFallback';
 
 /** Same default as Hardhat / MetaMask dev — keeps `getWalletClients()[0]` predictable. */
 const HARDHAT_TEST_MNEMONIC = 'test test test test test test test test test test test junk';
@@ -120,11 +121,14 @@ if (vars.has('BRB_KEY')) {
     };
   }
 
-  if (vars.has('ARBITRUM_RPC_URL')) {
+  {
+    // Hardhat binds a single bootstrap URL; deploy scripts install mid-request failover
+    // across `resolveArbitrumRpcUrls()` (see scripts/utils/hardhatRpcFailover.ts).
     networks.arbitrum = {
-      url: vars.get('ARBITRUM_RPC_URL'),
+      url: resolveArbitrumRpcUrls()[0] ?? ARBITRUM_RPC_URL,
       chainId: 42161,
       gasPrice: 'auto',
+      timeout: 60_000,
       accounts: [vars.get('BRB_KEY')],
     };
   }
