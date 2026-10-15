@@ -1,6 +1,7 @@
 // Public configuration only. No provider calls, credential reads, deployment or hosting changes.
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { releaseDefaults } from './release-manifest.mjs';
 const [manifestFile, environment, outputDirectory] = process.argv.slice(2);
 if (!manifestFile || !['mainnet', 'testnet'].includes(environment) || !outputDirectory) throw new Error('Usage: export-release-config.mjs <manifest> <mainnet|testnet> <new-output-directory>');
 const manifest = JSON.parse(readFileSync(resolve(manifestFile), 'utf8'));
@@ -10,15 +11,17 @@ if (manifest.chainId && manifest.chainId !== chainId) throw new Error('Manifest 
 manifest.chainId = chainId;
 const valid = value => /^0x[\da-f]{40}$/i.test(value ?? '') && !/^0x0{40}$/i.test(value);
 const values = {};
+const { market, receiver } = releaseDefaults(manifest);
 for (const [env, key] of Object.entries({ ROULETTE_ENGINE: 'roulette', BRB_TOKEN: 'brb', UPKEEP_SCHEDULER: 'scheduler',
   MARKET_REGISTRY: 'registry', SIDE_BET: 'sideBet', JACKPOT_TREASURY: 'jackpotTreasury', JACKPOT_FUNDER: 'jackpotFunder',
-  BRBR_TOKEN: 'brbReferal', AUTOMATION_RECEIVER: 'automationReceiver', CRE_EXECUTION_AUTHORITY: 'creExecutionAuthority' })) {
+  BRBR_TOKEN: 'brbReferal', CRE_EXECUTION_AUTHORITY: 'creExecutionAuthority' })) {
   if (!valid(manifest.addresses?.[key])) throw new Error(`Invalid/missing addresses.${key}`);
   values[`NEXT_PUBLIC_${env}_ADDRESS`] = manifest.addresses[key];
 }
-if (!valid(manifest.markets?.usdc?.bank) || !valid(manifest.vrf?.coordinator)) throw new Error('Missing default bank or coordinator');
+if (!valid(manifest.vrf?.coordinator)) throw new Error('Missing VRF coordinator');
 Object.assign(values, {
-  NEXT_PUBLIC_DEFAULT_BANK_ADDRESS: manifest.markets.usdc.bank,
+  NEXT_PUBLIC_DEFAULT_BANK_ADDRESS: market.bank,
+  NEXT_PUBLIC_AUTOMATION_RECEIVER_ADDRESS: receiver,
   NEXT_PUBLIC_VRF_COORDINATOR_ADDRESS: manifest.vrf.coordinator,
   NEXT_PUBLIC_CHAIN_ENV: environment,
   NEXT_PUBLIC_SITE_URL: environment === 'mainnet' ? 'https://biribi.net' : 'https://testnet.biribi.net',
@@ -27,6 +30,14 @@ Object.assign(values, {
   NEXT_PUBLIC_TX_EXPLORER_URL: environment === 'mainnet' ? 'https://arbiscan.io/tx/' : 'https://sepolia.arbiscan.io/tx/',
   NEXT_PUBLIC_DISABLE_INDEXING: environment === 'mainnet' ? 'false' : 'true',
 });
+for (const [variable, value] of Object.entries({ NEXT_PUBLIC_TIP_JAR_ADDRESS: manifest.addresses?.tipJar,
+  NEXT_PUBLIC_UNISWAP_V2_ROUTER_ADDRESS: manifest.uniswap?.router,
+  NEXT_PUBLIC_BUY_BRB_USDC_PAIR: manifest.uniswap?.brbUsdcPair })) {
+  if (value != null && !valid(value)) throw new Error(`Invalid ${variable}`);
+  if (value) values[variable] = value;
+}
+if (manifest.uniswap?.brbUsdcPair) Object.assign(values, { NEXT_PUBLIC_BUY_BRB_ENABLED: 'false',
+  NEXT_PUBLIC_BUY_BRB_CHAIN_ID: String(chainId), NEXT_PUBLIC_BUY_BRB_ADDRESS: manifest.addresses.brb });
 const out = resolve(outputDirectory);
 if (existsSync(out)) throw new Error('Output exists; choose a fresh release directory');
 mkdirSync(out, { recursive: true });
