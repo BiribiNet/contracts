@@ -1,0 +1,52 @@
+{
+  "chainId": 421614,
+  "round": "2394",
+  "tickets": 1000,
+  "wallets": 100,
+  "betLegs": 37000,
+  "chainAdmissionSeconds": 50,
+  "totalRoundSeconds": 82,
+  "afterLockSeconds": 22,
+  "afterVrfSeconds": 18,
+  "vrfRequestedAfterLock": 1,
+  "winningNumber": 13,
+  "jackpotNumber": 17,
+  "realVrf": true,
+  "manualSchedulerSubmissions": false,
+  "maxWagerReceiptGas": "3879651",
+  "maxAutomationReceiptGas": "2040489",
+  "resolutionTransaction": "0x5e25e3f93c7d99830ef50b3649c229275d13c53cf32064070056890e6678d0d7",
+  "vrfTransaction": "0xa519e69a4e18692d3c251cd938972930b7a9ba1dba8aed5a946cbf69784e1867",
+  "allWalletsPaidCorrectly": true,
+  "ordinaryPaidBRB": "36000",
+  "jackpotPaidBRB": "0",
+  "eachWalletTickets": 10,
+  "eachWalletOrdinaryPaidBRB": "360",
+  "noExternalTickets": true,
+  "rpcConfiguration": {
+    "mechanism": "viem fallback",
+    "endpointCount": 2,
+    "swarmOrder": [
+      "Arbitrum Sepolia PublicNode",
+      "authenticated Biribi Cloudflare RPC gateway"
+    ],
+    "transactionFees": "current RPC gas price refreshed per group, 2x headroom, 0.1 gwei ceiling"
+  },
+  "feeRangeWei": {
+    "min": 40324000,
+    "max": 72344000
+  },
+  "hostedWorkflowVerification": {
+    "instances": 20,
+    "allCompletedSuccessfully": true
+  },
+  "cleanupVerification": {
+    "allWalletBrbRecovered": true,
+    "allAllowancesZero": true,
+    "fundingWalletBrbRecovered": true,
+    "wallets": 100,
+    "chainAdmissionSeconds": 50,
+    "roundDuration": 60,
+    "verifiedAt": "2026-10-13T18:00:55.195Z"
+  }
+}

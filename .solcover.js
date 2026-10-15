@@ -1,3 +1,4 @@
 module.exports = {
-    skipFiles: ['external', 'test', 'interfaces']
-  };
+    skipFiles: ['external', 'test', 'interfaces', 'libraries', 'vendor'],
+    useProxy: true,
+};

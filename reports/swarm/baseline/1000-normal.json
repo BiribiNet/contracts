@@ -1,0 +1,13 @@
+{
+  "tickets": 1000,
+  "betLegs": 37000,
+  "uniqueWallets": 127,
+  "jackpot": false,
+  "callbackSuccess": true,
+  "callbackGas": "578552",
+  "maxBetGas": "3879651",
+  "settlementGasLimit": 2500000,
+  "maxSettlementGas": "1099597",
+  "calls": 20,
+  "completed": true
+}

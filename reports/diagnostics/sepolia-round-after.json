@@ -1,0 +1,92 @@
+{
+  "funderChecks": {
+    "address": "0x16aBfAB1E1c18C895EdCE0d6b8125AB451502fd3",
+    "engine": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+    "sideBet": "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+    "swapAssetTotalBps": "300",
+    "pendingTreasuryBrb": "0",
+    "pendingBurnBrb": "0"
+  },
+  "chainId": 421614,
+  "block": "317695028",
+  "round": "2137",
+  "phase": 1,
+  "pendingVrf": false,
+  "diagnostics": {
+    "requestId": "0",
+    "requestedAt": "0",
+    "available": false,
+    "fulfilled": false,
+    "winningNumber": 0,
+    "jackpotNumber": 0,
+    "marketsParticipating": 0,
+    "marketsSettled": 0,
+    "jackpotCursor": 0,
+    "jackpotPaid": "0",
+    "jackpotDistributed": false
+  },
+  "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "authority": "0xB24093FD7cbCA76C0A4098CdFF5F27d0734a2A68",
+  "simulation": {
+    "keeper": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "approved": true,
+    "balance": "1985299960642287277"
+  },
+  "lanes": [
+    {
+      "lane": 0,
+      "needed": false
+    },
+    {
+      "lane": 1,
+      "needed": false
+    }
+  ],
+  "markets": [
+    {
+      "id": 1,
+      "roundState": {
+        "betsReleased": false,
+        "winningBetCount": "0",
+        "bankPaidRunning": "0",
+        "settled": false,
+        "totals": {
+          "totalAmount": "0",
+          "betCount": "0"
+        }
+      },
+      "cursor0": "0",
+      "cursor1": "0"
+    },
+    {
+      "id": 2,
+      "roundState": {
+        "betsReleased": false,
+        "winningBetCount": "0",
+        "bankPaidRunning": "0",
+        "settled": false,
+        "totals": {
+          "totalAmount": "0",
+          "betCount": "0"
+        }
+      },
+      "cursor0": "0",
+      "cursor1": "0"
+    },
+    {
+      "id": 3,
+      "roundState": {
+        "betsReleased": false,
+        "winningBetCount": "0",
+        "bankPaidRunning": "0",
+        "settled": false,
+        "totals": {
+          "totalAmount": "0",
+          "betCount": "0"
+        }
+      },
+      "cursor0": "0",
+      "cursor1": "0"
+    }
+  ]
+}

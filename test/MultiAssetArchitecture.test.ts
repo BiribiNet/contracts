@@ -1,0 +1,308 @@
+import { viem } from "hardhat";
+
+import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { expect } from "chai";
+import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
+
+import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
+
+import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
+
+function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
+    return encodeAbiParameters(
+        [{ type: "uint256[]" }, { type: "uint256[]" }, { type: "uint256[]" }],
+        [[betType], [number], [amount]],
+    );
+}
+
+async function deployStack() {
+    const [admin, alice, bob] = await viem.getWalletClients();
+    const publicClient = await viem.getPublicClient();
+
+    const usdc = await viem.deployContract("MockUSDC");
+    const assetB = await viem.deployContract("MockUSDC");
+    const vrf = await viem.deployContract("MockVrfCoordinator");
+
+    const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+
+    const mockRouter = await viem.deployContract("MockUniswapV2Router");
+
+    const mockLaneKey = ("0x" + "11".repeat(32)) as `0x${string}`;
+    const { engine, scheduler, registry, jackpotTreasury, funder } = await deployRouletteEngine(
+        [mockLaneKey, mockLaneKey, mockLaneKey],
+        [
+            zeroAddress,
+            zeroAddress,
+            zeroAddress,
+            admin.account.address,
+            vrf.address,
+            1n,
+            2_000_000,
+            1,
+            500,
+            admin.account.address,
+        ],
+        { admin: admin.account.address, scanLimit: 5, maxPayoutsPerCall: 25 },
+        {
+            protocolPrefix: {
+                brb: brb.address,
+                mockRouter: mockRouter.address,
+                admin: admin.account.address,
+            },
+        },
+    );
+
+    await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
+
+    const factory = await viem.deployContract("MockUniswapV2Factory");
+    const pair = await viem.deployContract("MockUniswapV2Pair", [usdc.address, brb.address]);
+    await factory.write.setPair([usdc.address, brb.address, pair.address]);
+    await mockRouter.write.setFactory([factory.address]);
+    const reserves = usdc.address.toLowerCase() < brb.address.toLowerCase()
+        ? [parseUnits("10000", 6), parseUnits("10000", 18)] : [parseUnits("10000", 18), parseUnits("10000", 6)];
+    await pair.write.setReserves(reserves);
+
+    const vaultImpl = await viem.deployContract("BankVault4626");
+    const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
+    await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
+
+    await registry.write.createMarket(
+        [
+            {
+                asset: usdc.address,
+                bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
+            },
+        ],
+        { account: admin.account },
+    );
+    await registry.write.createMarket(
+        [
+            {
+                asset: assetB.address,
+                bankAdmin: admin.account.address,
+
+                minBet: 1_000_000n,
+            },
+        ],
+        { account: admin.account },
+    );
+
+    const cfg1 = await registry.read.getMarket([1]);
+    const cfg2 = await registry.read.getMarket([2]);
+    const bankUsdc = await viem.getContractAt("BankVault4626", cfg1.bank);
+    const bankAssetB = await viem.getContractAt("BankVault4626", cfg2.bank);
+
+    expect(await engine.read.currentGlobalRound()).to.equal(1n);
+    expect(await engine.read.roundPhase([1n])).to.equal(1); // RoundPhase.Open
+
+    await usdc.write.mint([alice.account.address, parseUnits("1000", 6)]);
+    await assetB.write.mint([bob.account.address, parseUnits("1000", 6)]);
+    await usdc.write.approve([bankUsdc.address, parseUnits("500", 6)], { account: alice.account });
+    await assetB.write.approve([bankAssetB.address, parseUnits("500", 6)], { account: bob.account });
+
+    return {
+        publicClient,
+        admin,
+        alice,
+        bob,
+        usdc,
+        assetB,
+        brb,
+        vrf,
+        registry,
+        engine,
+        scheduler,
+        bankUsdc,
+        bankAssetB,
+        jackpotTreasury,
+        funder,
+        factory: registry,
+    };
+}
+
+/** Buffered straight max payout needs LP depth in the ERC-4626 pool (excluding pending bets). */
+async function depositLpForStraightCover(
+    admin: { account: import("viem").Account },
+    bankUsdc: { address: `0x${string}`; write: { deposit(args: unknown[], opts?: unknown): Promise<unknown> } },
+    bankAssetB: { address: `0x${string}`; write: { deposit(args: unknown[], opts?: unknown): Promise<unknown> } },
+    usdc: { write: { mint(args: unknown[]): Promise<unknown>; approve(args: unknown[], opts?: unknown): Promise<unknown> } },
+    assetB: { write: { mint(args: unknown[]): Promise<unknown>; approve(args: unknown[], opts?: unknown): Promise<unknown> } },
+    lpPerBank = parseUnits("5000", 6),
+) {
+    await usdc.write.mint([admin.account.address, lpPerBank * 4n]);
+    await assetB.write.mint([admin.account.address, lpPerBank * 4n]);
+    await usdc.write.approve([bankUsdc.address, lpPerBank], { account: admin.account });
+    await assetB.write.approve([bankAssetB.address, lpPerBank], { account: admin.account });
+    await bankUsdc.write.deposit([lpPerBank, admin.account.address], { account: admin.account });
+    await bankAssetB.write.deposit([lpPerBank, admin.account.address], { account: admin.account });
+}
+
+describe("Multi-Asset architecture", function () {
+    it("derives vault share name and symbol from the asset ERC-20 metadata", async function () {
+        const { bankUsdc, usdc } = await deployStack();
+        const assetName = await usdc.read.name();
+        const assetSymbol = await usdc.read.symbol();
+        expect(await bankUsdc.read.name()).to.equal(`BRB ${assetName}`);
+        expect(await bankUsdc.read.symbol()).to.equal(`brb${assetSymbol}`);
+    });
+
+    it("keeps fixed upkeep surface while handling multiple markets", async function () {
+        const { scheduler, bankUsdc, bankAssetB, alice, bob, admin, publicClient, usdc, assetB } = await deployStack();
+        await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
+        const amount = parseUnits("10", 6);
+        const betData = encodeSingleBet(1n, 7n, amount);
+
+        await bankUsdc.write.placeBet([amount, betData, zeroAddress], { account: alice.account });
+        await bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account });
+        await time.increase(550);
+
+        const [needed, performData] = await scheduler.read.checkUpkeep(["0x"]);
+        expect(needed).to.equal(true);
+
+        const gas = await publicClient.estimateContractGas({
+            address: scheduler.address,
+            abi: scheduler.abi,
+            functionName: "performUpkeep",
+            args: [performData],
+            account: alice.account,
+        });
+        expect(gas).to.be.lt(2_000_000n);
+
+        await scheduler.write.performUpkeep([performData]);
+    });
+
+    it("rejects bets once lockAt elapsed, even before the TriggerVrf upkeep lands", async function () {
+        const { scheduler, bankUsdc, bankAssetB, alice, bob, usdc, assetB, admin } = await deployStack();
+        await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
+        const amount = parseUnits("10", 6);
+        const betData = encodeSingleBet(1n, 7n, amount);
+
+        await bankUsdc.write.placeBet([amount, betData, zeroAddress], { account: alice.account });
+        // Other markets may still join the round before lockAt.
+        await bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account });
+        await time.increase(550);
+
+        const [triggerNeeded] = await scheduler.read.checkUpkeep(["0x"]);
+        expect(triggerNeeded).to.equal(true);
+
+        // lockAt enforced at bet time — no upkeep needed to close the window.
+        await expect(bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account })).to.be.rejected;
+
+        const [, triggerData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerData]);
+
+        await expect(bankAssetB.write.placeBet([amount, betData, zeroAddress], { account: bob.account })).to.be.rejected;
+    });
+
+    it("enforces single active VRF request globally", async function () {
+        const { bankUsdc, bankAssetB, scheduler, vrf, engine, alice, admin, usdc, assetB } = await deployStack();
+        await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
+        const amount = parseUnits("10", 6);
+        const betData = encodeSingleBet(1n, 17n, amount);
+        await bankUsdc.write.placeBet([amount, betData, zeroAddress], { account: alice.account });
+        await time.increase(550);
+
+        // TriggerVrf performUpkeep locks the round and requests VRF in one tx.
+        const [, triggerData] = await scheduler.read.checkUpkeep(["0x"]);
+        await scheduler.write.performUpkeep([triggerData]);
+
+        expect(await engine.read.hasPendingVrf()).to.equal(true);
+        const [neededAfterPending] = await scheduler.read.checkUpkeep(["0x"]);
+        expect(neededAfterPending).to.equal(false);
+
+        await vrf.write.fulfill([engine.address, 1n, 777n]);
+        expect(await engine.read.hasPendingVrf()).to.equal(false);
+    });
+
+    it("keeps liquidity and APY base independent per bank asset", async function () {
+        const { bankUsdc, bankAssetB, usdc, assetB, alice, bob } = await deployStack();
+
+        await usdc.write.approve([bankUsdc.address, parseUnits("100", 6)], { account: alice.account });
+        await bankUsdc.write.deposit([parseUnits("100", 6), alice.account.address], { account: alice.account });
+
+        await assetB.write.approve([bankAssetB.address, parseUnits("100", 6)], { account: bob.account });
+        await bankAssetB.write.deposit([parseUnits("100", 6), bob.account.address], { account: bob.account });
+
+        const usdcAssets = await bankUsdc.read.totalAssets();
+        const assetBAssets = await bankAssetB.read.totalAssets();
+
+        expect(usdcAssets).to.equal(parseUnits("100", 6));
+        expect(assetBAssets).to.equal(parseUnits("100", 6));
+    });
+
+    it("supports typed roulette bets with legacy payout multipliers", async function () {
+        const { bankUsdc, usdc, alice, bob, scheduler, vrf, engine } = await deployStack();
+        const betAmount = parseUnits("10", 6);
+        const straight7 = encodeSingleBet(1n, 7n, betAmount);
+
+        await usdc.write.mint([bob.account.address, parseUnits("5000", 6)]);
+        await usdc.write.approve([bankUsdc.address, parseUnits("5000", 6)], { account: bob.account });
+        await bankUsdc.write.deposit([parseUnits("5000", 6), bob.account.address], { account: bob.account });
+
+        const before = await usdc.read.balanceOf([alice.account.address]);
+        await bankUsdc.write.placeBet([betAmount, straight7, zeroAddress], { account: alice.account });
+        await time.increase(550);
+
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
+        await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 13n]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
+
+        const after = await usdc.read.balanceOf([alice.account.address]);
+        expect(after).to.equal(before - parseUnits("10", 6) + parseUnits("360", 6));
+    });
+
+    it("funds and pays jackpot when winning and jackpot numbers match", async function () {
+        const { bankUsdc, usdc, alice, bob, scheduler, vrf, engine, jackpotTreasury } = await deployStack();
+        const betAmount = parseUnits("10", 6);
+        const straight7 = encodeSingleBet(1n, 7n, betAmount);
+
+        await usdc.write.mint([bob.account.address, parseUnits("5000", 6)]);
+        await usdc.write.approve([bankUsdc.address, parseUnits("5000", 6)], { account: bob.account });
+        await bankUsdc.write.deposit([parseUnits("5000", 6), bob.account.address], { account: bob.account });
+
+        const before = await usdc.read.balanceOf([alice.account.address]);
+        await bankUsdc.write.placeBet([betAmount, straight7, zeroAddress], { account: alice.account });
+        await time.increase(550);
+
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
+        await vrf.write.fulfillWithJackpot([engine.address, 1n, 7n, 7n]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
+
+        const after = await usdc.read.balanceOf([alice.account.address]);
+        expect(after).to.equal(before - parseUnits("10", 6) + parseUnits("360", 6));
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+    });
+
+    it("takes infra fee and swaps market win slice to BRB for jackpot", async function () {
+        const { bankUsdc, bankAssetB, usdc, assetB, alice, admin, scheduler, vrf, engine, brb, jackpotTreasury, funder } =
+            await deployStack();
+        await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
+        const betAmount = parseUnits("10", 6);
+        const straight7 = encodeSingleBet(1n, 7n, betAmount);
+
+        const infraBefore = await usdc.read.balanceOf([admin.account.address]);
+        await bankUsdc.write.placeBet([betAmount, straight7, zeroAddress], { account: alice.account });
+        await time.increase(550);
+
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
+        const brbSupplyBeforeFulfill = await brb.read.totalSupply();
+        await vrf.write.fulfillWithJackpot([engine.address, 1n, 8n, 10n]);
+        await runParallelLanesUntilIdle(scheduler, { maxIters: 80 });
+
+        const marketWin = parseUnits("10", 6);
+        const swapIn = (marketWin * 300n) / 10_000n;
+        const brbOut = swapIn * 10n ** 12n;
+        const toTreasury = (brbOut * 250n) / 300n;
+        const toBurn = brbOut - toTreasury;
+
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        await funder.write.processFunding([1], { gas: 1000000n });
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
+        const infraAfter = await usdc.read.balanceOf([admin.account.address]);
+        expect(infraAfter - infraBefore).to.equal(200_000n);
+
+        expect(await brb.read.totalSupply()).to.equal(brbSupplyBeforeFulfill - toBurn);
+    });
+});

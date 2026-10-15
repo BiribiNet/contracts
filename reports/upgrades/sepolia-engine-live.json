@@ -1,0 +1,32 @@
+{
+  "chainId": 421614,
+  "engineProxy": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+  "previousImplementation": "0x2bDeaA54d941BCF873C2e89fa74bDB3a1bc10a77",
+  "signer": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+  "startedAt": "2026-10-10T09:18:40.324Z",
+  "status": "verified",
+  "startingNonce": 7715,
+  "constructorArguments": [
+    "0x5CE8D5A2BC84beb22a398CCA51996F7930313D61",
+    "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+    "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+    "0x1770bdc7eec7771f7ba4ffd640f34260d7f095b79c92d34a5b2551d6f6cfd2be",
+    1,
+    "0x5b28b914881e069e72de8183D5b7aEc662Bf2905"
+  ],
+  "linkedLibraries": {
+    "rouletteLib": "0xad4253d661d5e8c796431656db0f18d3216be2ff",
+    "rouletteBetLib": "0x2251c70ecbe7ab65567dc477acd2cd3527a9b698",
+    "jackpotBatchLib": "0x139434a6ec3c495d5460b4d8b7aa08af011cde92",
+    "roulettePayoutMulLib": "0xfacaa1e547f5a119b2cfe4d5ada5d24225e3fd09",
+    "rouletteLiabilityMathLib": "0xc31f1358bf90ecf9dac87997bfe4d65ff7587ec9",
+    "rouletteBetCodecLib": "0x98cacd14d87d28e1907d2071d55247d828cefd8a",
+    "roulettePayoutSweepLib": "0x815dabd9f3225ce3f20697290cfdfc4d609251cf",
+    "rouletteJackpotCollectLib": "0xdc4028418bce6db7413b51c2d8b984ff2dfc771b",
+    "rouletteExposureLib": "0xf0d7a8a96b2c4f86dec0f4364d5dd3aadbe2bd85",
+    "rouletteUpkeepScanLib": "0xfdbed43d7eecbee54d15ce1343bc628b9777f009"
+  },
+  "newImplementation": "0x4ffdd949820b8cb358ab64985b436cc8dd4f68e8",
+  "upgradeTx": "0x1dd86882d7b666c771619e828cc2754e16af4ce8483d0c92bbca4fdc753969c7",
+  "upgradeBlock": "317690058"
+}

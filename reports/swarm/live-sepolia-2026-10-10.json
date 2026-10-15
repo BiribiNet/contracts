@@ -1,0 +1,3359 @@
+{
+  "chainId": 421614,
+  "engine": "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+  "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030",
+  "funder": "0x16aBfAB1E1c18C895EdCE0d6b8125AB451502fd3",
+  "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "admin": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+  "tickets": 250,
+  "legs": 9250,
+  "uniqueWallets": 25,
+  "round": "2141",
+  "phase": 1,
+  "duration": 60,
+  "adminEth": "1985043111112322877",
+  "adminBrb": "141680365118871874844620",
+  "bankAssets": "1291932987536187171514806",
+  "bankShares": "1032528577526072647880413765279",
+  "gasPrice": "43738000",
+  "startBlock": "317702930",
+  "status": "cleaned",
+  "wallets": [
+    {
+      "address": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+      "bets": [
+        {
+          "hash": "0x458a9f8bdba12fc93a5d0774e6b96ec1fa590e9e7ccf5e1ac8fa162b2d0e98cd",
+          "gas": "3879651",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.264Z"
+        },
+        {
+          "hash": "0x96b533d783761788b99c5f6427d7e6729cc9014d58b2bc9bfd0b1ff35ee3d0cd",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.555Z"
+        },
+        {
+          "hash": "0xaf0cde1775743a24e42801931576a3298a36d50870d65e0d89586f0bee25a2c2",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.055Z"
+        },
+        {
+          "hash": "0xd5f1ad33558344f908455bb39fc98ed256444a2c85d179c3f4443205e7a8aff6",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.406Z"
+        },
+        {
+          "hash": "0xf6f084a8aa7b8be3119e1c3aabf0443529282db32662b15760f72d3f2d38d132",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.817Z"
+        },
+        {
+          "hash": "0x6774f84936bcea1e2768503910aae056c5a0f24d857ec58b3cba1d99c40372d4",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.735Z"
+        },
+        {
+          "hash": "0x8622ce4f47978f595d0f8326e6fd2a2d8b2b0bcb566f9ef80c5e5c6e85484a08",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.482Z"
+        },
+        {
+          "hash": "0x8bde858f034ae4fe7c2a90b0850c776c737fa3314cac43132f5cbd6f5ef1a510",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.891Z"
+        },
+        {
+          "hash": "0xc436e386cdbda89289b5d93491efb959aa42c8d8e84d12014b8c7ad728d4d503",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.207Z"
+        },
+        {
+          "hash": "0xcadcb725e581873981863f65e89e2b0d2c92a42fe411e08882661f2baa87d4f9",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.788Z"
+        }
+      ]
+    },
+    {
+      "address": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+      "bets": [
+        {
+          "hash": "0x63aa37ef7d464bfdac80040e0921ae0798f0c2c680a0b0ad2f1b86f9f5c61fc8",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.279Z"
+        },
+        {
+          "hash": "0xecc6e285e0f2ae818564df5ea61074a0ab508c14533c831b3264fe1351f736dc",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.554Z"
+        },
+        {
+          "hash": "0xe745329881392e0c264751628b168f41d6254d65949505145f4abf5a9f3e204b",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.342Z"
+        },
+        {
+          "hash": "0xc4191aadccc6198ee0b30fe1cfb362b0995244987249e93e970751db1db31c1d",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.355Z"
+        },
+        {
+          "hash": "0x6b06030f473d96957b5db04884f4e342bc4c37ac01c0d20318969ae1102c2e9e",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.813Z"
+        },
+        {
+          "hash": "0x7efc709329db80244f6f225913509e048549638bcccb2ac5bf919acedab81692",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.748Z"
+        },
+        {
+          "hash": "0x2bdc7e71b7d49d7ec34542e0367914e2bfb71cada3ad160ebada312f09139740",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.605Z"
+        },
+        {
+          "hash": "0x7a606e884d42638335cc9e98b0288f9b188ebb8bc15f5f803fd37e41e75b18d2",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.911Z"
+        },
+        {
+          "hash": "0xed00795ea1dfb12767872333d1ca67293d03425d68d4df1e4e9416cb74d87d89",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.222Z"
+        },
+        {
+          "hash": "0x6f4d76c47df7d5dff1ddcd52265735fc5fa3ff64b865c835c18249667c1fa963",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.034Z"
+        }
+      ]
+    },
+    {
+      "address": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+      "bets": [
+        {
+          "hash": "0xf30298a10061c517c64933270522705971056b6bc06a9cf125768634c665e8b8",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.295Z"
+        },
+        {
+          "hash": "0xe3518cc42eedbb0abfdfa86997cbe8a48501a94f09258f0d9daf369ccd56589e",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.564Z"
+        },
+        {
+          "hash": "0x156f2e1b5e7ee1da8fc60c22b03fde7d8536331b9005c0b10ee309b555be6855",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.356Z"
+        },
+        {
+          "hash": "0x3a96d4b9c188bca318bda71aa4731213d25551885c91dcb9cf26939910b57227",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.360Z"
+        },
+        {
+          "hash": "0x4fd22c306fdb960da0513f53103f3449f4bcaf63e6ba72426550da45f0ed73d6",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:47.764Z"
+        },
+        {
+          "hash": "0x182b4086d394f52acb50930e381f350abfa1f02bf8e147bc07f1673d6d85afd4",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.838Z"
+        },
+        {
+          "hash": "0xf422127e3d0d4dfc80de9a04ac0744cc56f63d490b148bd80aba76d10373b3db",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.088Z"
+        },
+        {
+          "hash": "0x2a869e25e1cb1ce51b5115d02acfa33c0970c3f5c552c3bbaa373fc67559ffe3",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.878Z"
+        },
+        {
+          "hash": "0x303c1d6484af28050e9bb13cd568e02837bcc9874424252553f66c56bff41df2",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.218Z"
+        },
+        {
+          "hash": "0xac7b0360d7a02732cd7c1e9c31d1d736c81ec9ad52b6dd41daf3064901c5ae25",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.031Z"
+        }
+      ]
+    },
+    {
+      "address": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+      "bets": [
+        {
+          "hash": "0xeeb305b90541cf1b25dfc605f8ecbc684c724c6bc1473da1ba87ace835a96003",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.282Z"
+        },
+        {
+          "hash": "0x82a8c4be57fbf770c481607f49c65569e20a93a83db7c0865a23e6e091574785",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.543Z"
+        },
+        {
+          "hash": "0x356db18b030fa02f337de869c71abcbfc44973bb4c16b3c141d9dc278357f5fd",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:42.687Z"
+        },
+        {
+          "hash": "0x7a5e70f370b9cb6d6046cf9c8fa8d740b080991602a5c01967fb22957c00ab13",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.358Z"
+        },
+        {
+          "hash": "0x978a0e64c883df0486df7cf22f05209eb73f3d971a7defa0bb37fb6a0e815efb",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:47.689Z"
+        },
+        {
+          "hash": "0xf8001d914a3be71000e3b89cca60b8a57c841995f920f4901d0cfacd97d89e41",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.818Z"
+        },
+        {
+          "hash": "0x7c1c54af1ea402df1e0621909c402993cb271b884fe51dfa99e1fd2aa27ed995",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.487Z"
+        },
+        {
+          "hash": "0x08145db7a5602d7e0953a0674aa263b17b940581c98a1d8ef86deb8ed1a3a013",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.920Z"
+        },
+        {
+          "hash": "0x3c9c0cc8a98d5eefd19e6a733a1b7a0eb10f9d452494a4c2cf432c0daed9601e",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.220Z"
+        },
+        {
+          "hash": "0xbcda5863d705c86885c5549d5f9bfe1035e753728e11a91af0dcef41df9b803e",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:04.163Z"
+        }
+      ]
+    },
+    {
+      "address": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+      "bets": [
+        {
+          "hash": "0x4291c498a6fa6f16eab226545562b60001452f44da4ec3dd568d5b8cdbe6c1f4",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.274Z"
+        },
+        {
+          "hash": "0x47e4d037002af4e1d0551bc261b63b9e983c3fa97970c7aa9d541a63898dedda",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.775Z"
+        },
+        {
+          "hash": "0x1782a39128c24639c23a6f3e4e6870111dde969ebbb6a41773789a0ff582dcd7",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.557Z"
+        },
+        {
+          "hash": "0x79b2505d46f77190ce0cec06ef5f995cf85d6f02f570ce0a9eb8a0b966315b75",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.353Z"
+        },
+        {
+          "hash": "0x8457cc7cb53510cafab41c83ba6477e0083085e43a0b9c435e6583ff1bfdf0b2",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.838Z"
+        },
+        {
+          "hash": "0x3cdabef592fff54a680ae9f602f5bada239bd91676f34bc98640a236f456f2ce",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.617Z"
+        },
+        {
+          "hash": "0x5d7c7f41f91f385d3c983cc85c96356c095b78d3ba61b63db8c5d2ebd02d9f24",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.477Z"
+        },
+        {
+          "hash": "0x2eb401a550a0f1fa6d09ae5d1e31f91e5f8e8f95d70ecdc82600ded5f964bef1",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.521Z"
+        },
+        {
+          "hash": "0xe5414e6f73d6eaa545a27346c8c73089029e5a2c02d28ec323734457f19194c4",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.315Z"
+        },
+        {
+          "hash": "0x2c0abdce04f08b5da40a35f8b152058bf4f7c3f4a60bc8947b85573c43d8b28a",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.037Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+      "bets": [
+        {
+          "hash": "0x9a388e80094ddc5538e579219505b718b1dd7815c61739665ad31a8c0b5c8205",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.290Z"
+        },
+        {
+          "hash": "0x31c30cfb7672445d548763084de6fbdd75601bb962f8cd05c4afacfcacf8f841",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.566Z"
+        },
+        {
+          "hash": "0x8f19a2a0bb2a48f7562aa9b6212c3df1535100a7855e7f719963c0884d995eb2",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:43.684Z"
+        },
+        {
+          "hash": "0x06d4485eef2bcd93b445f532ef0d501715012faefaf3654e633e3365874c7992",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.356Z"
+        },
+        {
+          "hash": "0x949c35f140396328ba677b72c2a2e34964187d29856df640468dd22c95aa0b6a",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.901Z"
+        },
+        {
+          "hash": "0xc0aec6d2406ec64a21daa7d338181786c8c419444745f36c83c84776b5d4d861",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.756Z"
+        },
+        {
+          "hash": "0x1b1cbb3dce35374050d22a5c69e140dc0b8594c9738c3538ccb448b33610b276",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.095Z"
+        },
+        {
+          "hash": "0x4d63bf0dea4f9067f3998e22c208614631cc6e2da7958897a454975c138ca370",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.898Z"
+        },
+        {
+          "hash": "0xb7c194a5b142bac34de9ab353f203f5f721b893cfa7614314eba37d35c35283f",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.223Z"
+        },
+        {
+          "hash": "0x68cdb13eec55ea0dc6262ce164a9d8623a9c23e0f3f91bd44e219d3a29445a42",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.781Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+      "bets": [
+        {
+          "hash": "0x76b79adef42da3b56364469fa363e3dda4cb9c3efa5cd5cce6750d1fca8395b5",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.266Z"
+        },
+        {
+          "hash": "0x9cbd55f448a8f97a3d5aac675a71c71e9b0eb9fb7bb8103d2b751dfb864b4b7d",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.547Z"
+        },
+        {
+          "hash": "0x2fbdda8aba4a1447893bad53ba340a26bd264a754badcf0b0d50d08f615cc588",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.353Z"
+        },
+        {
+          "hash": "0x35d4fee0c5fd132bd0f02aa57c6d300d6c473b6a34b4be6f5e0f0ff955d5d5e6",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.362Z"
+        },
+        {
+          "hash": "0xdb0aa6e4ba0cac9abe91d123981ecb97576ba055947a64b8ffeeb4bc0efddfd0",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.841Z"
+        },
+        {
+          "hash": "0xec32bb07f3757290c538b5300f1cd7610c3b8142deb36d2cb054e12408693305",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.743Z"
+        },
+        {
+          "hash": "0xa1300f1eb8e20355f6f482468d9d8914a01c28d90a7539d64ffe008481c497cb",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.480Z"
+        },
+        {
+          "hash": "0x24faab22d9d90fda57634cde8fb7304735db9876453c22ad7fc84d41faa5982a",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.915Z"
+        },
+        {
+          "hash": "0x4c6dbe8cf137a904599b517c15d33ae25efccee936d77d43ce2113dfc30a6caa",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.227Z"
+        },
+        {
+          "hash": "0xdd65a2d649bfe61e473e09f56c909f0e5a98af74f22bc002af08cea84ce85446",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.041Z"
+        }
+      ]
+    },
+    {
+      "address": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+      "bets": [
+        {
+          "hash": "0xed7e29d48c52457a1eda9ac6328d9369b98aa78e1bcd7c95387e11a7a863098a",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.269Z"
+        },
+        {
+          "hash": "0xf821f83daa55d844b4638e27821fdbbdb8cd88151cbac96a2891da6a4df4d809",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.559Z"
+        },
+        {
+          "hash": "0xc3ad2a8b00c0bad505e7685451415c69876f514a26a63d5b3283f0573dd9789b",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.364Z"
+        },
+        {
+          "hash": "0x54bd2b4453a87ac0cc14daf56003fb280637d92251890837dff89924cb89b272",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.393Z"
+        },
+        {
+          "hash": "0x6a277de09aba457383b5752844213891ac8afeb977dc44f9b93fe73e94d67a51",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.850Z"
+        },
+        {
+          "hash": "0x434ee01db0bf2caaa1c38603a3c4a5506ddfc81b81c91a92fd00c42009caa777",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.613Z"
+        },
+        {
+          "hash": "0x47d19c05cfb38e5f6121d0b5ca8dbd3fe4ce05ed2eafe54f21b8ca49951ca48d",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:56.225Z"
+        },
+        {
+          "hash": "0x5b79b027e90d20c46d557ace8827ee16a4212d09a00124e39939e1c980d46fd0",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.518Z"
+        },
+        {
+          "hash": "0x7656831986ba8b0774ec25f286053f228ab43ea7ac04a0ae715ad9e9f40ed764",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.231Z"
+        },
+        {
+          "hash": "0x15b97a954c677551f8f8635956a1763e2207630f2415d591ad4dec3f10720646",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.787Z"
+        }
+      ]
+    },
+    {
+      "address": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+      "bets": [
+        {
+          "hash": "0xaa3d5175ca8943f3fd179825235a54eff19369e5e258c0e3d342847b09cf4979",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.272Z"
+        },
+        {
+          "hash": "0x63930e75e905985e326c684e3229c9281b5aa7d162cd47d4cf628fa1e737c6c3",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.760Z"
+        },
+        {
+          "hash": "0xdb6fd31bc35bba9e82e5dd5267191f87279e6dd60beb408a3844832df7192498",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.328Z"
+        },
+        {
+          "hash": "0x091cc05ed55728f1c7899c4fef476c876933cfb2da0f40ec13fa8aabdc4bab07",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.404Z"
+        },
+        {
+          "hash": "0x8f29a9584fa33852de31b48748ea99bc2c58883c4df88a853b316d5e56fac00a",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.840Z"
+        },
+        {
+          "hash": "0x5043eb433f27a5c49a73450ecc18441f73350c1b5970c1a8d6e330ff7247af59",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.711Z"
+        },
+        {
+          "hash": "0x52be78428e88673e4df411f9929856e7de84ebab8b1179021f16dcdf624b115b",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.609Z"
+        },
+        {
+          "hash": "0x01fb233349c2336d5155850f26d05c2cb693b732102f3be47f37090a6fa15a2c",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.886Z"
+        },
+        {
+          "hash": "0xbdf72d870b9b6614c6d3dbb3a92c1e767bbca38b07ca179ffabeae3202e7fc28",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.221Z"
+        },
+        {
+          "hash": "0x1c4764ecd8c3bab037d0bcedd3079a66528c729497dae2865e861d8115d428c6",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.039Z"
+        }
+      ]
+    },
+    {
+      "address": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+      "bets": [
+        {
+          "hash": "0x8db7de34acbfa3313ab402af3f40e9ff0ec0a4d225dbed6993d9f164d58537cf",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.270Z"
+        },
+        {
+          "hash": "0x7cd4027831ebd76f4bea66a67b7be65fa738237dac3c388115302e0ecda6c88a",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.563Z"
+        },
+        {
+          "hash": "0x6d206d62765d8d55706e708d62aabcc27b9cd687770067ba254b0c3d560913c5",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.371Z"
+        },
+        {
+          "hash": "0x6e8694f48cade820bf4039d3558019119eef30a5c4a61e1d3f6ccfe5aba95b1f",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.377Z"
+        },
+        {
+          "hash": "0xae2b768fd6a0572be66d1425e0265c6212e5662b0eedb927379d556c82f88608",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.795Z"
+        },
+        {
+          "hash": "0x2471514b1e9bfb1b5d6a5ab9e46dc0bd88b9bb58494b687561b2271a4b44fbbf",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.608Z"
+        },
+        {
+          "hash": "0xc907d9e5e24d03e3970a06b67de7444c99d635e31ee23280a5ebfda4c0bc1965",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.092Z"
+        },
+        {
+          "hash": "0x0e096404c73e89e446d42cb093ec49c5a7de0973c542ad4b5f7e2fb09d6ee546",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.523Z"
+        },
+        {
+          "hash": "0x012963b4b6be587a280172a1fc0d352e696146be293a29beb2d2349cc40f502c",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:00.198Z"
+        },
+        {
+          "hash": "0x51ab8ae2271354d9972326f901561d30d0453295bbec0b02135145c12a5e563b",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.790Z"
+        }
+      ]
+    },
+    {
+      "address": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+      "bets": [
+        {
+          "hash": "0x0f355d27fd57c1cc6373d4ecdc8f1823015ec9e0b93d3aa996a5650e3028fa23",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.276Z"
+        },
+        {
+          "hash": "0xf2216616190db813abf493e1416f15d9338f517bee4cbb083b05512c6ce8d6ee",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.648Z"
+        },
+        {
+          "hash": "0x4aba0a114b7824fb22861f10e230d61653ccb15229738533a7c13b6394606f26",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.334Z"
+        },
+        {
+          "hash": "0xeba8b4b91ced7f6cc473b8cad40d5658786981c6cce23bbff649fc5c0925995e",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.357Z"
+        },
+        {
+          "hash": "0xc42e0f445afba5bd008b605af3aca0fd9432cfad96565c14ed97e73b77125cbc",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.896Z"
+        },
+        {
+          "hash": "0x7036f7b3e9c3778b00a7d7eb610f7986bbb106104284bcbed7e2a32e32f564d8",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.610Z"
+        },
+        {
+          "hash": "0xd26518bbe4f0a34b56c51738ce306d8dbd2e61fc49a30654dd9545dbf998a18c",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.611Z"
+        },
+        {
+          "hash": "0xa51d2a552c88e5bfa9f9ac950fc30638c3da6b951097d99983a128316a5761a3",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.525Z"
+        },
+        {
+          "hash": "0xf7a542353f2a88423a8ae734891f90bcb07373f52833968522fe20062b4d260f",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.318Z"
+        },
+        {
+          "hash": "0x7a23455af950f1d541e459bfb778ec40ac1c3f820b92379febd58058bf4b9aa3",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.782Z"
+        }
+      ]
+    },
+    {
+      "address": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+      "bets": [
+        {
+          "hash": "0x0dcdc0178f4a0c9055ce7b89485f7699521aaf89bc5219d768c3e7701634d09d",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.278Z"
+        },
+        {
+          "hash": "0x8f43a39f17fa0e67499a8e223454e51bea56edea8992f243997d0c76813b3228",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.778Z"
+        },
+        {
+          "hash": "0x4d7eb323f62607b3d209e3c1b62db5066faa86337edc938960828aca0b05105d",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.340Z"
+        },
+        {
+          "hash": "0x54c56a530093d3f0accd6cec0bc5e9f718aff18079a3299fe2c95bc8f71a4800",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.518Z"
+        },
+        {
+          "hash": "0xcb1e950b6fae65094c4bd25a1819b23792e231ae51df21d6d40665fc00c65255",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.895Z"
+        },
+        {
+          "hash": "0x180ad03efd5bdf9fff875dae3b97e0a8f74e5f90b649b0cc79adf82a8f4c6244",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.826Z"
+        },
+        {
+          "hash": "0x5f5027d6c38e4dc8a07803c9ac6bd8f8c57d0214371898f5e126d0820c450d7b",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:56.214Z"
+        },
+        {
+          "hash": "0x1d4ab10e83b5add67f7c134fdd86e114279b2841de59ed046890b08e4293b2bc",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.529Z"
+        },
+        {
+          "hash": "0xd20cacdc235d57f431fffd98377b35630f3e125c7e459c82e1266dd06fcfee4f",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.317Z"
+        },
+        {
+          "hash": "0x9f4c884d04cf733aa6a38fca7f5d968e89f97e0506e09bae888a6f6f8288a90d",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.017Z"
+        }
+      ]
+    },
+    {
+      "address": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+      "bets": [
+        {
+          "hash": "0xc4787a578157aa0e1426edf9d2fa6d4d002de158804d43d7b24d98bceea1ff21",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.884Z"
+        },
+        {
+          "hash": "0xeefda6209112ea8cb9abdf4f3edbba16ce45c540d15a82784b556a6302246ee8",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.562Z"
+        },
+        {
+          "hash": "0xb89b77d5d27605003861185527c0550d7bbdddbc4ad4f69bfe3dc62dce943224",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:42.495Z"
+        },
+        {
+          "hash": "0x707d9c6b9d3a7d395431d389749ca011ef02f6b9798296a8603146af2f361560",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:46.013Z"
+        },
+        {
+          "hash": "0x4efce41f5bed64f4129230f23b6bd176b62a9c56ae58c732c19b715468f53afd",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.806Z"
+        },
+        {
+          "hash": "0xb24ded1d180f36ced451638f783ee2a17a1c1cf495fcd05c2a9545a0628752ca",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.615Z"
+        },
+        {
+          "hash": "0xe5dd28a0fe395ba03d47bb0b542b723ee64ede9ba27b77b9cfdd92845786f7d7",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.469Z"
+        },
+        {
+          "hash": "0xec4082dfcfc26792f58e3561a992260f19da89bd33c3992bf69dda01062285a9",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.890Z"
+        },
+        {
+          "hash": "0x6110b3927fb2f9cb6b096af702ea1f85b676574f390a52a1d4374235cc73b4ee",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.319Z"
+        },
+        {
+          "hash": "0xf78ad786a09ec9b36392a1025a0bb6e4243d1c75a61292356763cdfb06c9c846",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.029Z"
+        }
+      ]
+    },
+    {
+      "address": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+      "bets": [
+        {
+          "hash": "0x2418a512b98eea572052a75107353a73933c09bb06b038114904e662bb04e129",
+          "gas": "2461094",
+          "block": "317702943",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.267Z"
+        },
+        {
+          "hash": "0x4b5c964d7d8e209add86479632e43fe3740238b426f2028aa4d1c9d3d0a0c022",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.694Z"
+        },
+        {
+          "hash": "0x673ad913efc851c3686abfcda2a074a01f7fd85b909703e1cb5778c5426f0911",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.363Z"
+        },
+        {
+          "hash": "0xd2934470caf36c9e2b6b7c8aa75c4fc8e9632c4942e15b057880f5f52d9830e9",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.365Z"
+        },
+        {
+          "hash": "0xc641014c3709da1e0cc1f9ee9b89a51247482f3963a0b60eb1bfedbc3a3363d7",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.810Z"
+        },
+        {
+          "hash": "0xecc5f2da76458b782a99ef90dfd973aa7d802d03f791fad86199172db8012548",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.606Z"
+        },
+        {
+          "hash": "0x707544f24b4a8c1cbc9699c3acd106e52d81051ff6b719ee0e65375c067d774e",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.101Z"
+        },
+        {
+          "hash": "0x6cfa002d4db265b31911ed28d8b07cce248a5a50081fbd6d3dc78c04e297177f",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.899Z"
+        },
+        {
+          "hash": "0xe7ca5bd26ad39530dd870e78af72a4a16fdb57d6a443366fbef483edb544eb4b",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.199Z"
+        },
+        {
+          "hash": "0x747eb4755518c2ff1848b52f7bfb45a3c76677c0e62a73bc8721d520e926f3e0",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.038Z"
+        }
+      ]
+    },
+    {
+      "address": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+      "bets": [
+        {
+          "hash": "0x45c70bc64f3926ef4bdcd204bb1e989c1a1b18c1a83c71bf0f7186a04e2324bb",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.868Z"
+        },
+        {
+          "hash": "0x07c4f243da85815f28723b8eb61c91cfcfd4c24e2cb9ee709d70cf9f129cc480",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.550Z"
+        },
+        {
+          "hash": "0x36edd1ee811f3c53e20081ac272c327bb81e6d27835ba6b764ff22405e982ada",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:40.532Z"
+        },
+        {
+          "hash": "0x920e4f982c3d559a3929e4c6de15169ae2a1c3065faf0357c9154c20990aeb5e",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.521Z"
+        },
+        {
+          "hash": "0x5f534a3e85a9fa3b8ce7bc62f81da37531c838e7a4de2de71a1175605aff6661",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.816Z"
+        },
+        {
+          "hash": "0x12916004bfdd7479f33976d1373ba37c749c03461eddb324adbbc28a4c5f6b92",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.741Z"
+        },
+        {
+          "hash": "0xc1a1e96d1df3fa2760dba7c37aa264b74005f6fe9c0da16a212f332706341cf8",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.484Z"
+        },
+        {
+          "hash": "0xa86485a3ce499dc34f265a8a69f847ab5ee9b46ac8577ec99cafae9efbc92546",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.912Z"
+        },
+        {
+          "hash": "0x591d0fcf36d4c1aac3ab3009916fa7f8249dfd23c87a6587f9d03b833e521710",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.311Z"
+        },
+        {
+          "hash": "0x780238bd6ca2cdfe21b323e0e5fcd97d6254f11276aa991590142ebc269794d4",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.036Z"
+        }
+      ]
+    },
+    {
+      "address": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+      "bets": [
+        {
+          "hash": "0x5a90e184cb9e0bac64edd40c4631b7724f000998d94f97bb2bb854c38927d848",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.879Z"
+        },
+        {
+          "hash": "0x82a25be1b4564e7cba0ee5a2617a92dd3e09a7f7be9ca92ff8794ad191079a9e",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.774Z"
+        },
+        {
+          "hash": "0x6ce098998bb826120b089b7cf0928fbaf9b21ad857f576d8a230abfb1106389d",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.337Z"
+        },
+        {
+          "hash": "0x1a6b96ed109e2b798c40f0771f297b8a09a4065cf9e2beba23e1a6a1641b910a",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:46.008Z"
+        },
+        {
+          "hash": "0xe85a22a6f80d5f840613b92c9651e84b53ac0e460487049609b60b4c8471f98a",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:47.779Z"
+        },
+        {
+          "hash": "0x1833434a9c58893735d92dae67cf497fdb3aae193733f0099632f2548715e89c",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.825Z"
+        },
+        {
+          "hash": "0x1dbb845a231edd6d30398d84f35227b4081b122148fc7675d700920e31783ad2",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.619Z"
+        },
+        {
+          "hash": "0x6069ae8ccfe5293e22358d6864aeb98a8d43a1dde1f0254011ffb7292ebe3083",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.504Z"
+        },
+        {
+          "hash": "0xd4a77bdb2b572ca98e35f29ca98869d0cd53ab25ba888f2701366b026d36bef1",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:00.233Z"
+        },
+        {
+          "hash": "0x912422c190df223b9feed128ab4892b0cbf01a5a45d24b69d1a765128cd565a7",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.779Z"
+        }
+      ]
+    },
+    {
+      "address": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+      "bets": [
+        {
+          "hash": "0x098d8f4a5a3dec4b9a703a2d3810bbc4b4cf157425ff5ef017a32c04bc47ba70",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.882Z"
+        },
+        {
+          "hash": "0x695da3b16bd1455400bb8d989f6a5fe750eed43f4e8989641c2d91a92c401c04",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.782Z"
+        },
+        {
+          "hash": "0x8e70c93094a9eccf7e2ad5677ef3baa71a3e63316794998591ad86f09404ffe5",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.657Z"
+        },
+        {
+          "hash": "0xb4c7a734a42e26eeb16cf61175179a43c995d119cb0c8c0b774528a05442f2a3",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:46.037Z"
+        },
+        {
+          "hash": "0xf76acdc87261dc4fedee2a283bac024d1e43c192a1c756a81e6360cad9514c6b",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:47.686Z"
+        },
+        {
+          "hash": "0xb425b226fb1d5859c69056ec3a85f640773845c1d2e4926152ccc6568b3de3d4",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.612Z"
+        },
+        {
+          "hash": "0x9f9a2447d59d6e93a2f5036ad72d7a2a83aa043a8eb0d6ec1ce17e540ffa2ba5",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.486Z"
+        },
+        {
+          "hash": "0x2be6bfec884bba464b7211769380854834ca6b2926d5d8c0d82779bbef2a02fa",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.515Z"
+        },
+        {
+          "hash": "0xb2949ad643f71b4834ae4a6e01ddda92e536046c3b511ef5045eff5e56fd1276",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.357Z"
+        },
+        {
+          "hash": "0x1e9b49a43bcc77f8a1cf259e0484cce94d58419306c0d519d22e68c0f18179d1",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.022Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+      "bets": [
+        {
+          "hash": "0xd716a9b3d6067459bd07bde7bdbca42fd2a12022a8845429aba1673573396535",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.878Z"
+        },
+        {
+          "hash": "0xf01fb6c7eb8366539656c942eaa9dc31fdc07327f2c3e87b546520635e662c7b",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.556Z"
+        },
+        {
+          "hash": "0xb16454c04aa337229035c3dd98be39b1abd27f474744558b1aeac61ba05d1491",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.563Z"
+        },
+        {
+          "hash": "0xf5647db31c0a8029cc7e44eeb44237cc8af9bba242a07d0a61f3e9709d4486bf",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.528Z"
+        },
+        {
+          "hash": "0x20c90015402366bb58a37ea1058eae1de27fe1777836aefd7d7e6bbbf2a0c1e9",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.890Z"
+        },
+        {
+          "hash": "0xb7f8a63ca8bb8c13e9033ccbabd430e29d15cfbd7a876b8a19595cbaf92427e2",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.823Z"
+        },
+        {
+          "hash": "0x70e81d1e8fd459c6f90d1ebc86480a41cb70f433ccd676d95890c0c98d35db10",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:56.227Z"
+        },
+        {
+          "hash": "0x910744f1a4a578d6792f4d6d04acb2b9c0c490cc0dce64ebd348483014e3f523",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.524Z"
+        },
+        {
+          "hash": "0x33283e3633550c3cb0b9b9975f38483d5fbf64a097825c1968466b65e5849fd4",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:00.227Z"
+        },
+        {
+          "hash": "0x414d81c226235b95d8284800c1d99022c85ab1637dbb28475db31e3302634dd8",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.785Z"
+        }
+      ]
+    },
+    {
+      "address": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+      "bets": [
+        {
+          "hash": "0x08509f4c390ea6f713910f2b9ed245d53f212171b550aeb33f295bdd9c0da6a1",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.864Z"
+        },
+        {
+          "hash": "0x88286272ef4aea1d6b23e43343baff3aa98282e5e49dcd4846f19a2e9eef67c3",
+          "gas": "2461094",
+          "block": "317702952",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.560Z"
+        },
+        {
+          "hash": "0x499291a9fbf22804f0277410331fdbb1a808b55deffa7c1560956033c8ba4178",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.343Z"
+        },
+        {
+          "hash": "0xd97b96bebabeaf6a49f2318d696265276ce89a990cbee0d8ec1993a6b1a3017d",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.523Z"
+        },
+        {
+          "hash": "0x31525015602f32121422755c9e78b5f9d25b07d016b4a337e69fd66753af8129",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.893Z"
+        },
+        {
+          "hash": "0xf49ca57a10198391f27c3d918793efee1ef8694a94f04ab8f2fd28fc2bbbd92e",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.836Z"
+        },
+        {
+          "hash": "0xb5e153dc1c5836053f0ef7f3a241b034ada9f9e10251cd1890ad5a6be286a729",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.083Z"
+        },
+        {
+          "hash": "0x8e9e820b8f6304ebae0f6c808f4bb858f9fa8a3a428e3c195707d18892cf4bb7",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.892Z"
+        },
+        {
+          "hash": "0xbe7e4b3f290bfca21c58cb340e4f83a27c59d4d9458eae829be58cbf568254aa",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.226Z"
+        },
+        {
+          "hash": "0x56da1bbbd44ea209215a706bdd38454fbb2a35859800aa635c7e204d3d32b4cd",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.042Z"
+        }
+      ]
+    },
+    {
+      "address": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+      "bets": [
+        {
+          "hash": "0x204b5c5910e839396253c5a2ec19bc6956e1e1bfff878a0dfc2ba5cad31b1f1b",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.872Z"
+        },
+        {
+          "hash": "0xacd5097bd9a6e9e803768ca8fedd2b34bd3201e961c1afd08135a09324784e6b",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:37.641Z"
+        },
+        {
+          "hash": "0xe6fd1b447b658643fb8149d114764d4af43b96804b7aa0ce4f40d9ee47ee89d9",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.322Z"
+        },
+        {
+          "hash": "0xaed4eab91f87a184ad3517461b2d123328cf48bab0fb4d81e6bb22763852e6a9",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.994Z"
+        },
+        {
+          "hash": "0x99fd70686c9dad7d2c8cabc50a2104854ba0929e104ae862003d22a1d4ecb702",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.899Z"
+        },
+        {
+          "hash": "0x2a33247147ce536265495169d32be6478ba0400327043a893667a6b8ad7271c4",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.695Z"
+        },
+        {
+          "hash": "0x422bdc3a5797ac976ab815ea8eab6b1e34507632c636c75c35292213ce8d8e4c",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:56.221Z"
+        },
+        {
+          "hash": "0xa2f769ce3d78731771fbadd2529ec34955e9ad369da28a3ac781e0674c5682a5",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.511Z"
+        },
+        {
+          "hash": "0xab2180eb1054041d556be32350cf6a9cb2cefbad0686256e164c98e85b4dc413",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:00.196Z"
+        },
+        {
+          "hash": "0x4c354a2b2dc3db92075eb62965170caa50c3d7e43d6117f13c6198d8cc11676a",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.013Z"
+        }
+      ]
+    },
+    {
+      "address": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+      "bets": [
+        {
+          "hash": "0x7028e5d062fe310a0aac013e61076b032e8b5978de51ea0cfcfc2f9dccd08ce8",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.876Z"
+        },
+        {
+          "hash": "0xee10435d8bceb6fe175014908a9af2f3553a68a7fb86232e3698e3115a387eec",
+          "gas": "2461094",
+          "block": "317702953",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.770Z"
+        },
+        {
+          "hash": "0x568c228c2f33bc865457974be87e19c1a2826d262d305eba9bbb022794c93996",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.654Z"
+        },
+        {
+          "hash": "0x6bb313078bcaaf60e7bb0c2e1c74c5c6f974a07c07617ae45919d2a07e71001d",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:46.010Z"
+        },
+        {
+          "hash": "0xa0e4db05429e37fd60d8a90b3db5b3f6b75b6f55cd2817dd4934b0be2308dfff",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.886Z"
+        },
+        {
+          "hash": "0x23c6d0f0f9cb86f32e66875a5533a92d40c0ff09a9951e65ea9f73e1b94008dd",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.812Z"
+        },
+        {
+          "hash": "0x3606888e28b59af7778d8dc80db70cff7d159e49e6ecacf3ba02a5fc1cd06a0b",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.094Z"
+        },
+        {
+          "hash": "0x31ec7c43242861c19bafa64b572e8e4078f183c0e0e745848148302a324513ce",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.896Z"
+        },
+        {
+          "hash": "0x7af5a323aa5372f4fe028a4b8d743ba39846ff3cbbc1cbde9413b369e16661e0",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:00.105Z"
+        },
+        {
+          "hash": "0x52dab734e539d4eeca0bc2077f7410663949c6de8a0dd631d8dad9a5b95c8cb5",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.791Z"
+        }
+      ]
+    },
+    {
+      "address": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+      "bets": [
+        {
+          "hash": "0x36e571331bef29222ec713cb967c2a3056ec150a5c6ec161f420db6a1e6060e8",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.889Z"
+        },
+        {
+          "hash": "0x682690b5ed842fff73818ee71068955d42389bedf9a91ad7ac4ba8eb9f830e10",
+          "gas": "2461094",
+          "block": "317702954",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.772Z"
+        },
+        {
+          "hash": "0x816324a650ccc65f9a12d4608cda1570069fcc2f5201b2fd245de4c9954a62df",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.366Z"
+        },
+        {
+          "hash": "0x3937ad47c88462b562922031900485e06e783c9b4b770fbfec7b478d82eaf9df",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:46.011Z"
+        },
+        {
+          "hash": "0xebc466915ee40b386c41c62e697a15b7cccfffd703ba037afbff57896b4015c1",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.898Z"
+        },
+        {
+          "hash": "0x21ec26f30237ba55d454f43e02a1eebbb9d56ac35b2f894a987b1512da32b58e",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.720Z"
+        },
+        {
+          "hash": "0xee68ad4d653b2c43ebf4352e742da099c924c1b65f7770f9f3624c47a46d1666",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.475Z"
+        },
+        {
+          "hash": "0x9cfee32ebbbb9619dde215c44f4eee8fafa262daa4ef6ec181735a49b203d2aa",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.527Z"
+        },
+        {
+          "hash": "0x9e7d0c13129f0ed7bb195c3612b91fc1e218ccea2eae69ad44ed18fbfcc3acea",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.225Z"
+        },
+        {
+          "hash": "0x1aaa78decbb247758350bf78db24a4b120a1fa246d8509e35fb9f9f1b24239cb",
+          "gas": "2451494",
+          "block": "317703055",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:03.026Z"
+        }
+      ]
+    },
+    {
+      "address": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+      "bets": [
+        {
+          "hash": "0x50c034a218e032eb1c64e0eb79b16216962b344949c693951ecdfca830cbd3ac",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.874Z"
+        },
+        {
+          "hash": "0x91083d1a60fec6b073efa779a2f156c20934b7a4fd4f33b01f1809421ff85de1",
+          "gas": "2461094",
+          "block": "317702954",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.764Z"
+        },
+        {
+          "hash": "0x2a5eab65a0b21405342b40a8e5839a68fcc2f407a5d27de002d2969120bf0c99",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:40.536Z"
+        },
+        {
+          "hash": "0xb9aeb9d707291260b6186c4b877e4949e9da03c9e4b0bc1df4fbd99243fef9fa",
+          "gas": "2461094",
+          "block": "317702983",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.349Z"
+        },
+        {
+          "hash": "0xc3b2805fcc8c3ff5be236fbe07c84b9ed78546446753424d19eef7fd434e21a7",
+          "gas": "2461094",
+          "block": "317702992",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.818Z"
+        },
+        {
+          "hash": "0xe8ab7878ab0f56f128f17e6a02dd1e97ed7ae518a24a6b046336b46844d1b3cf",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:51.706Z"
+        },
+        {
+          "hash": "0x07703bc3d9192bd961f22df423fc93832630da217afceb227be0a64c2462effb",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.097Z"
+        },
+        {
+          "hash": "0x693247f98827e1ac873ee2692c137270f1a088016d2f6e3ed235a3b5b6db1fb9",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.520Z"
+        },
+        {
+          "hash": "0x389a6bfaa07e2474123719ce02d9e5ca72c4982bc3585e6314147688da0b3c35",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.333Z"
+        },
+        {
+          "hash": "0xa3b94a5ff22a49a3ab686bc26ef9b11aec35bd64903e274b8b9593077490810b",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.773Z"
+        }
+      ]
+    },
+    {
+      "address": "0x541e25F12601c4D21723808F573C2B70893553D2",
+      "bets": [
+        {
+          "hash": "0xd8434cc5100c24013a81cbe324d0a3c83c7f2fbd54e809bd44ee0d9378482bcb",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.870Z"
+        },
+        {
+          "hash": "0x92ed82c5faec663b9ebe54034862cf8a97ab6e54cc8a36dba337e2de46159d27",
+          "gas": "2461094",
+          "block": "317702954",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.781Z"
+        },
+        {
+          "hash": "0xab7e843032b350f109edee0caa8e940290ec3fae4b658c9c8299023146db45b5",
+          "gas": "2461094",
+          "block": "317702964",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:41.349Z"
+        },
+        {
+          "hash": "0x42ccfa0f3ccce172e5c4e2d88735f0f304935ed36bf182c79a7f13771d1d0cf0",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:46.014Z"
+        },
+        {
+          "hash": "0x8f1c1e8d6027a08f5fc023e38b3ddae3b68f97baec9dae51e96490f1702c0b3f",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.903Z"
+        },
+        {
+          "hash": "0x45503e4f08f4e2c79b2bd72333f22f1eba127696d52acb2eee1db883f432138d",
+          "gas": "2461094",
+          "block": "317703009",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.834Z"
+        },
+        {
+          "hash": "0x9a57b4cc0ae3d1b6f5ea4708466d1d401ed0717c1ebd1c384bf84d8c8cf27cfe",
+          "gas": "2461094",
+          "block": "317703021",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:55.086Z"
+        },
+        {
+          "hash": "0x7d74f43a264ed492cf674dc43a66054316261f7babff997f2b796c55f633071c",
+          "gas": "2461094",
+          "block": "317703034",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:57.894Z"
+        },
+        {
+          "hash": "0xdd805681c16b123a9b915e45d23ba654994a1fdce72c107cdd5956ba4db7c32b",
+          "gas": "2461094",
+          "block": "317703043",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:01.204Z"
+        },
+        {
+          "hash": "0x1620d5458edcba74f128c243bc80b02aa632a926039a4d2833716e923e073c46",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.784Z"
+        }
+      ]
+    },
+    {
+      "address": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+      "bets": [
+        {
+          "hash": "0x72abb6879895639f7bd354bfb12eae4bf8eb9b70d3002048ad783ca22c603a8a",
+          "gas": "2461094",
+          "block": "317702944",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:35.881Z"
+        },
+        {
+          "hash": "0x3816ef884fb396a0f06c62d60be741f3e2b22492798c6302fa92397adc83a78a",
+          "gas": "2461094",
+          "block": "317702954",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:38.777Z"
+        },
+        {
+          "hash": "0xd2d974b5f11435f716e9554ae50b850e38118633f8cef89b6fbd43d8cdd1e7aa",
+          "gas": "2461094",
+          "block": "317702965",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:40.539Z"
+        },
+        {
+          "hash": "0x85aafddfb122e0fe4d8c505cdaaa070723bf253242028706babab9541dc7646c",
+          "gas": "2461094",
+          "block": "317702984",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:45.998Z"
+        },
+        {
+          "hash": "0x4686811d069d7f9f9d6176e6c3843e3fa270be6a6b5384eb06cd259bc30a324c",
+          "gas": "2461094",
+          "block": "317702993",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:48.894Z"
+        },
+        {
+          "hash": "0x6e0e1b5aaece495eb2dbaa1d7d1c00c5eb70d927bf514cf9744851e4df930714",
+          "gas": "2461094",
+          "block": "317703008",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:52.749Z"
+        },
+        {
+          "hash": "0xea0eebd120a9c26de829b28a4f345b0b365c4c5d14598eecc48a90e478be6a42",
+          "gas": "2461094",
+          "block": "317703020",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:54.470Z"
+        },
+        {
+          "hash": "0xb2b8b135f9ce0fd5d05b6d29fe4e8314e4408e6de6f73c57b3cb1439b19b2165",
+          "gas": "2461094",
+          "block": "317703035",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:13:58.517Z"
+        },
+        {
+          "hash": "0x0bcd06f7f12a4801fc5badae002c6e7950d8f57ab97e7dc295ea617d33a4d855",
+          "gas": "2461094",
+          "block": "317703044",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:00.186Z"
+        },
+        {
+          "hash": "0xcc1916b5dadaea29a1aeff42ed9d90e5b67edb6dd1f612867659aa2b0f7c4587",
+          "gas": "2451494",
+          "block": "317703056",
+          "receiptStatus": "success",
+          "actualRound": "2141",
+          "confirmed": true,
+          "confirmedAt": "2026-10-10T10:14:02.793Z"
+        }
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "label": "fund BRB wallet 0",
+      "hash": "0xecfd27799803124dea1bbc4bace0d12abcf336c6e8ce4245e1d679dcaad48ec9"
+    },
+    {
+      "label": "fund ETH wallet 0",
+      "hash": "0xf2e98424f09ccb200b49ea64679fa6793143b7eee20e91867c701eecd694b209"
+    },
+    {
+      "label": "approve wallet 0",
+      "hash": "0x381f7a61562bc9ed29b6832b2e03633d2e55ba15cfe7f05e7e2053ec34298372"
+    },
+    {
+      "label": "fund BRB wallet 1",
+      "hash": "0xb5f4eedd35acc3e0095282dc0ea7f2946139a22fab8f8338cb36ec647173ef55"
+    },
+    {
+      "label": "fund ETH wallet 1",
+      "hash": "0x5621662685ebe20039ace823f64ab38405c1eee93f663ae8cc3b08390449c8fb"
+    },
+    {
+      "label": "approve wallet 1",
+      "hash": "0xe8a19c1e4155be6c7327f0ba8ed9253542b00640837acf0fd32004d763d1b544"
+    },
+    {
+      "label": "fund BRB wallet 2",
+      "hash": "0x532220fcefab1ef0c6d1d6636cda4e4bcc336583456168411c3d2b7eb30daf2c"
+    },
+    {
+      "label": "fund ETH wallet 2",
+      "hash": "0x367e43a6684dfa1afff66baa82cf8dc1ac2c3b62141158bfbe8ef90322f8a8ff"
+    },
+    {
+      "label": "approve wallet 2",
+      "hash": "0x2c320b8f3fd7dfd3ab65df81a7ebe90a164ce2e2e99c17316c6580beab9ee20f"
+    },
+    {
+      "label": "fund BRB wallet 3",
+      "hash": "0x4b6ef966495bb0ce6f3ae8ead0fcc9f7af101067beccb3afdc80395d17d6d512"
+    },
+    {
+      "label": "fund ETH wallet 3",
+      "hash": "0x1e69d40f136de69cf48fad526398d48861c594c1a48406c5ca0fdb329ad36c8d"
+    },
+    {
+      "label": "approve wallet 3",
+      "hash": "0x35f75570c6a78429d83321e3d71a487c8c1af7b0ab35a4ee94c9a4170f5e8203"
+    },
+    {
+      "label": "fund BRB wallet 4",
+      "hash": "0xe41ef1daac61f208f9f66b20cd28fa815febf7221637f638d344a3f6efacf226"
+    },
+    {
+      "label": "fund ETH wallet 4",
+      "hash": "0xba7bc737135a51074697a646c1862c628cff8033481d91e13ce0aee0af5ccab2"
+    },
+    {
+      "label": "approve wallet 4",
+      "hash": "0xd60c2c0d6e39fe425b5e7890a4ea247c30d6c8e9cadc08d64ba5d7d67c9ce40a"
+    },
+    {
+      "label": "fund BRB wallet 5",
+      "hash": "0x12fdd12d9f88fea7a1c9c1753861ff77ea8124b77b769509cb756edcd4fb6b0b"
+    },
+    {
+      "label": "fund ETH wallet 5",
+      "hash": "0x2ff172a3ea2ced4fcc62d861361dde29324a4946b1af022a84e533360265f0b5"
+    },
+    {
+      "label": "approve wallet 5",
+      "hash": "0x7924036fd14db6eab49d7db6b350d7e2cd5e66f902b4254b8dce36816d2e2239"
+    },
+    {
+      "label": "fund BRB wallet 6",
+      "hash": "0x56609e49bd3184340b21d8fe3a7338a1b8b4b776de79b91e551bfc8aec98970d"
+    },
+    {
+      "label": "fund ETH wallet 6",
+      "hash": "0xacafe0b73c3410e23fa9b50fa1e050e454104ed34a50ccb0b0f41def51487bb8"
+    },
+    {
+      "label": "approve wallet 6",
+      "hash": "0x705ac54fdf25b09b96a4cad4bbd4dd74784f578c3da2a345e36abf0e5f1b52c3"
+    },
+    {
+      "label": "fund BRB wallet 7",
+      "hash": "0x5d20a963e669c3f5acfa0e474934880b55680ff967e32de437ac8ff5f9f35db3"
+    },
+    {
+      "label": "fund ETH wallet 7",
+      "hash": "0x41234eb1f283797fbd443a2d4b378795ba071e86503af1fda98fad375d14a10f"
+    },
+    {
+      "label": "approve wallet 7",
+      "hash": "0xfec75e7ffeba7a55c13379e656aa410e17551e82bcbe03a423d240ed0f291ff1"
+    },
+    {
+      "label": "fund BRB wallet 8",
+      "hash": "0xc57a6f143983e493d6d55cec8d981297d8baa6f177e11e0578332a52c5a52e73"
+    },
+    {
+      "label": "fund ETH wallet 8",
+      "hash": "0x0e90849f54ca6da86348b3eadb6456d58c0b76976c4dcde559efb0e1d604ee46"
+    },
+    {
+      "label": "approve wallet 8",
+      "hash": "0x4af761ef5084d3fc76034f66cc8559d6cdf17d79a6b4b12cc162f02998995e46"
+    },
+    {
+      "label": "fund BRB wallet 9",
+      "hash": "0xc8805625f6f5cff0b1cdac9377e8df28254c8e8593538d0a7f72ae96e48aaede"
+    },
+    {
+      "label": "fund ETH wallet 9",
+      "hash": "0xb33b6379241e67242d5d69551ece9c970f1a329af6ee2bc7a78a593ee9bf6dbc"
+    },
+    {
+      "label": "approve wallet 9",
+      "hash": "0x94021546bc54cbd0fe72ba920fa10cde8430f90ec6b7b883cf025186a4d8e7f9"
+    },
+    {
+      "label": "fund BRB wallet 10",
+      "hash": "0xdca8cb8fdac807560ebb34b4c56bfc86dc99a3d84bd700c31e56e99208530905"
+    },
+    {
+      "label": "fund ETH wallet 10",
+      "hash": "0xa2969957f9a76dd40e34bf349b0beff487303b8607aa5c349d0721c9118ea7ed"
+    },
+    {
+      "label": "approve wallet 10",
+      "hash": "0xbbc489474edfa61486ec8aee6178effe4b0e327715438423f280166b901e0c72"
+    },
+    {
+      "label": "fund BRB wallet 11",
+      "hash": "0x2937b2712b5eb8df37201d60a54062c3a8df496926029f5e83ae6234cbc88085"
+    },
+    {
+      "label": "fund ETH wallet 11",
+      "hash": "0x750112b9a2b8f6435a6d73eb6d49120ad358d4b8d3426cf2369776a8f24e2b27"
+    },
+    {
+      "label": "approve wallet 11",
+      "hash": "0xb8b8f8efa484ddd311f58aec676c05a51addb7d99edc6627364eaf3483a78fc4"
+    },
+    {
+      "label": "fund BRB wallet 12",
+      "hash": "0x75e026d38f6202f9e3cbf8c3e608e12232b0b4082bf1e819bad96a6a1a755f02"
+    },
+    {
+      "label": "fund ETH wallet 12",
+      "hash": "0xa419295948c91902d11e0961bb905a4bbc6ada8c0b58e49242a0257b9e79c43f"
+    },
+    {
+      "label": "approve wallet 12",
+      "hash": "0xa7ddc613bc0fcb5c946de4b04c66f8fe3d4f62d29159e3c525c34db3f3279bb3"
+    },
+    {
+      "label": "fund BRB wallet 13",
+      "hash": "0xbde6a67fd2ea9338e10c88de02dc9e3c25ff51633fcc8bd29cbc5bb8150899c6"
+    },
+    {
+      "label": "fund ETH wallet 13",
+      "hash": "0xf6ad1f20cb13df9bffac040d31a7d3f995d003f276927a13fe4331f62029d2c2"
+    },
+    {
+      "label": "approve wallet 13",
+      "hash": "0x5664ca1a9862543aa37f2c9edab80a870a6f1d16e965a1e03c96c71cd9db03b6"
+    },
+    {
+      "label": "fund BRB wallet 14",
+      "hash": "0x57b4df26c7907ebe06bcb3ea269508aa2d6db63c7146dfc6041ce6b4f439fce4"
+    },
+    {
+      "label": "fund ETH wallet 14",
+      "hash": "0x47bd0702079bbc8850cd93848cc36a24637d8df2f32ecbcd006c685f042c35a2"
+    },
+    {
+      "label": "approve wallet 14",
+      "hash": "0x2bc450228062a59b2b59cfed7ab8f8b49d8cc1723ef00241e78750798d7da310"
+    },
+    {
+      "label": "fund BRB wallet 15",
+      "hash": "0x7915d2cb86504c3e11e3de5e7c8f1e14f8f243b8a1492eb50642e78cb82131b9"
+    },
+    {
+      "label": "fund ETH wallet 15",
+      "hash": "0x897dcbff3172dec45443a40642d3b74c9635b20b934faa7c39291e2473af8d81"
+    },
+    {
+      "label": "approve wallet 15",
+      "hash": "0x596e98ffecff79c13234abead4787bda43e81aa36955997d3bb3c15576eb267d"
+    },
+    {
+      "label": "fund BRB wallet 16",
+      "hash": "0xb596d2db5aa8b907d8b7c9633d550f3a31cb6bbf022e559db683bcf97034335d"
+    },
+    {
+      "label": "fund ETH wallet 16",
+      "hash": "0xfefd1f3655607d5e106296c3f65b01ce5c4e2a21f3afb4d6281a8a35c0e9a5b1"
+    },
+    {
+      "label": "approve wallet 16",
+      "hash": "0xd93f2dbfe5bdacca6893b74844c6de0361722200d6f1e9e3b9373985614a254b"
+    },
+    {
+      "label": "fund BRB wallet 17",
+      "hash": "0xe756797b20d8ee48dce08be2ffeeac270720d300844186fd2454ff4cf8e30262"
+    },
+    {
+      "label": "fund ETH wallet 17",
+      "hash": "0xdb7194eebe2aeca307019b48db54670b4334d3bcb67e2fa789e716dcb52620d7"
+    },
+    {
+      "label": "approve wallet 17",
+      "hash": "0xf112ec1a47c77513f864f40277246517e595dfea0cba27e6b919efa0673a2628"
+    },
+    {
+      "label": "fund BRB wallet 18",
+      "hash": "0x7194330d6b6fe99b0893342f05455e469d0494b4822b537fe50e685e30e2739d"
+    },
+    {
+      "label": "fund ETH wallet 18",
+      "hash": "0xa139c372d70b6a9e32533edc5c5c3d4889ed18f7bbbc092df8ca16aff4a683db"
+    },
+    {
+      "label": "approve wallet 18",
+      "hash": "0xf7b5f5084b88126d70d501acaf17e121882cb99efafde19ed83fa0ec2e0fef5b"
+    },
+    {
+      "label": "fund BRB wallet 19",
+      "hash": "0xd981ad2dcf2238f8e863d981c4e2117c9708651786070e476e9cbdfd39e43e93"
+    },
+    {
+      "label": "fund ETH wallet 19",
+      "hash": "0x53f8187601298aba6ebd66b109f03cea50570942bf05045adb82898627e9533e"
+    },
+    {
+      "label": "approve wallet 19",
+      "hash": "0x23626666d8a53ee4c65822e0d5106bc03f7cb766a1f21de08506b63adca485da"
+    },
+    {
+      "label": "fund BRB wallet 20",
+      "hash": "0xe76d746716df69c61b0e56c41b3ca09673475a25b2f51244ce62fc6892b09ba6"
+    },
+    {
+      "label": "fund ETH wallet 20",
+      "hash": "0x891195d36e53550052bb0f6fdb115c1f7ce576c15ca3de4dbe2290c499555c61"
+    },
+    {
+      "label": "approve wallet 20",
+      "hash": "0x46aeaac1991f586a97f737b945835e0fa930c3f8641451dfc133dac38f805697"
+    },
+    {
+      "label": "fund BRB wallet 21",
+      "hash": "0x2d2e86eeadc9627ba75ec5801b90eb6d5f25225b188017343af9eac9be21516c"
+    },
+    {
+      "label": "fund ETH wallet 21",
+      "hash": "0xf3997b31848846816f0b330f5cb5fba78066e1247424cd452244103df7e96744"
+    },
+    {
+      "label": "approve wallet 21",
+      "hash": "0xcdfc45312e6070751ec742e48d8e9429af91addc4e632585b36cdeecca3b3be0"
+    },
+    {
+      "label": "fund BRB wallet 22",
+      "hash": "0xef874e3be8d6c9bc88a92239db3821bf4c0e3111e1eda6f2061f6ab32c10b47f"
+    },
+    {
+      "label": "fund ETH wallet 22",
+      "hash": "0x2fe43649b42ef1258f5053cbc7c4b085ef654783378cd15cdddec2e73a9cdb3b"
+    },
+    {
+      "label": "approve wallet 22",
+      "hash": "0x557f19fb058e8d4c01c95bfac654c7a0495d649c2f2eab1377038700fa08813b"
+    },
+    {
+      "label": "fund BRB wallet 23",
+      "hash": "0xdd197298cbc77c14fd40d9ce8068f597fe43899694e620405f26bdfff30cc989"
+    },
+    {
+      "label": "fund ETH wallet 23",
+      "hash": "0x108b48722625d980f0b01bc6fdd36fccabc8776c7452a3b3e1dee7eede1ca7ca"
+    },
+    {
+      "label": "approve wallet 23",
+      "hash": "0x5fff37bb911dc2c523f87cdea66004389a18c3ee6334bf9d74c2a10704530dbe"
+    },
+    {
+      "label": "fund BRB wallet 24",
+      "hash": "0x8d1009e27d0cbcfef1c7726eb00664c4402cb264fd92d3a236606506e746c0d9"
+    },
+    {
+      "label": "fund ETH wallet 24",
+      "hash": "0x6fdfa96992206327753e491ec6e5fadcf5d07090fea7728d56a072f592b5f040"
+    },
+    {
+      "label": "approve wallet 24",
+      "hash": "0xf989b2b208d9b809bf7f79dace8893b0a0155012f25e5608e8c25d0d8694107f"
+    },
+    {
+      "label": "recover BRB wallet 0",
+      "hash": "0x7978cb11fa7c5d2a397911dea8a5b3f7a1f3b977e8e9bfdc468f2a19f9492d34"
+    },
+    {
+      "label": "recover ETH wallet 0",
+      "hash": "0x44ee31ee82a5341188dae280fc3d248cd8cc74d9fb464323ec22125c0ee4b4a1"
+    },
+    {
+      "label": "recover BRB wallet 1",
+      "hash": "0xed23d4ae18cc4f25971981529a702d0ae4b262614de44fddb04173e813f6f285"
+    },
+    {
+      "label": "recover ETH wallet 1",
+      "hash": "0x621a7380a35ffbbc4aa6e106b1174cb6eb433cb1ee9e3203bb6dac9e02a8fd13"
+    },
+    {
+      "label": "recover BRB wallet 2",
+      "hash": "0x7f4316ad162ab18b36806af8699ecf05c0b57e36d1e09d37da44de522ada61fa"
+    },
+    {
+      "label": "recover ETH wallet 2",
+      "hash": "0x0c4b2d1e570671fd78867e3fffa9ce59123994411dd96ed043e409164a78d08c"
+    },
+    {
+      "label": "recover BRB wallet 3",
+      "hash": "0xcde3f71aae3b9365ec5b171295667ec520a496036df573a10ae0160113bfb961"
+    },
+    {
+      "label": "recover ETH wallet 3",
+      "hash": "0xedede0ad4bd0f47649a3b3d62017ccc35d5e6d1e7b69ebbb92c40f19391df743"
+    },
+    {
+      "label": "recover BRB wallet 4",
+      "hash": "0xa0f6f7243f6f1195ef24a55eeec0b6f2d5b9862de61310da520e30f5184dfa31"
+    },
+    {
+      "label": "recover ETH wallet 4",
+      "hash": "0xe0b084216bda906427096e7d5fd6a631e2d9e4e9775ccfea407555717b2de618"
+    },
+    {
+      "label": "recover BRB wallet 5",
+      "hash": "0x4c88f5b886c20db4f5364c8ceff624d8ebe95c6695fc11148cf4dfde52d2f33b"
+    },
+    {
+      "label": "recover ETH wallet 5",
+      "hash": "0xe10ebaf76d3a7268f2ed7069b0c9ebe21ab5c385d73753733883ffa6c4ea0605"
+    },
+    {
+      "label": "recover BRB wallet 6",
+      "hash": "0x44fccbb0933676d71724647db8a943d052f1d1e474b4ae6ef2a1bacaa6cc7db9"
+    },
+    {
+      "label": "recover ETH wallet 6",
+      "hash": "0xa3f9903ed61f33995361046398e26452b0ce3dff202a6fb095aafb225e5e7ec3"
+    },
+    {
+      "label": "recover BRB wallet 7",
+      "hash": "0xb2cae3e8b5abdc76dce4cd6fce817da285130168df23ec1a4b3db8d92d20fe7d"
+    },
+    {
+      "label": "recover ETH wallet 7",
+      "hash": "0xbcaeba2f296ab956a98afda0aaa6aa671bad193e22424b1f26bfde61daa1a7f7"
+    },
+    {
+      "label": "recover BRB wallet 8",
+      "hash": "0x981c574a9b189da36c384f1b82e5f71ffa5f61c4859e9950b31ff78abf61d749"
+    },
+    {
+      "label": "recover ETH wallet 8",
+      "hash": "0xc62b9efa530cff9a85496bb83a8e9d7068617d8cc3b1edd6714b28b125f5ded3"
+    },
+    {
+      "label": "recover BRB wallet 9",
+      "hash": "0x358244895ccef756cff86f07b8e77026dac72964f8a2f7a19c8f0b138c566085"
+    },
+    {
+      "label": "recover ETH wallet 9",
+      "hash": "0xa07c7c4ea76eddc83f365bbc4b20325eaaa33bac875d45c09a99f15cba6f29f1"
+    },
+    {
+      "label": "recover BRB wallet 10",
+      "hash": "0x6557c102a6e8c922ff8d7bc4cfc70d14d744a5cf961cf96aacf6167a45c4d172"
+    },
+    {
+      "label": "recover ETH wallet 10",
+      "hash": "0xda3f1ff3f148c72e18575febff4e2f1cb2a09900b5b83fa4d032274209d24ae1"
+    },
+    {
+      "label": "recover BRB wallet 11",
+      "hash": "0xf598b780b7c0567bb05eea9c4a7af51c10561b30452b65414d20a0ed5a50a327"
+    },
+    {
+      "label": "recover ETH wallet 11",
+      "hash": "0x075ffab81ee4917d111cdf562272864a72e4d5ee5226afa9ee4c96f510491172"
+    },
+    {
+      "label": "recover BRB wallet 12",
+      "hash": "0xfd0522928454e20bc53bdf480c0635dd9912d8a6f16df003807188db2455bf35"
+    },
+    {
+      "label": "recover ETH wallet 12",
+      "hash": "0xb93ffaaf59bf0432d53120f45884b8addb22ecaca6320a1b5ef492b5546056db"
+    },
+    {
+      "label": "recover BRB wallet 13",
+      "hash": "0xb94fe57c029c7f19da0658ac258c82d1fff768d391fc585f95abdbacf7de5da1"
+    },
+    {
+      "label": "recover ETH wallet 13",
+      "hash": "0x7ca2e4b19bcbb556511c628962d31d2e2a369ac2707a148e0b307b6b8b2bda15"
+    },
+    {
+      "label": "recover BRB wallet 14",
+      "hash": "0x976498ddf6162a6dffad9d66eb76b97ee0e5c30772fa63dee1278f970f2d7247"
+    },
+    {
+      "label": "recover ETH wallet 14",
+      "hash": "0xf5b6b8dfff4afb66f346be72451b66b36f661382bc1d4dc42d1f4b07353740ca"
+    },
+    {
+      "label": "recover BRB wallet 15",
+      "hash": "0xf859246cc3321d349c357ac3e9c9587a414fe20e19e03084f18cb2ff56809846"
+    },
+    {
+      "label": "recover ETH wallet 15",
+      "hash": "0xa5b75f7e992e28e23c5b348199ceefe00e8732305e7bd6f40c54a3461a69b368"
+    },
+    {
+      "label": "recover BRB wallet 16",
+      "hash": "0x4e5e5a831d6b1120d2ca5b3d036514d3328cabb989b4facc23875432a2e250c1"
+    },
+    {
+      "label": "recover ETH wallet 16",
+      "hash": "0xf9443ee42cefa573d8adcddfa2bbb30321c31f97d3350b4e12ad634f9b1b68e8"
+    },
+    {
+      "label": "recover BRB wallet 17",
+      "hash": "0x37f05ce21295624d4a74bf7a97fd3be86f78919e93e550061da4d85c5e389d8b"
+    },
+    {
+      "label": "recover ETH wallet 17",
+      "hash": "0x106e20784f78f77de922b480c6de2b79e283a0686b8e2658e551623a2972a08b"
+    },
+    {
+      "label": "recover BRB wallet 18",
+      "hash": "0x7406928f18d1e8063453b336892b5729f04208983ec363db50d9a38cd8bfb568"
+    },
+    {
+      "label": "recover ETH wallet 18",
+      "hash": "0x882c2a55c021617166016c0cdd2c251f1b4fb91f123bdced0aea6c4980fefa03"
+    },
+    {
+      "label": "recover BRB wallet 19",
+      "hash": "0xda5c9b0fb40efff747cd49ef0e3ce60ed0b0535dd9a1226da1144a97e763737f"
+    },
+    {
+      "label": "recover ETH wallet 19",
+      "hash": "0x9ac1333d27ad668f27f7d163dd9598a1f922abcf2aae4f1d6a5cfe65a8b6d54e"
+    },
+    {
+      "label": "recover BRB wallet 20",
+      "hash": "0x1d66c4c509f56bb28768bc1d6cda8d6d9cf57c0378c1e99375041e4a507010cd"
+    },
+    {
+      "label": "recover ETH wallet 20",
+      "hash": "0x8765195611b7a50549bef6061837811df05723866a948ceff18158b8a730129b"
+    },
+    {
+      "label": "recover BRB wallet 21",
+      "hash": "0x5c5dc4153a41d026692824bbb960c71ccbba6a9ac164f6bf202173e3f32b7356"
+    },
+    {
+      "label": "recover ETH wallet 21",
+      "hash": "0xd98bda9b14d3b7570a9050416ba1026906658fc5a8a7d149f654e1d72f9defca"
+    },
+    {
+      "label": "recover BRB wallet 22",
+      "hash": "0x09477a09d5e4e476e6d2bdd633aa7fa03a84f4ad9429aeddd22f152de4cdaf21"
+    },
+    {
+      "label": "recover ETH wallet 22",
+      "hash": "0x5f91f1da01c0f2811c5d57fc2b05ccb459cbfc5851a6c7a0be2e700df2945888"
+    },
+    {
+      "label": "recover BRB wallet 23",
+      "hash": "0xf5eac14335857153492b00d2864f5cfdda196cf5c6b8f3072e560259f3c1fe5b"
+    },
+    {
+      "label": "recover ETH wallet 23",
+      "hash": "0xe19c6da85e05f4fd1e4f8f46d60be4889239323fafa27bc85c53f58f60356d7b"
+    },
+    {
+      "label": "recover BRB wallet 24",
+      "hash": "0x3f35ce97c3fbf8d03997101a0e003d636e965f7f70bcd4b82b8a745711ba31a7"
+    },
+    {
+      "label": "recover ETH wallet 24",
+      "hash": "0xb0362f712eb371abab9ba74a8389208a6427b731d32f1544308889c37e2a8382"
+    }
+  ],
+  "originalDuration": 60,
+  "walletBalancesBefore": [
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000",
+    "370000000000000000000"
+  ],
+  "bankAssetsBefore": "1291932987536187171514806",
+  "admissionStartedAt": "2026-10-10T10:13:33.576Z",
+  "lockAt": "1791627273",
+  "admissionSeconds": 30.588,
+  "admissionEndBlock": "317703060",
+  "observation": {
+    "block": "317703639",
+    "currentRound": "2142",
+    "phase": 4,
+    "diagnostics": {
+      "requestId": "55175011978748233510749061784261467897930928005765095634109090278580631628889",
+      "requestedAt": "1791627274",
+      "available": true,
+      "fulfilled": true,
+      "winningNumber": 21,
+      "jackpotNumber": 10,
+      "marketsParticipating": 1,
+      "marketsSettled": 1,
+      "jackpotCursor": 0,
+      "jackpotPaid": "0",
+      "jackpotDistributed": false
+    },
+    "market": {
+      "betsReleased": true,
+      "winningBetCount": "250",
+      "bankPaidRunning": "9000000000000000000000",
+      "settled": true,
+      "totals": {
+        "totalAmount": "9250000000000000000000",
+        "betCount": "250"
+      }
+    },
+    "walletDelta": "-250000000000000000000",
+    "externalTickets": "0",
+    "roundDuration": 60,
+    "fundingAccount": [
+      "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+      "7890000000000000000",
+      "7920000000000000000",
+      "30000000000000000",
+      "30000000000000000",
+      "25000000000000000",
+      "5000000000000000"
+    ],
+    "events": [
+      {
+        "name": "VrfRequested",
+        "args": {
+          "newRoundId": "2141",
+          "requestId": "55175011978748233510749061784261467897930928005765095634109090278580631628889",
+          "timestamp": "1791627274"
+        },
+        "hash": "0x29eb0cc4bad13671774bffd6a9de308797effc3d33a11d9f811c5631cdf11f4d",
+        "block": "317703184"
+      },
+      {
+        "name": "VRFResult",
+        "args": {
+          "roundId": "2141",
+          "winningNumber": 21,
+          "jackpotNumber": 10
+        },
+        "hash": "0xe43541b3f56bed1209c4cb30f8818ce9d7d818aca88f7dccfce903a3245e1fe4",
+        "block": "317703192"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "fromCursor": "0",
+          "toCursor": "60",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0x954d3d84fa335214590684256f19d9d390fdc1cde7b9fca05cb2bea5dc753923",
+        "block": "317703222"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "fromCursor": "60",
+          "toCursor": "120",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0x3ed364c9f21e4544bc53374c9339a6ec8ace85addb339cff489f101bb52459cc",
+        "block": "317703226"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "fromCursor": "120",
+          "toCursor": "125",
+          "paidAmount": "180000000000000000000"
+        },
+        "hash": "0xc72ab0b27ae72e52b8af42f049fa5c9c1c50b9ca7f2b11275756f3c98c0ae231",
+        "block": "317703229"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "fromCursor": "0",
+          "toCursor": "60",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0x6766e10a119c26cbb3994d54f5fcd09e82f38f1b558693cbbc1c7de403e89012",
+        "block": "317703233"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "fromCursor": "60",
+          "toCursor": "120",
+          "paidAmount": "2160000000000000000000"
+        },
+        "hash": "0x4581a0baab8cd467096ec64b4a87f844d6e5a2f4bf50f04784798ba745b98e44",
+        "block": "317703236"
+      },
+      {
+        "name": "PayoutProgress",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "fromCursor": "120",
+          "toCursor": "125",
+          "paidAmount": "180000000000000000000"
+        },
+        "hash": "0x0add36f7df082f70af819c8942319f71ba4dcf5d095b41632fe6a07911d6f877",
+        "block": "317703239"
+      },
+      {
+        "name": "RoundResolved",
+        "args": {
+          "roundId": "2141"
+        },
+        "hash": "0x0add36f7df082f70af819c8942319f71ba4dcf5d095b41632fe6a07911d6f877",
+        "block": "317703239"
+      },
+      {
+        "name": "JackpotFunded",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "amount": "7500000000000000000"
+        },
+        "hash": "0x0add36f7df082f70af819c8942319f71ba4dcf5d095b41632fe6a07911d6f877",
+        "block": "317703239"
+      },
+      {
+        "name": "InfrastructureFeePaid",
+        "args": {
+          "globalRoundId": "2141",
+          "marketId": 3,
+          "amount": "5000000000000000000"
+        },
+        "hash": "0x0add36f7df082f70af819c8942319f71ba4dcf5d095b41632fe6a07911d6f877",
+        "block": "317703239"
+      }
+    ],
+    "automationTransactions": [
+      {
+        "hash": "0x29eb0cc4bad13671774bffd6a9de308797effc3d33a11d9f811c5631cdf11f4d",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "273244",
+        "gasUsed": "264590",
+        "status": "success",
+        "block": "317703184"
+      },
+      {
+        "hash": "0xe43541b3f56bed1209c4cb30f8818ce9d7d818aca88f7dccfce903a3245e1fe4",
+        "from": "0x57301ceabc3742ac07d913c3f2efa52cc1d59c67",
+        "to": "0x343300b5d84d444b2adc9116fef1bed02be49cf2",
+        "gasLimit": "3687200",
+        "gasUsed": "412436",
+        "status": "success",
+        "block": "317703192"
+      },
+      {
+        "hash": "0x954d3d84fa335214590684256f19d9d390fdc1cde7b9fca05cb2bea5dc753923",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "1391607",
+        "gasUsed": "1341689",
+        "status": "success",
+        "block": "317703222"
+      },
+      {
+        "hash": "0x3ed364c9f21e4544bc53374c9339a6ec8ace85addb339cff489f101bb52459cc",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "938214",
+        "gasUsed": "907046",
+        "status": "success",
+        "block": "317703226"
+      },
+      {
+        "hash": "0xc72ab0b27ae72e52b8af42f049fa5c9c1c50b9ca7f2b11275756f3c98c0ae231",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "262630",
+        "gasUsed": "256227",
+        "status": "success",
+        "block": "317703229"
+      },
+      {
+        "hash": "0x6766e10a119c26cbb3994d54f5fcd09e82f38f1b558693cbbc1c7de403e89012",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "908227",
+        "gasUsed": "877983",
+        "status": "success",
+        "block": "317703233"
+      },
+      {
+        "hash": "0x4581a0baab8cd467096ec64b4a87f844d6e5a2f4bf50f04784798ba745b98e44",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "916069",
+        "gasUsed": "885583",
+        "status": "success",
+        "block": "317703236"
+      },
+      {
+        "hash": "0x0add36f7df082f70af819c8942319f71ba4dcf5d095b41632fe6a07911d6f877",
+        "from": "0xbbbbedc42dc53842141be8f70df9efe4d08538a4",
+        "to": "0x098a5a03be176aae3413ad98f57cb4c63e16b49d",
+        "gasLimit": "421117",
+        "gasUsed": "405861",
+        "status": "success",
+        "block": "317703239"
+      }
+    ],
+    "walletBalancesAfter": [
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000",
+      "360000000000000000000"
+    ],
+    "bankAssets": "1292170487536187171514806",
+    "bankShares": "1032528577526072647880413765279"
+  },
+  "cleanupVerification": {
+    "wallets": [
+      {
+        "address": "0xbd5055006e320e478c74F157638F3a08cFCe8d5c",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092674000000"
+      },
+      {
+        "address": "0x4937aD13ab37e5c5D658B033F8CD4A0e466f6cb0",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99090154000000"
+      },
+      {
+        "address": "0xD9669F55Caf30093f24492E669689E8Fd8595FBC",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99077386000000"
+      },
+      {
+        "address": "0x059e3B0577A8C2b7487D7C0344dE06fb961001cf",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99080872000000"
+      },
+      {
+        "address": "0x69985f49b0c8E0807456E8C78c260948b0F95A39",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99084148000000"
+      },
+      {
+        "address": "0xa71059a3270dF8c8Ac98586fB22F89A0CC8592d1",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99086374000000"
+      },
+      {
+        "address": "0xa8F2dDc5f1BD8Ce744a3bB4926A6BfeB7Fc0041a",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092758000000"
+      },
+      {
+        "address": "0x5926898D88a21c4c805DF5e8ACdfa92B3B749d33",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99083140000000"
+      },
+      {
+        "address": "0xE4e2BcCE0a926B3cFd3E3F84C77C8fef8398cf56",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99083686000000"
+      },
+      {
+        "address": "0x0bdF10461942bC2Bec92025c1549B582AdD464c5",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092758000000"
+      },
+      {
+        "address": "0x9DF5dF0F2cee9C1211D2b7161Db7Dbf68095dd72",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092884000000"
+      },
+      {
+        "address": "0x188A29cB8e8674e6640B9bCC6e395BBC7497c072",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092884000000"
+      },
+      {
+        "address": "0x429E8cC6119d58989eBc44f45851fDE16C5d0981",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99083896000000"
+      },
+      {
+        "address": "0x0e5A6e772B21f0e7d0Cadf1cee1420Df79152b03",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99082720000000"
+      },
+      {
+        "address": "0x476C7389E64B4cd5e8964357F8412ebD241BfCCB",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99084904000000"
+      },
+      {
+        "address": "0xb817A4fDf5b4592e2426B9C8914079307691Dd63",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99090154000000"
+      },
+      {
+        "address": "0xb87ebd95187BF5fFae0a39c6C5e25fEe9c129ad8",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99091036000000"
+      },
+      {
+        "address": "0xa11647053A7f83e5a3d92A456CbC397684c646A9",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092926000000"
+      },
+      {
+        "address": "0xa2B95FF8545B6e147a53527f2D497D16eA6B7ec7",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99086962000000"
+      },
+      {
+        "address": "0xEecCA9EBef771B27AEb633C602363936A3B31c2C",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092926000000"
+      },
+      {
+        "address": "0x26f6485A67d2397FB9894C49f2A55091FdeBa5d8",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99092926000000"
+      },
+      {
+        "address": "0x3f4ab875509aa9A9Ac7CdFDe2c64Acf6752cCC7C",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99093010000000"
+      },
+      {
+        "address": "0x990aae5fD2354e7e78126b0f767274b250ec676F",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99084106000000"
+      },
+      {
+        "address": "0x541e25F12601c4D21723808F573C2B70893553D2",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99093010000000"
+      },
+      {
+        "address": "0xd1fe816B94A3CAF65f5c2978df749bd9C74e1809",
+        "brb": "0",
+        "allowance": "0",
+        "eth": "99090070000000"
+      }
+    ],
+    "roundDuration": 60,
+    "chainAdmissionSeconds": "28",
+    "firstBetBlock": "317702943",
+    "lastBetBlock": "317703056",
+    "adminEth": "1928094030502874326",
+    "adminBrb": "141435365118871874844620",
+    "verifiedAt": "2026-10-10T10:20:12.228Z"
+  }
+}

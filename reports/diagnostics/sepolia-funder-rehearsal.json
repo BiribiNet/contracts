@@ -1,0 +1,68 @@
+{
+  "chainId": 31337,
+  "oldFunder": "0xfB5075174cb85aDfBf0A4E946840CbFD03bF48a2",
+  "constructorArgs": [
+    "0x7eb8110d9e84d3c32fa6468d13ea2bc81544acf1",
+    "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+    "0xEEDA8616872ef6eA2F41A4A40aB240253cd5C4aC",
+    "0x89658247aB5A1D93830AECECc6674170D0D7081c",
+    "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+    "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4"
+  ],
+  "policy": {
+    "swap": "300",
+    "numerator": "250",
+    "denominator": "300",
+    "slippage": "100",
+    "cold": "300",
+    "twap": 1800
+  },
+  "oldBalances": [
+    {
+      "marketId": 1,
+      "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+      "balance": "0"
+    },
+    {
+      "marketId": 2,
+      "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+      "balance": "0"
+    },
+    {
+      "marketId": 3,
+      "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+      "balance": "0"
+    }
+  ],
+  "pendingTreasury": "0",
+  "pendingBurn": "0",
+  "status": "recovered",
+  "startBlock": "317693446",
+  "newFunder": "0x16abfab1e1c18c895edce0d6b8125ab451502fd3",
+  "wiringTx": "0x1657db75a822342f8a2304f08fa78d81f890c093642639da967f371b878eec75",
+  "round": "2136",
+  "settlementTxs": [
+    "0x676be538dce73159cd03fa813723495fabc393771bc2d0e9ecd85a9f683e79df"
+  ],
+  "settlementPassed": true,
+  "nextRound": "2137",
+  "queued": [
+    "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+    "30000000000000000",
+    "30000000000000000",
+    "0",
+    "0",
+    "0",
+    "0"
+  ],
+  "fundingTx": "0x1d575f0b10fd403c783f3e4a7a46db04baef200203bfd7eff036bcb5aa61d741",
+  "remainingQueued": [
+    "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+    "0",
+    "30000000000000000",
+    "30000000000000000",
+    "30000000000000000",
+    "25000000000000000",
+    "5000000000000000"
+  ]
+}

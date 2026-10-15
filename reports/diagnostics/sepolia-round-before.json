@@ -1,0 +1,118 @@
+{
+  "funderChecks": {
+    "address": "0xfB5075174cb85aDfBf0A4E946840CbFD03bF48a2",
+    "engine": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+    "sideBet": "0xA0DCb8FCEd50EeD13899Af86DE70FcE42897E8B1",
+    "swapAssetTotalBps": "300",
+    "pendingTreasuryBrb": "0",
+    "pendingBurnBrb": "0"
+  },
+  "chainId": 421614,
+  "block": "317693446",
+  "round": "2136",
+  "phase": 3,
+  "pendingVrf": false,
+  "diagnostics": {
+    "requestId": "114580769793130962700718719019545128243118828288191975903900392605355787747495",
+    "requestedAt": "1791624099",
+    "available": true,
+    "fulfilled": true,
+    "winningNumber": 7,
+    "jackpotNumber": 8,
+    "marketsParticipating": 1,
+    "marketsSettled": 0,
+    "jackpotCursor": 0,
+    "jackpotPaid": "0",
+    "jackpotDistributed": false
+  },
+  "scheduler": "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+  "authority": "0xB24093FD7cbCA76C0A4098CdFF5F27d0734a2A68",
+  "simulation": {
+    "keeper": "0xbbbbeDc42dC53842141Be8F70Df9EFe4d08538A4",
+    "approved": true,
+    "balance": "1985499405102028438",
+    "success": false,
+    "error": "The contract function \"performUpkeep\" reverted.",
+    "cause": "The contract function \"performUpkeep\" reverted.",
+    "causes": [
+      {
+        "name": "ContractFunctionExecutionError"
+      },
+      {
+        "name": "ContractFunctionRevertedError"
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "lane": 0,
+      "needed": true,
+      "decoded": [
+        0,
+        "0",
+        {
+          "kind": 2,
+          "marketId": 3,
+          "roundId": "2136",
+          "nextCursor": 0,
+          "payoutShardIndex": 0,
+          "payoutShardWidth": 2
+        },
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "lane": 1,
+      "needed": false
+    }
+  ],
+  "markets": [
+    {
+      "id": 1,
+      "roundState": {
+        "betsReleased": false,
+        "winningBetCount": "0",
+        "bankPaidRunning": "0",
+        "settled": false,
+        "totals": {
+          "totalAmount": "0",
+          "betCount": "0"
+        }
+      },
+      "cursor0": "0",
+      "cursor1": "0"
+    },
+    {
+      "id": 2,
+      "roundState": {
+        "betsReleased": false,
+        "winningBetCount": "0",
+        "bankPaidRunning": "0",
+        "settled": false,
+        "totals": {
+          "totalAmount": "0",
+          "betCount": "0"
+        }
+      },
+      "cursor0": "0",
+      "cursor1": "0"
+    },
+    {
+      "id": 3,
+      "roundState": {
+        "betsReleased": false,
+        "winningBetCount": "0",
+        "bankPaidRunning": "0",
+        "settled": false,
+        "totals": {
+          "totalAmount": "1000000000000000000",
+          "betCount": "1"
+        }
+      },
+      "cursor0": "0",
+      "cursor1": "0"
+    }
+  ]
+}

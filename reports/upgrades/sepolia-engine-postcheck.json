@@ -1,0 +1,75 @@
+{
+  "chainId": 421614,
+  "block": "317690326",
+  "proxy": "0x7eb8110d9E84D3c32fA6468d13Ea2bC81544acf1",
+  "implementation": "0x4FFDD949820B8Cb358ab64985B436Cc8Dd4F68E8",
+  "runtimeBytes": 22379,
+  "upgradeTx": "0x1dd86882d7b666c771619e828cc2754e16af4ce8483d0c92bbca4fdc753969c7",
+  "stateMatchesPreUpgrade": true,
+  "pendingVrf": false,
+  "upkeep": [
+    {
+      "lane": 0,
+      "needed": false
+    },
+    {
+      "lane": 1,
+      "needed": false
+    }
+  ],
+  "state": {
+    "wiring": [
+      "0xBB93AE01f205Ba4C9C9B32def71dc8F76c67F672",
+      "0xfB5075174cb85aDfBf0A4E946840CbFD03bF48a2",
+      "0x89658247aB5A1D93830AECECc6674170D0D7081c",
+      "0x098A5a03Be176aAe3413ad98f57CB4c63E16B49D",
+      "91478276944701169124973572614879929312810262634334161093796665773446386878274",
+      2500000,
+      2
+    ],
+    "markets": [
+      {
+        "cfg": {
+          "asset": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+          "bank": "0x7A8C8E4833e3eAA5b440757E3E4fb17537e21Eec"
+        },
+        "supply": "10000000000000",
+        "assets": "10950000",
+        "balance": "10950000"
+      },
+      {
+        "cfg": {
+          "asset": "0xA64617ABdcA4477B17020a763F24bFe27046a752",
+          "bank": "0xBE100446eEE90392BC154F6d8d80B88f01Da91a7"
+        },
+        "supply": "4289616197442843190705557573851",
+        "assets": "4730578099610404432743999",
+        "balance": "4730578099610404432743999"
+      },
+      {
+        "cfg": {
+          "asset": "0xcD97563E22017462F35Ba1E266e13f8F756A53c9",
+          "bank": "0x1759B09798f3DA7FE0D129E66c0a87722a954030"
+        },
+        "supply": "1032528577526072647880413765279",
+        "assets": "1291928687536187171514806",
+        "balance": "1291928687536187171514806"
+      }
+    ],
+    "round": "2136",
+    "diagnostics": {
+      "requestId": "0",
+      "requestedAt": "0",
+      "available": false,
+      "fulfilled": false,
+      "winningNumber": 0,
+      "jackpotNumber": 0,
+      "marketsParticipating": 0,
+      "marketsSettled": 0,
+      "jackpotCursor": 0,
+      "jackpotPaid": "0",
+      "jackpotDistributed": false
+    },
+    "admin": true
+  }
+}

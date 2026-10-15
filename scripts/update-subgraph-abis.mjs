@@ -24,16 +24,45 @@ const destDir = process.env.SUBGRAPH_ABIS_DIR
 
 const artifactsRoot = path.join(repoRoot, "artifacts", "contracts");
 
+function artifactJsonPath(solName) {
+  if (solName === "MockUSDC") {
+    return path.join(artifactsRoot, "test", `${solName}.sol`, `${solName}.json`);
+  }
+  if (solName === "AutomationReceiver") {
+    return path.join(artifactsRoot, "chainlink", "cre", `${solName}.sol`, `${solName}.json`);
+  }
+  return path.join(artifactsRoot, `${solName}.sol`, `${solName}.json`);
+}
+
 /** Subgraph data-source file names → Solidity artifact base name */
 const ABI_COPY_MAP = [
-  ["BRB.json", "BRB"],
-  ["Game.json", "RouletteClean"],
-  ["StakedBRB.json", "StakedBRB"],
-  ["BRBReferal.json", "BRBReferal"],
+  ["AssetToken.json", "MockUSDC"],
+  ["Game.json", "RouletteEngine"],
+  ["JackpotTreasury.json", "JackpotTreasury"],
+  ["BankVault4626.json", "BankVault4626"],
+  ["BRBJackpotFunder.json", "BRBJackpotFunder"],
+  ["SideBet.json", "SideBet"],
+  ["UpkeepScheduler.json", "UpkeepScheduler"],
+  ["CreExecutionAuthority.json", "CreExecutionAuthority"],
+  ["AutomationReceiver.json", "AutomationReceiver"],
 ];
 
-/** Contracts whose events are merged for Goldsky (deduped). UpkeepManager included for UpkeepRegistered etc. */
-const MERGE_EVENT_SOURCES = ["BRB", "RouletteClean", "StakedBRB", "BRBReferal", "BRBUpkeepManager"];
+/** Contracts whose events are merged for Goldsky (deduped). */
+/** Registry omitted: market catalog is RouletteEngine.MarketRegistered only (no MarketCreated). */
+const MERGE_EVENT_SOURCES = [
+  "MockUSDC",
+  "RouletteEngine",
+  "JackpotTreasury",
+  "BankVault4626",
+  "BRBJackpotFunder",
+  "SideBet",
+  "UpkeepScheduler",
+  "CreExecutionAuthority",
+  "AutomationReceiver",
+];
+
+/** Legacy registry event; market catalog uses RouletteEngine.MarketRegistered only. */
+const EXCLUDED_MERGE_EVENT_NAMES = new Set(["MarketCreated"]);
 
 if (!process.env.SKIP_COMPILE) {
   const r = spawnSync("yarn", ["hardhat", "compile"], {
@@ -73,7 +102,7 @@ const seenEventKeys = new Set();
 const mergedEvents = [];
 
 for (const solName of MERGE_EVENT_SOURCES) {
-  const artifactPath = path.join(artifactsRoot, `${solName}.sol`, `${solName}.json`);
+  const artifactPath = artifactJsonPath(solName);
   if (!fs.existsSync(artifactPath)) {
     console.warn(`[update-subgraph-abis] skip merge ${solName}: missing ${artifactPath}`);
     continue;
@@ -88,6 +117,9 @@ for (const solName of MERGE_EVENT_SOURCES) {
   if (!Array.isArray(artifact.abi)) continue;
   for (const item of artifact.abi) {
     if (!item || item.type !== "event") continue;
+    if (EXCLUDED_MERGE_EVENT_NAMES.has(item.name)) {
+      continue;
+    }
     const key = eventKey(item);
     if (seenEventKeys.has(key)) continue;
     seenEventKeys.add(key);
@@ -96,7 +128,7 @@ for (const solName of MERGE_EVENT_SOURCES) {
 }
 
 for (const [outFile, solName] of ABI_COPY_MAP) {
-  const artifactPath = path.join(artifactsRoot, `${solName}.sol`, `${solName}.json`);
+  const artifactPath = artifactJsonPath(solName);
   if (!fs.existsSync(artifactPath)) {
     console.warn(`[update-subgraph-abis] skip copy ${outFile}: missing ${artifactPath}`);
     continue;

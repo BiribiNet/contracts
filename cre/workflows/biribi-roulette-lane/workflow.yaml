@@ -1,0 +1,85 @@
+# Auto-generated lane targets — run deploy / yarn generate:cre:configs to refresh.
+# Deploy one CRE workflow per lane (LOG payout + optional HTTP recovery when authorizedKeys set).
+# HTTP pre-VRF: trigger-vrf (round-watcher) — locks the round and requests VRF in one tx.
+
+lane0-test-settings:
+  user-workflow:
+    workflow-name: "biribi-roulette-lane-0-test"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.lane0.test.json"
+    secrets-path: ""
+
+lane1-test-settings:
+  user-workflow:
+    workflow-name: "biribi-roulette-lane-1-test"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.lane1.test.json"
+    secrets-path: ""
+
+# Legacy alias: lane 0 test
+test-settings:
+  user-workflow:
+    workflow-name: "biribi-roulette-lane-test"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.lane0.test.json"
+    secrets-path: ""
+
+lane0-production-settings:
+  user-workflow:
+    workflow-name: "biribi-roulette-lane-0-production"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.lane0.production.json"
+    secrets-path: ""
+
+lane1-production-settings:
+  user-workflow:
+    workflow-name: "biribi-roulette-lane-1-production"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.lane1.production.json"
+    secrets-path: ""
+
+# Legacy alias: lane 0 production
+production-settings:
+  user-workflow:
+    workflow-name: "biribi-roulette-lane-production"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.lane0.production.json"
+    secrets-path: ""
+
+trigger-vrf-test-settings:
+  user-workflow:
+    workflow-name: "biribi-trigger-vrf-test"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.trigger-vrf.test.json"
+    secrets-path: ""
+
+trigger-vrf-production-settings:
+  user-workflow:
+    workflow-name: "biribi-trigger-vrf-production"
+    # Chainlink-hosted registry (login session, no mainnet gas). Default would be onchain:ethereum-mainnet.
+    deployment-registry: "private"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.trigger-vrf.production.json"
+    secrets-path: ""

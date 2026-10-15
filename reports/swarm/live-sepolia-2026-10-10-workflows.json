@@ -1,0 +1,191 @@
+{
+  "round": 2141,
+  "instances": [
+    {
+      "workflow": "biribi-round-lock",
+      "instance": "round-2141",
+      "version": "26a443ae-dbd9-41a6-8321-916bd920ad82",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "cre_verify",
+          "patch": {
+            "creAttempt": 1,
+            "awaitingCreVerify": true
+          }
+        },
+        {
+          "action": "ack",
+          "reason": "cre_accepted"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0x02b7481da67a653d595f4e6244ebb04b2760d42b65",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 1
+          }
+        },
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 2
+          }
+        },
+        {
+          "action": "ack",
+          "reason": "vrf_not_fulfilled"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0x132f5dba896bcc84573a700188a4390e2377692fdf",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 1
+          }
+        },
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 2
+          }
+        },
+        {
+          "action": "ack",
+          "reason": "vrf_not_fulfilled"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0xed3269a378bb36cdd2754c30fbb841648786fe4f82",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "ack",
+          "reason": "cre_accepted"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0x12622e9f7825f4f9eac6e30fe37dbfe7494cd1ab13",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 1
+          }
+        },
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 2
+          }
+        },
+        {
+          "action": "ack",
+          "reason": "vrf_not_fulfilled"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0x48ce9ce7090b43b54dc647e153bea478c476cb8207",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "ack",
+          "reason": "cre_accepted"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0x2428bc4592b512fbb173772b4bd1d86598de35a48d",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "payout_verify",
+          "patch": {
+            "attempt": 1
+          }
+        },
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 2
+          }
+        },
+        {
+          "action": "ack",
+          "reason": "vrf_not_fulfilled"
+        }
+      ]
+    },
+    {
+      "workflow": "biribi-payout-drain",
+      "instance": "payout-2141-log_0xb5fa806765f9667a16f9eccab36b078166b8eb1796",
+      "version": "19550f9f-29c9-4298-a5c8-7294538bcfee",
+      "status": "\u2705 Completed",
+      "outputs": [
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 1
+          }
+        },
+        {
+          "action": "requeue",
+          "delaySeconds": 10,
+          "reason": "await_vrf_tip",
+          "patch": {
+            "attempt": 2
+          }
+        },
+        {
+          "action": "ack",
+          "reason": "vrf_not_fulfilled"
+        }
+      ]
+    }
+  ],
+  "finding": "Late payout wakes inspect currentGlobalRound, causing vrf_not_fulfilled false alarms after the requested round has settled. Completed workflow status alone is insufficient."
+}

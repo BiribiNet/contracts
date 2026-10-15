@@ -1,0 +1,796 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+
+import { SideBetChallengeEvaluator } from "./SideBetChallengeEvaluator.sol";
+import { ISideBet } from "./interfaces/ISideBet.sol";
+import { IBankVault } from "./interfaces/IBankVault.sol";
+import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
+import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
+import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
+import { SideBetOutcomeLib } from "./libraries/SideBetOutcomeLib.sol";
+import { SideBetRoundLib } from "./libraries/SideBetRoundLib.sol";
+import { MarketFeeLib } from "./libraries/MarketFeeLib.sol";
+import { IRouletteFeeConfig } from "./interfaces/IRouletteFeeConfig.sol";
+import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
+
+/// @title SideBet — BRBGAME single-player side bets (UUPS upgradeable).
+/// @notice Players stake against a per-market vault on outcomes resolved over global roulette rounds.
+///         Settlement is automation-only: `previewSettleBundleV2` in `checkUpkeep`, apply-only `settleBatchV2` in `performUpkeep`.
+contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, ISideBet {
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable state-variable-assignment
+    SideBetChallengeEvaluator public immutable CHALLENGE_EVALUATOR = new SideBetChallengeEvaluator();
+    bytes32 public constant SIDE_BET_CONFIG_ROLE = keccak256("SIDE_BET_CONFIG_ROLE");
+    bytes32 public constant SIDE_BET_LIMITS_ROLE = keccak256("SIDE_BET_LIMITS_ROLE");
+    bytes32 public constant SETTLEMENT_ROLE = keccak256("SETTLEMENT_ROLE");
+
+    uint256 private constant BPS_DENOMINATOR = 10_000;
+    /// @dev Seeded on fresh deploys only; an upgrade leaves `settleTimeout` at 0 (expiry off).
+    uint64 private constant DEFAULT_SETTLE_TIMEOUT = 30 days;
+    uint8 private constant MAX_ROULETTE_NUMBER = 36;
+
+    IRouletteEngine public ENGINE;
+    IMarketRegistry public REGISTRY;
+
+    /// @custom:storage-location erc7201:biribi.storage.SideBet
+    struct SideBetData {
+        uint256 configCount;
+        mapping(uint256 => SideBetConfig) configs;
+        uint256 betCount;
+        mapping(uint256 => Bet) bets;
+        mapping(address => uint256[]) playerBets;
+        uint32 minMultiplierBps;
+        uint32 maxMultiplierBps;
+        IBRBJackpotFunder jackpotFunder;
+        address infraRecipient;
+        /// @dev Appended (ERC-7201 layout stays valid). Seconds after `placedAt` before an
+        /// undecided bet may be settled as EXPIRED with a stake refund. 0 disables expiry, which is
+        /// what an upgraded proxy sees until an admin calls `setSettleTimeout`.
+        uint64 settleTimeout;
+        /// @dev Appended. Running sum of the payout reserved by the ACTIVE bets of each market —
+        /// what `reservedOf` used to recompute by scanning every bet ever placed. Maintained
+        /// incrementally, so it is only valid from a proxy that adopted it while empty
+        /// (`initializeReservedAccounting`).
+        mapping(uint32 => uint256) reservedByMarket;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("biribi.storage.SideBet")) - 1)) & ~bytes32(uint256(0xff));
+    bytes32 private constant SIDE_BET_STORAGE_LOCATION =
+        0x1846f22cbddf11ab4f03976bc184e4c229eb24d5ca6fd07bdce57e89b8a62c00;
+
+    /// @dev Working buffers for `_previewVaultApplies` (keeps parent function off the stack limit).
+    struct PreviewVaultScratch {
+        address[] banks;
+        uint32[] marketIds;
+        uint256[] releaseTotals;
+        uint256[] totalStakes;
+        uint256[] totalPaid;
+        IBankVault.Payout[] winnerPayouts;
+        uint256[] winnerCounts;
+        uint256 vaultCount;
+    }
+
+    function _s() private pure returns (SideBetData storage $) {
+        assembly {
+            $.slot := SIDE_BET_STORAGE_LOCATION
+        }
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
+        address admin,
+        address engine,
+        address registry,
+        uint32 minMultiplierBps_,
+        uint32 maxMultiplierBps_
+    ) external initializer {
+        if (admin == address(0) || engine == address(0) || registry == address(0)) revert ZeroAddress();
+        if (minMultiplierBps_ <= BPS_DENOMINATOR || maxMultiplierBps_ < minMultiplierBps_) revert InvalidConfig();
+
+        __AccessControl_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(SIDE_BET_CONFIG_ROLE, admin);
+        _grantRole(SIDE_BET_LIMITS_ROLE, admin);
+
+        ENGINE = IRouletteEngine(engine);
+        REGISTRY = IMarketRegistry(registry);
+
+        SideBetData storage $ = _s();
+        IRouletteFeeConfig feeCfg = IRouletteFeeConfig(engine);
+        $.jackpotFunder = IBRBJackpotFunder(feeCfg.JACKPOT_FUNDER());
+        $.infraRecipient = feeCfg.INFRA_RECIPIENT();
+        $.minMultiplierBps = minMultiplierBps_;
+        $.maxMultiplierBps = maxMultiplierBps_;
+        $.settleTimeout = DEFAULT_SETTLE_TIMEOUT;
+
+        emit MultiplierBandUpdated(minMultiplierBps_, maxMultiplierBps_);
+        emit SettleTimeoutUpdated(DEFAULT_SETTLE_TIMEOUT);
+    }
+
+    /// @notice Adopts the incremental reserved-liquidity accounting behind `reservedOf`.
+    /// @dev Must be passed as the `upgradeToAndCall` payload when upgrading a proxy that predates
+    ///      `reservedByMarket`. It carries no state to migrate — `reservedByMarket` starts empty and
+    ///      only ever sees the bets placed after it exists — which is exactly why a proxy that
+    ///      already holds bets must not adopt it: `reservedOf` would silently under-report the
+    ///      payout at risk in each market, with nothing on-chain to reveal the gap. Reverting is the
+    ///      loud failure that replaces that silent one. A fresh deploy runs `initialize`, which
+    ///      leaves the mapping empty and consistent, so it never needs this call.
+    function initializeReservedAccounting() external reinitializer(2) {
+        if (_s().betCount != 0) revert ReservedAccountingMigrationUnsafe();
+    }
+
+    // --- Config management ---------------------------------------------------
+
+    function addConfig(SideBetConfig calldata cfg) external override onlyRole(SIDE_BET_CONFIG_ROLE) returns (uint256 configId) {
+        _validateConfigCore(cfg);
+        SideBetData storage $ = _s();
+        configId = $.configCount;
+        SideBetConfig storage stored = $.configs[configId];
+        stored.marketId = cfg.marketId;
+        stored.betType = cfg.betType;
+        stored.color = cfg.color;
+        stored.targetNumber = cfg.targetNumber;
+        stored.targetCount = cfg.targetCount;
+        stored.redRatioBps = cfg.redRatioBps;
+        stored.windowSpins = cfg.windowSpins;
+        stored.multiplierBps = cfg.multiplierBps;
+        stored.minStake = 0;
+        stored.maxStake = 0;
+        $.configCount = configId + 1;
+        emit ConfigAdded(configId, cfg.marketId, cfg.betType);
+    }
+
+    function removeConfig(uint256 configId) external override onlyRole(SIDE_BET_CONFIG_ROLE) {
+        SideBetData storage $ = _s();
+        if (configId >= $.configCount) revert UnknownConfig();
+        SideBetConfig storage stored = $.configs[configId];
+        if (stored.marketId == 0) revert ConfigInactive();
+        _clearConfig(stored);
+        emit ConfigRemoved(configId);
+    }
+
+    function updateConfig(uint256 configId, SideBetConfig calldata cfg) external override onlyRole(SIDE_BET_CONFIG_ROLE) {
+        SideBetData storage $ = _s();
+        if (configId >= $.configCount) revert UnknownConfig();
+        SideBetConfig storage stored = $.configs[configId];
+        if (stored.marketId == 0) revert ConfigInactive();
+        _validateConfigCore(cfg);
+        uint256 minStake = stored.minStake;
+        uint256 maxStake = stored.maxStake;
+        stored.marketId = cfg.marketId;
+        stored.betType = cfg.betType;
+        stored.color = cfg.color;
+        stored.targetNumber = cfg.targetNumber;
+        stored.targetCount = cfg.targetCount;
+        stored.redRatioBps = cfg.redRatioBps;
+        stored.windowSpins = cfg.windowSpins;
+        stored.multiplierBps = cfg.multiplierBps;
+        stored.minStake = minStake;
+        stored.maxStake = maxStake;
+        emit ConfigUpdated(configId);
+    }
+
+    function setConfigStakeLimits(uint256 configId, uint256 minStake, uint256 maxStake)
+        external
+        override
+        onlyRole(SIDE_BET_LIMITS_ROLE)
+    {
+        SideBetData storage $ = _s();
+        if (configId >= $.configCount) revert UnknownConfig();
+        SideBetConfig storage stored = $.configs[configId];
+        if (stored.marketId == 0) revert ConfigInactive();
+        if (minStake == 0 || maxStake < minStake) revert InvalidConfig();
+        stored.minStake = minStake;
+        stored.maxStake = maxStake;
+        emit ConfigStakeLimitsUpdated(configId, minStake, maxStake);
+    }
+
+    /// @notice Seconds after `placedAt` before an undecided bet may be settled as EXPIRED and its
+    /// stake refunded. 0 disables expiry.
+    /// @dev Without this, a bet in a market whose roulette activity stops is undecidable forever —
+    /// its lane's cursor can never move past it (see `previewSettleBundleV2`).
+    function setSettleTimeout(uint64 newSettleTimeout) external onlyRole(SIDE_BET_CONFIG_ROLE) {
+        _s().settleTimeout = newSettleTimeout;
+        emit SettleTimeoutUpdated(newSettleTimeout);
+    }
+
+    function settleTimeout() external view returns (uint64) {
+        return _s().settleTimeout;
+    }
+
+    function setMultiplierBand(uint32 minMultiplierBps_, uint32 maxMultiplierBps_) external onlyRole(SIDE_BET_CONFIG_ROLE) {
+        if (minMultiplierBps_ <= BPS_DENOMINATOR || maxMultiplierBps_ < minMultiplierBps_) revert InvalidConfig();
+        SideBetData storage $ = _s();
+        $.minMultiplierBps = minMultiplierBps_;
+        $.maxMultiplierBps = maxMultiplierBps_;
+        emit MultiplierBandUpdated(minMultiplierBps_, maxMultiplierBps_);
+    }
+
+    function _clearConfig(SideBetConfig storage cfg) private {
+        cfg.marketId = 0;
+        cfg.betType = SideBetType.COLOR_COUNT;
+        cfg.color = SideBetColor.RED;
+        cfg.targetNumber = 0;
+        cfg.targetCount = 0;
+        cfg.redRatioBps = 0;
+        cfg.windowSpins = 0;
+        cfg.multiplierBps = 0;
+        cfg.minStake = 0;
+        cfg.maxStake = 0;
+    }
+
+    function _validateConfigCore(SideBetConfig calldata cfg) private view {
+        SideBetData storage $ = _s();
+        _marketOrRevert(cfg.marketId);
+        if (cfg.windowSpins == 0) revert InvalidConfig();
+        if (cfg.multiplierBps < $.minMultiplierBps || cfg.multiplierBps > $.maxMultiplierBps) revert MultiplierOutOfBand();
+
+        if (!CHALLENGE_EVALUATOR.validConfig(cfg)) revert InvalidConfig();
+    }
+
+    function _marketOrRevert(uint32 marketId) private view returns (IMarketRegistry.MarketConfig memory m) {
+        if (marketId == 0 || marketId > REGISTRY.marketCount()) revert UnknownMarket();
+        m = REGISTRY.getMarket(marketId);
+        if (m.bank == address(0)) revert UnknownMarket();
+    }
+
+    // --- Betting -------------------------------------------------------------
+
+    function placeBet(uint256 configId, uint256 stake) external override nonReentrant returns (uint256 betId) {
+        SideBetData storage $ = _s();
+        if (configId >= $.configCount) revert UnknownConfig();
+        SideBetConfig storage cfg = $.configs[configId];
+        if (cfg.marketId == 0) revert ConfigInactive();
+        if (cfg.minStake == 0) revert StakeLimitsNotSet();
+        if (stake < cfg.minStake || stake > cfg.maxStake) revert StakeOutOfRange();
+
+        uint256 payout = (stake * cfg.multiplierBps) / BPS_DENOMINATOR;
+        IMarketRegistry.MarketConfig memory m = _marketOrRevert(cfg.marketId);
+        ISideBetVault vault = ISideBetVault(m.bank);
+
+        uint64 startGlobalRound = ENGINE.currentGlobalRound();
+        // Reject placement once the start round's VRF is fulfilled: its winning number and jackpot flag
+        // are already public storage, so an attacker could otherwise place a risk-free, guaranteed-win bet.
+        (bool startRoundFulfilled, ) = ENGINE.roundOutcome(startGlobalRound);
+        if (startRoundFulfilled) revert RoundOutcomeAlreadyKnown();
+        betId = $.betCount;
+        $.betCount = betId + 1;
+        $.bets[betId] = Bet({
+            player: msg.sender,
+            marketId: cfg.marketId,
+            stake: stake,
+            payout: payout,
+            startGlobalRound: startGlobalRound,
+            windowSpins: cfg.windowSpins,
+            betType: cfg.betType,
+            color: cfg.color,
+            targetNumber: cfg.targetNumber,
+            targetCount: cfg.targetCount,
+            redRatioBps: cfg.redRatioBps,
+            status: SideBetStatus.ACTIVE,
+            placedAt: uint64(block.timestamp),
+            resolvedAt: 0
+        });
+        $.playerBets[msg.sender].push(betId);
+        $.reservedByMarket[cfg.marketId] += payout;
+
+        vault.lockSideBetStake(msg.sender, stake, payout);
+
+        emit SideBetPlaced(betId, msg.sender, configId, cfg.marketId, stake, payout, startGlobalRound, cfg.windowSpins);
+    }
+
+    /// @notice Preserve the deployed scheduler's ABI. Expiry is re-derived during settlement;
+    /// it must never be appended to the legacy return tuple (return types do not change selectors).
+    function previewSettleBundle(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
+        external view override
+        returns (LegacySettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies)
+    {
+        SettleRow[] memory current;
+        (current, nextCursorBetId, vaultApplies) = previewSettleBundleV2(cursorBetId, maxBets, lane, laneCount);
+        rows = new LegacySettleRow[](current.length);
+        for (uint256 i; i < current.length; ++i) {
+            rows[i] = LegacySettleRow(current[i].betId, current[i].won, current[i].payoutAmount);
+        }
+    }
+
+    function previewSettleBundleV2(uint256 cursorBetId, uint32 maxBets, uint32 lane, uint32 laneCount)
+        public
+        view
+        override
+        returns (SettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies)
+    {
+        if (maxBets == 0 || laneCount == 0 || lane >= laneCount) {
+            return (new SettleRow[](0), cursorBetId, new SettleVaultApply[](0));
+        }
+
+        SideBetData storage $ = _s();
+        uint256 total = $.betCount;
+        uint256 id = cursorBetId;
+        if (id % laneCount != lane) {
+            // Add `laneCount` before subtracting so the offset stays non-negative in unsigned math
+            // when `id % laneCount > lane` (reachable after the engine's payout lane count changes).
+            id += (lane + laneCount - (id % laneCount)) % laneCount;
+        }
+
+        SettleRow[] memory found = new SettleRow[](maxBets);
+        uint256 n;
+        // Lowest id in this lane that is still ACTIVE and undecided. The scan pointer runs ahead of
+        // it, but the cursor must not: persisting the scan pointer skipped every pending bet in the
+        // lane, and since the scan almost always ends on `id >= total`, one decided bet was enough to
+        // strand all of them. A skipped bet is unreachable forever — its stake is never returned and
+        // its payout reserve never leaves `lockedBetLiquidity`.
+        uint256 firstPending = type(uint256).max;
+        while (n < maxBets && id < total) {
+            Bet storage bet = $.bets[id];
+            if (bet.status == SideBetStatus.ACTIVE) {
+                (bool decided, bool won) = _evaluate(bet);
+                if (decided) {
+                    found[n] = SettleRow({
+                        betId: id,
+                        won: won,
+                        payoutAmount: won ? bet.payout : 0,
+                        expired: false
+                    });
+                    unchecked {
+                        ++n;
+                    }
+                } else if (_isExpired($, bet)) {
+                    // Undecidable for too long: refund rather than let it hold the cursor forever.
+                    found[n] = SettleRow({ betId: id, won: false, payoutAmount: 0, expired: true });
+                    unchecked {
+                        ++n;
+                    }
+                } else if (id < firstPending) {
+                    firstPending = id;
+                }
+            }
+            id += laneCount;
+        }
+
+        nextCursorBetId = firstPending < id ? firstPending : id;
+        // A lane stride can end beyond betCount. Persist at most the current end so a
+        // scheduler validating the cursor accepts a partially populated final lane.
+        if (n > 0 && nextCursorBetId > total) nextCursorBetId = total;
+        if (n != maxBets) {
+            rows = new SettleRow[](n);
+            for (uint256 i; i < n; ) {
+                rows[i] = found[i];
+                unchecked {
+                    ++i;
+                }
+            }
+        } else {
+            rows = found;
+        }
+
+        vaultApplies = _previewVaultApplies($, rows);
+    }
+
+    /// @dev The `vaultApplies` argument is accepted for calldata compatibility with
+    /// `previewSettleBundleV2` / `UpkeepScheduler` but is deliberately NOT trusted: banks, amounts and
+    /// recipients are recomputed here from the rows this call actually finalized. Applying a
+    /// caller-supplied bundle let a re-delivered CRE report re-run `payoutBatch` / `releaseBets` /
+    /// fee collection against already-settled bets, and let `bundle.bank` name any vault.
+    function settleBatch(LegacySettleRow[] calldata rows, SettleVaultApply[] calldata)
+        external override nonReentrant onlyRole(SETTLEMENT_ROLE) returns (uint256 settled)
+    {
+        SideBetData storage $ = _s();
+        SettleRow[] memory candidates = new SettleRow[](rows.length);
+        uint256 count;
+        for (uint256 i; i < rows.length; ++i) {
+            uint256 id = rows[i].betId;
+            if (id >= $.betCount || $.bets[id].status != SideBetStatus.ACTIVE) continue;
+            Bet storage bet = $.bets[id];
+            (bool decided, bool won) = _evaluate(bet);
+            bool expired = !decided && _isExpired($, bet);
+            if (!decided && !expired) continue;
+            // A stale or forged legacy report cannot pick a winner, turn an expiry into a
+            // loss, or redirect a payout. Only bet IDs are used from the old wire format.
+            candidates[count++] = SettleRow(id, won, won ? bet.payout : 0, expired);
+        }
+        SettleRow[] memory resolved = new SettleRow[](count);
+        for (uint256 i; i < count; ++i) resolved[i] = candidates[i];
+        return _settleBatch(resolved);
+    }
+
+    function settleBatchV2(SettleRow[] calldata rows, SettleVaultApply[] calldata)
+        external
+        override
+        nonReentrant
+        onlyRole(SETTLEMENT_ROLE)
+        returns (uint256 settled)
+    {
+        return _settleBatch(rows);
+    }
+
+    function _settleBatch(SettleRow[] memory rows) private returns (uint256 settled)
+    {
+        SideBetData storage $ = _s();
+
+        // Pass 1 — finalize rows. `_finalizeSettleRow` is idempotent: a bet that is no longer
+        // ACTIVE returns false, so a replayed report finalizes nothing and `settled` stays 0.
+        uint256 rowCount = rows.length;
+        SettleRow[] memory finalized = new SettleRow[](rowCount);
+        for (uint256 i; i < rowCount; ) {
+            if (_finalizeSettleRow($, rows[i])) {
+                finalized[settled] = rows[i];
+                unchecked {
+                    ++settled;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Nothing newly settled (re-delivered report, or a lane that raced us): touching the vaults
+        // would double-pay winners, double-release liquidity and double-collect market fees.
+        if (settled == 0) return 0;
+
+        if (settled != rowCount) {
+            SettleRow[] memory trimmed = new SettleRow[](settled);
+            for (uint256 i; i < settled; ) {
+                trimmed[i] = finalized[i];
+                unchecked {
+                    ++i;
+                }
+            }
+            finalized = trimmed;
+        }
+
+        // Pass 2 — derive vault effects from the finalized rows only. `_previewVaultApplies` reads
+        // stake/payout/player from storage (untouched by finalization) and resolves each bank from
+        // the registry, so no field of the report can redirect funds.
+        SettleVaultApply[] memory applies = _previewVaultApplies($, finalized);
+
+        for (uint256 v; v < applies.length; ) {
+            SettleVaultApply memory bundle = applies[v];
+            IBankVault bank = IBankVault(bundle.bank);
+            bank.releaseBets(bundle.releaseTotal);
+            if (bundle.winnerPayouts.length != 0) {
+                bank.payoutBatch(bundle.winnerPayouts);
+            }
+            _collectMarketFees($, bundle.marketId, bundle.bank, finalized);
+            unchecked {
+                ++v;
+            }
+        }
+    }
+
+    function _collectMarketFees(SideBetData storage $, uint32 marketId, address bank, SettleRow[] memory rows) private {
+        IRouletteFeeConfig feeCfg = IRouletteFeeConfig(address(ENGINE));
+        IBRBJackpotFunder funder = IBRBJackpotFunder(feeCfg.JACKPOT_FUNDER());
+        if (address(funder) == address(0)) return;
+        uint256 swapBps = funder.swapAssetTotalBps();
+        MarketFeeLib.CollectResult memory fees;
+        // A ticket's positive house profit is the fee base. Winners cannot offset unrelated
+        // tickets merely by sharing an automation batch. Round each ticket before summing.
+        for (uint256 i; i < rows.length; ++i) {
+            SettleRow memory row = rows[i];
+            Bet storage bet = $.bets[row.betId];
+            if (bet.marketId != marketId || row.expired) continue;
+            (uint256 swap, uint256 infra) = CHALLENGE_EVALUATOR.ticketFees(bet.stake, row.won ? row.payoutAmount : 0, swapBps);
+            fees.swapIn += swap;
+            fees.infraFee += infra;
+        }
+        fees = MarketFeeLib.collectAmounts(funder, feeCfg.INFRA_RECIPIENT(), bank, marketId, fees);
+        if (fees.swapIn > 0) emit SideBetJackpotFunded(marketId, fees.swapIn);
+        if (fees.infraFee > 0) emit SideBetInfrastructureFeePaid(marketId, fees.infraFee);
+    }
+
+    /// @dev Simulation-only grouping for `previewSettleBundleV2` (mirrors roulette `previewPayoutBundle`).
+    function _previewVaultApplies(SideBetData storage $, SettleRow[] memory rows)
+        private
+        view
+        returns (SettleVaultApply[] memory vaultApplies)
+    {
+        uint256 batchLen = rows.length;
+        if (batchLen == 0) return new SettleVaultApply[](0);
+
+        PreviewVaultScratch memory scratch;
+        scratch.banks = new address[](batchLen);
+        scratch.marketIds = new uint32[](batchLen);
+        scratch.releaseTotals = new uint256[](batchLen);
+        scratch.totalStakes = new uint256[](batchLen);
+        scratch.totalPaid = new uint256[](batchLen);
+        scratch.winnerPayouts = new IBankVault.Payout[](batchLen);
+        scratch.winnerCounts = new uint256[](batchLen);
+
+        _accumulatePreviewVaultScratch($, rows, scratch);
+        return _buildPreviewVaultApplies(scratch);
+    }
+
+    function _accumulatePreviewVaultScratch(
+        SideBetData storage $,
+        SettleRow[] memory rows,
+        PreviewVaultScratch memory s
+    ) private view {
+        uint256 batchLen = rows.length;
+        SettleRow memory row;
+        Bet storage bet;
+        address bank;
+        uint256 vaultIdx;
+
+        // Pass 1 — register vaults, accumulate per-vault totals, and COUNT winners per vault.
+        // Winner payout slots are written in pass 2: their flat-array position depends on the
+        // FINAL per-vault counts (which `_buildPreviewVaultApplies` uses to slice the array back),
+        // so they cannot be computed while counts are still growing. `rowVaultIdx` caches each
+        // row's vault so pass 2 need not re-derive the bank via `_marketOrRevert`.
+        uint256[] memory rowVaultIdx = new uint256[](batchLen);
+        for (uint256 i; i < batchLen; ) {
+            row = rows[i];
+            bet = $.bets[row.betId];
+            bank = _marketOrRevert(bet.marketId).bank;
+
+            vaultIdx = _vaultIndex(s.banks, s.vaultCount, bank);
+            if (vaultIdx == s.vaultCount) {
+                s.banks[s.vaultCount] = bank;
+                s.marketIds[s.vaultCount] = bet.marketId;
+                vaultIdx = s.vaultCount;
+                unchecked {
+                    ++s.vaultCount;
+                }
+            }
+            rowVaultIdx[i] = vaultIdx;
+
+            s.releaseTotals[vaultIdx] += bet.payout;
+            s.totalStakes[vaultIdx] += bet.stake;
+            if (row.won) {
+                s.totalPaid[vaultIdx] += row.payoutAmount;
+                unchecked {
+                    ++s.winnerCounts[vaultIdx];
+                }
+            } else if (row.expired) {
+                // The refund rides the existing payout machinery, and counting it as paid keeps
+                // `marketWin = totalStakes - totalPaid` at zero so no fee is taken on a bet that
+                // never resolved.
+                s.totalPaid[vaultIdx] += bet.stake;
+                unchecked {
+                    ++s.winnerCounts[vaultIdx];
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Base offset of each vault's contiguous winner block, from the final counts.
+        uint256[] memory base = new uint256[](s.vaultCount);
+        uint256[] memory written = new uint256[](s.vaultCount);
+        uint256 acc;
+        for (uint256 v; v < s.vaultCount; ) {
+            base[v] = acc;
+            acc += s.winnerCounts[v];
+            unchecked {
+                ++v;
+            }
+        }
+
+        // Pass 2 — place each winner into `[base[vault], base[vault] + count[vault])`, in row order.
+        for (uint256 i; i < batchLen; ) {
+            row = rows[i];
+            if (row.won || row.expired) {
+                vaultIdx = rowVaultIdx[i];
+                bet = $.bets[row.betId];
+                uint256 pos = base[vaultIdx] + written[vaultIdx];
+                s.winnerPayouts[pos] = IBankVault.Payout({
+                    player: bet.player,
+                    amount: row.won ? row.payoutAmount : bet.stake
+                });
+                unchecked {
+                    ++written[vaultIdx];
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _buildPreviewVaultApplies(PreviewVaultScratch memory s)
+        private
+        pure
+        returns (SettleVaultApply[] memory vaultApplies)
+    {
+        vaultApplies = new SettleVaultApply[](s.vaultCount);
+        uint256 winnerCount;
+        IBankVault.Payout[] memory winners;
+        uint256 base;
+
+        for (uint256 v; v < s.vaultCount; ) {
+            winnerCount = s.winnerCounts[v];
+            winners = new IBankVault.Payout[](winnerCount);
+            base = 0;
+            for (uint256 u; u < v; ) {
+                base += s.winnerCounts[u];
+                unchecked {
+                    ++u;
+                }
+            }
+            for (uint256 w; w < winnerCount; ) {
+                winners[w] = s.winnerPayouts[base + w];
+                unchecked {
+                    ++w;
+                }
+            }
+            vaultApplies[v] = SettleVaultApply({
+                bank: s.banks[v],
+                marketId: s.marketIds[v],
+                releaseTotal: s.releaseTotals[v],
+                totalStakes: s.totalStakes[v],
+                totalPaid: s.totalPaid[v],
+                winnerPayouts: winners
+            });
+            unchecked {
+                ++v;
+            }
+        }
+    }
+
+    /// @dev Marks bet resolved and emits; no vault I/O (batched in `settleBatchV2`).
+    function _finalizeSettleRow(SideBetData storage $, SettleRow memory row) private returns (bool applied) {
+        if (row.betId >= $.betCount) return false;
+        Bet storage bet = $.bets[row.betId];
+        if (bet.status != SideBetStatus.ACTIVE) return false;
+
+        uint256 reserved = bet.payout;
+        if (row.expired) {
+            // Re-derive expiry from storage: the report may claim it, it does not get to decide it.
+            if (row.won || row.payoutAmount != 0 || !_isExpired($, bet)) return false;
+            bet.status = SideBetStatus.EXPIRED;
+        } else if (row.won) {
+            if (row.payoutAmount != reserved) return false;
+            bet.status = SideBetStatus.WON;
+        } else {
+            if (row.payoutAmount != 0) return false;
+            bet.status = SideBetStatus.LOST;
+        }
+
+        // The bet just left ACTIVE, so its reserve leaves the market total. Every ACTIVE bet added
+        // exactly `payout` in `placeBet` and the guard above lets each one through here once, so
+        // this cannot underflow; leaving it checked keeps that invariant enforced rather than assumed.
+        $.reservedByMarket[bet.marketId] -= reserved;
+
+        bet.resolvedAt = uint64(block.timestamp);
+        emit SideBetSettled(row.betId, bet.player, bet.status, row.payoutAmount);
+        return true;
+    }
+
+    function _vaultIndex(address[] memory banks, uint256 vaultCount, address bank) private pure returns (uint256) {
+        for (uint256 i; i < vaultCount; ) {
+            if (banks[i] == bank) return i;
+            unchecked {
+                ++i;
+            }
+        }
+        return vaultCount;
+    }
+
+    function _evaluate(Bet storage bet) private view returns (bool decided, bool won) {
+        if (bet.betType == SideBetType.JACKPOT_IN_WINDOW) {
+            return SideBetRoundLib.evaluateJackpotWindow(ENGINE, bet.startGlobalRound, bet.windowSpins);
+        }
+
+        uint64 start = bet.startGlobalRound;
+        uint16 windowN = bet.windowSpins;
+
+        uint256 obsLen;
+        uint64 cur = ENGINE.currentGlobalRound();
+        for (uint64 r = start; obsLen < windowN && r <= cur; ) {
+            (bool fulfilled, ) = ENGINE.roundOutcome(r);
+            if (!fulfilled) break;
+            unchecked {
+                ++obsLen;
+                ++r;
+            }
+        }
+        if (obsLen == 0) return (false, false);
+
+        (uint8[] memory observed, ) = SideBetRoundLib.loadWindow(ENGINE, start, obsLen);
+        bool windowComplete = obsLen == windowN && SideBetRoundLib.windowFulfilled(ENGINE, start, windowN);
+        return CHALLENGE_EVALUATOR.evaluate(observed, windowComplete, _betMemory(bet));
+    }
+
+    /// @dev True once an undecided bet has outlived `settleTimeout`. Checked against storage, never
+    /// taken from the report.
+    function _isExpired(SideBetData storage $, Bet storage bet) private view returns (bool) {
+        uint64 timeout = $.settleTimeout;
+        if (timeout == 0) return false;
+        return block.timestamp > uint256(bet.placedAt) + uint256(timeout);
+    }
+
+    function _betMemory(Bet storage bet) private view returns (Bet memory) {
+        return Bet({
+            player: bet.player,
+            marketId: bet.marketId,
+            stake: bet.stake,
+            payout: bet.payout,
+            startGlobalRound: bet.startGlobalRound,
+            windowSpins: bet.windowSpins,
+            betType: bet.betType,
+            color: bet.color,
+            targetNumber: bet.targetNumber,
+            targetCount: bet.targetCount,
+            redRatioBps: bet.redRatioBps,
+            status: bet.status,
+            placedAt: bet.placedAt,
+            resolvedAt: bet.resolvedAt
+        });
+    }
+
+    // --- Views ---------------------------------------------------------------
+
+    function getBet(uint256 betId) external view override returns (Bet memory) {
+        return _s().bets[betId];
+    }
+
+    function getConfig(uint256 configId) external view override returns (SideBetConfig memory) {
+        SideBetData storage $ = _s();
+        if (configId >= $.configCount) revert UnknownConfig();
+        SideBetConfig memory cfg = $.configs[configId];
+        if (cfg.marketId == 0) revert ConfigInactive();
+        return cfg;
+    }
+
+    function isConfigActive(uint256 configId) external view override returns (bool active) {
+        SideBetData storage $ = _s();
+        return configId < $.configCount && $.configs[configId].marketId != 0;
+    }
+
+    function configCount() external view override returns (uint256) {
+        return _s().configCount;
+    }
+
+    function betCount() external view override returns (uint256) {
+        return _s().betCount;
+    }
+
+    function reservedOf(uint32 marketId) external view override returns (uint256) {
+        return _s().reservedByMarket[marketId];
+    }
+
+    function availableVaultLiquidity(uint32 marketId) external view override returns (uint256) {
+        IMarketRegistry.MarketConfig memory m = _marketOrRevert(marketId);
+        return ISideBetVault(m.bank).availableForSideBet();
+    }
+
+    function playerBetCount(address player) external view override returns (uint256) {
+        return _s().playerBets[player].length;
+    }
+
+    function playerBetAt(address player, uint256 index) external view override returns (uint256 betId) {
+        return _s().playerBets[player][index];
+    }
+
+    function isResolvable(uint256 betId) external view override returns (bool) {
+        SideBetData storage $ = _s();
+        if (betId >= $.betCount) return false;
+        return _isResolvable($, betId);
+    }
+
+    function _isResolvable(SideBetData storage $, uint256 betId) private view returns (bool) {
+        Bet storage bet = $.bets[betId];
+        if (bet.status != SideBetStatus.ACTIVE) return false;
+        (bool decided, ) = _evaluate(bet);
+        return decided;
+    }
+
+    function minMultiplierBps() external view returns (uint32) {
+        return _s().minMultiplierBps;
+    }
+
+    function maxMultiplierBps() external view returns (uint32) {
+        return _s().maxMultiplierBps;
+    }
+
+    function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
+}
