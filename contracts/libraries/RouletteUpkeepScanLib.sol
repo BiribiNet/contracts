@@ -101,7 +101,15 @@ library RouletteUpkeepScanLib {
                     payoutShardIndex: payoutLane,
                     payoutShardWidth: laneCount
                 });
-                if (_payoutLaneHasWork($, candidate)) return (true, candidate);
+                if (_payoutLaneHasWork($, candidate)) {
+                    // Once this lane's roulette rows are complete, nextCursor identifies the
+                    // jackpot chunk instead. Keep the deployed Job tuple unchanged.
+                    if (payoutLane == 0 && $.payoutCursorByShard[roundId][marketId][0]
+                        >= $.winningBetCountByShard[roundId][marketId][0]) {
+                        candidate.nextCursor = $.globalRoundState[roundId].jackpotCursor;
+                    }
+                    return (true, candidate);
+                }
             }
             unchecked {
                 ++marketId;

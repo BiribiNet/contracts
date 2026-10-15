@@ -638,6 +638,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         }
 
         if (lane == 0 && jackpotWinners.length != 0) {
+            // Mixed chunks are protected by the roulette cursor below (a stale report reverts
+            // the entire transaction). Jackpot-only reports must bind their own cursor.
+            if (winnerPayoutRows.length == 0 && job.nextCursor != gr.jackpotCursor) revert StaleJackpotChunk();
             RouletteJackpotCollectLib.applyJackpotChunk($, roundId, marketId, gr.winningNumber, gr, jackpotWinners, jackpotAmounts);
         }
 

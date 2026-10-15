@@ -11,7 +11,9 @@ interface IRouletteEngine {
         Payout
     }
 
-    /// @notice For `JobKind.Payout`, `payoutShardIndex` is the automation lane and `payoutShardWidth` is `payoutParallelLaneCount`.
+    /// @notice For `JobKind.Payout`, `nextCursor` binds the roulette cursor while rows remain,
+    /// then the jackpot cursor for lane-zero jackpot-only chunks. The tuple ABI is unchanged.
+    /// `payoutShardIndex` is the automation lane and `payoutShardWidth` is `payoutParallelLaneCount`.
     /// Vault winners are sharded by global winner index (`index % width`); all lanes may service the same market.
     struct Job {
         JobKind kind;

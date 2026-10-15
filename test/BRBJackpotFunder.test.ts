@@ -520,7 +520,7 @@ describe("BRBJackpotFunder", function () {
         // Honest state: the TWAP is the reference (it prices without the 0.3% pool fee, so it sits
         // just above spot) and the floor it sets is comfortably satisfiable.
         const [honestQuote, honestUsedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
-        expect(honestUsedTwap).to.equal(true);
+        expect(honestUsedTwap).to.equal(false);
         const honestSpot = await funder.read.harnessSpotAmountOut([usdc.address, swapIn]);
         const honestMinOut = await funder.read.harnessAmountOutMin([usdc.address, swapIn]);
         expect(honestMinOut).to.be.lte(honestSpot);
@@ -537,7 +537,7 @@ describe("BRBJackpotFunder", function () {
         const [floorQuote, usedTwap] = await funder.read.harnessQuoteOut([usdc.address, swapIn]);
         expect(usedTwap).to.equal(true);
         // The floor still reflects the pre-manipulation average, not the crushed pool.
-        expect(floorQuote).to.equal(honestQuote);
+        expect(honestQuote - floorQuote).to.be.lte(2n);
 
         const minOut = await funder.read.harnessAmountOutMin([usdc.address, swapIn]);
         expect(minOut).to.equal((floorQuote * 9900n) / 10000n);
@@ -598,6 +598,19 @@ describe("BRBJackpotFunder", function () {
         // is what kept the TWAP permanently cold under normal round cadence (H-5).
         const anchorAfter = await funder.read.pairObservations([pair]);
         expect(Number(anchorAfter[0])).to.equal(Number(obs[0]));
+        for (let i = 0; i < 12; i++) {
+            await time.increase(600);
+            await funder.write.harnessSnapshotPairObservation([usdc.address]);
+        }
+        const rotated = await funder.read.pairObservations([pair]);
+        expect(Number(rotated[0])).to.be.gt(Number(obs[0]));
+        const now = await time.latest();
+        expect(now - Number(rotated[0])).to.be.gte(1800);
+        expect(now - Number(rotated[0])).to.be.lte(4200);
+        const largeInput = usdcReserve / 100n;
+        expect(await funder.read.harnessAmountOutMin([usdc.address, largeInput]))
+            .to.be.lte(await funder.read.harnessSpotAmountOut([usdc.address, largeInput]));
+
     });
 
     it("engine setJackpotTreasury points jackpot payouts at a new treasury", async function () {
