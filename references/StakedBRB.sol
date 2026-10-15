@@ -453,9 +453,9 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
                             amountsToProcess[v.actualProcessCount] = amount;
                             v.actualProcessCount++;
                         }
+                        i++; // Only non-null entries consume the batch limit.
                     }
                     currentIndex++;
-                    i++;
                     maxIterations--;
                 }
             }
@@ -726,6 +726,13 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
             $.queueHead = 0;
             $.queueTail = 0;
             delete $.withdrawalQueue;
+        } else if (index == $.queueHead) {
+            uint256 newHead = index + 1;
+            uint256 len = $.withdrawalQueue.length;
+            while (newHead < len && $.withdrawalQueue[newHead] == address(0)) {
+                unchecked { ++newHead; }
+            }
+            $.queueHead = newHead;
         }
     }
     
@@ -893,16 +900,14 @@ contract StakedBRB is ERC4626Upgradeable, AccessControlUpgradeable, UUPSUpgradea
     }
     
     /// @dev Private function to check if withdrawals are allowed
-    function _checkWithdrawalAllowed(address owner) private view {
+    /// @dev Pending withdrawals are checked by noPendingWithdrawal on withdraw/redeem.
+    function _checkWithdrawalAllowed(address) private view {
         StakedBRBStorage storage $ = _getStakedBRBStorage();
         // Block during pre-VRF lock or post-VRF transition until cleaning completes
         if ($.roundTransitionInProgress || $.roundResolutionLocked) {
             revert WithdrawalBlockedDuringResolution();
         }
 
-        if ($.pendingWithdrawal[owner].kind != 0) {
-            revert WithdrawalPending();
-        }
     }
 
     function _enqueueWithdrawal(QueuedWithdrawal memory q) private {
