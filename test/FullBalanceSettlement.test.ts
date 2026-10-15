@@ -74,6 +74,14 @@ async function deploySingleMarketSettlement(opts?: { treasuryBrbSeed?: bigint; m
         await brb.write.transfer([jackpotTreasury.address, treasuryBrbSeed], { account: admin.account });
     }
 
+    const factory = await viem.deployContract("MockUniswapV2Factory");
+    const pair = await viem.deployContract("MockUniswapV2Pair", [usdc.address, brb.address]);
+    await factory.write.setPair([usdc.address, brb.address, pair.address]);
+    await mockRouter.write.setFactory([factory.address]);
+    const reserves = usdc.address.toLowerCase() < brb.address.toLowerCase()
+        ? [parseUnits("10000", 6), parseUnits("10000", 18)] : [parseUnits("10000", 18), parseUnits("10000", 6)];
+    await pair.write.setReserves(reserves);
+
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
@@ -157,6 +165,8 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         const toTreasury = (brbOut * treasuryNum) / treasuryDen;
         const toBurn = brbOut - toTreasury;
 
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        await funder.write.processFunding([1], { gas: 1000000n });
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBeforeFulfill - toBurn);
 
@@ -297,6 +307,7 @@ describe("Full balance settlement (players, jackpot BRB, LP stakers)", function 
         const treasuryNum = await funder.read.treasuryBrbNumerator();
         const treasuryDen = await funder.read.treasuryBrbDenominator();
         const toBurn = brbOut - (brbOut * treasuryNum) / treasuryDen;
+        await funder.write.processFunding([1], { gas: 1000000n });
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore - toBurn);
 
         expect(await usdc.read.balanceOf([admin.account.address])).to.be.gt(0n);

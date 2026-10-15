@@ -54,6 +54,14 @@ async function deployStack() {
 
     await brb.write.transfer([mockRouter.address, parseUnits("2000000", 18)], { account: admin.account });
 
+    const factory = await viem.deployContract("MockUniswapV2Factory");
+    const pair = await viem.deployContract("MockUniswapV2Pair", [usdc.address, brb.address]);
+    await factory.write.setPair([usdc.address, brb.address, pair.address]);
+    await mockRouter.write.setFactory([factory.address]);
+    const reserves = usdc.address.toLowerCase() < brb.address.toLowerCase()
+        ? [parseUnits("10000", 6), parseUnits("10000", 18)] : [parseUnits("10000", 18), parseUnits("10000", 6)];
+    await pair.write.setReserves(reserves);
+
     const vaultImpl = await viem.deployContract("BankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
@@ -268,7 +276,7 @@ describe("Multi-Asset architecture", function () {
     });
 
     it("takes infra fee and swaps market win slice to BRB for jackpot", async function () {
-        const { bankUsdc, bankAssetB, usdc, assetB, alice, admin, scheduler, vrf, engine, brb, jackpotTreasury } =
+        const { bankUsdc, bankAssetB, usdc, assetB, alice, admin, scheduler, vrf, engine, brb, jackpotTreasury, funder } =
             await deployStack();
         await depositLpForStraightCover(admin, bankUsdc, bankAssetB, usdc, assetB);
         const betAmount = parseUnits("10", 6);
@@ -289,6 +297,8 @@ describe("Multi-Asset architecture", function () {
         const toTreasury = (brbOut * 250n) / 300n;
         const toBurn = brbOut - toTreasury;
 
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        await funder.write.processFunding([1], { gas: 1000000n });
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         const infraAfter = await usdc.read.balanceOf([admin.account.address]);
         expect(infraAfter - infraBefore).to.equal(200_000n);

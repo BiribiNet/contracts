@@ -5,6 +5,12 @@ import {SideBetChallengeLib} from "./libraries/SideBetChallengeLib.sol";
 import {SideBetOutcomeLib} from "./libraries/SideBetOutcomeLib.sol";
 /// @notice Stateless evaluator created with each SideBet implementation; no admin or mutable rules.
 contract SideBetChallengeEvaluator {
+    /// @dev Ticket-local fee rounding is independent of settlement batching.
+    function ticketFees(uint256 stake, uint256 paid, uint256 swapBps) external pure returns (uint256 swap, uint256 infra) {
+        if (stake <= paid) return (0, 0);
+        uint256 profit = stake - paid;
+        return (profit * swapBps / 10000, profit * 200 / 10000);
+    }
     /// @notice Immutable stateless validation keeps the upgrade implementation below EIP-170.
     function validConfig(ISideBet.SideBetConfig calldata cfg) external pure returns (bool) {
         if (uint8(cfg.betType) >= uint8(ISideBet.SideBetType.FIRST_RETURN)) {
