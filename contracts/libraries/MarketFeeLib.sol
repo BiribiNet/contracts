@@ -33,15 +33,24 @@ library MarketFeeLib {
         uint256 marketWin = totalStakes - totalPaid;
         uint256 swapBps = funder.swapAssetTotalBps();
         result.swapIn = (marketWin * swapBps) / BPS_DENOMINATOR;
+        result.infraFee = (marketWin * INFRA_BPS) / BPS_DENOMINATOR;
+        return collectAmounts(funder, infraRecipient, bank, marketId, result);
+    }
+
+    /// @dev Transfers already sized fees (SideBet sizes and rounds each finalized ticket).
+    function collectAmounts(
+        IBRBJackpotFunder funder, address infraRecipient, address bank, uint32 marketId,
+        CollectResult memory result
+    ) internal returns (CollectResult memory) {
         if (result.swapIn > 0) {
             address asset = IERC4626(bank).asset();
             IBankVault(bank).transferOut(address(funder), result.swapIn);
-            funder.fundFromMarket(marketId, asset);
+            funder.queueFunding(marketId, asset, result.swapIn);
         }
 
-        result.infraFee = (marketWin * INFRA_BPS) / BPS_DENOMINATOR;
         if (infraRecipient != address(0) && result.infraFee > 0) {
             IBankVault(bank).transferOut(infraRecipient, result.infraFee);
         }
+        return result;
     }
 }

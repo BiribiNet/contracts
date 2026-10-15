@@ -1,6 +1,6 @@
 import { viem } from "hardhat";
 
-import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { time, takeSnapshot } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { encodeAbiParameters, getAddress, parseUnits } from "viem";
 
@@ -1078,10 +1078,10 @@ describe("SideBet reserved-liquidity accounting", function () {
 });
 
 describe("SideBet fees", function () {
-    async function deployFeeFixture(marketAsset: "usdc" | "brb") {
+    async function deployFeeFixture(marketAsset: "usdc" | "dai" | "brb") {
         const [admin, alice, infra] = await viem.getWalletClients();
 
-        const usdc = await viem.deployContract("MockUSDC");
+        const usdc = await viem.deployContract(marketAsset === "dai" ? "MockDAI" : "MockUSDC");
         const brb = await viem.deployContract("BRBToken", [admin.account.address]);
         const asset = marketAsset === "brb" ? brb : usdc;
 
@@ -1140,8 +1140,17 @@ describe("SideBet fees", function () {
         if (marketAsset === "usdc") {
             await brb.write.transfer([mockRouter.address, ROUTER_BRB_LIQUIDITY], { account: admin.account });
         }
+        if (marketAsset === "usdc") {
+            const factory = await viem.deployContract("MockUniswapV2Factory");
+            const pair = await viem.deployContract("MockUniswapV2Pair", [asset.address, brb.address]);
+            await factory.write.setPair([asset.address, brb.address, pair.address]);
+            await mockRouter.write.setFactory([factory.address]);
+            const reserves = asset.address.toLowerCase() < brb.address.toLowerCase()
+                ? [parseUnits("10000", 6), parseUnits("10000", 18)] : [parseUnits("10000", 18), parseUnits("10000", 6)];
+            await pair.write.setReserves(reserves);
+        }
 
-        const minBet = marketAsset === "brb" ? parseUnits("1", 18) : USDC("1");
+        const minBet = parseUnits("1", marketAsset === "usdc" ? 6 : 18);
         await registry.write.createMarket(
             [{ asset: asset.address, bankAdmin: admin.account.address, minBet }],
             { account: admin.account },
@@ -1149,7 +1158,7 @@ describe("SideBet fees", function () {
         const market = await registry.read.getMarket([MARKET_ID]);
         const vault = await viem.getContractAt("BankVault4626", market.bank);
 
-        const lpAmount = marketAsset === "brb" ? parseUnits("10000", 18) : USDC("10000");
+        const lpAmount = parseUnits("10000", marketAsset === "usdc" ? 6 : 18);
         if (marketAsset === "brb") {
             await brb.write.transfer([admin.account.address, lpAmount], { account: admin.account });
             await brb.write.approve([vault.address, lpAmount], { account: admin.account });
@@ -1159,8 +1168,8 @@ describe("SideBet fees", function () {
         }
         await vault.write.deposit([lpAmount, admin.account.address], { account: admin.account });
 
-        const playerBudget = marketAsset === "brb" ? parseUnits("100", 18) : USDC("100");
-        const stake = marketAsset === "brb" ? parseUnits("10", 18) : USDC("10");
+        const playerBudget = parseUnits("100", marketAsset === "usdc" ? 6 : 18);
+        const stake = parseUnits("10", marketAsset === "usdc" ? 6 : 18);
         if (marketAsset === "brb") {
             await brb.write.transfer([alice.account.address, playerBudget], { account: admin.account });
             await brb.write.approve([vault.address, playerBudget], { account: alice.account });
@@ -1170,6 +1179,35 @@ describe("SideBet fees", function () {
         }
 
         return { sideBet, scheduler, vault, asset, brb, funder, jackpotTreasury, admin, alice, infra, stake, roundEngine };
+    }
+
+    for (const assetKind of ["usdc", "dai", "brb"] as const) {
+        it(`keeps ticket fees invariant across batch sizes and order for ${assetKind}`, async function () {
+            const f = await deployFeeFixture(assetKind);
+            const decimals = assetKind === "usdc" ? 6 : 18;
+            for (const number of [7, 8]) {
+                await registerConfig(f.sideBet, config({targetNumber: number, windowSpins: 1,
+                    minStake: 1n, maxStake: parseUnits("1000", decimals)}), f.admin.account);
+            }
+            await f.sideBet.write.grantRole([await f.sideBet.read.SETTLEMENT_ROLE(), f.admin.account.address]);
+            // One winner, three losses; fractional stakes exercise rounding per ticket.
+            for (const cfg of [0n, 1n, 1n, 1n]) {
+                await f.sideBet.write.placeBet([cfg, f.stake + 17n], {account: f.alice.account});
+            }
+            await fulfillRounds(f.roundEngine, [7]);
+            const [rows] = await f.sideBet.read.previewSettleBundleV2([0n, 10, 0, 1]);
+            const snap = await takeSnapshot();
+            const balances = async () => [await f.asset.read.balanceOf([f.infra.account.address]),
+                await f.asset.read.balanceOf([f.vault.address]), await f.asset.read.balanceOf([f.funder.address])];
+            await f.sideBet.write.settleBatchV2([rows, []]);
+            const grouped = await balances();
+            expect(grouped[0]).to.equal(3n * ((f.stake + 17n) * 200n / 10000n));
+            await snap.restore();
+            for (const row of [...rows].reverse()) await f.sideBet.write.settleBatchV2([[row], []]);
+            expect(await balances()).to.deep.equal(grouped);
+            await f.sideBet.write.settleBatchV2([rows, []]);
+            expect(await balances()).to.deep.equal(grouped);
+        });
     }
 
     it("collects infra and BRB jackpot funding on a losing USDC side bet", async function () {
@@ -1201,6 +1239,9 @@ describe("SideBet fees", function () {
         const toTreasury = (brbOut * treasuryNum) / treasuryDen;
         const toBurn = brbOut - toTreasury;
 
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        expect((await funder.read.fundingAccounts([MARKET_ID]))[1]).to.equal(swapIn);
+        await funder.write.processFunding([MARKET_ID], { gas: 1000000n });
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore - toBurn);
     });
@@ -1241,6 +1282,9 @@ describe("SideBet fees", function () {
         const toTreasury = (swapIn * treasuryNum) / treasuryDen;
         const toBurn = swapIn - toTreasury;
 
+        expect(await jackpotTreasury.read.jackpotPool()).to.equal(0n);
+        expect((await funder.read.fundingAccounts([MARKET_ID]))[1]).to.equal(swapIn);
+        await funder.write.processFunding([MARKET_ID], { gas: 1000000n });
         expect(await jackpotTreasury.read.jackpotPool()).to.equal(toTreasury);
         expect(await brb.read.totalSupply()).to.equal(brbSupplyBefore - toBurn);
     });
