@@ -54,7 +54,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
     /// cadence, leaving `amountOutMin` derived from spot alone.
     mapping(address pair => UniswapV2TwapLib.Observation) public pairObservations;
 
-    /// @dev Most recent sample per pair (still taken after every successful swap). Promoted to the
+    /// @dev Oldest pending sample per pair, retained between successful swaps. Promoted to the
     /// anchor once it has aged past `twapWindowSeconds`.
     mapping(address pair => UniswapV2TwapLib.Observation) public pendingPairObservations;
 
@@ -281,7 +281,7 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
         uint32 window = twapWindowSeconds;
 
         if (window > 0 && obs.timestamp != 0 && nowTs > obs.timestamp && nowTs - obs.timestamp >= window) {
-            uint256 twapOut = UniswapV2TwapLib.quoteTwapAmountOut(pair, asset, swapIn, obs, nowTs);
+            uint256 twapOut = UniswapV2TwapLib.quoteExecutableTwapAmountOut(pair, asset, swapIn, obs, nowTs);
             // Protective floor: only a TWAP ABOVE spot carries information — it means spot has been
             // pushed down (sandwich, thin liquidity), which is exactly when the floor must bite.
             // Taking the lower of the two, as this did before, made `amountOutMin` follow the
@@ -337,13 +337,18 @@ contract BRBJackpotFunder is AccessControl, IBRBJackpotFunder {
             return;
         }
 
-        pendingPairObservations[pair] = sample;
-
         // Roll the anchor forward only once the previous sample has aged past the window, so the
         // anchor keeps a >= `twapWindowSeconds` lookback instead of being reset by every swap.
         uint32 window = twapWindowSeconds;
-        if (window > 0 && timestamp > pending.timestamp && timestamp - pending.timestamp >= window) {
+        if (window == 0) {
+            pairObservations[pair] = sample;
+            pendingPairObservations[pair] = sample;
+            emit PairObservationUpdated(pair, timestamp);
+        } else if (pending.timestamp == pairObservations[pair].timestamp) {
+            pendingPairObservations[pair] = sample;
+        } else if (timestamp > pending.timestamp && timestamp - pending.timestamp >= window) {
             pairObservations[pair] = pending;
+            pendingPairObservations[pair] = sample;
             emit PairObservationUpdated(pair, pending.timestamp);
         }
     }
