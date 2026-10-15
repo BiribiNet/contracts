@@ -38,7 +38,7 @@ const sideBetAbiFile = path.join(frontendDir, "lib", "abi", "side-bet.ts");
 const mergedErrorsFile = path.join(frontendDir, "lib", "abi", "merged-errors.json");
 
 const HEADER = `// lib/abi/side-bet.ts
-// SideBet (BRBGAME) ABI — standalone copy of the compiled artifact
+// SideBet (Side bets) ABI — standalone copy of the compiled artifact
 // (contracts/SideBet.sol). SideBet is NOT in the contracts repo's wagmi
 // include list, so this file must NOT be a re-export of generated.ts:
 // a \`yarn compile\` in the contracts repo regenerates generated.ts without

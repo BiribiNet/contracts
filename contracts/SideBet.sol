@@ -18,7 +18,7 @@ import { MarketFeeLib } from "./libraries/MarketFeeLib.sol";
 import { IRouletteFeeConfig } from "./interfaces/IRouletteFeeConfig.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 
-/// @title SideBet — BRBGAME single-player side bets (UUPS upgradeable).
+/// @title SideBet — Side bets single-player side bets (UUPS upgradeable).
 /// @notice Players stake against a per-market vault on outcomes resolved over global roulette rounds.
 ///         Settlement is automation-only: `previewSettleBundleV2` in `checkUpkeep`, apply-only `settleBatchV2` in `performUpkeep`.
 contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, ISideBet {

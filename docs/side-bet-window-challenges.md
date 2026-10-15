@@ -1,4 +1,4 @@
-# Eight additional BRBGAME offers
+# Eight additional Side bets offers
 
 This change prepares code and pricing; it is not evidence of a live Sepolia upgrade.
 IDs 0–14, struct storage and settlement APIs remain unchanged. The immutable evaluator

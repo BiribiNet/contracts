@@ -6,7 +6,7 @@ import { viem } from "hardhat";
 import { formatUnits, isAddress, parseAbi, parseEventLogs, parseUnits } from "viem";
 
 /**
- * Seed the BRBGAME side-bet catalogue onto the live `SideBet` contract.
+ * Seed the Side bets side-bet catalogue onto the live `SideBet` contract.
  *
  * The deployed `SideBet` has `configCount == 0` because no deploy path ever called `addConfig`,
  * which is why no side bet is offered in the UI. This script creates the catalogue in
