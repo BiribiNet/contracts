@@ -48,7 +48,10 @@
     "test:swarm:live-sepolia": "REPORT_GAS=false hardhat run scripts/liveSepoliaSwarm.ts --network arbitrumsepolia",
     "verify:protocol:arbitrum": "hardhat run scripts/verifyProtocolArbitrum.ts --network arbitrum",
     "typecheck:deployment": "tsc -p tsconfig.deployment.json",
-    "check:dependencies:arbitrum": "ts-node --transpile-only scripts/checkArbitrumDependencies.ts"
+    "check:dependencies:arbitrum": "ts-node --transpile-only scripts/checkArbitrumDependencies.ts",
+    "seed:brb-usdc:arbitrum": "hardhat run scripts/seedBrbUsdcArbitrum.ts --network arbitrum",
+    "audit:deployment:arbitrum": "hardhat run scripts/auditMainnetDeployment.ts --network arbitrum",
+    "verify:proxy-links:arbitrum": "hardhat run scripts/linkVerifiedProxiesArbitrum.ts --network arbitrum"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

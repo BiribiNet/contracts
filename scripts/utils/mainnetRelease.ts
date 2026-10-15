@@ -39,6 +39,9 @@ export async function preflightMainnet(client: PublicClient, options: {
     usdc: Address; dai: Address; /** When omitted, deploy will create a new VRF subscription. */
     subscriptionId?: bigint; brb?: Address; expectedFactory?: Address; keeper?: Address;
     callbackGasLimit?: number; confirmations?: number; vrfKeyHashes?: readonly `0x${string}`[];
+    deploymentMode?: "full-launch" | "brb-test";
+    minimumLinkJuels?: bigint;
+    gasTopUps?: { keeperTarget: bigint; infra: Address; infraTarget: bigint; marketing?: Address; marketingTarget?: bigint };
 }) {
     if (await client.getChainId() !== 42161) throw new Error('Expected Arbitrum One (42161)');
     const blockNumber = await client.getBlockNumber();
@@ -46,17 +49,31 @@ export async function preflightMainnet(client: PublicClient, options: {
         throw new Error('Keeper must use a dedicated account without protocol administrator privileges');
     }
     const deployerEth = await client.getBalance({ address: options.deployer, blockNumber });
-    if (deployerEth < MIN_DEPLOYER_ETH) throw new Error('Deployer needs at least 0.02 ETH before broadcast (minimum reserve, not a total-cost guarantee)');
+    let keeperTopUp = 0n;
+    let infraTopUp = 0n;
+    let marketingTopUp = 0n;
+    if (options.gasTopUps) {
+        if (!options.keeper) throw new Error('Keeper address is required for gas top-ups');
+        const keeperBalance = await client.getBalance({ address: options.keeper, blockNumber });
+        const infraBalance = await client.getBalance({ address: options.gasTopUps.infra, blockNumber });
+        keeperTopUp = keeperBalance < options.gasTopUps.keeperTarget ? options.gasTopUps.keeperTarget - keeperBalance : 0n;
+        infraTopUp = infraBalance < options.gasTopUps.infraTarget ? options.gasTopUps.infraTarget - infraBalance : 0n;
+        if (options.gasTopUps.marketing && options.gasTopUps.marketingTarget !== undefined) {
+            const balance = await client.getBalance({ address: options.gasTopUps.marketing, blockNumber });
+            marketingTopUp = balance < options.gasTopUps.marketingTarget ? options.gasTopUps.marketingTarget - balance : 0n;
+        }
+    }
+    if (deployerEth < MIN_DEPLOYER_ETH + keeperTopUp + infraTopUp + marketingTopUp) throw new Error('Deployer needs the deployment ETH reserve plus the approved wallet gas shortfalls before broadcast');
     if (options.keeper) {
         const keeperEth = await client.getBalance({ address: options.keeper, blockNumber });
-        if (keeperEth < MIN_KEEPER_ETH) throw new Error('Fund the dedicated keeper with at least 0.005 ETH before broadcast');
+        if (!options.gasTopUps && keeperEth < MIN_KEEPER_ETH) throw new Error('Fund the dedicated keeper with at least 0.005 ETH before broadcast');
         const keeperCode = await client.getBytecode({ address: options.keeper, blockNumber });
         if (keeperCode && keeperCode !== '0x') throw new Error('Worker keeper must be an EOA controlled by its signing private key');
     }
     const deployerUsdc = await client.readContract({ address: options.usdc,
         abi: parseAbi(['function balanceOf(address) view returns (uint256)']),
         functionName: 'balanceOf', args: [options.deployer], blockNumber });
-    if (deployerUsdc === 0n) throw new Error('Fund the deployer with native USDC for genesis liquidity before broadcast');
+    if (options.deploymentMode !== 'brb-test' && deployerUsdc === 0n) throw new Error('Fund the deployer with native USDC for genesis liquidity before broadcast');
     const latestNonce = await client.getTransactionCount({ address: options.deployer, blockTag: 'latest' });
     const pendingNonce = await client.getTransactionCount({ address: options.deployer, blockTag: 'pending' });
     if (latestNonce !== pendingNonce) throw new Error('Deployer has pending transactions; CREATE predictions require an idle, dedicated deployment signer');
@@ -97,6 +114,9 @@ export async function preflightMainnet(client: PublicClient, options: {
         args: [options.deployer],
         blockNumber,
     });
+    if (options.minimumLinkJuels !== undefined && deployerLinkJuels < options.minimumLinkJuels) {
+        throw new Error('Deployer LINK is below the reviewed initial VRF funding amount');
+    }
     let subscriptionOwner: Address | null = null;
     let subscriptionLinkJuels = '0';
     if (options.subscriptionId !== undefined) {
@@ -114,12 +134,14 @@ export async function preflightMainnet(client: PublicClient, options: {
             throw new Error('VRF subscription must be owned by the deployment signer to register the new engine. No deployment transaction sent.');
         }
     } else if (deployerLinkJuels === 0n) {
-        throw new Error('Deployer holds no LINK — fund the deploy wallet; deploy creates a VRF subscription and drains all LINK into it');
+        throw new Error('Deployer holds no LINK — fund the deploy wallet; deploy creates and funds a VRF subscription');
     }
     const sizes = await checkProductionArtifacts();
     return { blockNumber: blockNumber.toString(), chainId: 42161, admin: options.admin, subscriptionOwner,
         subscriptionLinkJuels, deployerLinkJuels: deployerLinkJuels.toString(),
         deployerEth: deployerEth.toString(), deployerUsdc: deployerUsdc.toString(),
+        deploymentMode: options.deploymentMode ?? 'full-launch',
+        keeperTopUpWei: keeperTopUp.toString(), infraTopUpWei: infraTopUp.toString(), marketingTopUpWei: marketingTopUp.toString(),
         factory, createVrfSubscription: options.subscriptionId === undefined, sizes, fundingSufficiencyVerified: false };
 }
 

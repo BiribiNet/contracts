@@ -172,7 +172,7 @@ export async function vrfAddConsumerIfNeeded(
 }
 
 /**
- * Funds a subscription with test LINK via ERC-677 `transferAndCall`.
+ * Funds a subscription with LINK via ERC-677 `transferAndCall`.
  * Coordinator must implement `onTokenTransfer` for the encoded `subId`.
  */
 export async function vrfFundSubscriptionWithLink(
@@ -194,7 +194,7 @@ export async function vrfFundSubscriptionWithLink(
     });
     if (linkBalance < amountJuels) {
         throw new Error(
-            `Deployer LINK balance ${linkBalance.toString()} Juels is below VRF_INITIAL_LINK_JUELS ${amountJuels.toString()} — fund ${walletClient.account.address} with testnet LINK.`,
+            `Signer LINK balance ${linkBalance.toString()} Juels is below requested funding ${amountJuels.toString()} — fund ${walletClient.account.address} with LINK.`,
         );
     }
 

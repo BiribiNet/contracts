@@ -13,7 +13,13 @@
     "scripts/deployCloudflareRoundWatcherArbitrum.ts",
     "scripts/verifyProtocolArbitrum.ts",
     "test/CloudflareKeeperDeployment.test.ts",
-    "scripts/checkArbitrumDependencies.ts"
+    "scripts/checkArbitrumDependencies.ts",
+    "scripts/checkMainnetArchitecture.ts",
+    "test/MainnetBrbArchitecture.fork.test.ts",
+    "scripts/seedBrbUsdcArbitrum.ts",
+    "test/MainnetBrbLiquidity.fork.test.ts",
+    "scripts/auditMainnetDeployment.ts",
+    "scripts/linkVerifiedProxiesArbitrum.ts"
   ],
   "exclude": [
     "node_modules",

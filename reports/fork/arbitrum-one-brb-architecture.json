@@ -1,0 +1,116 @@
+{
+  "checkedAt": "2026-10-15T15:38:04.434Z",
+  "sourceChainId": 42161,
+  "localChainId": 31337,
+  "pinnedBlock": 515102497,
+  "deploymentMode": "brb-test",
+  "vrfOwner": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+  "vrfFundedJuels": "11952032734339140742",
+  "roundInfrastructureFee": "20000000000000000",
+  "withdrawalInfrastructureFee": "1000000000000000000",
+  "sizes": {
+    "RouletteEngine": 22379,
+    "SideBet": 20898,
+    "BankVault4626": 15435,
+    "BRBJackpotFunder": 16759,
+    "JackpotTreasury": 2092,
+    "MarketRegistry": 5370,
+    "UpkeepScheduler": 8601,
+    "AutomationReceiver": 4433,
+    "CreExecutionAuthority": 1368,
+    "BRBToken": 3852,
+    "SideBetChallengeEvaluator": 9283,
+    "BRBReferal": 1878,
+    "TipJar": 1347,
+    "ERC1967Proxy": 122,
+    "UpgradeableBeacon": 624,
+    "BeaconProxy": 242,
+    "RouletteLib": 315,
+    "RouletteBetLib": 2767,
+    "JackpotBatchLib": 3338,
+    "RoulettePayoutMulLib": 433,
+    "RouletteExposureLib": 1857,
+    "RouletteJackpotCollectLib": 6822,
+    "RoulettePayoutSweepLib": 7599,
+    "RouletteLiabilityMathLib": 2317,
+    "RouletteBetCodecLib": 933,
+    "RouletteUpkeepScanLib": 6154
+  },
+  "gasFunding": [
+    {
+      "name": "keeper",
+      "address": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+      "amountWei": "5000000000000000",
+      "balanceBeforeWei": "0",
+      "targetWei": "5000000000000000",
+      "hash": "0xe506941f2205429aad8d7ee291aab9bf076e89840ff613d10af48cc25a9918a5"
+    },
+    {
+      "name": "infrastructure",
+      "address": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+      "amountWei": "1000000000000000",
+      "balanceBeforeWei": "0",
+      "targetWei": "1000000000000000",
+      "hash": "0xa06fd4a2b948af9a348eab7ea138fb7bf6e447d84135af189e2b7818505abff1"
+    },
+    {
+      "name": "marketing",
+      "address": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+      "amountWei": "2100000000000000",
+      "balanceBeforeWei": "0",
+      "targetWei": "2100000000000000",
+      "hash": "0x1e2306cac81aa1cd17c75c1ac26c01fdea9804e2f061dc375c0f1d48879144c1"
+    }
+  ],
+  "infrastructureStake": {
+    "owner": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+    "assets": "300000000000000000000000",
+    "shares": "300000000000000000000000000000",
+    "approveHash": "0xc1c12c85ede3fd7cbb20536e8975f67dd4b19888cbfbb003772a25ce57c05ac6",
+    "depositHash": "0x934373d88643d53fae2a3a48c0a02063f2daccd0c5629ea38859ca4a7f5ef1ba"
+  },
+  "houseBotFunding": {
+    "source": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+    "houseBot": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+    "brbAmount": "1000000000000000000000",
+    "marketingBrbRemaining": "299000000000000000000000",
+    "brbHash": "0x7aa0bcb62abd4464842e08925027d87d05cba9eda736b85356519a424e37f632",
+    "gasFunding": [
+      {
+        "name": "house_bot",
+        "address": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+        "amountWei": "1000000000000000",
+        "balanceBeforeWei": "0",
+        "targetWei": "1000000000000000",
+        "hash": "0x96c783c7aba2afab06f0dcc5363abe268c6c049e7c685e48cf6773232beb4243"
+      }
+    ]
+  },
+  "addresses": {
+    "brb": "0xc33f403128d9d234d542e54684c2f1c2d408556e",
+    "engine": "0xb904d709cb94a4f2ec859ef0762738a7ded0020f",
+    "sideBet": "0x50a4fbc7bc76182d3276dae3bc6345c0ca9a1102",
+    "registry": "0x76cc6a0ce3a585979dfee43f932c9b2cf2639366",
+    "scheduler": "0x1f43a19e3da761d630c2e38316678b919f33f2a0",
+    "bank": "0x616F4B14D47237C0dC7Dd113A743bb9957a0872e",
+    "tipJar": "0x70cb8b72ccaa962e848fdcc6d0bae223faeac25b",
+    "creExecutionAuthority": "0x8a75ee1f4bbceed9491880f7a45950a66f5dc712",
+    "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8"
+  },
+  "marketCount": 1,
+  "infrastructureStakedBrb": "300000",
+  "houseBotBrb": "1000",
+  "marketingRemainingBrb": "299000",
+  "pairsCreated": false,
+  "usdcUntouched": true,
+  "realCoordinatorRequestAccepted": true,
+  "keeperSettlementCompleted": true,
+  "brbFundingWithoutPairCompleted": true,
+  "limitations": [
+    "Recipient accounts impersonated only on local chain; saved mainnet keys not used for fork signatures",
+    "LINK borrowed only in disposable fork",
+    "Oracle fulfillment simulated; live DON delivery and Cloudflare hosting not proven",
+    "Hardhat fork does not reproduce Arbitrum sequencer or L1 fee behavior",
+    "Shared production deployment helpers exercised; live-only entrypoint chain gates not bypassed"
+  ]
+}

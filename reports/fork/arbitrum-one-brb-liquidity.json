@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-15T16:10:20.275Z",
+  "sourceChainId": 42161,
+  "localChainId": 31337,
+  "pinnedBlock": 515105221,
+  "brb": "0x58871cf545f8f0df790443492a80edc414df4504",
+  "pair": "0x848A51FaD11746bca839DF587C3Cde450bDfb853",
+  "router": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+  "factory": "0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9",
+  "brbAmount": "2400000000000000000000000",
+  "usdcAmount": "24000000000",
+  "lpRecipient": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+  "lpBalance": "239999999999999000",
+  "minimumLiquidityBurned": "1000",
+  "lpVestingLockDeployed": false,
+  "lpVestingLockFunded": false,
+  "infrastructureBankrollUnchanged": true,
+  "usesActualDeployedContracts": true,
+  "limitation": "Writes and deployer impersonation occurred only on the isolated local fork",
+  "savedMainnetKeysUsedForSigning": false
+}

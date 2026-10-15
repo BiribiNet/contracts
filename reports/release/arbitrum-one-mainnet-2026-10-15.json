@@ -1,0 +1,210 @@
+{
+  "chainId": 42161,
+  "deploymentMode": "brb-test",
+  "deployer": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+  "manifest": "deployments/arbitrum-one.json",
+  "architecture": {
+    "infrastructureStakeBrb": "300000",
+    "marketingRemainingBrb": "299000",
+    "houseBotBrb": "1000",
+    "vrfOwner": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+    "vrfLinkJuels": "11952032734339140742"
+  },
+  "liquidity": {
+    "dexPairCreationDeferred": false,
+    "usdcUntouched": false,
+    "deployerUsdcBefore": "24000000000",
+    "deployerUsdcAfter": "24000000000",
+    "futureLiquidityBrb": {
+      "owner": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+      "amount": "0"
+    },
+    "brbAllocation": {
+      "marketing": {
+        "wallet": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+        "amount": "300000000000000000000000"
+      },
+      "infra": {
+        "wallet": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+        "amount": "300000000000000000000000",
+        "staked": true,
+        "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9"
+      }
+    },
+    "lpVestingLockDeferred": true,
+    "note": "BRB/USDC seeded by deployer with approved amounts. All minted LP stays with deployer; no cliff or vesting contract deployed or funded. Stablecoin betting markets remain deferred.",
+    "seeded": true,
+    "architectureDeploymentUsdcUntouched": true,
+    "seededAt": "2026-10-15T15:48:47.036Z",
+    "pair": "0x848A51FaD11746bca839DF587C3Cde450bDfb853",
+    "router": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+    "factory": "0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9",
+    "brbAmount": "2400000000000000000000000",
+    "usdcAmount": "24000000000",
+    "lpRecipient": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+    "lpBalance": "239999999999999000",
+    "minimumLiquidityBurned": "1000",
+    "lpVestingLockDeployed": false,
+    "lpVestingLockFunded": false
+  },
+  "validation": {
+    "onchainAudit": {
+      "ok": true,
+      "checks": 108,
+      "block": "515108480",
+      "report": "deployments/arbitrum-one-onchain-audit.json"
+    },
+    "architectureFork": {
+      "passed": true,
+      "block": 515102497,
+      "report": "reports/fork/arbitrum-one-brb-architecture.json"
+    },
+    "actualDeploymentLiquidityFork": {
+      "passed": true,
+      "block": 515104726,
+      "report": "reports/fork/arbitrum-one-brb-liquidity.json",
+      "initialPreBroadcastPinnedBlock": 515104726,
+      "latestReplayPinnedBlock": 515105221
+    },
+    "deploymentTypes": "passed",
+    "focusedDeploymentTests": "2 passed"
+  },
+  "worker": {
+    "url": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
+    "healthPassed": true
+  },
+  "limitations": [
+    "No live wager or Chainlink DON fulfillment has been exercised",
+    "Stablecoin betting markets and SideBet offer catalog remain deferred",
+    "LP vesting lock has not been deployed or funded"
+  ],
+  "sourceVerification": {
+    "checkedAt": "2026-10-15T16:09:24.343Z",
+    "contracts": [
+      {
+        "address": "0x58871cf545f8f0df790443492a80edc414df4504",
+        "artifact": "BRBToken"
+      },
+      {
+        "address": "0xa65ad745721b0f1382653328b837ef75f79b99ce",
+        "artifact": "TipJar"
+      },
+      {
+        "address": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+        "artifact": "JackpotTreasury"
+      },
+      {
+        "address": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+        "artifact": "BRBJackpotFunder"
+      },
+      {
+        "address": "0x2afd5402faeb550045aea5884bcf33409a91679a",
+        "artifact": "MarketRegistry"
+      },
+      {
+        "address": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+        "artifact": "SideBetChallengeEvaluator",
+        "buildContract": "contracts/SideBet.sol:SideBet"
+      },
+      {
+        "address": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "artifact": "BankVault4626"
+      },
+      {
+        "address": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+        "artifact": "UpgradeableBeacon"
+      },
+      {
+        "address": "0x6d19c9d21ce7b2670fc5f142f27d9819dd888544",
+        "artifact": "BRBReferal"
+      },
+      {
+        "address": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+        "artifact": "RouletteLib"
+      },
+      {
+        "address": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+        "artifact": "RouletteBetLib"
+      },
+      {
+        "address": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+        "artifact": "JackpotBatchLib"
+      },
+      {
+        "address": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+        "artifact": "RoulettePayoutMulLib"
+      },
+      {
+        "address": "0x44641e1e3328ac759a88599438c663b291a357e7",
+        "artifact": "RouletteExposureLib"
+      },
+      {
+        "address": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+        "artifact": "RouletteJackpotCollectLib"
+      },
+      {
+        "address": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+        "artifact": "RouletteLiabilityMathLib"
+      },
+      {
+        "address": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
+        "artifact": "RouletteBetCodecLib"
+      },
+      {
+        "address": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+        "artifact": "RoulettePayoutSweepLib"
+      },
+      {
+        "address": "0xa672a7c0233a651026d9441eb7384da09b731b8b",
+        "artifact": "RouletteUpkeepScanLib"
+      },
+      {
+        "address": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+        "artifact": "SideBet"
+      },
+      {
+        "address": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+        "artifact": "RouletteEngine"
+      },
+      {
+        "address": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+        "artifact": "ERC1967Proxy"
+      },
+      {
+        "address": "0x96e34298425c310422bfba424bd4ed455b597d7f",
+        "artifact": "ERC1967Proxy"
+      },
+      {
+        "address": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "artifact": "BeaconProxy"
+      },
+      {
+        "address": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+        "artifact": "UpkeepScheduler"
+      },
+      {
+        "address": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+        "artifact": "CreExecutionAuthority"
+      }
+    ],
+    "count": 26,
+    "proxyLinks": [
+      {
+        "proxy": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+        "implementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+        "linked": true
+      },
+      {
+        "proxy": "0x96e34298425c310422bfba424bd4ed455b597d7f",
+        "implementation": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+        "linked": true
+      },
+      {
+        "proxy": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "implementation": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "linked": true
+      }
+    ],
+    "proxyLinksVerifiedAt": "2026-10-15T16:09:39.888Z"
+  }
+}

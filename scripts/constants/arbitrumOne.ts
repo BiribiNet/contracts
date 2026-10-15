@@ -36,9 +36,10 @@ export const DAI = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1" as const;
 
 /**
  * Fixed genesis recipient addresses (not loaded from env); verify control before broadcast.
- * Genesis BRB: 300_000 each; remaining 2_400_000 seeds the USDC/BRB pair with full deployer USDC.
+ * Genesis BRB: 300_000 each; 2_400_000 remains with the deployer for future liquidity.
  */
 export const MARKETING_WALLET: Address = "0xB43800e00EA2502775385fEa1A93594eC6D73339";
+export const HOUSE_BOT_WALLET: Address = "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f";
 export const INFRA_WALLET: Address = "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6";
 
 /**
@@ -60,7 +61,7 @@ export const PAYOUT_LANE_COUNT = 2;
 export const UPKEEP_SCAN_LIMIT = 25;
 export const UPKEEP_MAX_PAYOUTS_PER_CALL = 60;
 export const KEEPER_MAX_DRAIN_ITERATIONS = 5;
-export const VERIFY_DELAY_MS = 30_000;
+export const VERIFY_DELAY_MS = 3_000;
 
 export const MIN_BET_USDC = parseUnits("1", 6);
 export const MIN_BET_DAI = parseUnits("1", 18);
@@ -98,17 +99,28 @@ export const ARBITRUM_RPC_URLS = [
 export const ARBITRUM_RPC_URL = ARBITRUM_RPC_URLS[0];
 export const MIN_DEPLOYER_ETH = parseEther("0.02");
 export const MIN_KEEPER_ETH = parseEther("0.005");
+/** Approved gas balances; the deployer sends only each wallet's shortfall. */
+export const KEEPER_GAS_TARGET = parseEther("0.005");
+export const INFRA_GAS_TARGET = parseEther("0.001");
+export const MARKETING_GAS_TARGET = parseEther("0.001");
+export const HOUSE_BOT_GAS_TARGET = parseEther("0.001");
+export const MARKETING_TRANSFER_GAS_BUFFER = parseEther("0.0001");
+export const HOUSE_BOT_BRB_AMOUNT = parseUnits("1000", 18);
+/** Initial mainnet test registers only BRB. Stablecoin markets and DEX liquidity come later. */
+export const MAINNET_DEPLOYMENT_MODE = "brb-test" as const;
+export const BRB_INFRA_STAKE_AMOUNT = BRB_INFRA_AMOUNT;
+
 
 export function assertGenesisWalletsConfigured() {
-    const wallets = { marketingWallet: MARKETING_WALLET, infraWallet: INFRA_WALLET, keeperWallet: KEEPER_WALLET };
+    const wallets = { marketingWallet: MARKETING_WALLET, infraWallet: INFRA_WALLET, keeperWallet: KEEPER_WALLET, houseBotWallet: HOUSE_BOT_WALLET };
     for (const [name, value] of Object.entries(wallets)) {
         if (!value || !isAddress(value) || BigInt(value) === 0n) {
             throw new Error(`Set the actual ${name} in scripts/constants/arbitrumOne.ts before deployment`);
         }
         getAddress(value);
     }
-    if (MARKETING_WALLET!.toLowerCase() === INFRA_WALLET!.toLowerCase()) {
-        throw new Error("Marketing and infrastructure recipients must be distinct");
+    if (new Set(Object.values(wallets).map(address => address.toLowerCase())).size !== Object.keys(wallets).length) {
+        throw new Error("Genesis recipients, house bot and keeper must be distinct");
     }
-    return { marketingWallet: MARKETING_WALLET!, infraWallet: INFRA_WALLET!, keeperWallet: KEEPER_WALLET! };
+    return wallets;
 }

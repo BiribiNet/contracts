@@ -3,9 +3,26 @@ import { expect } from "chai";
 import { viem } from "hardhat";
 import { parseEther } from "viem";
 import { deployProductionRouletteEngine } from "../scripts/utils/deployRouletteEngine";
+import { gasShortfall, fundHouseBot, stakeInfrastructureBrb } from "../scripts/utils/mainnetBrbTest";
 import { deployKeeperAutomation } from "../scripts/utils/deployKeeperAutomation";
 
 describe("Cloudflare production deployment wiring", function () {
+    it("rejects invalid funding and staking requests before any transfer", async function () {
+        expect(gasShortfall(3n, 5n)).to.equal(2n);
+        expect(gasShortfall(6n, 5n)).to.equal(0n);
+        expect(() => gasShortfall(0n, -1n)).to.throw("Negative");
+        const [admin, infra] = await viem.getWalletClients();
+        const client = await viem.getPublicClient();
+        const brb = await viem.deployContract("BRBToken", [admin.account.address]);
+        const nonce = await client.getTransactionCount({ address: admin.account.address });
+        await rejects(fundHouseBot({ token: brb.address, marketing: admin, houseBot: admin.account.address,
+            client, brbAmount: parseEther("1000"), ethTarget: parseEther("0.001"), marketingEthReserve: parseEther("0.001"),
+            waitWrite: async () => { throw new Error("Unexpected write"); } }), /distinct/);
+        await rejects(stakeInfrastructureBrb({ token: brb.address, bank: admin.account.address,
+            infrastructure: infra, client, amount: parseEther("300000"),
+            waitWrite: async () => { throw new Error("Unexpected write"); } }), /exact genesis allocation/);
+        expect(await client.getTransactionCount({ address: admin.account.address })).to.equal(nonce);
+    });
     it("deploys real prefix addresses and referral, and approves only the dedicated keeper", async function () {
         const [admin, keeper, stranger] = await viem.getWalletClients();
         const client = await viem.getPublicClient();

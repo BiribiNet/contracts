@@ -2,10 +2,18 @@ import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { network, viem } from "hardhat";
+import { vars } from "hardhat/config";
+import { createWalletClient, parseAbi, type Hex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 
 import {
     ARBITRUM_RPC_URLS,
+    HOUSE_BOT_BRB_AMOUNT, HOUSE_BOT_GAS_TARGET, MARKETING_GAS_TARGET, MARKETING_TRANSFER_GAS_BUFFER,
     BRB_INFRA_AMOUNT,
+    BRB_INFRA_STAKE_AMOUNT,
+    INFRA_GAS_TARGET,
+    KEEPER_GAS_TARGET,
+    MAINNET_DEPLOYMENT_MODE,
     BRB_LIQUIDITY_AMOUNT,
     BRB_MARKETING_AMOUNT,
     CLOUDFLARE_WORKER_NAME,
@@ -13,8 +21,6 @@ import {
     KEEPER_MAX_DRAIN_ITERATIONS,
     LINK_TOKEN,
     MIN_BET_BRB,
-    MIN_BET_DAI,
-    MIN_BET_USDC,
     PAYOUT_LANE_COUNT,
     ROUND_DURATION_SECONDS,
     UNISWAP_V2_FACTORY,
@@ -41,17 +47,16 @@ import {
     handoffProtocolRoles,
     preflightMainnet,
 } from "./utils/mainnetRelease";
-import { seedBrbAssetPool } from "./utils/seedUniswapV2BrbPools";
+import { createInfrastructureVrfSubscription, fundHouseBot, gasShortfall, stakeInfrastructureBrb, topUpGasWallets } from "./utils/mainnetBrbTest";
+import { createRpcFallback } from "./utils/rpcFallback";
 import {
     vrfAddConsumerIfNeeded,
-    vrfCreateSubscription,
-    vrfFundSubscriptionWithAllLink,
 } from "./utils/vrfSubscription";
 /**
  * Arbitrum One (42161) protocol deploy — addresses fixed in `scripts/constants/arbitrumOne.ts`.
  * Automation is Cloudflare Workers keeper mode (no Chainlink CRE).
  *
- * Only BRB_KEY supplies the signing account. All public settings are in the address catalog.
+ * Signing keys are loaded from Hardhat vars; all public addresses are fixed. All public settings are in the address catalog.
  * Provision the Worker with `yarn deploy:cloudflare:arbitrum` after deploying contracts.
  *
  * RPC: Hardhat bootstraps on the first `ARBITRUM_RPC_URLS` entry; mid-script failures
@@ -61,7 +66,7 @@ import {
  */
 
 async function main() {
-    const { marketingWallet, infraWallet, keeperWallet } = assertGenesisWalletsConfigured();
+    const { marketingWallet, infraWallet, keeperWallet, houseBotWallet } = assertGenesisWalletsConfigured();
 
     installHardhatRpcFailover(network.provider);
     console.log(`RPC failover armed (${ARBITRUM_RPC_URLS.length} endpoints)`);
@@ -110,10 +115,37 @@ async function main() {
     const payoutLaneCount = PAYOUT_LANE_COUNT;
     const scanLimit = UPKEEP_SCAN_LIMIT;
     const maxPayouts = UPKEEP_MAX_PAYOUTS_PER_CALL;
-    const minStable = MIN_BET_USDC;
-    const minDai = MIN_BET_DAI;
     const minBrb = MIN_BET_BRB;
 
+    if (!vars.has("KEEPER_PRIVATE_KEY") || !vars.has("INFRA_PRIVATE_KEY") || !vars.has("MARKETING_PRIVATE_KEY")) {
+        throw new Error("Set KEEPER_PRIVATE_KEY, INFRA_PRIVATE_KEY and MARKETING_PRIVATE_KEY before deployment");
+    }
+    const keeperAccount = privateKeyToAccount(vars.get("KEEPER_PRIVATE_KEY") as Hex);
+    const infraAccount = privateKeyToAccount(vars.get("INFRA_PRIVATE_KEY") as Hex);
+    const marketingAccount = privateKeyToAccount(vars.get("MARKETING_PRIVATE_KEY") as Hex);
+    if (keeperAccount.address.toLowerCase() !== keeperWallet.toLowerCase() ||
+        infraAccount.address.toLowerCase() !== infraWallet.toLowerCase() ||
+        marketingAccount.address.toLowerCase() !== marketingWallet.toLowerCase()) {
+        throw new Error("Keeper, infrastructure or marketing signing key does not match its configured address");
+    }
+    if ([keeperWallet, infraWallet, marketingWallet, houseBotWallet].some(address => address.toLowerCase() === bootstrapAdmin.toLowerCase())) {
+        throw new Error("Deployer must be separate from genesis recipients and the keeper");
+    }
+    const infrastructure = createWalletClient({ account: infraAccount, chain: publicClient.chain,
+        transport: createRpcFallback([...ARBITRUM_RPC_URLS], 42161) });
+    const marketing = createWalletClient({ account: marketingAccount, chain: publicClient.chain,
+        transport: createRpcFallback([...ARBITRUM_RPC_URLS], 42161) });
+    const marketingFundingTarget = MARKETING_GAS_TARGET + MARKETING_TRANSFER_GAS_BUFFER +
+        gasShortfall(await receiptClient.getBalance({ address: houseBotWallet }), HOUSE_BOT_GAS_TARGET);
+    for (const address of [infraWallet, marketingWallet, keeperWallet]) {
+        const [latest, pending] = await Promise.all([
+            receiptClient.getTransactionCount({ address, blockTag: "latest" }),
+            receiptClient.getTransactionCount({ address, blockTag: "pending" }),
+        ]);
+        if (latest !== pending) throw new Error("A configured signing wallet has pending transactions; stop before deployment");
+    }
+    const tokenReadAbi = parseAbi(["function balanceOf(address) view returns (uint256)"]);
+    const usdcBefore = await receiptClient.readContract({ address: usdc, abi: tokenReadAbi, functionName: "balanceOf", args: [bootstrapAdmin] });
     const preflight = await preflightMainnet(publicClient, {
         deployer: bootstrapAdmin,
         admin: protocolAdmin,
@@ -125,6 +157,9 @@ async function main() {
         expectedFactory: UNISWAP_V2_FACTORY,
         keeper: keeperWallet,
         callbackGasLimit, confirmations, vrfKeyHashes,
+        deploymentMode: MAINNET_DEPLOYMENT_MODE,
+        minimumLinkJuels: 1n,
+        gasTopUps: { keeperTarget: KEEPER_GAS_TARGET, infra: infraWallet, infraTarget: INFRA_GAS_TARGET, marketing: marketingWallet, marketingTarget: marketingFundingTarget },
     });
     console.log(
         JSON.stringify(
@@ -135,11 +170,15 @@ async function main() {
                 cloudflareWorkerName: CLOUDFLARE_WORKER_NAME,
                 marketingWallet,
                 infraWallet,
+                houseBotWallet,
                 brbGenesis: {
                     liquidityBrb: BRB_LIQUIDITY_AMOUNT.toString(),
                     marketingBrb: BRB_MARKETING_AMOUNT.toString(),
                     infraBrb: BRB_INFRA_AMOUNT.toString(),
-                    usdcSeed: "entire deployer USDC balance",
+                    infraStakedBrb: BRB_INFRA_STAKE_AMOUNT.toString(),
+                    marketingToHouseBotBrb: HOUSE_BOT_BRB_AMOUNT.toString(),
+                    futureLiquidityBrb: BRB_LIQUIDITY_AMOUNT.toString(),
+                    usdcSeed: "deferred; no USDC spending or pair creation",
                 },
             },
             null,
@@ -165,22 +204,24 @@ async function main() {
     });
     writeFileSync(
         journalPath,
-        JSON.stringify({ stage: "started", deployer: bootstrapAdmin, deploymentNonce, preflight }, null, 2) + "\n",
+        JSON.stringify({ stage: "started", deployer: bootstrapAdmin, infrastructure: infraWallet, marketing: marketingWallet, deploymentNonce, preflight }, null, 2) + "\n",
         { flag: "wx" },
     );
 
-    const vrfSubscriptionId = await vrfCreateSubscription(deployer, publicClient, vrfCoordinator);
-    console.log(`Created VRF subscription id: ${vrfSubscriptionId.toString()}`);
-    const linkFundedJuels = await vrfFundSubscriptionWithAllLink(
-        deployer,
-        publicClient,
-        linkToken,
-        vrfCoordinator,
-        vrfSubscriptionId,
-    );
-    console.log(
-        `Drained ${linkFundedJuels.toString()} Juels LINK from deployer into VRF subscription ${vrfSubscriptionId.toString()}`,
-    );
+    const gasFunding = await topUpGasWallets({ deployer, client: receiptClient,
+        recipients: [
+            { name: "keeper", address: keeperWallet, target: KEEPER_GAS_TARGET },
+            { name: "infrastructure", address: infraWallet, target: INFRA_GAS_TARGET },
+            { name: "marketing", address: marketingWallet, target: marketingFundingTarget },
+        ], waitWrite });
+    writeFileSync(journalPath, JSON.stringify({ stage: "wallets-funded", deployer: bootstrapAdmin,
+        deploymentNonce, gasFunding, preflight }, null, 2) + "\n");
+
+    const infrastructureVrf = await createInfrastructureVrfSubscription({ deployer, infrastructure,
+        client: receiptClient, link: linkToken, coordinator: vrfCoordinator, waitWrite });
+    const vrfSubscriptionId = infrastructureVrf.subscriptionId;
+    const linkFundedJuels = infrastructureVrf.fundedJuels;
+    console.log(`Infrastructure owns VRF subscription ${vrfSubscriptionId} funded with all ${linkFundedJuels} deployer LINK Juels`);
 
     const brbC = await viem.deployContract("BRBToken", [bootstrapAdmin]);
     const brb = brbC.address;
@@ -234,7 +275,7 @@ async function main() {
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, protocolAdmin]);
     await waitWrite(registry.write.setVaultBeacon([beacon.address], { account: deployer.account }));
 
-    await vrfAddConsumerIfNeeded(deployer, publicClient, vrfCoordinator, vrfSubscriptionId, engine.address);
+    await vrfAddConsumerIfNeeded(infrastructure, receiptClient, vrfCoordinator, vrfSubscriptionId, engine.address);
 
     await waitWrite(engine.write.setPayoutLaneCount([payoutLaneCount], { account: deployer.account }));
     console.log(
@@ -253,22 +294,13 @@ async function main() {
         `Keeper automation: CreExecutionAuthority ${keeperAutomation.creExecutionAuthority}, keeper ${keeperWallet}`,
     );
 
-    for (const params of [
-        { asset: usdc, minBet: minStable },
-        { asset: dai, minBet: minDai },
-        { asset: brb, minBet: minBrb },
-    ] as const) {
-        await waitWrite(
-            registry.write.createMarket(
-                [{ asset: params.asset, bankAdmin: protocolAdmin, minBet: params.minBet }],
-                { account: deployer.account },
-            ),
-        );
+    await waitWrite(registry.write.createMarket(
+        [{ asset: brb, bankAdmin: protocolAdmin, minBet: minBrb }], { account: deployer.account },
+    ));
+    const marketBrb = await registry.read.getMarket([1]);
+    if (await registry.read.marketCount() !== 1 || marketBrb.asset.toLowerCase() !== brb.toLowerCase()) {
+        throw new Error("Expected the BRB-only test market as market 1");
     }
-
-    const marketUsdc = await registry.read.getMarket([1]);
-    const marketDai = await registry.read.getMarket([2]);
-    const marketBrb = await registry.read.getMarket([3]);
     const challengeEvaluator = await sideBet.read.CHALLENGE_EVALUATOR();
 
     const tipJar = await viem.deployContract("TipJar", [brb, engine.address]);
@@ -329,34 +361,24 @@ async function main() {
         `Allocated ${BRB_MARKETING_AMOUNT.toString()} BRB to marketing ${marketingWallet} and ${BRB_INFRA_AMOUNT.toString()} BRB to infra ${infraWallet}`,
     );
 
-    const usdcLiquidity = await publicClient.readContract({
-        address: usdc,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [bootstrapAdmin],
-    });
-    if (usdcLiquidity === 0n) {
-        throw new Error("Deployer USDC balance is 0 — fund the deploy wallet before seeding the USDC/BRB pair");
+    const infrastructureStake = await stakeInfrastructureBrb({ token: brb, bank: marketBrb.bank,
+        infrastructure, client: receiptClient, amount: BRB_INFRA_STAKE_AMOUNT, waitWrite });
+    const houseBotFunding = await fundHouseBot({ token: brb, marketing, houseBot: houseBotWallet,
+        client: receiptClient, brbAmount: HOUSE_BOT_BRB_AMOUNT, ethTarget: HOUSE_BOT_GAS_TARGET,
+        marketingEthReserve: MARKETING_GAS_TARGET, waitWrite });
+    if (BigInt(houseBotFunding.marketingBrbRemaining) !== BRB_MARKETING_AMOUNT - HOUSE_BOT_BRB_AMOUNT) {
+        throw new Error("Marketing BRB remainder does not match the approved house bot allocation");
     }
-
-    console.log(
-        `Seeding Uniswap V2 USDC/BRB with full deployer USDC (${usdcLiquidity.toString()}) + ${BRB_LIQUIDITY_AMOUNT.toString()} BRB; LP to deployer (LPVestingLock deferred)`,
-    );
-    const seeded = await seedBrbAssetPool(
-        deployer,
-        publicClient,
-        {
-            router,
-            brb,
-            asset: usdc,
-            assetAmount: usdcLiquidity,
-            brbAmount: BRB_LIQUIDITY_AMOUNT,
-            assetLabel: "USDC",
-        },
-        waitWrite,
-    );
-
-    await waitWrite(funder.write.updateObservation([usdc], { account: deployer.account }));
+    const usdcAfter = await receiptClient.readContract({ address: usdc, abi: tokenReadAbi, functionName: "balanceOf", args: [bootstrapAdmin] });
+    if (usdcAfter !== usdcBefore) throw new Error("Deployer USDC changed during the architecture-only deployment");
+    const futureLiquidityBrb = await brbC.read.balanceOf([bootstrapAdmin]);
+    if (futureLiquidityBrb !== BRB_LIQUIDITY_AMOUNT) throw new Error("Future BRB liquidity reserve changed unexpectedly");
+    const factory = await viem.getContractAt("UniswapV2Factory", UNISWAP_V2_FACTORY);
+    const usdcBrbPair = await factory.read.getPair([usdc, brb]);
+    const daiBrbPair = await factory.read.getPair([dai, brb]);
+    if (BigInt(usdcBrbPair) !== 0n || BigInt(daiBrbPair) !== 0n) {
+        throw new Error("Unexpected DEX pair exists for the new BRB token");
+    }
 
     const deploymentManifest = {
         network: "arbitrum-one",
@@ -364,7 +386,12 @@ async function main() {
         startBlock: deployBlock,
         startBlocks: { brb: deployBlock },
         deployer: bootstrapAdmin,
+        deploymentMode: MAINNET_DEPLOYMENT_MODE,
         activationApproved: false,
+        gasFunding,
+        infrastructureStake,
+        houseBotFunding,
+        houseBotWallet,
         handoffComplete: false,
         verificationComplete: false,
         linkedLibraries,
@@ -378,6 +405,7 @@ async function main() {
             keeper: keeperWallet,
             cloudflareWorkerName: CLOUDFLARE_WORKER_NAME,
             payoutLaneCount,
+            scanLimit, maxPayoutsPerCall: maxPayouts,
             keeperMaxDrainIterations: KEEPER_MAX_DRAIN_ITERATIONS,
             note: "Provision the keeper with yarn deploy:cloudflare:arbitrum using Wrangler login",
         },
@@ -399,30 +427,29 @@ async function main() {
             vaultImpl: vaultImpl.address,
             vaultBeacon: beacon.address,
             uniswapRouter: router,
-            banks: [marketUsdc.bank, marketDai.bank, marketBrb.bank],
+            banks: [marketBrb.bank],
         },
         markets: {
-            usdc: { marketId: 1, asset: usdc, bank: marketUsdc.bank },
-            dai: { marketId: 2, asset: dai, bank: marketDai.bank },
-            brb: { marketId: 3, asset: brb, bank: marketBrb.bank },
+            brb: { marketId: 1, asset: brb, bank: marketBrb.bank, minBet: minBrb.toString() },
         },
+        deferredMarkets: { usdc: { asset: usdc }, dai: { asset: dai } },
         liquidity: {
-            usdcBrb: {
-                pair: seeded.pair,
-                liquidity: seeded.liquidity.toString(),
-                lpHolder: seeded.lpRecipient,
-                usdcAmount: usdcLiquidity.toString(),
-                brbAmount: BRB_LIQUIDITY_AMOUNT.toString(),
-            },
+            dexPairCreationDeferred: true,
+            usdcUntouched: true,
+            deployerUsdcBefore: usdcBefore.toString(), deployerUsdcAfter: usdcAfter.toString(),
+            futureLiquidityBrb: { owner: bootstrapAdmin, amount: futureLiquidityBrb.toString() },
             brbAllocation: {
                 marketing: { wallet: marketingWallet, amount: BRB_MARKETING_AMOUNT.toString() },
-                infra: { wallet: infraWallet, amount: BRB_INFRA_AMOUNT.toString() },
+                infra: { wallet: infraWallet, amount: BRB_INFRA_AMOUNT.toString(), staked: true, bank: marketBrb.bank },
             },
             lpVestingLockDeferred: true,
-            note: "USDC/BRB LP is held by lpHolder; deploy LPVestingLock later and transfer LP when ready",
+            note: "No DEX pair or stablecoin market created; infrastructure owns the BRB vault shares; deployer retains the future liquidity reserve",
         },
         vrf: {
             coordinator: vrfCoordinator,
+            owner: infraWallet,
+            linkTransferToInfrastructureHash: infrastructureVrf.transferHash,
+            confirmations, callbackGasLimit,
             linkToken,
             subscriptionId: vrfSubscriptionId.toString(),
             keyHash2Gwei: vrfKeyHashes[0],
@@ -472,7 +499,7 @@ async function main() {
 
     console.log(JSON.stringify(deploymentManifest, null, 2));
     console.log(
-        "Contracts configured (Cloudflare keeper automation). Next: yarn deploy:cloudflare:arbitrum after Wrangler login. LP remains on the deployer until LPVestingLock is deployed.",
+        "BRB-only architecture configured; infrastructure allocation staked. No USDC spent and no DEX pair created. Activate the keeper with yarn deploy:cloudflare:arbitrum.",
     );
 }
 

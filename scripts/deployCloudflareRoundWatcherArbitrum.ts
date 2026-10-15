@@ -90,10 +90,11 @@ async function main() {
         // One upload includes code and its signing secret; no live interval with missing configuration.
         command(["deploy", "--config", "wrangler.json", "--dry-run"]);
         const deploymentOutput = command(["deploy", "--config", "wrangler.json", "--secrets-file", secretPath], true);
-        const url = deploymentOutput.match(/https:\/\/biribi-round-watcher-arbitrum-one\.[a-z0-9-]+\.workers\.dev/)?.[0];
+        const url = deploymentOutput.match(/https:\/\/biribi-round-watcher-arbitrum-one\.[a-z0-9-]+\.workers\.dev\b/)?.[0];
         manifest.automation.workerDeployed = true;
         manifest.automation.workerHealthVerified = false;
-        manifest.automation.workerSettings = workerSettings;
+        const { rpcUrl: _rpcUrl, ...publicSettings } = workerSettings;
+        manifest.automation.workerSettings = publicSettings;
         manifest.automation.workerDeployedAt = new Date().toISOString();
         if (url) {
             manifest.automation.workerUrl = url;
@@ -111,8 +112,7 @@ async function main() {
             }
         }
         writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-        writeFileSync(join(contractsRoot, "deployments", "arbitrum-one-worker.json"), JSON.stringify({ config, workerSettings }, null, 2) + "\n");
-        const { rpcUrl: _rpcUrl, ...publicSettings } = workerSettings;
+        writeFileSync(join(contractsRoot, "deployments", "arbitrum-one-worker.json"), JSON.stringify({ config, workerSettings: publicSettings }, null, 2) + "\n");
         console.log(JSON.stringify({ worker: CLOUDFLARE_WORKER_NAME, url: url ?? null,
             workerHealthVerified: manifest.automation.workerHealthVerified, settings: publicSettings }, null, 2));
         if (!manifest.automation.workerHealthVerified) throw new Error("Worker uploaded but readiness was not confirmed; inspect /health and Cloudflare logs");

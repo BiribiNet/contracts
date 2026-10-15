@@ -2,113 +2,67 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { viem } from "hardhat";
 import { vars } from "hardhat/config";
-import { VERIFY_DELAY_MS, MIN_BET_USDC, MIN_BET_DAI, MIN_BET_BRB, UPKEEP_SCAN_LIMIT, UPKEEP_MAX_PAYOUTS_PER_CALL, VRF_CONFIRMATIONS } from "./constants/arbitrumOne";
-import { encodeBankVaultProxyInitDataFromAsset, verifyProtocolProxies } from "./utils/proxyVerification";
-import { buildRouletteEngineLibraryMap, verifyContractWithDelay, verifyRouletteLinkedLibraries } from "./utils/verifyWithEtherscan";
+import { type Address } from "viem";
+import { VERIFY_DELAY_MS } from "./constants/arbitrumOne";
+import { encodeBankVaultProxyInitDataFromAsset } from "./utils/proxyVerification";
+import { buildRouletteEngineLibraryMap } from "./utils/verifyWithEtherscan";
+import { verifyExactCompilerBuild } from "./utils/verifyExactCompilerBuild";
+import { createArbitrumFallbackPublicClient } from "./utils/hardhatRpcFailover";
 
+type Target = Parameters<typeof verifyExactCompilerBuild>[0];
 async function main() {
-    if (!vars.has("ETHERSCAN_API_KEY")) throw new Error("Explorer verification requires its separate ETHERSCAN_API_KEY credential");
-    const deployJsonPath = join(__dirname, "..", "deployments", "arbitrum-one.json");
-    const deploymentManifest = JSON.parse(readFileSync(deployJsonPath, "utf8"));
-    const publicClient = await viem.getPublicClient();
-    if (await publicClient.getChainId() !== 42161 || deploymentManifest.chainId !== 42161) throw new Error("Expected Arbitrum One");
-    const a = deploymentManifest.addresses;
-    const bootstrapAdmin = deploymentManifest.deployer, protocolAdmin = deploymentManifest.protocolAdmin;
-    const brb = a.brb, brbReferral = a.brbReferal, router = a.uniswapRouter;
-    const tipJar = { address: a.tipJar }, jackpotTreasury = { address: a.jackpotTreasury };
-    const funder = { address: a.jackpotFunder }, registry = { address: a.registry };
-    const engine = { address: a.engine }, sideBet = { address: a.sideBet }, scheduler = { address: a.scheduler };
-    const vaultImpl = { address: a.vaultImpl }, beacon = { address: a.vaultBeacon };
-    const engineImplementation = { address: a.engineImplementation }, sideBetImplementation = { address: a.sideBetImplementation };
-    const challengeEvaluator = a.challengeEvaluator, linkedLibraries = deploymentManifest.linkedLibraries;
-    const keeperAutomation = { creExecutionAuthority: a.creExecutionAuthority };
-    const engineProxyInitData = deploymentManifest.proxyInitialization.engine;
-    const sideBetProxyInitData = deploymentManifest.proxyInitialization.sideBet;
-    const usdc = deploymentManifest.markets.usdc.asset, dai = deploymentManifest.markets.dai.asset;
-    const marketUsdc = deploymentManifest.markets.usdc, marketDai = deploymentManifest.markets.dai, marketBrb = deploymentManifest.markets.brb;
-    const vrfCoordinator = deploymentManifest.vrf.coordinator;
-    const vrfKeyHashes = [deploymentManifest.vrf.keyHash2Gwei, deploymentManifest.vrf.keyHash30Gwei, deploymentManifest.vrf.keyHash150Gwei];
-    const confirmations = VRF_CONFIRMATIONS, scanLimit = UPKEEP_SCAN_LIMIT, maxPayouts = UPKEEP_MAX_PAYOUTS_PER_CALL;
-    const minStable = MIN_BET_USDC, minDai = MIN_BET_DAI, minBrb = MIN_BET_BRB;
-    {
-        const verifyDelayMs = VERIFY_DELAY_MS;
-        await verifyContractWithDelay(brb, [bootstrapAdmin], verifyDelayMs);
-        await verifyContractWithDelay(tipJar.address, [brb, engine.address], verifyDelayMs);
-        await verifyContractWithDelay(jackpotTreasury.address, [brb, engine.address, bootstrapAdmin], verifyDelayMs);
-        await verifyContractWithDelay(
-            funder.address,
-            [engine.address, brb, router, jackpotTreasury.address, sideBet.address, bootstrapAdmin],
-            verifyDelayMs,
-        );
-        await verifyContractWithDelay(registry.address, [bootstrapAdmin, engine.address, sideBet.address], verifyDelayMs);
-        await verifyContractWithDelay(challengeEvaluator, [], verifyDelayMs);
-        await verifyContractWithDelay(vaultImpl.address, [], verifyDelayMs);
-        await verifyContractWithDelay(beacon.address, [vaultImpl.address, protocolAdmin], verifyDelayMs);
-        await verifyContractWithDelay(brbReferral, [engine.address], verifyDelayMs);
-        await verifyRouletteLinkedLibraries(linkedLibraries, verifyDelayMs);
-
-        const [usdcVaultInit, daiVaultInit, brbVaultInit] = await Promise.all([
-            encodeBankVaultProxyInitDataFromAsset(publicClient, {
-                asset: usdc,
-                marketId: 1,
-                engine: engine.address,
-                bankAdmin: protocolAdmin,
-                minBet: minStable,
-                sideBetController: sideBet.address,
-            }),
-            encodeBankVaultProxyInitDataFromAsset(publicClient, {
-                asset: dai,
-                marketId: 2,
-                engine: engine.address,
-                bankAdmin: protocolAdmin,
-                minBet: minDai,
-                sideBetController: sideBet.address,
-            }),
-            encodeBankVaultProxyInitDataFromAsset(publicClient, {
-                asset: brb,
-                marketId: 3,
-                engine: engine.address,
-                bankAdmin: protocolAdmin,
-                minBet: minBrb,
-                sideBetController: sideBet.address,
-            }),
-        ]);
-
-        await verifyProtocolProxies({
-            strict: true,
-            delayMs: verifyDelayMs,
-            engineProxy: engine.address,
-            engineImplementation: engineImplementation.address,
-            engineInitData: engineProxyInitData,
-            engineImplCtorArgs: [
-                vrfCoordinator,
-                vrfKeyHashes[0],
-                vrfKeyHashes[1],
-                vrfKeyHashes[2],
-                confirmations,
-                brbReferral,
-            ],
-            engineLibraryMap: buildRouletteEngineLibraryMap(linkedLibraries),
-            sideBetProxy: sideBet.address,
-            sideBetImplementation: sideBetImplementation.address,
-            sideBetInitData: sideBetProxyInitData,
-            vaultBeacon: beacon.address,
-            bankVaults: [
-                { bank: marketUsdc.bank, initData: usdcVaultInit },
-                { bank: marketDai.bank, initData: daiVaultInit },
-                { bank: marketBrb.bank, initData: brbVaultInit },
-            ],
-        });
-
-        await verifyContractWithDelay(
-            scheduler.address,
-            [engine.address, sideBet.address, bootstrapAdmin, scanLimit, maxPayouts],
-            verifyDelayMs,
-        );
-        await verifyContractWithDelay(keeperAutomation.creExecutionAuthority, [bootstrapAdmin], verifyDelayMs);
-        deploymentManifest.verificationComplete = true;
-        writeFileSync(deployJsonPath, `${JSON.stringify(deploymentManifest, null, 2)}\n`);
+    if (!vars.has("ETHERSCAN_API_KEY")) throw new Error("Explorer verification requires ETHERSCAN_API_KEY");
+    const path = join(__dirname, "..", "deployments", "arbitrum-one.json");
+    const manifest = JSON.parse(readFileSync(path, "utf8"));
+    const client = createArbitrumFallbackPublicClient();
+    if (await client.getChainId() !== 42161 || manifest.chainId !== 42161) throw new Error("Expected Arbitrum One");
+    const a = manifest.addresses;
+    const admin = manifest.deployer;
+    const targets: Target[] = [
+        { address: a.brb, artifact: "BRBToken", constructorArguments: [admin] },
+        { address: a.tipJar, artifact: "TipJar", constructorArguments: [a.brb, a.engine] },
+        { address: a.jackpotTreasury, artifact: "JackpotTreasury", constructorArguments: [a.brb, a.engine, admin] },
+        { address: a.jackpotFunder, artifact: "BRBJackpotFunder", constructorArguments: [a.engine, a.brb, a.uniswapRouter, a.jackpotTreasury, a.sideBet, admin] },
+        { address: a.registry, artifact: "MarketRegistry", constructorArguments: [admin, a.engine, a.sideBet] },
+        { address: a.challengeEvaluator, artifact: "SideBetChallengeEvaluator", buildContract: "contracts/SideBet.sol:SideBet", constructorArguments: [] },
+        { address: a.vaultImpl, artifact: "BankVault4626", constructorArguments: [] },
+        { address: a.vaultBeacon, artifact: "UpgradeableBeacon", constructorArguments: [a.vaultImpl, manifest.protocolAdmin] },
+        { address: a.brbReferal, artifact: "BRBReferal", constructorArguments: [a.engine] },
+    ];
+    const libraries = manifest.linkedLibraries;
+    for (const [key, artifact, links] of [
+        ["rouletteLib", "RouletteLib", {}], ["rouletteBetLib", "RouletteBetLib", {}],
+        ["jackpotBatchLib", "JackpotBatchLib", {}], ["roulettePayoutMulLib", "RoulettePayoutMulLib", {}],
+        ["rouletteExposureLib", "RouletteExposureLib", {}], ["rouletteJackpotCollectLib", "RouletteJackpotCollectLib", {}],
+        ["rouletteLiabilityMathLib", "RouletteLiabilityMathLib", { "contracts/RouletteLib.sol:RouletteLib": libraries.rouletteLib }],
+        ["rouletteBetCodecLib", "RouletteBetCodecLib", { "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": libraries.rouletteBetLib }],
+        ["roulettePayoutSweepLib", "RoulettePayoutSweepLib", { "contracts/libraries/RouletteBetLib.sol:RouletteBetLib": libraries.rouletteBetLib, "contracts/libraries/RoulettePayoutMulLib.sol:RoulettePayoutMulLib": libraries.roulettePayoutMulLib }],
+        ["rouletteUpkeepScanLib", "RouletteUpkeepScanLib", { "contracts/libraries/JackpotBatchLib.sol:JackpotBatchLib": libraries.jackpotBatchLib, "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib": libraries.rouletteJackpotCollectLib, "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": libraries.roulettePayoutSweepLib }],
+    ] as Array<[string, string, Record<string, string>]>) targets.push({ address: libraries[key], artifact, libraries: links, constructorArguments: [] });
+    targets.push(
+        { address: a.sideBetImplementation, artifact: "SideBet", constructorArguments: [] },
+        { address: a.engineImplementation, artifact: "RouletteEngine", constructorArguments: [manifest.vrf.coordinator, manifest.vrf.keyHash2Gwei, manifest.vrf.keyHash30Gwei, manifest.vrf.keyHash150Gwei, manifest.vrf.confirmations, a.brbReferal], libraries: buildRouletteEngineLibraryMap(libraries) },
+        { address: a.engine, artifact: "ERC1967Proxy", constructorArguments: [a.engineImplementation, manifest.proxyInitialization.engine] },
+        { address: a.sideBet, artifact: "ERC1967Proxy", constructorArguments: [a.sideBetImplementation, manifest.proxyInitialization.sideBet] },
+    );
+    for (const market of Object.values(manifest.markets) as Array<{ asset: Address; bank: Address; marketId: number; minBet: string }>) {
+        const init = await encodeBankVaultProxyInitDataFromAsset(client, { asset: market.asset, marketId: market.marketId,
+            engine: a.engine, bankAdmin: manifest.protocolAdmin, minBet: BigInt(market.minBet), sideBetController: a.sideBet });
+        targets.push({ address: market.bank, artifact: "BeaconProxy", constructorArguments: [a.vaultBeacon, init] });
     }
-
+    targets.push(
+        { address: a.scheduler, artifact: "UpkeepScheduler", constructorArguments: [a.engine, a.sideBet, admin, manifest.automation.scanLimit, manifest.automation.maxPayoutsPerCall] },
+        { address: a.creExecutionAuthority, artifact: "CreExecutionAuthority", constructorArguments: [admin] },
+    );
+    for (const target of targets) {
+        try { await verifyExactCompilerBuild(target); }
+        catch { throw new Error(`Exact compiler verification failed for ${target.artifact} at ${target.address}; no completion flag recorded`); }
+        await new Promise(resolve => setTimeout(resolve, VERIFY_DELAY_MS));
+    }
+    const latest = JSON.parse(readFileSync(path, "utf8"));
+    latest.verificationComplete = true;
+    latest.sourceVerification = { checkedAt: new Date().toISOString(), contracts: targets.map(({ address, artifact, buildContract }) => ({ address, artifact, ...(buildContract ? { buildContract } : {}) })), count: targets.length };
+    writeFileSync(path, JSON.stringify(latest, null, 2) + "\n");
+    console.log(`All ${targets.length} deployed protocol contracts source verified.`);
 }
-main().catch(() => { console.error("Verification failed; verificationComplete remains false"); process.exitCode = 1; });
+main().catch(error => { console.error(error instanceof Error && !error.cause && !/https?:\/\//i.test(error.message) ? error.message : "Source verification interrupted; no completion flag recorded"); process.exitCode = 1; });

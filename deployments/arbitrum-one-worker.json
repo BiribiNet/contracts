@@ -1,0 +1,49 @@
+{
+  "config": {
+    "name": "biribi-round-watcher-arbitrum-one",
+    "account_id": "565dcec5f878e204eb97f74b00e25a58",
+    "main": "src/mainnet.ts",
+    "compatibility_date": "2026-10-15",
+    "compatibility_flags": [
+      "nodejs_compat"
+    ],
+    "workers_dev": true,
+    "durable_objects": {
+      "bindings": [
+        {
+          "name": "KEEPER",
+          "class_name": "MainnetKeeper"
+        }
+      ]
+    },
+    "migrations": [
+      {
+        "tag": "v1",
+        "new_sqlite_classes": [
+          "MainnetKeeper"
+        ]
+      }
+    ],
+    "triggers": {
+      "crons": [
+        "* * * * *"
+      ]
+    },
+    "observability": {
+      "enabled": true
+    }
+  },
+  "workerSettings": {
+    "chainId": 42161,
+    "engine": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+    "scheduler": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+    "funder": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+    "authority": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+    "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+    "laneCount": 2,
+    "marketIds": [
+      1
+    ],
+    "maxTransactionsPerWake": 5
+  }
+}

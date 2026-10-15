@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-15T15:34:27.293Z",
+  "chainId": 42161,
+  "balances": [
+    {
+      "name": "deployer",
+      "address": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+      "eth": "0.054613486521962425"
+    },
+    {
+      "name": "keeper",
+      "address": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+      "eth": "0"
+    },
+    {
+      "name": "infrastructure",
+      "address": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+      "eth": "0"
+    },
+    {
+      "name": "marketing",
+      "address": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+      "eth": "0"
+    },
+    {
+      "name": "houseBot",
+      "address": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+      "eth": "0"
+    }
+  ],
+  "deployerLink": "11.952032734339140742",
+  "deployerUsdc": "24000",
+  "gasPriceWei": "20110000",
+  "latestNonce": 4,
+  "pendingNonce": 4,
+  "signerStatus": {
+    "KEEPER_PRIVATE_KEY": {
+      "configured": true,
+      "matches": true
+    },
+    "INFRA_PRIVATE_KEY": {
+      "configured": true,
+      "matches": true
+    },
+    "MARKETING_PRIVATE_KEY": {
+      "configured": true,
+      "matches": true
+    }
+  },
+  "note": "Read-only; no transaction sent"
+}
