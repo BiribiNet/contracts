@@ -1,5 +1,5 @@
 /**
- * BRBGAME side-bet catalogue — the bet templates seeded onto `SideBet` for every registered market.
+ * Side bets side-bet catalogue — the bet templates seeded onto `SideBet` for every registered market.
  *
  * WHY THIS FILE EXISTS: `SideBet` ships with `configCount == 0`, and neither the deploy scripts nor
  * the Ignition module ever called `addConfig`. With no config the whole product is inert —

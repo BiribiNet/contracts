@@ -55,7 +55,7 @@ Core mechanics:
 
 ## Current Contract Architecture
 
-### BRBGAME settlement compatibility
+### Side bets settlement compatibility
 
 The Arbitrum Sepolia scheduler at `0xad1f181ad88aee13a6643104941ecea2b963c2d7`
 is immutable and uses three-field settlement rows. `previewSettleBundle` and `settleBatch`

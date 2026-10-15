@@ -1,4 +1,4 @@
-# BRBGAME challenge upgrade — testnet activation plan
+# Side bets challenge upgrade — testnet activation plan
 
 This is prepared code, not a record of an on-chain upgrade or active markets.
 Existing deployment and seeding scripts do not automatically offer these challenges.

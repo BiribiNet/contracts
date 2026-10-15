@@ -38,7 +38,7 @@ hardhat vars set ETHERSCAN_API_KEY          # optional verify
    SideBet with no config offers nothing: every `placeBet` reverts `UnknownConfig` and the frontend
    renders its empty "no side bets are open" state.
 
-## SideBet (BRBGAME)
+## SideBet (Side bets)
 
 `SideBet` is deployed and wired by the protocol deploy (registry, engine, and each vault's
 `sideBetController`), but **no bet template is ever created for it**. Seeding is a required
@@ -98,7 +98,7 @@ and re-run. Tune with `SEED_MIN_STAKE_UNITS` (default 1 whole asset unit) and `S
 cast call $SIDE_BET "configCount()(uint256)" --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
 ```
 
-Then check the subgraph returns them (`sideBetConfigs(where: {active: true})`) and that `/brbgame`
+Then check the subgraph returns them (`sideBetConfigs(where: {active: true})`) and that `/side-bets`
 lists the catalogue.
 
 > **Role hazard on a fresh deploy.** `scripts/utils/deployRouletteEngine.ts` grants
@@ -118,7 +118,7 @@ lists the catalogue.
 6. Run `yarn deploy:protocol:arbitrum`.
 7. Deploy `UPKEEP_LANE_COUNT` CRE workflows (defaults to `PAYOUT_LANE_COUNT`) — [docs/CRE_MIGRATION.md](docs/CRE_MIGRATION.md).
 8. LP: lock Uniswap LP in `LPVestingLock` (3-year cliff).
-9. Seed the side-bet catalogue (see **SideBet (BRBGAME)** above) from an account holding
+9. Seed the side-bet catalogue (see **SideBet (Side bets)** above) from an account holding
    `SIDE_BET_CONFIG_ROLE` and `SIDE_BET_LIMITS_ROLE`, pointing `SIDE_BET_ADDRESS` at the mainnet
    proxy. Fund each vault first — the seed refuses to activate configs the vault cannot back.
 
