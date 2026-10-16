@@ -111,6 +111,7 @@ async function main() {
                 await new Promise(resolve => setTimeout(resolve, 5_000));
             }
         }
+        manifest.automation.marketCatalogUpdatePending = !manifest.automation.workerHealthVerified;
         writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
         writeFileSync(join(contractsRoot, "deployments", "arbitrum-one-worker.json"), JSON.stringify({ config, workerSettings: publicSettings }, null, 2) + "\n");
         console.log(JSON.stringify({ worker: CLOUDFLARE_WORKER_NAME, url: url ?? null,

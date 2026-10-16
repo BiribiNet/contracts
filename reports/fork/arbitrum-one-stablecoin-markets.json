@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-16T14:13:22.422Z",
+  "localChainId": 31337,
+  "sourceChainId": 42161,
+  "pinnedBlock": 515396690,
+  "order": [
+    "BRB:1",
+    "USDC:2",
+    "DAI:3"
+  ],
+  "markets": {
+    "usdc": {
+      "marketId": 2,
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+      "minBet": "1000000",
+      "creationHash": "0x89a417e9383df0c055e0255161abe6775145e10e14286f852bf200ae67cd60fb"
+    },
+    "dai": {
+      "marketId": 3,
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+      "minBet": "1000000000000000000",
+      "creationHash": "0x58433525a619af5cb0fdbdfddbcfa22c7aad609578718e837642e4482d01e4e0"
+    }
+  },
+  "brbBankUnchanged": true,
+  "tokenBalancesUnchanged": true,
+  "poolReservesUnchanged": true,
+  "lpOwnerUnchanged": true,
+  "limitation": "Only local fork impersonation was used; no live private key signed a fork transaction"
+}

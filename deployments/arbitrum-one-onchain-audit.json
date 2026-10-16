@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-15T16:03:28.061Z",
+  "checkedAt": "2026-10-16T14:17:52.889Z",
   "chainId": 42161,
-  "blockNumber": "515108480",
+  "blockNumber": "515398048",
   "ok": true,
   "checks": [
     {
@@ -141,6 +141,24 @@
     },
     {
       "name": "runtime BeaconProxy 0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+      "ok": true,
+      "detail": {
+        "bytes": 242,
+        "deployedHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "constructorImmutableRanges": 1
+      }
+    },
+    {
+      "name": "runtime BeaconProxy 0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+      "ok": true,
+      "detail": {
+        "bytes": 242,
+        "deployedHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "constructorImmutableRanges": 1
+      }
+    },
+    {
+      "name": "runtime BeaconProxy 0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
       "ok": true,
       "detail": {
         "bytes": 242,
@@ -567,8 +585,188 @@
       }
     },
     {
-      "name": "BRB-only market",
+      "name": "market catalog matches manifest",
       "ok": true
+    },
+    {
+      "name": "brb registered asset",
+      "ok": true,
+      "detail": {
+        "actual": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "expected": "0x58871cf545f8f0df790443492a80edc414df4504"
+      }
+    },
+    {
+      "name": "brb registered bank",
+      "ok": true,
+      "detail": {
+        "actual": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "expected": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9"
+      }
+    },
+    {
+      "name": "brb bank asset",
+      "ok": true,
+      "detail": {
+        "actual": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "expected": "0x58871cf545f8f0df790443492a80edc414df4504"
+      }
+    },
+    {
+      "name": "brb bank engine",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "brb bank SideBet",
+      "ok": true,
+      "detail": {
+        "actual": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+        "expected": "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      }
+    },
+    {
+      "name": "brb bank market id",
+      "ok": true
+    },
+    {
+      "name": "brb bank minimum bet",
+      "ok": true
+    },
+    {
+      "name": "brb bank administrator",
+      "ok": true
+    },
+    {
+      "name": "brb bank beacon",
+      "ok": true,
+      "detail": {
+        "actual": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+        "expected": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b"
+      }
+    },
+    {
+      "name": "usdc registered asset",
+      "ok": true,
+      "detail": {
+        "actual": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "expected": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+      }
+    },
+    {
+      "name": "usdc registered bank",
+      "ok": true,
+      "detail": {
+        "actual": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "expected": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA"
+      }
+    },
+    {
+      "name": "usdc bank asset",
+      "ok": true,
+      "detail": {
+        "actual": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "expected": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+      }
+    },
+    {
+      "name": "usdc bank engine",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "usdc bank SideBet",
+      "ok": true,
+      "detail": {
+        "actual": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+        "expected": "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      }
+    },
+    {
+      "name": "usdc bank market id",
+      "ok": true
+    },
+    {
+      "name": "usdc bank minimum bet",
+      "ok": true
+    },
+    {
+      "name": "usdc bank administrator",
+      "ok": true
+    },
+    {
+      "name": "usdc bank beacon",
+      "ok": true,
+      "detail": {
+        "actual": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+        "expected": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b"
+      }
+    },
+    {
+      "name": "dai registered asset",
+      "ok": true,
+      "detail": {
+        "actual": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+        "expected": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+      }
+    },
+    {
+      "name": "dai registered bank",
+      "ok": true,
+      "detail": {
+        "actual": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "expected": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2"
+      }
+    },
+    {
+      "name": "dai bank asset",
+      "ok": true,
+      "detail": {
+        "actual": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+        "expected": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+      }
+    },
+    {
+      "name": "dai bank engine",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "dai bank SideBet",
+      "ok": true,
+      "detail": {
+        "actual": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+        "expected": "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      }
+    },
+    {
+      "name": "dai bank market id",
+      "ok": true
+    },
+    {
+      "name": "dai bank minimum bet",
+      "ok": true
+    },
+    {
+      "name": "dai bank administrator",
+      "ok": true
+    },
+    {
+      "name": "dai bank beacon",
+      "ok": true,
+      "detail": {
+        "actual": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+        "expected": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b"
+      }
     },
     {
       "name": "infra bank assets",
@@ -684,7 +882,11 @@
       "ok": true
     },
     {
-      "name": "pool reserves approved amounts",
+      "name": "pool initially funded with approved amounts",
+      "ok": true
+    },
+    {
+      "name": "live pool reserves positive and backed",
       "ok": true
     },
     {
@@ -769,7 +971,7 @@
     }
   ],
   "balances": {
-    "deployerEth": "0.045748888698865748",
+    "deployerEth": "0.045728521081737436",
     "infraEth": "0.000990300327186",
     "marketingEth": "0.001098464709326",
     "houseBotEth": "0.001",
@@ -783,8 +985,11 @@
   "pool": {
     "address": "0x848A51FaD11746bca839DF587C3Cde450bDfb853",
     "sourceVerified": true,
-    "brbReserve": "2400000",
-    "usdcReserve": "24000",
+    "initialBrb": "2400000",
+    "initialUsdc": "24000",
+    "reservesChangedSinceFunding": true,
+    "brbReserve": "2399953.775584175634557911",
+    "usdcReserve": "24000.463644",
     "lpOwner": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
     "lpBalance": "239999999999999000",
     "lpSupply": "240000000000000000",
@@ -831,7 +1036,7 @@
     "chainId": 42161,
     "status": {
       "ok": true,
-      "checkedAt": 1792080205025,
+      "checkedAt": 1792160271924,
       "chainId": 42161
     }
   },

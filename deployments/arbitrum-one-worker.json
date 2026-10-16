@@ -42,7 +42,9 @@
     "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
     "laneCount": 2,
     "marketIds": [
-      1
+      1,
+      2,
+      3
     ],
     "maxTransactionsPerWake": 5
   }

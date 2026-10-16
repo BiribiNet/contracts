@@ -51,7 +51,9 @@
     "check:dependencies:arbitrum": "ts-node --transpile-only scripts/checkArbitrumDependencies.ts",
     "seed:brb-usdc:arbitrum": "hardhat run scripts/seedBrbUsdcArbitrum.ts --network arbitrum",
     "audit:deployment:arbitrum": "hardhat run scripts/auditMainnetDeployment.ts --network arbitrum",
-    "verify:proxy-links:arbitrum": "hardhat run scripts/linkVerifiedProxiesArbitrum.ts --network arbitrum"
+    "verify:proxy-links:arbitrum": "hardhat run scripts/linkVerifiedProxiesArbitrum.ts --network arbitrum",
+    "deploy:markets:arbitrum": "hardhat run scripts/deployStablecoinMarketsArbitrum.ts --network arbitrum",
+    "verify:markets:arbitrum": "hardhat run scripts/verifyStablecoinMarketsArbitrum.ts --network arbitrum"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-16T14:12:14.716Z",
+  "chainId": 42161,
+  "ok": true,
+  "order": [
+    "BRB:1",
+    "USDC:2",
+    "DAI:3"
+  ],
+  "markets": [
+    {
+      "name": "usdc",
+      "marketId": 2,
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+      "minBet": "1000000",
+      "exactRuntimeMatches": true,
+      "beaconCorrect": true,
+      "wiringCorrect": true,
+      "adminCorrect": true,
+      "totalAssets": "0",
+      "totalShares": "0",
+      "creationHash": "0xce007717664f38764f629e37fdafb04888e6e8e7cd200b1652acd3e59b263bbb",
+      "sourceVerified": true,
+      "blockNumber": "515396691"
+    },
+    {
+      "name": "dai",
+      "marketId": 3,
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+      "minBet": "1000000000000000000",
+      "exactRuntimeMatches": true,
+      "beaconCorrect": true,
+      "wiringCorrect": true,
+      "adminCorrect": true,
+      "totalAssets": "0",
+      "totalShares": "0",
+      "creationHash": "0xe78d99b6a46bb73bfc691b415866d778c3ecef0e58393df20c865ff039339ece",
+      "sourceVerified": true,
+      "blockNumber": "515396708"
+    }
+  ]
+}

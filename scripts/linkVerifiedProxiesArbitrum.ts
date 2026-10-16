@@ -25,9 +25,9 @@ async function main() {
     for (const [proxy, implementation] of [
         [manifest.addresses.engine, manifest.addresses.engineImplementation],
         [manifest.addresses.sideBet, manifest.addresses.sideBetImplementation],
-        [manifest.markets.brb.bank, manifest.addresses.vaultImpl],
+        ...Object.values(manifest.markets).map((market: any) => [market.bank, manifest.addresses.vaultImpl]),
     ] as Array<[`0x${string}`, `0x${string}`]>) {
-        if (proxy !== manifest.markets.brb.bank) {
+        if (!Object.values(manifest.markets).some((market: any) => market.bank.toLowerCase() === proxy.toLowerCase())) {
             const slot = await client.getStorageAt({ address: proxy, slot: ERC1967_IMPLEMENTATION_SLOT });
             if (`0x${slot?.slice(-40)}`.toLowerCase() !== implementation.toLowerCase()) throw new Error("On-chain implementation mismatch");
         }

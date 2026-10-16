@@ -19,7 +19,10 @@
     "scripts/seedBrbUsdcArbitrum.ts",
     "test/MainnetBrbLiquidity.fork.test.ts",
     "scripts/auditMainnetDeployment.ts",
-    "scripts/linkVerifiedProxiesArbitrum.ts"
+    "scripts/linkVerifiedProxiesArbitrum.ts",
+    "scripts/deployStablecoinMarketsArbitrum.ts",
+    "test/MainnetStablecoinMarkets.fork.test.ts",
+    "scripts/verifyStablecoinMarketsArbitrum.ts"
   ],
   "exclude": [
     "node_modules",

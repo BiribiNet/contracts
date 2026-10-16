@@ -1,7 +1,7 @@
 import { artifacts, viem } from "hardhat";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { formatEther, formatUnits, parseAbi, keccak256, encodeAbiParameters, toHex, type Address, type Hex } from "viem";
+import { decodeEventLog, formatEther, formatUnits, parseAbi, keccak256, encodeAbiParameters, toHex, type Address, type Hex } from "viem";
 import { createArbitrumFallbackPublicClient } from "./utils/hardhatRpcFailover";
 import { ERC1967_IMPLEMENTATION_SLOT } from "./utils/proxyVerification";
 import { Etherscan } from "@nomicfoundation/hardhat-verify/internal/etherscan";
@@ -32,7 +32,8 @@ async function main() {
         ["SideBetChallengeEvaluator", a.challengeEvaluator], ["UpkeepScheduler", a.scheduler],
         ["CreExecutionAuthority", a.creExecutionAuthority], ["JackpotTreasury", a.jackpotTreasury],
         ["BRBJackpotFunder", a.jackpotFunder], ["TipJar", a.tipJar], ["BankVault4626", a.vaultImpl],
-        ["UpgradeableBeacon", a.vaultBeacon], ["BeaconProxy", m.markets.brb.bank],
+        ["UpgradeableBeacon", a.vaultBeacon],
+        ...Object.values(m.markets).map((market: any) => ["BeaconProxy", market.bank] as [string, Address]),
         ...Object.entries(linked).map(([name, address]) => [name, address as Address] as [string, Address]),
     ];
     for (const [name, address] of deployments) {
@@ -111,7 +112,21 @@ async function main() {
     const sideBet = await viem.getContractAt("SideBet", a.sideBet);
     const authority = await viem.getContractAt("CreExecutionAuthority", a.creExecutionAuthority);
     const bank = await viem.getContractAt("BankVault4626", m.markets.brb.bank);
-    check("BRB-only market", await registry.read.marketCount() === 1 && (await registry.read.getMarket([1])).bank.toLowerCase() === bank.address.toLowerCase());
+    check("market catalog matches manifest", await registry.read.marketCount() === Object.keys(m.markets).length && (await registry.read.getMarket([1])).bank.toLowerCase() === bank.address.toLowerCase());
+    for (const [name, market] of Object.entries(m.markets) as Array<[string, { marketId: number; asset: Address; bank: Address; minBet: string }]>) {
+        const configured = await registry.read.getMarket([market.marketId]);
+        const vault = await viem.getContractAt("BankVault4626", market.bank);
+        equal(`${name} registered asset`, configured.asset, market.asset);
+        equal(`${name} registered bank`, configured.bank, market.bank);
+        equal(`${name} bank asset`, await vault.read.asset(), market.asset);
+        equal(`${name} bank engine`, await vault.read.ENGINE(), a.engine);
+        equal(`${name} bank SideBet`, await vault.read.sideBetController(), a.sideBet);
+        check(`${name} bank market id`, await vault.read.marketId() === market.marketId);
+        check(`${name} bank minimum bet`, await vault.read.minBet() === BigInt(market.minBet));
+        check(`${name} bank administrator`, await vault.read.hasRole([await vault.read.BANK_ADMIN_ROLE(), m.protocolAdmin]));
+        const bankBeacon = await pc.getStorageAt({ address: market.bank, slot: beaconSlot, blockNumber });
+        equal(`${name} bank beacon`, `0x${bankBeacon?.slice(-40)}`, a.vaultBeacon);
+    }
     check("infra bank assets", await bank.read.totalAssets() === 300000n * 10n ** 18n);
     check("infra owns recorded shares", await bank.read.balanceOf([m.infraWallet]) === BigInt(m.infrastructureStake.shares));
     check("withdrawal fee 1 BRB", await bank.read.flatWithdrawFee() === 10n ** 18n);
@@ -159,7 +174,17 @@ async function main() {
     const [brbReserve, usdcReserve] = token0.toLowerCase() === a.brb.toLowerCase() ? reserves : [reserves[1], reserves[0]];
     const lp = await bal(pair, m.deployer);
     const lpSupply = await pc.readContract({ address: pair, abi: pairAbi, functionName: "totalSupply", blockNumber });
-    check("pool reserves approved amounts", brbReserve === 2400000n * 10n ** 18n && usdcReserve === 24000n * 10n ** 6n);
+    // Live reserves can change after swaps. Verify the approved deposit against its actual Mint event.
+    const liquidityJournal = readFileSync(join(root, "arbitrum-one-liquidity-transactions.jsonl"), "utf8").trim().split("\n").map(line => JSON.parse(line));
+    const fundingRecord = liquidityJournal.filter(record => record.event === "receipt" && record.status === "success").at(-1);
+    if (!fundingRecord) throw new Error("Missing initial liquidity receipt");
+    const fundingReceipt = await pc.getTransactionReceipt({ hash: fundingRecord.hash });
+    const mintLog = fundingReceipt.logs.find(log => log.address.toLowerCase() === pair.toLowerCase() && log.topics[0] === keccak256(toHex("Mint(address,uint256,uint256)")));
+    if (!mintLog) throw new Error("Initial pool Mint event missing");
+    const mint = decodeEventLog({ abi: parseAbi(["event Mint(address indexed sender,uint256 amount0,uint256 amount1)"]), data: mintLog.data, topics: mintLog.topics });
+    const [initialBrb, initialUsdc] = token0.toLowerCase() === a.brb.toLowerCase() ? [mint.args.amount0, mint.args.amount1] : [mint.args.amount1, mint.args.amount0];
+    check("pool initially funded with approved amounts", initialBrb === 2400000n * 10n ** 18n && initialUsdc === 24000n * 10n ** 6n);
+    check("live pool reserves positive and backed", brbReserve > 0n && usdcReserve > 0n && await bal(a.brb, pair) >= brbReserve && await bal(USDC, pair) >= usdcReserve);
     check("all minted LP stays with deployer", lp > 0n && lpSupply - lp === 1000n);
     for (const token of [a.brb, USDC]) check(`router allowance cleared ${token}`, await pc.readContract({ address: token, abi: tokenAbi, functionName: "allowance", args: [m.deployer, UNISWAP_V2_ROUTER], blockNumber }) === 0n);
     const balances: Record<string, string> = {};
@@ -189,7 +214,7 @@ async function main() {
     check("Uniswap pool source publicly verified", poolSourceVerified);
     const failed = checks.filter(x => !x.ok);
     const report = { checkedAt: new Date().toISOString(), chainId: 42161, blockNumber: blockNumber.toString(), ok: failed.length === 0, checks, balances,
-        pool: { address: pair, sourceVerified: poolSourceVerified, brbReserve: formatUnits(brbReserve, 18), usdcReserve: formatUnits(usdcReserve, 6), lpOwner: m.deployer, lpBalance: lp.toString(), lpSupply: lpSupply.toString(), standardMinimumLiquidityBurned: "1000", lpVestingLockDeployed: false, receipts },
+        pool: { address: pair, sourceVerified: poolSourceVerified, initialBrb: formatUnits(initialBrb, 18), initialUsdc: formatUnits(initialUsdc, 6), reservesChangedSinceFunding: brbReserve !== initialBrb || usdcReserve !== initialUsdc, brbReserve: formatUnits(brbReserve, 18), usdcReserve: formatUnits(usdcReserve, 6), lpOwner: m.deployer, lpBalance: lp.toString(), lpSupply: lpSupply.toString(), standardMinimumLiquidityBurned: "1000", lpVestingLockDeployed: false, receipts },
         vrf: { owner: subscription[3], linkBalance: formatUnits(subscription[0], 18), consumers: subscription[4] }, worker,
         scope: "Read-only exact runtime comparison with expected constructor immutables and library addresses reconstructed, proxy storage, wiring, ownership, funding and receipt audit. Explorer source verification is tracked separately." };
     writeFileSync(join(root, "arbitrum-one-onchain-audit.json"), JSON.stringify(report, null, 2) + "\n");
