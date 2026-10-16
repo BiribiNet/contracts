@@ -3,6 +3,13 @@ import { expect } from "chai";
 import { customErrorPattern } from "./helpers/customErrorPattern";
 
 describe("Custom-error assertions", () => {
+    it("accepts complete static arguments and rejects truncated or extra raw data", () => {
+        const pattern = customErrorPattern("AccessControlUnauthorizedAccount(address,bytes32)");
+        const payload = "0xe2517d3f" + "0".repeat(128);
+        expect(`return data: ${payload})`).to.match(pattern);
+        expect(`return data: ${payload.slice(0, -2)})`).not.to.match(pattern);
+        expect(`return data: ${payload}00)`).not.to.match(pattern);
+    });
     it("accepts named and raw RPC errors for the exact expected no-argument error", () => {
         const pattern = customErrorPattern("InvalidInitialization()");
         expect("reverted with custom error 'InvalidInitialization()'").to.match(pattern);
