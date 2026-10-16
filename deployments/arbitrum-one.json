@@ -6,7 +6,8 @@
   "defaultMarket": "brb",
   "automation": {
     "mode": "keeper",
-    "worker": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev"
+    "worker": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
+    "executorApprovalIndexed": false
   },
   "addresses": {
     "brb": "0x58871cf545f8f0df790443492a80edc414df4504",
@@ -247,10 +248,31 @@
     },
     "limitations": [
       "Public launch is not approved by this record.",
-      "Role grants were sampled; complete bootstrap/admin handoff was not attested.",
+      "Named role grants were reconciled at the dated role snapshot; complete bootstrap/admin handoff remains unattested.",
       "Explorer/source verification and deployed artifact identity remain unverified.",
       "No signed bet, VRF fulfillment, payout or withdrawal canary was performed.",
       "Worker health does not prove webhook delivery, signer authorization or successful upkeep."
-    ]
+    ],
+    "executorApprovalLayout": {
+      "signature": "ExecutorApprovalUpdated(address,bool)",
+      "executorIndexed": false,
+      "transactionHash": "0x5fc3f1989b76ceb7106b2cb8bf7b79f4b1d3ab4b87889eb676d34d3feffd7529",
+      "blockNumber": 515103432,
+      "topics": [
+        "0x391bf247d4d273b732acb87cbd9aec2f23350358681e1a043bd7642eee30afb8"
+      ],
+      "data": "0x00000000000000000000000029984d0c50ddaa5be680b750025dc88d16c57ab80000000000000000000000000000000000000000000000000000000000000001"
+    },
+    "roleSnapshot": {
+      "checkedAt": "2026-10-16T08:12:51.923Z",
+      "blockNumber": 515317976,
+      "rolesExamined": 21,
+      "matchesManifest": true,
+      "executor": {
+        "address": "0x29984d0c50ddaa5be680b750025dc88d16c57ab8",
+        "approved": true
+      },
+      "limitation": "Observed grants and approval do not attest deployed source identity, worker signer custody or completion of bootstrap handoff."
+    }
   }
 }

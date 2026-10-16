@@ -50,3 +50,30 @@ Keeper configuration leaves AutomationReceiver blank and preserves the existing
 authority key. It exports TipJar/router/pair metadata and keeps the buy feature
 disabled pending executable-route validation. No contracts were upgraded or
 redeployed. See the existing MAINNET_RUNBOOK and the frontend cutover document.
+
+## Follow-up — 2026-10-16
+
+At block 515317976 the 21 named roles across eight protocol contracts were
+reconstructed from RoleGranted/RoleRevoked logs and checked with hasRole.
+The examined memberships match the candidate, without additional holders in
+those roles. Scheduler authority, vault beacon implementation/owner and keeper
+executor approval also match. The public snapshot is recorded in
+`deployments/arbitrum-one-role-audit-2026-10-16.json`. This is a dated role
+observation, not completion of bootstrap handoff or deployed source verification.
+
+The approved executor is `0x29984d0c50ddaa5be680b750025dc88d16c57ab8`.
+It does not prove which signing key the deployed Worker uses. Transaction
+`0x5fc3f1989b76ceb7106b2cb8bf7b79f4b1d3ab4b87889eb676d34d3feffd7529`
+at block 515103432 emits `ExecutorApprovalUpdated(address,bool)` with one
+topic (the event signature) and both arguments in data. The repository event
+declares the executor indexed. The candidate explicitly records
+`automation.executorApprovalIndexed: false`; isolated mainnet indexer/decoder
+generation must honor that evidence. Solidity and shared testnet ABIs have
+not been rewritten to imply that the deployed revision equals current source.
+Other deployed event layouts still need reconciliation.
+
+Vercel now exposes the existing frontend project and accepts isolated Preview
+settings. The public site remains Sepolia. Independent mainnet service
+credentials, shared API security storage, deployed source identity, the C1/C2
+review and signed lifecycle canaries remain release gates. Both completion
+flags intentionally remain false.
