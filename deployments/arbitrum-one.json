@@ -107,11 +107,14 @@
       ],
       "maxTransactionsPerWake": 5
     },
-    "workerDeployedAt": "2026-10-16T14:14:12.557Z",
+    "workerDeployedAt": "2026-10-16T15:05:18.194Z",
     "workerUrl": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
     "marketCatalogUpdatePending": false,
     "worker": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
-    "executorApprovalIndexed": false
+    "executorApprovalIndexed": false,
+    "goldskyWakeupsEnabled": true,
+    "webhookMode": "wake-only",
+    "workerDeploymentVersion": "a660e565-ed42-433d-a15a-3606a456617c"
   },
   "addresses": {
     "brb": "0x58871cf545f8f0df790443492a80edc414df4504",

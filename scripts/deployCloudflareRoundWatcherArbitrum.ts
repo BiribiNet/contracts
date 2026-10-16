@@ -11,7 +11,8 @@ import { ARBITRUM_RPC_URL, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_WORKER_NAME, KEEPER
 /**
  * Deploys a dedicated, autonomous keeper Worker with a single durable transaction signer.
  * Public configuration is bundled from the actual deployment manifest; no address/RPC env vars.
- * Wrangler uses its saved OAuth login. Only KEEPER_PRIVATE_KEY is supplied as a Worker secret.
+ * Wrangler uses its saved OAuth login. The dedicated signing key and optional
+ * Goldsky wake-up credential are supplied as Worker secrets.
  * Nothing is uploaded until the manifest, bytecode, signer and on-chain authority graph pass.
  */
 async function main() {
@@ -86,7 +87,16 @@ async function main() {
             `export const settings = ${JSON.stringify(workerSettings, null, 2)} as const;\nexport type KeeperSettings = typeof settings;\n`);
         writeFileSync(join(deploymentRoot, "wrangler.json"), JSON.stringify(config, null, 2) + "\n");
         const secretPath = join(deploymentRoot, "secrets.json");
-        writeFileSync(secretPath, JSON.stringify({ KEEPER_PRIVATE_KEY: privateKey }), { mode: 0o600, flag: "wx" });
+        const workerSecrets: Record<string, string> = { KEEPER_PRIVATE_KEY: privateKey };
+        const localCredentialPath = join(contractsRoot, "scripts", "constants", "arbitrumOne.local.json");
+        if (existsSync(localCredentialPath)) {
+            const credential = JSON.parse(readFileSync(localCredentialPath, "utf8")).keeperWebhookSecret;
+            if (credential !== undefined) {
+                if (typeof credential !== "string" || credential.length < 32) throw new Error("Invalid local keeper webhook credential");
+                workerSecrets.MAINNET_WEBHOOK_SECRET = credential;
+            }
+        }
+        writeFileSync(secretPath, JSON.stringify(workerSecrets), { mode: 0o600, flag: "wx" });
         // One upload includes code and its signing secret; no live interval with missing configuration.
         command(["deploy", "--config", "wrangler.json", "--dry-run"]);
         const deploymentOutput = command(["deploy", "--config", "wrangler.json", "--secrets-file", secretPath], true);
@@ -99,19 +109,30 @@ async function main() {
         if (url) {
             manifest.automation.workerUrl = url;
             // Starts the durable alarm and confirms actual readiness, not merely HTTP liveness.
-            for (let attempt = 0; attempt < 12; attempt++) {
+            // Worker and Durable Object code propagate independently; preserve the
+            // existing signer object while allowing the backing code to catch up.
+            const readinessDeadline = Date.now() + 8 * 60_000;
+            for (let attempt = 0; Date.now() < readinessDeadline; attempt++) {
                 const health = await fetch(`${url}/health`, { signal: AbortSignal.timeout(15_000) }).catch(() => undefined);
                 if (health?.ok) {
-                    const status = await health.json() as { ok?: boolean; chainId?: number; mode?: string };
-                    if (status.ok && status.chainId === 42161 && status.mode === "keeper") {
+                    const status = await health.json() as { ok?: boolean; chainId?: number; mode?: string; webhooksEnabled?: boolean;
+                        engine?: string; scheduler?: string; keeper?: string; marketIds?: number[]; laneCount?: number };
+                    if (status.ok && status.chainId === 42161 && status.mode === "keeper" &&
+                        status.engine?.toLowerCase() === addresses.engine.toLowerCase() &&
+                        status.scheduler?.toLowerCase() === addresses.scheduler.toLowerCase() &&
+                        status.keeper?.toLowerCase() === signer.address.toLowerCase() &&
+                        status.laneCount === PAYOUT_LANE_COUNT && JSON.stringify(status.marketIds) === JSON.stringify(marketIds) &&
+                        (!workerSecrets.MAINNET_WEBHOOK_SECRET || status.webhooksEnabled === true)) {
                         manifest.automation.workerHealthVerified = true;
                         break;
                     }
                 }
+                if (attempt > 0 && attempt % 12 === 0) console.log("Waiting for Cloudflare keeper code and secret readiness");
                 await new Promise(resolve => setTimeout(resolve, 5_000));
             }
         }
         manifest.automation.marketCatalogUpdatePending = !manifest.automation.workerHealthVerified;
+        manifest.automation.goldskyWakeupsEnabled = Boolean(workerSecrets.MAINNET_WEBHOOK_SECRET && manifest.automation.workerHealthVerified);
         writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
         writeFileSync(join(contractsRoot, "deployments", "arbitrum-one-worker.json"), JSON.stringify({ config, workerSettings: publicSettings }, null, 2) + "\n");
         console.log(JSON.stringify({ worker: CLOUDFLARE_WORKER_NAME, url: url ?? null,

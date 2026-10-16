@@ -5,8 +5,10 @@ preserves the locally executed deployment and its verified three-market catalog:
 BRB market 1, USDC market 2, DAI market 3. All 28 protocol contract sources are
 verified, all five proxies have confirmed implementation ABI links, and the full
 on-chain audit passes 138 checks. USDC/DAI banks start unfunded. The Cloudflare
-keeper is healthy and watches markets [1,2,3]. No CRE receiver or keeper webhook
-pipeline is part of this deployed architecture.
+keeper is healthy and watches markets [1,2,3]. No CRE receiver is deployed.
+On October 16, both existing Goldsky countdown/payout pipelines were switched to
+Arbitrum One and authenticated wake-up routes on the mainnet keeper. They share
+the existing durable signer; five-second polling remains independent of Goldsky.
 
 Local and origin/master diverged from commit 751b796: three local execution/fix
 commits and four remote observation/cutover commits. Both describe the same engine.
