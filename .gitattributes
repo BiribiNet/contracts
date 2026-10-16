@@ -1,0 +1,2 @@
+# Solidity source hashes are part of vendored CREATE2 bytecode predictions.
+*.sol text eol=lf
