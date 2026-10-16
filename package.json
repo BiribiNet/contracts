@@ -4,6 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "test:release-config": "node --test scripts/release-manifest.test.mjs",
     "compile": "hardhat compile && wagmi generate",
     "sync:uniswap:pair-hash": "hardhat run scripts/syncUniswapV2PairInitCodeHash.ts",
     "pretest": "hardhat run scripts/syncUniswapV2PairInitCodeHash.ts",
