@@ -59,7 +59,7 @@ describe("Mainnet readiness audit probes (current behavior)", function () {
             [zeroAddress, zeroAddress, zeroAddress, multisig.account.address, vrf.address, 1n, 2_000_000, 1, 500, multisig.account.address],
             { admin: multisig.account.address, scanLimit: 25, maxPayoutsPerCall: 10 },
             { protocolPrefix: { brb: brb.address, router: router.address, admin: multisig.account.address }, wireMockForwarder: false },
-        )).to.be.rejectedWith("AccessControlUnauthorizedAccount");
+        )).to.be.rejectedWith(customErrorPattern("AccessControlUnauthorizedAccount(address,bytes32)"));
         expect(deployer.account.address).not.to.equal(multisig.account.address);
     });
 
@@ -182,7 +182,7 @@ describe("Mainnet readiness audit probes (current behavior)", function () {
         await expect(receiver.write.onReport(["0x", payload], { account: s.attacker.account })).to.be.rejected;
         await expect(receiver.write.setForwarderAddress([s.attacker.account.address], { account: s.attacker.account })).to.be.rejected;
         await expect(forwarder.write.route([toHex(5n, { size: 32 }), s.attacker.account.address, receiver.address, "0x", payload], { account: s.attacker.account })).to.be.rejected;
-        await expect(forwarder.write.report([receiver.address, a.raw, context, []], { account: s.attacker.account })).to.be.rejectedWith("InvalidSignatureCount");
+        await expect(forwarder.write.report([receiver.address, a.raw, context, []], { account: s.attacker.account })).to.be.rejectedWith(customErrorPattern("InvalidSignatureCount(uint256,uint256)"));
         const before = await s.usdc.read.balanceOf([s.attacker.account.address]);
         const snapshot = await takeSnapshot();
         await forwarder.write.report([receiver.address, a.raw, context, a.signatures], { account: s.attacker.account });
@@ -216,7 +216,7 @@ describe("Mainnet readiness audit probes (current behavior)", function () {
         // has small overhead, while 2000 shard writes alone exceed the budget.
         await expect(s.vrf.write.fulfill([s.engine.address, 1n, 7n], { gas: 2_500_000n })).to.be.rejected;
         expect(await s.engine.read.hasPendingVrf()).to.equal(true);
-        await expect(s.engine.write.setPayoutLaneCount([10])).to.be.rejectedWith("PayoutLaneCountLockedWhileSettling");
+        await expect(s.engine.write.setPayoutLaneCount([10])).to.be.rejectedWith(customErrorPattern("PayoutLaneCountLockedWhileSettling()"));
     });
 
     it("skips a blocked withdrawal recipient without stalling settlement; owner keeps shares and may re-request", async function () {
