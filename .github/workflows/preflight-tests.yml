@@ -15,4 +15,4 @@ jobs:
         with:
           node-version: 22
       - run: corepack enable && yarn install --immutable
-      - run: node --test scripts/protocol-preflight.test.mjs
+      - run: node --test scripts/protocol-preflight.test.mjs scripts/export-mainnet-abis.test.mjs scripts/release-manifest.test.mjs
