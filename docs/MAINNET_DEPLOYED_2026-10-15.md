@@ -104,3 +104,17 @@ settings. The public site remains Sepolia. Independent mainnet service
 credentials, shared API security storage, deployed source identity, the C1/C2
 review and signed lifecycle canaries remain release gates. Both completion
 flags intentionally remain false.
+
+## ABI distribution follow-up — 2026-10-17
+
+The frontend and subgraph release branches now consume the canonical three-market
+manifest and a source-checked solc 0.8.27 ABI snapshot. The compiler inputs for all
+local Solidity imports were compared with this repository before export. The
+snapshot records the full source revision and per-contract source hashes; the
+existing on-chain audit remains the separate runtime/constructor verification.
+
+Reproduce with scripts/export-mainnet-abis.mjs <artifacts-root> <full-source-revision>
+<new-output-file>. It rejects changed Solidity imports, missing ABI or compiler
+drift and never calls a provider or signer. This prevents the client/indexer from
+keeping the old indexed event layouts and old five-argument withdrawal event.
+Public activation remains false; the source/handoff flags do not approve launch.

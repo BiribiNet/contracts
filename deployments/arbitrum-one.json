@@ -704,6 +704,17 @@
       "count": 28,
       "checkedAt": "2026-10-16T14:12:14.715Z"
     },
-    "stablecoinMarkets": "deployments/arbitrum-one-stablecoin-markets-audit.json"
-  }
+    "stablecoinMarkets": "deployments/arbitrum-one-stablecoin-markets-audit.json",
+    "executorApprovalLayout": {
+      "signature": "ExecutorApprovalUpdated(address,bool)",
+      "executorIndexed": false,
+      "transactionHash": "0x5fc3f1989b76ceb7106b2cb8bf7b79f4b1d3ab4b87889eb676d34d3feffd7529",
+      "blockNumber": 515103432,
+      "topics": [
+        "0x391bf247d4d273b732acb87cbd9aec2f23350358681e1a043bd7642eee30afb8"
+      ],
+      "data": "0x00000000000000000000000029984d0c50ddaa5be680b750025dc88d16c57ab80000000000000000000000000000000000000000000000000000000000000001"
+    }
+  },
+  "abiProfile": "arbitrum-one-2026-10-15"
 }
