@@ -12,7 +12,7 @@ import { ARBITRUM_RPC_URL, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_WORKER_NAME, KEEPER
  * Deploys a dedicated, autonomous keeper Worker with a single durable transaction signer.
  * Public configuration is bundled from the actual deployment manifest; no address/RPC env vars.
  * Wrangler uses its saved OAuth login. The dedicated signing key and optional
- * Goldsky wake-up credential are supplied as Worker secrets.
+ * Goldsky wake-up credentials are supplied as Worker secrets.
  * Nothing is uploaded until the manifest, bytecode, signer and on-chain authority graph pass.
  */
 async function main() {
@@ -90,10 +90,18 @@ async function main() {
         const workerSecrets: Record<string, string> = { KEEPER_PRIVATE_KEY: privateKey };
         const localCredentialPath = join(contractsRoot, "scripts", "constants", "arbitrumOne.local.json");
         if (existsSync(localCredentialPath)) {
-            const credential = JSON.parse(readFileSync(localCredentialPath, "utf8")).keeperWebhookSecret;
-            if (credential !== undefined) {
-                if (typeof credential !== "string" || credential.length < 32) throw new Error("Invalid local keeper webhook credential");
-                workerSecrets.MAINNET_WEBHOOK_SECRET = credential;
+            const credentials = JSON.parse(readFileSync(localCredentialPath, "utf8"));
+            const countdown = credentials.countdownWebhookSecret;
+            const payout = credentials.payoutWebhookSecret;
+            if (countdown !== undefined || payout !== undefined) {
+                if (typeof countdown !== "string" || countdown.length < 32 ||
+                    typeof payout !== "string" || payout.length < 32 || countdown === payout) {
+                    throw new Error("Set distinct countdownWebhookSecret and payoutWebhookSecret (at least 32 characters each)");
+                }
+                workerSecrets.MAINNET_COUNTDOWN_WEBHOOK_SECRET = countdown;
+                workerSecrets.MAINNET_PAYOUT_WEBHOOK_SECRET = payout;
+            } else if (credentials.keeperWebhookSecret !== undefined) {
+                throw new Error("Migrate keeperWebhookSecret to separate countdownWebhookSecret and payoutWebhookSecret before deploying");
             }
         }
         writeFileSync(secretPath, JSON.stringify(workerSecrets), { mode: 0o600, flag: "wx" });
@@ -122,7 +130,7 @@ async function main() {
                         status.scheduler?.toLowerCase() === addresses.scheduler.toLowerCase() &&
                         status.keeper?.toLowerCase() === signer.address.toLowerCase() &&
                         status.laneCount === PAYOUT_LANE_COUNT && JSON.stringify(status.marketIds) === JSON.stringify(marketIds) &&
-                        (!workerSecrets.MAINNET_WEBHOOK_SECRET || status.webhooksEnabled === true)) {
+                        (!workerSecrets.MAINNET_COUNTDOWN_WEBHOOK_SECRET || status.webhooksEnabled === true)) {
                         manifest.automation.workerHealthVerified = true;
                         break;
                     }
@@ -132,7 +140,7 @@ async function main() {
             }
         }
         manifest.automation.marketCatalogUpdatePending = !manifest.automation.workerHealthVerified;
-        manifest.automation.goldskyWakeupsEnabled = Boolean(workerSecrets.MAINNET_WEBHOOK_SECRET && manifest.automation.workerHealthVerified);
+        manifest.automation.goldskyWakeupsEnabled = Boolean(workerSecrets.MAINNET_COUNTDOWN_WEBHOOK_SECRET && manifest.automation.workerHealthVerified);
         writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
         writeFileSync(join(contractsRoot, "deployments", "arbitrum-one-worker.json"), JSON.stringify({ config, workerSettings: publicSettings }, null, 2) + "\n");
         console.log(JSON.stringify({ worker: CLOUDFLARE_WORKER_NAME, url: url ?? null,

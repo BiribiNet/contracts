@@ -107,7 +107,7 @@
       ],
       "maxTransactionsPerWake": 5
     },
-    "workerDeployedAt": "2026-10-16T15:05:18.194Z",
+    "workerDeployedAt": "2026-10-16T19:22:43.491Z",
     "workerUrl": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
     "marketCatalogUpdatePending": false,
     "worker": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
