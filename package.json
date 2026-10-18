@@ -28,6 +28,7 @@
     "coverage": "NODE_OPTIONS='--max-old-space-size=12288' SOLIDITY_COVERAGE=true hardhat coverage",
     "clean": "hardhat clean",
     "test": "hardhat test",
+    "test:ci": "REPORT_GAS=false hardhat test test/CustomErrorPattern.test.ts test/EngineStorageLayout.test.ts test/PayoutMathLib.test.ts test/ZeroBetLegRejection.test.ts test/E2EUpkeepFlow.test.ts test/UpkeepForwarderGate.test.ts test/RetryVrf.test.ts test/SideBetCompatibilityArtifact.test.ts test/SideBetEconomics.test.ts test/WindowChallengePricing.test.ts",
     "generate:eth:wallet": "ts-node scripts/generateEthWallet.ts",
     "update:subgraph:abis": "node scripts/update-subgraph-abis.mjs",
     "update:frontend:abis": "node scripts/update-frontend-abis.mjs",

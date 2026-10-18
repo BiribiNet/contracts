@@ -1,18 +1,38 @@
-name: Protocol reliability
+name: Contracts CI
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'reports/**'
   push:
     branches: [master]
+    paths-ignore:
+      - '**/*.md'
+      - 'reports/**'
   workflow_dispatch:
     inputs:
+      suite:
+        description: Test suite (heavy suites run only when selected manually)
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - full
+          - swarm
+          - fork
       fork_block:
         description: Optional pinned Arbitrum One block (latest when empty)
         required: false
         type: string
 permissions:
   contents: read
+concurrency:
+  group: contracts-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.suite }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 jobs:
   regression:
+    if: github.event_name != 'workflow_dispatch' || inputs.suite != 'fork'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -22,26 +42,45 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: corepack enable && yarn install --immutable
-      - name: Compile contracts and run protocol regressions
-        run: yarn hardhat test
-  swarm:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - run: corepack enable
+      - name: Locate Yarn download cache
+        id: yarn-cache
+        run: echo "path=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
         with:
-          node-version: 22
-      - run: corepack enable && yarn install --immutable
-      - run: yarn test:swarm
+          path: ${{ steps.yarn-cache.outputs.path }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+      - run: yarn install --immutable
+      - name: Restore compiled contracts
+        uses: actions/cache@v4
+        with:
+          path: |
+            artifacts
+            cache
+          key: ${{ runner.os }}-hardhat-${{ hashFiles('yarn.lock', 'hardhat*.ts') }}-${{ hashFiles('contracts/**/*.sol') }}
+          restore-keys: ${{ runner.os }}-hardhat-${{ hashFiles('yarn.lock', 'hardhat*.ts') }}-
+      - name: Run preflight and release configuration tests
+        run: node --test scripts/protocol-preflight.test.mjs scripts/export-mainnet-abis.test.mjs scripts/release-manifest.test.mjs
+      - name: Compile contracts and run smoke regressions
+        if: github.event_name != 'workflow_dispatch' || inputs.suite == 'smoke'
+        run: yarn test:ci
+      - name: Run full contract regressions (manual only)
+        if: github.event_name == 'workflow_dispatch' && inputs.suite == 'full'
+        run: yarn hardhat test
+      - name: Run swarm (manual only)
+        if: github.event_name == 'workflow_dispatch' && inputs.suite == 'swarm'
+        run: yarn test:swarm
+      - name: Check side-bet economics types
+        run: yarn typecheck:side-bet-economics
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.suite == 'swarm'
         with:
           name: brb-swarm-gas-and-accounting
           path: reports/swarm/*.json
+          retention-days: 7
   arbitrum-fork:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.suite == 'fork'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: mainnet-rehearsal
@@ -68,3 +107,4 @@ jobs:
         with:
           name: arbitrum-fork-rehearsal
           path: reports/fork/arbitrum-one.json
+          retention-days: 7
