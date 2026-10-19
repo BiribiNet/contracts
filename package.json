@@ -21,6 +21,7 @@
     "redeploy:scheduler:arbitrum-sepolia": "hardhat run scripts/redeployUpkeepSchedulerArbitrumSepolia.ts --network arbitrumsepolia",
     "upgrade:vault:arbitrum-sepolia": "hardhat run scripts/upgradeBankVaultArbitrumSepolia.ts --network arbitrumsepolia",
     "seed:side-bets:arbitrum-sepolia": "hardhat run scripts/seedSideBetConfigs.ts --network arbitrumsepolia",
+    "seed:side-bets:arbitrum": "hardhat run scripts/seedSideBetConfigs.ts --network arbitrum",
     "deploy:protocol:arbitrum": "hardhat run scripts/deployProtocolArbitrum.ts --network arbitrum",
     "deploy:cloudflare:arbitrum": "hardhat run scripts/deployCloudflareRoundWatcherArbitrum.ts --network arbitrum",
     "verify:protocol:arbitrum-sepolia": "hardhat run scripts/verifyArbitrumSepoliaProtocol.ts --network arbitrumsepolia",

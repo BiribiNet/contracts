@@ -21,8 +21,10 @@ import { formatUnits, isAddress, parseAbi, parseEventLogs, parseUnits } from "vi
  * present. Reruns enforce the rounding floor and may lower active maxima to current capacity.
  *
  * Env:
- * - SIDE_BET_ADDRESS       — SideBet proxy (default: ../subgraph/deployments/arbitrum-sepolia.json)
+ * - SIDE_BET_ADDRESS       — SideBet proxy (defaults to the manifest for the connected chain)
  * - SEED_APPLY             — set to `true` to broadcast; otherwise this is a dry run
+ * - SEED_MARKET_IDS        — comma-separated market IDs; required on Arbitrum One
+ * - SEED_MAINNET_CONFIRM   — on Arbitrum One, set to the manifest SideBet address when applying
  * - SEED_CATALOGUE         — legacy (default) or x100
  * - SEED_RETIRE_LEGACY     — true retires known historical prices only after replacements open
  * - SEED_STAGE_ONLY        — true creates configs with zero limits, without activating them
@@ -31,6 +33,7 @@ import { formatUnits, isAddress, parseAbi, parseEventLogs, parseUnits } from "vi
  *
  * Run: `yarn seed:side-bets:arbitrum-sepolia`            (dry run)
  *      `SEED_APPLY=true yarn seed:side-bets:arbitrum-sepolia`
+ *      `SEED_CATALOGUE=legacy SEED_MARKET_IDS=1 yarn seed:side-bets:arbitrum` (mainnet dry run)
  */
 import "dotenv/config";
 
@@ -54,7 +57,8 @@ if (catalogueName !== "legacy" && catalogueName !== "x100") throw new Error("SEE
 if (catalogueName === "x100") assertX100Pricing();
 const catalogueForMarket = catalogueName === "x100" ? buildX100CatalogueForMarket : buildCatalogueForMarket;
 
-const DEPLOY_JSON = join(__dirname, "..", "..", "subgraph", "deployments", "arbitrum-sepolia.json");
+const SEPOLIA_DEPLOY_JSON = join(__dirname, "..", "..", "subgraph", "deployments", "arbitrum-sepolia.json");
+const MAINNET_DEPLOY_JSON = join(__dirname, "..", "deployments", "arbitrum-one.json");
 
 const DEFAULT_MIN_STAKE_WHOLE_UNITS = "1";
 
@@ -107,13 +111,34 @@ function envBigInt(name: string, fallback: bigint): bigint {
     return parsed;
 }
 
-function readSideBetAddress(): `0x${string}` {
-    const override = process.env.SIDE_BET_ADDRESS?.trim();
-    if (override) return envAddress("SIDE_BET_ADDRESS", "0x0000000000000000000000000000000000000000");
-    const deploy = JSON.parse(readFileSync(DEPLOY_JSON, "utf8")) as {
+function readSideBetAddress(chainId: number): `0x${string}` {
+    const manifest = chainId === 42161 ? MAINNET_DEPLOY_JSON : SEPOLIA_DEPLOY_JSON;
+    const deploy = JSON.parse(readFileSync(manifest, "utf8")) as {
+        chainId?: number;
         addresses: { sideBet: `0x${string}` };
     };
-    return envAddress("SIDE_BET_ADDRESS", deploy.addresses.sideBet);
+    if (deploy.chainId !== undefined && deploy.chainId !== chainId)
+        throw new Error(`Deployment manifest chain ${deploy.chainId} does not match connected chain ${chainId}`);
+    if (!isAddress(deploy.addresses.sideBet)) throw new Error(`Invalid SideBet address in ${manifest}`);
+    const address = envAddress("SIDE_BET_ADDRESS", deploy.addresses.sideBet);
+    if (chainId === 42161 && address.toLowerCase() !== deploy.addresses.sideBet.toLowerCase())
+        throw new Error(`Mainnet SIDE_BET_ADDRESS must match ${manifest}: ${deploy.addresses.sideBet}`);
+    return address;
+}
+
+function selectedMarketIds(chainId: number): Set<number> | undefined {
+    const raw = process.env.SEED_MARKET_IDS?.trim();
+    if (!raw) {
+        if (chainId === 42161) throw new Error("SEED_MARKET_IDS is required on Arbitrum One");
+        return undefined;
+    }
+    const values = raw.split(",").map((part) => part.trim());
+    if (values.some((part) => !/^[1-9][0-9]*$/.test(part)))
+        throw new Error("SEED_MARKET_IDS must be a comma-separated list of positive market IDs");
+    const ids = new Set(values.map(Number));
+    if (ids.size !== values.length || [...ids].some((id) => !Number.isSafeInteger(id)))
+        throw new Error("SEED_MARKET_IDS contains a duplicate or invalid market ID");
+    return ids;
 }
 
 /** Read every market from the registry, with the liquidity that actually backs side bets. */
@@ -254,8 +279,12 @@ function assertCatalogueInBand(plan: PlannedAction[], minimum: number, maximum: 
 
 async function main(): Promise<void> {
     const publicClient = await viem.getPublicClient();
-    if ((await publicClient.getChainId()) !== 421614)
-        throw new Error("This activation script requires Arbitrum Sepolia (421614)");
+    const chainId = await publicClient.getChainId();
+    if (chainId !== 421614 && chainId !== 42161)
+        throw new Error("This activation script requires Arbitrum Sepolia (421614) or Arbitrum One (42161)");
+    if (chainId === 42161 && !process.env.SEED_CATALOGUE?.trim())
+        throw new Error("SEED_CATALOGUE must be set explicitly on Arbitrum One");
+    const marketIds = selectedMarketIds(chainId);
 
     const apply = process.env.SEED_APPLY?.trim().toLowerCase() === "true";
     const stageOnly = process.env.SEED_STAGE_ONLY?.trim().toLowerCase() === "true";
@@ -263,7 +292,9 @@ async function main(): Promise<void> {
     const safetyBps = envBigInt("SEED_SAFETY_BPS", DEFAULT_LIQUIDITY_SAFETY_BPS);
     if (safetyBps > BPS_DENOMINATOR) throw new Error("SEED_SAFETY_BPS cannot exceed 10000");
 
-    const sideBetAddress = readSideBetAddress();
+    const sideBetAddress = readSideBetAddress(chainId);
+    if (chainId === 42161 && apply && process.env.SEED_MAINNET_CONFIRM?.trim().toLowerCase() !== sideBetAddress.toLowerCase())
+        throw new Error(`To apply on Arbitrum One, set SEED_MAINNET_CONFIRM=${sideBetAddress}`);
     const sideBet = await getSideBetContract(sideBetAddress);
 
     console.log("SideBet proxy:", sideBetAddress);
@@ -325,8 +356,13 @@ async function main(): Promise<void> {
         );
     }
 
-    const markets = await loadMarkets(sideBet);
-    if (markets.length === 0) throw new Error("MarketRegistry reports no markets — nothing to seed.");
+    const registeredMarkets = await loadMarkets(sideBet);
+    const markets = marketIds
+        ? registeredMarkets.filter((market) => marketIds.has(market.marketId))
+        : registeredMarkets;
+    if (markets.length === 0) throw new Error("No selected markets are registered — nothing to seed.");
+    if (marketIds && markets.length !== marketIds.size)
+        throw new Error(`SEED_MARKET_IDS contains unregistered market IDs; registered: ${registeredMarkets.map((market) => market.marketId).join(", ")}`);
 
     const existing = await loadExistingConfigs(sideBet);
     const plan = planActions(markets, existing, minStakeWholeUnits, safetyBps);

@@ -12,6 +12,7 @@
 | Upgrade SideBet (Sepolia) | `yarn upgrade:side-bet:arbitrum-sepolia` |
 | Upgrade BankVault beacon (Sepolia) | `yarn upgrade:vault:arbitrum-sepolia` |
 | Seed side-bet catalogue (Sepolia) | `yarn seed:side-bets:arbitrum-sepolia` |
+| Plan side-bet catalogue (Arbitrum One) | `SEED_CATALOGUE=legacy SEED_MARKET_IDS=1 yarn seed:side-bets:arbitrum` |
 
 ## Hardhat vars (required)
 
@@ -118,9 +119,38 @@ lists the catalogue.
 6. Run `yarn deploy:protocol:arbitrum`.
 7. Deploy `UPKEEP_LANE_COUNT` CRE workflows (defaults to `PAYOUT_LANE_COUNT`) — [docs/CRE_MIGRATION.md](docs/CRE_MIGRATION.md).
 8. LP: lock Uniswap LP in `LPVestingLock` (3-year cliff).
-9. Seed the side-bet catalogue (see **SideBet (Side bets)** above) from an account holding
-   `SIDE_BET_CONFIG_ROLE` and `SIDE_BET_LIMITS_ROLE`, pointing `SIDE_BET_ADDRESS` at the mainnet
-   proxy. Fund each vault first — the seed refuses to activate configs the vault cannot back.
+9. Seed the side-bet catalogue from an account holding `SIDE_BET_CONFIG_ROLE` and
+   `SIDE_BET_LIMITS_ROLE`. The mainnet command reads the proxy from `deployments/arbitrum-one.json`
+   and requires an explicit catalogue and market selection. Fund each selected vault first —
+   the seed refuses to activate configs the vault cannot back. See the commands below.
+
+### Mainnet SideBet activation
+
+The production page displays an empty catalogue until configs are created with `addConfig` and
+opened with `setConfigStakeLimits`. Start with a dry run for the BRB market (market 1):
+
+```bash
+SEED_CATALOGUE=legacy SEED_MARKET_IDS=1 yarn seed:side-bets:arbitrum
+```
+
+Review every proposed multiplier, minimum, maximum, vault liquidity, settlement compatibility,
+and pending VRF status. The dry run broadcasts no transaction. USDC and DAI (markets 2 and 3)
+should be selected only after their vaults are funded and their risk limits reviewed. To apply the
+reviewed plan, use the same catalogue and market IDs, plus the transaction switch and the mainnet
+proxy confirmation:
+
+```bash
+SEED_CATALOGUE=legacy SEED_MARKET_IDS=1 SEED_APPLY=true \
+  SEED_MAINNET_CONFIRM=0x96e34298425c310422bfba424bd4ed455b597d7f \
+  yarn seed:side-bets:arbitrum
+```
+
+The script checks chain ID 42161, the proxy against the deployment manifest, both required roles,
+liquidity limits, settlement compatibility, and that no VRF request is pending before broadcasting.
+It can be rerun after an interrupted batch; it reads existing configs and skips matching ones.
+Verify `configCount`, active limits, the indexer, and the public `/side-bets` catalogue after the
+transactions confirm. This procedure requires approval of the exact offers and an authorized
+signer; a frontend deployment alone cannot open them.
 
 ## Manifest output
 
