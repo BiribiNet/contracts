@@ -37,13 +37,15 @@
     "totalSupply": "2999999.735",
     "burnedSinceInitialMint": "0.265",
     "marketingReserveBalance": "299000",
+    "houseBotAddress": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+    "houseBotBalance": "0",
     "founderWalletBalance": "1.06",
     "founderVaultSharesRaw": "300000000000000000000000000000",
     "founderShareDecimals": 24,
     "founderVaultShareAssetEquivalent": "300050.316455696202531645",
     "knownTeamHoldingsExcluded": "599051.376455696202531645",
     "provisionalCirculatingSupplyEstimate": "2400948.358544303797468355",
-    "method": "ERC20 totalSupply minus the marketing wallet BRB balance, founder holding-wallet BRB balance and convertToAssets value of founder-held BRB-bank shares, all read at the same block. Other public bank-vault shares are not treated as team reserves."
+    "method": "ERC20 totalSupply minus the marketing wallet BRB balance, founder holding-wallet BRB balance and convertToAssets value of founder-held BRB-bank shares, all read at the same block. The project-controlled house bot balance was also read at this block and was zero, so it contributes no additional exclusion. Other public bank-vault shares are not treated as team reserves."
   },
   "limitations": [
     "This is a dated disclosure, not a live supply API or independent aggregator verification.",
