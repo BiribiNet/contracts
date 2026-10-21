@@ -1,0 +1,63 @@
+{
+  "project": "Biribi",
+  "symbol": "BRB",
+  "chain": "Arbitrum One",
+  "chainId": 42161,
+  "token": "0x58871cf545f8f0df790443492a80edc414df4504",
+  "decimals": 18,
+  "website": "https://biribi.net",
+  "contact": "info@biribi.net",
+  "initialSupply": "3000000",
+  "maximumSupply": "3000000",
+  "initialAllocation": [
+    {
+      "name": "Initial BRB/USDC Uniswap V2 liquidity",
+      "tokens": "2400000",
+      "percentage": 80,
+      "pool": "0x848A51FaD11746bca839DF587C3Cde450bDfb853"
+    },
+    {
+      "name": "Marketing reserve",
+      "tokens": "300000",
+      "percentage": 10,
+      "address": "0xB43800e00EA2502775385fEa1A93594eC6D73339"
+    },
+    {
+      "name": "Three cofounders",
+      "tokens": "300000",
+      "percentage": 10,
+      "allocationPerCofounder": "100000",
+      "publishedHoldingAddress": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+      "note": "The deployment manifest labels this holding as infrastructure; the project owner clarified on 2026-10-21 that the 300000 BRB allocation is for the three cofounders. Its bank-vault share position remains team-controlled and is excluded from the estimate below."
+    }
+  ],
+  "snapshot": {
+    "checkedAt": "2026-10-21T09:35:15.328Z",
+    "blockNumber": "516875415",
+    "totalSupply": "2999999.735",
+    "burnedSinceInitialMint": "0.265",
+    "marketingReserveBalance": "299000",
+    "founderWalletBalance": "1.06",
+    "founderVaultSharesRaw": "300000000000000000000000000000",
+    "founderShareDecimals": 24,
+    "founderVaultShareAssetEquivalent": "300050.316455696202531645",
+    "knownTeamHoldingsExcluded": "599051.376455696202531645",
+    "provisionalCirculatingSupplyEstimate": "2400948.358544303797468355",
+    "method": "ERC20 totalSupply minus the marketing wallet BRB balance, founder holding-wallet BRB balance and convertToAssets value of founder-held BRB-bank shares, all read at the same block. Other public bank-vault shares are not treated as team reserves."
+  },
+  "limitations": [
+    "This is a dated disclosure, not a live supply API or independent aggregator verification.",
+    "Initial liquidity allocation is not the current pool balance or current circulating supply.",
+    "Wallet classification is based on project-owner confirmation that marketing and founder allocations are the team reserves. The final supply classification remains subject to aggregator review.",
+    "No founder vesting contract or off-chain vesting agreement is asserted. Fully allocated tokens may still be excluded from circulating supply when held by the team.",
+    "The deployment manifest states that LP tokens remain with the deployer and that no on-chain LP vesting lock was deployed or funded. No liquidity-lock claim is made.",
+    "convertToAssets is a share-accounting value, not immediately withdrawable cash; withdrawals are queued and fees apply.",
+    "Vault returns depend on gaming activity and outcomes and may be negative. No guaranteed yield or capital protection is offered."
+  ],
+  "sources": {
+    "tokenSource": "https://github.com/BiribiNet/contracts/blob/master/contracts/BRBToken.sol",
+    "deploymentManifest": "https://github.com/BiribiNet/contracts/blob/master/deployments/arbitrum-one.json",
+    "holders": "https://arbiscan.io/token/0x58871cf545f8f0df790443492a80edc414df4504#balances",
+    "pool": "https://www.geckoterminal.com/arbitrum/pools/0x848a51fad11746bca839df587c3cde450bdfb853"
+  }
+}
