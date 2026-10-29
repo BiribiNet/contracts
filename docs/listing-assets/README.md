@@ -26,6 +26,7 @@ Public reference for directory editors, ecosystem reviewers and analytics teams.
 ## Official logos
 
 - [200 × 200 SVG chip](biribi-logo-200.svg) and [200 × 200 PNG chip](biribi-logo-200.png).
+- [400 × 400 PNG chip](biribi-logo-400.png), rendered from the same official SVG on 29 October 2026 for directory requirements. Geometry, #6478ff accent and transparent background preserved.
 - [40 × 40 SVG chip](https://biribi.net/marketing/biribi-icon-40.svg) for directories requiring that size.
 
 The supplied chip geometry is the official logo. The accent is **#6478ff**, with dark **#0d0d0f** and foreground **#f0f1f5** used by the site. Preserve the geometry and aspect ratio; use these assets rather than generating a substitute.
