@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "targetedTests": 18,
+  "combinedRegressionTests": 71,
+  "typecheck": "passed",
+  "compile": "passed",
+  "originalFunderSourceAndRuntimeUnchanged": true,
+  "commentCleanupPreservedTestedRuntime": true,
+  "fork": {
+    "status": "passed",
+    "block": 519439325,
+    "gasUsed": {
+      "DAI cold": "675419",
+      "USDC direct": "343166",
+      "BRB direct": "195702",
+      "DAI warm": "373176"
+    }
+  },
+  "scope": "Local draft only; no live changes",
+  "knownResidual": "Old funder retains the backed 0.03 DAI queue. This draft cannot migrate or withdraw it."
+}

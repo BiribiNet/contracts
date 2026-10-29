@@ -1,0 +1,89 @@
+
+
+  RoutedBRBJackpotFunder
+    ✔ preserves the existing keeper/accounting ABI and stays below EIP-170 (189ms)
+    DAI cold-route worker gas: 749863
+    ✔ fixes DAI routing without a DAI/BRB pool and accounts for the exact output (572ms)
+    ✔ keeps direct USDC swaps and direct BRB distribution working in one keeper batch (311ms)
+    ✔ caps DAI input against the shallower second pool, retaining the remainder and cooldown (353ms)
+    ✔ also respects the first pool's input cap when it is shallower (62ms)
+    ✔ retains the entire queue when the first route pool is missing or empty (84ms)
+    ✔ retains the entire queue when the second route pool is missing or empty (101ms)
+    ✔ rejects a depressed first-hop price against the warm TWAP without losing input (181ms)
+    ✔ rejects a depressed second-hop price against the warm TWAP without losing input (216ms)
+    DAI warm-route worker gas: 539649
+    ✔ executes the warm route within the deployed keeper transaction budget (209ms)
+    ✔ does not assume stablecoin parity or confuse DAI and USDC decimals (203ms)
+    ✔ isolates markets, protects queued assets from sweep, and enforces worker/admin guards (198ms)
+    ✔ rejects ambiguous deployment routes (38ms)
+    ✔ stops after five failed dust quotes, retains the queue and resumes only after an admin reset (359ms)
+    ✔ keeps treasury/burn debts attached to their original market and split (72ms)
+    ✔ rotates both oracle anchors without resetting the shared USDC/BRB lookback (281ms)
+    ✔ settles a DAI round with the same fee splits (1474ms)
+    ✔ settles a DAI round and an active side bet across funder cutover with the same fee splits (2072ms)
+
+  BRBJackpotFunder
+    ✔ swaps with router spot quote minus slippage and completes (96ms)
+    ✔ native BRB asset: splits fee slice without router swap (56ms)
+    ✔ returns without revert when router swap reverts (75ms)
+    ✔ reverts constructor on zero addresses (45ms)
+    ✔ exposes brbToken and admin setters with bounds (59ms)
+    ✔ updates the pair observation immediately when the TWAP window is zero (72ms)
+    ✔ skips swap when quoted minOut exceeds mock router delivery (78ms)
+    ✔ reverts admin setters from accounts without FUNDER_ADMIN_ROLE (40ms)
+    ✔ fundFromMarket: fee collector guard, empty balance, and sideBet caller (78ms)
+    ✔ sweepToken recovers stuck asset for FUNDER_ADMIN_ROLE (43ms)
+    ✔ fundFromMarket: treasury split edges and fee-hook failures (227ms)
+    ✔ sweepToken reverts when amount exceeds balance
+    ✔ skips swap when pair has no liquidity (SKIP_NO_QUOTE) (75ms)
+    ✔ uses router spot quote when pair is not deployed (98ms)
+    ✔ returns zero minOut when router returns a short amounts array (48ms)
+    ✔ returns zero minOut when getAmountsOut reverts (58ms)
+    ✔ no-ops pair observation snapshot when pair is not deployed
+    ✔ uses cold slippage on spot quotes before TWAP window is warm (81ms)
+    ✔ keeps spot as the floor reference when spot sits above TWAP (H-5) (98ms)
+    ✔ raises the floor to the TWAP when spot is pushed below it (H-5) (146ms)
+    ✔ records pair observation and uses TWAP after the window elapses (274ms)
+    ✔ engine setJackpotTreasury points jackpot payouts at a new treasury (146ms)
+    ✔ engine setJackpotFunder points settlement at a new funder (153ms)
+
+  Funding queue and reconciliation
+    ✔ isolates two vaults sharing one token, including an older failed swap (158ms)
+    ✔ queues without touching a broken router; only the worker attempts a swap (66ms)
+    ✔ imports only unassigned backed funds and never double credits a migration (67ms)
+    ✔ splits accumulated input at one percent of reserves and preserves the remainder (276ms)
+    ✔ stops after five failures, retains every asset, and requires an admin reset (330ms)
+    ✔ maintains an oracle anchor without executing a swap (86ms)
+    ✔ does not consume retries when a caller supplies insufficient gas (58ms)
+    ✔ isolates approval failures inside the worker, retaining the credited input (98ms)
+    ✔ retries BRB debts automatically without assigning them to another vault or changing their split (146ms)
+    ✔ conserves two vault ledgers through seeded deposits, failures and split changes (17) (2040ms)
+    ✔ conserves two vault ledgers through seeded deposits, failures and split changes (9127) (2344ms)
+    ✔ conserves two vault ledgers through seeded deposits, failures and split changes (60109) (2107ms)
+
+  UniswapV2TwapLib
+    ✔ uses canonical pair init code hash for production Uniswap V2
+    ✔ vendored Sepolia factory: init code hash matches compiled UniswapV2Pair
+    ✔ vendored Sepolia factory: UniswapV2Library init code hash matches compiled pair
+    ✔ vendored Sepolia factory: pair address helper matches createPair
+
+  E2E upkeep flow
+    ✔ settles zero splits correctly for outcome 0 and rejects 0/4 at placement (2324ms)
+    ✔ settles zero splits correctly for outcome 1 and rejects 0/4 at placement (1067ms)
+    ✔ settles zero splits correctly for outcome 2 and rejects 0/4 at placement (1085ms)
+    ✔ settles zero splits correctly for outcome 3 and rejects 0/4 at placement (1257ms)
+    ✔ settles zero splits correctly for outcome 4 and rejects 0/4 at placement (1060ms)
+    ✔ runs full rounds end-to-end and keeps upkeep surface consistent (10960ms)
+
+  Exact side-bet economics and rounding policy
+    ✔ matches the cross-repository probability/pricing fingerprint
+    ✔ matches independent closed forms for the old catalogue
+    ✔ preserves old rules and chooses the largest multiplier that never undercuts 5%
+    ✔ independently matches all X100 counts
+    ✔ bounds token rounding for all stakes above the 100000 policy floor
+    ✔ bounds token rounding for all stakes above the 1000000 policy floor
+    ✔ rejects odds that cannot meet the tolerance and malformed rules
+    ✔ retires only identical historical prices in the same market and is rerunnable
+
+
+  71 passing (35s)

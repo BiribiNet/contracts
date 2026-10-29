@@ -1,0 +1,127 @@
+{
+  "status": "passed",
+  "checkedAt": "2026-10-29T20:15:30.079Z",
+  "block": "519459065",
+  "activeFunder": "0xd0083c4D3056F6D2bb2b98aEB4FEe0DD36C3bDB5",
+  "runtimeHash": "0x6c3f7ddbf44a82b427753a4799d014a0d789d609f23d3412706c3c0c4ec86c3e",
+  "engineImplementationUnchanged": true,
+  "immutables": {
+    "engine": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+    "brbToken": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+    "router": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+    "jackpotTreasury": "0x2A7c5023581F2A5c75D699cF3A7f0c37d7919EaE",
+    "sideBet": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+    "routedAsset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    "bridgeAsset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+  },
+  "policies": {
+    "swapAssetTotalBps": "300",
+    "treasuryBrbNumerator": "250",
+    "treasuryBrbDenominator": "300",
+    "slippageBps": "100",
+    "coldSlippageBps": "300",
+    "twapWindowSeconds": "1800",
+    "maxSwapReserveBps": "100"
+  },
+  "infrastructureBps": "200",
+  "infrastructureRecipient": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+  "route": [
+    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "0x58871cf545f8F0dF790443492a80EdC414df4504"
+  ],
+  "quoteFor003Dai": [
+    "30000000000000000",
+    "29940",
+    "2972516837070182065"
+  ],
+  "pools": [
+    {
+      "address": "0x8edd9aEABdf2e63f76f4c4B7F36AEFa14D3cC6BC",
+      "reserves": [
+        "31502992679",
+        "31471295901281336963289",
+        1793256054
+      ],
+      "observation": [
+        1793302637,
+        "421082915516989491387022116122447581933726224382631687",
+        "420779860838749136704304698622"
+      ]
+    },
+    {
+      "address": "0x848A51FaD11746bca839DF587C3Cde450bDfb853",
+      "reserves": [
+        "2394978193240145213739154",
+        "24050474851",
+        1793288870
+      ],
+      "observation": [
+        1793302637,
+        "63723540888011622816755312",
+        "633132715469082820903921594785322266452444515935996086"
+      ]
+    }
+  ],
+  "queues": [
+    {
+      "marketId": 1,
+      "account": [
+        "0x0000000000000000000000000000000000000000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "pendingTreasury": "0",
+      "pendingBurn": "0",
+      "balance": "0",
+      "failures": 0
+    },
+    {
+      "marketId": 2,
+      "account": [
+        "0x0000000000000000000000000000000000000000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "pendingTreasury": "0",
+      "pendingBurn": "0",
+      "balance": "0",
+      "failures": 0
+    },
+    {
+      "marketId": 3,
+      "account": [
+        "0x0000000000000000000000000000000000000000",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "pendingTreasury": "0",
+      "pendingBurn": "0",
+      "balance": "0",
+      "failures": 0
+    }
+  ],
+  "oldAcceptedDaiResidual": [
+    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    "30000000000000000",
+    "30000000000000000",
+    "0",
+    "0",
+    "0",
+    "0"
+  ],
+  "allLedgersBalanced": true,
+  "routerApprovalsCleared": true
+}

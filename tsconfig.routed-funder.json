@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true, "types": ["node", "mocha", "chai-as-promised", "@nomicfoundation/hardhat-chai-matchers"] },
+  "include": [
+    "hardhat.fork-only.config.ts",
+    "artifacts/**/*.d.ts",
+    "test/RoutedBRBJackpotFunder.test.ts",
+    "scripts/runFundingKeeper.ts",
+    "scripts/rehearseRoutedFunderFork.ts",
+    "scripts/rehearseRoutedFunderPlanFork.ts",
+    "scripts/deployRoutedFunderArbitrum.ts",
+    "scripts/verifyRoutedFunderLive.ts"
+  ],
+  "exclude": ["node_modules", "cre"]
+}

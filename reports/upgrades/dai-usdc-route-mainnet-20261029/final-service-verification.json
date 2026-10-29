@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "checkedAt": "2026-10-29T20:17:52.513Z",
+  "indexer": {
+    "globalStates": [
+      {
+        "jackpotFunder": "0xd0083c4d3056f6d2bb2b98aeb4fee0dd36c3bdb5",
+        "currentRoundNumber": "98"
+      }
+    ],
+    "jackpotFunderConfigs": [
+      {
+        "id": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+        "swapAssetTotalBps": "300",
+        "treasuryBrbNumerator": "250",
+        "treasuryBrbDenominator": "300"
+      },
+      {
+        "id": "0xd0083c4d3056f6d2bb2b98aeb4fee0dd36c3bdb5",
+        "swapAssetTotalBps": "300",
+        "treasuryBrbNumerator": "250",
+        "treasuryBrbDenominator": "300"
+      }
+    ],
+    "markets": [
+      {
+        "marketId": 1,
+        "bank": "0x5f9332b04b2590850c7681850ca445ddf7f64aa9",
+        "totalAssets": "299827364252080586275817",
+        "totalShares": "274523634831654689002891394529"
+      },
+      {
+        "marketId": 2,
+        "bank": "0x46206b1c1fc631fd6fcf2aa2503f9cb022da96ba",
+        "totalAssets": "5950000",
+        "totalShares": "6000000000000"
+      },
+      {
+        "marketId": 3,
+        "bank": "0x137dd55e422b1881ad1566ce21e2e4f393bb37b2",
+        "totalAssets": "6950000000000000000",
+        "totalShares": "6000000000000000000000000"
+      }
+    ],
+    "_meta": {
+      "block": {
+        "number": 519459869
+      },
+      "deployment": "QmfG1ToFGgvhdQnhvLnfMeLJEZwmZDLCVq2G816WiHiyAz",
+      "hasIndexingErrors": false
+    }
+  },
+  "mirror": {
+    "status": "ACTIVE",
+    "readyReplicas": 1,
+    "oldAndNewFundersIncluded": true
+  },
+  "keeper": {
+    "ok": true,
+    "paused": false,
+    "pending": null,
+    "lanes": 1,
+    "mode": "webhook-only"
+  }
+}

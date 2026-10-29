@@ -1,0 +1,21 @@
+{
+  "hash": "0x32849f48a2a37122fe8b3d78e06f9e50d4362792024f5fd4ad5185f8443132b2",
+  "block": "519458900",
+  "engineImplementationUnchanged": true,
+  "payoutLanesUnchanged": true,
+  "oldDaiResidualPreserved": true,
+  "before": {
+    "implementation": "0x000000000000000000000000a50f1ef3ae42d8ace07d1c0747a33a1c8f030193",
+    "round": "98",
+    "lanes": 1,
+    "oldDaiAccount": [
+      "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "30000000000000000",
+      "30000000000000000",
+      "0",
+      "0",
+      "0",
+      "0"
+    ]
+  }
+}

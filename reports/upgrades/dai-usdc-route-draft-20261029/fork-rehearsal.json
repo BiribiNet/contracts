@@ -1,0 +1,100 @@
+{
+  "status": "passed",
+  "scope": "Isolated local fork; no mainnet writes",
+  "publicRpcForwardedMethods": {
+    "eth_chainId": 2,
+    "eth_blockNumber": 53,
+    "net_version": 1,
+    "eth_getCode": 256,
+    "eth_getBalance": 256,
+    "eth_getTransactionCount": 256,
+    "eth_getBlockByNumber": 1,
+    "eth_getStorageAt": 156,
+    "eth_feeHistory": 1
+  },
+  "publicRpcRejectedMethods": [
+    "eth_sendRawTransaction"
+  ],
+  "pinnedArbitrumBlock": 519449481,
+  "existingPools": {
+    "daiBrb": "0x0000000000000000000000000000000000000000",
+    "daiUsdc": "0x8edd9aEABdf2e63f76f4c4B7F36AEFa14D3cC6BC",
+    "usdcBrb": "0x848A51FaD11746bca839DF587C3Cde450bDfb853"
+  },
+  "replacementOnLocalForkOnly": "0x7d296ef557acac15070e8f3c8b4bb0179012165c",
+  "runtimeBytes": 17625,
+  "swaps": [
+    {
+      "label": "DAI cold",
+      "amount": "30000000000000000",
+      "quote": "2972516837070182065",
+      "account": [
+        "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+        "0",
+        "30000000000000000",
+        "30000000000000000",
+        "2972516837070182065",
+        "2477097364225151720",
+        "495419472845030345"
+      ],
+      "localTransaction": "0x2946835d83d5a037f51719978dca653c807d549e84a3490c0d0318e1997d0923"
+    },
+    {
+      "label": "USDC direct",
+      "amount": "30000",
+      "quote": "2978466372677181277",
+      "account": [
+        "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "0",
+        "30000",
+        "30000",
+        "2978466372677181277",
+        "2482055310564317730",
+        "496411062112863547"
+      ],
+      "localTransaction": "0x432cdc9800b79494b73662160851ab39f701662ea051e6b2ecbdff3574cd60e8"
+    },
+    {
+      "label": "BRB direct",
+      "amount": "300000000000000000",
+      "quote": "300000000000000000",
+      "account": [
+        "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "0",
+        "300000000000000000",
+        "300000000000000000",
+        "300000000000000000",
+        "250000000000000000",
+        "50000000000000000"
+      ],
+      "localTransaction": "0xa9be66308e82b91cb946ce6db52f788dafeebd1fa2e36555edbea4e5bc7efb71"
+    }
+  ],
+  "gasUsed": {
+    "DAI cold": "675419",
+    "USDC direct": "343166",
+    "BRB direct": "195702",
+    "DAI warm": "373176"
+  },
+  "oldDaiQueuePreserved": [
+    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    "30000000000000000",
+    "30000000000000000",
+    "0",
+    "0",
+    "0",
+    "0"
+  ],
+  "checks": [
+    "Real DAI/USDC and USDC/BRB pools, no pair creation",
+    "DAI cold and warm worker execution",
+    "USDC direct swap",
+    "BRB direct distribution",
+    "Exact treasury and burn transfers",
+    "Zero residual router approvals",
+    "Engine pointer change only, no implementation upgrade",
+    "Round state and all bank token balances unchanged",
+    "Old queued DAI remains backed and untouched; cannot be swept",
+    "Public RPC rejects transaction submission"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "status": "live-verified",
+  "newFunder": "0xd0083c4D3056F6D2bb2b98aEB4FEe0DD36C3bDB5",
+  "activationTransactionHash": "0x32849f48a2a37122fe8b3d78e06f9e50d4362792024f5fd4ad5185f8443132b2",
+  "engineImplementationChanged": false,
+  "onlyEngineConfigurationSlotChanged": 2,
+  "regressionTestsPassed": 71,
+  "forkRehearsalsPassed": true,
+  "oracleLookbackWarmed": true,
+  "infrastructureFeeBps": 200,
+  "brbFundingBps": 300,
+  "routes": {
+    "BRB": "direct distribution",
+    "USDC": "USDC -> BRB",
+    "DAI": "DAI -> USDC -> BRB"
+  },
+  "keeperHealthy": true,
+  "keeperPaused": false,
+  "keeperPendingTransaction": null,
+  "productionIndexerVersion": "1.1.4",
+  "historicalCollectionsCompared": 61,
+  "historicalRecordsCompared": 2597,
+  "zeroIntroducedVaultDrift": true,
+  "oldAcceptedDaiResidual": "0.03",
+  "liveWagersPlacedForValidation": false,
+  "liveTestFundingTransfers": false,
+  "followups": [
+    {
+      "kind": "Existing indexed BRB vault discrepancy",
+      "description": "Indexed assets exceed the same-block on-chain assets by 2 BRB in both old and new indexers; preserved unchanged and documented separately."
+    }
+  ],
+  "frontendEnvironmentStatus": "updated-verified"
+}

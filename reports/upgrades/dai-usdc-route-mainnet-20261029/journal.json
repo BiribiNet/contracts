@@ -1,0 +1,30 @@
+{
+  "status": "activated-verified",
+  "transactions": [
+    {
+      "label": "deploy routed funder",
+      "nonce": 288,
+      "hash": "0xcd4d3aa9ec10df463027e45deb202ae1b7d280e758227b37e35d44a29b56baab",
+      "status": "success",
+      "block": "519451162",
+      "gasUsed": "4116667"
+    },
+    {
+      "label": "seed both route observations",
+      "nonce": 289,
+      "hash": "0x2442f3f58193a1546d5cdb6e9859b3de4625f242515b0477be88026461b49171",
+      "status": "success",
+      "block": "519451244",
+      "gasUsed": "332290"
+    },
+    {
+      "label": "switch engine funder pointer",
+      "nonce": 290,
+      "hash": "0x32849f48a2a37122fe8b3d78e06f9e50d4362792024f5fd4ad5185f8443132b2",
+      "status": "success",
+      "block": "519458900",
+      "gasUsed": "36872"
+    }
+  ],
+  "completedAt": "2026-10-29T20:17:51.793Z"
+}

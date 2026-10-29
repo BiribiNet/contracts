@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-10-29T20:17:51.793Z",
+  "http": 200,
+  "ok": true,
+  "paused": false,
+  "configured": true,
+  "mode": "keeper",
+  "triggerMode": "webhook-only",
+  "chainId": 42161,
+  "engine": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+  "scheduler": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+  "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+  "marketIds": [
+    1,
+    2,
+    3
+  ],
+  "laneCount": 1,
+  "pollIntervalMs": 0,
+  "webhooksEnabled": true,
+  "nextWakeAt": null,
+  "lastWebhook": {
+    "kind": "payout",
+    "receivedAt": 1793305010559
+  },
+  "lastTransaction": {
+    "hash": "0xc79bd0dbfa65e8575acb5ebe51dcb9981f9b180dcace70f390d63ae2b6e65127",
+    "status": "success",
+    "block": "519457411"
+  },
+  "pendingTransactionHash": null,
+  "status": {
+    "ok": true,
+    "checkedAt": 1793305010942,
+    "chainId": 42161
+  }
+}

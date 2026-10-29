@@ -1,0 +1,9 @@
+{
+  "baselineSourceUnchanged": true,
+  "baselineRuntimeUnchanged": true,
+  "baselineSourceSha256": "bd874a5686988c7698e6e4e289362a1762942d55354d4aaa2f3aa63f5078b958",
+  "baselineRuntimeTemplateHash": "0xef9dbb1751e9851a1b0b2cd8e6940265205fcf2ef09620a9aa81f5f4b62fac01",
+  "newSourceSha256": "b8cc0f5f7fb1d2b8f1c91de7486b748deb27ff888357f9b25a4b1f8c1c4bba52",
+  "newRuntimeTemplateHash": "0x7156930cdec6bdf206fe57229669493d60428875896e01d40cd3325c9c579309",
+  "newRuntimeBytes": 17625
+}

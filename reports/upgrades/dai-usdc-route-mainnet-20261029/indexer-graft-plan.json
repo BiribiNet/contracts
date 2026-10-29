@@ -1,0 +1,21 @@
+{
+  "candidateVersion": "1.1.4",
+  "fullReindexVersion": "1.1.1",
+  "graft": {
+    "base": "QmV6Dv8QFeceY59xBQVFxkUzHegC5a7Mop616njxZFu7km",
+    "block": 519451161
+  },
+  "newFunderStartBlock": 519451162,
+  "productionTagUnchanged": true,
+  "reason": "Preserve production history and schema with native Goldsky grafting; append a single funder source.",
+  "notPromotedCandidates": [
+    "1.1.1",
+    "1.1.2"
+  ],
+  "productionSourceCommit": "5ee1ade",
+  "sourceCompatibilityFix": "Use the saved production source baseline, including all 25 SideBet enum values and RoulettePlacement receipts. Do not deploy the older working-tree source.",
+  "deploymentFields": {
+    "graft_from": "biribi-arbitrum-one/1.1.0",
+    "start_block": 519451161
+  }
+}

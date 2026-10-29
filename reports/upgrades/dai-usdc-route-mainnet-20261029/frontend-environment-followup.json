@@ -1,0 +1,23 @@
+{
+  "status": "updated-verified",
+  "projectId": "prj_v4fPQdO7BycVnoD4EzoEHExIxGU9",
+  "teamId": "team_tOfN2Y8ZMvymNHkCe3b2Ov6p",
+  "key": "NEXT_PUBLIC_JACKPOT_FUNDER_ADDRESS",
+  "envId": "4DgMxGG5a3EBG1Vp",
+  "target": "production",
+  "previousValue": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+  "requiredValue": "0xd0083c4D3056F6D2bb2b98aEB4FEe0DD36C3bDB5",
+  "verifiedValue": "0xd0083c4D3056F6D2bb2b98aEB4FEe0DD36C3bDB5",
+  "verifiedAt": "2026-10-29T20:27:06.753Z",
+  "teamConsentGranted": true,
+  "productionOnlyEntry": true,
+  "previewEnvironmentMutated": false,
+  "liveFrontendUsesEngineFunderGetter": true,
+  "noFrontendRedeploymentPerformed": true,
+  "priorAccess": {
+    "connectorHttp": 403,
+    "existingCliHttp": 403,
+    "resolvedBy": "Vercel team consent"
+  },
+  "note": "Updated the existing production-only entry through Vercel and verified the decrypted address and production scope by reading the same variable ID back. No preview or development variable was edited. Existing live funder panels read JACKPOT_FUNDER dynamically."
+}

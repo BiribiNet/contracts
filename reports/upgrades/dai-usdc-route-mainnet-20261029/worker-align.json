@@ -1,0 +1,12 @@
+{
+  "phase": "align",
+  "checkedAt": "2026-10-29T20:11:47.456Z",
+  "sourceSha256": "f978b47c8db782d23b239820f142faf5b553b49f67343da317949594283ed24f",
+  "deploymentId": "7e8aabd49fd244908fffdac04c055cc6",
+  "bindingsPreserved": true,
+  "crons": [],
+  "paused": true,
+  "pendingTransactionHash": null,
+  "laneCount": 1,
+  "triggerMode": "webhook-only"
+}

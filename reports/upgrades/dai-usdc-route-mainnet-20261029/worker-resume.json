@@ -1,0 +1,12 @@
+{
+  "phase": "resume",
+  "checkedAt": "2026-10-29T20:16:35.105Z",
+  "sourceSha256": "ae93efd100a2eb822a5f6b19c309e9cb16de7a6ee8d638e66cc24e434a08832a",
+  "deploymentId": "e0f7344bd0b3485f9f15804e4354dae0",
+  "bindingsPreserved": true,
+  "crons": [],
+  "paused": false,
+  "pendingTransactionHash": null,
+  "laneCount": 1,
+  "triggerMode": "webhook-only"
+}

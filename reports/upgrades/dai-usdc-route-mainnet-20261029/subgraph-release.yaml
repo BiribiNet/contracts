@@ -1,0 +1,539 @@
+specVersion: 1.3.0
+description: BRB multi-market
+schema:
+  file: ./schema.graphql
+indexerHints:
+  prune: auto
+dataSources:
+  - name: BRBToken
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: BRB
+      address: "0x58871cf545f8f0df790443492a80edc414df4504"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - GlobalState
+        - GlobalRound
+        - Market
+        - BRBTransfer
+        - BRBBurn
+        - User
+        - UserMarketStats
+        - WithdrawTransaction
+        - JackpotPayout
+        - PayoutTransaction
+        - RouletteRound
+        - RouletteBet
+        - RoulettePlacement
+        - DailyStat
+        - TokenApproval
+      abis:
+        - name: BRB
+          file: ./abis/BRB.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+      file: ./src/mappings/brb.ts
+  - name: RouletteEngine
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: Game
+      address: "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - GlobalState
+        - GlobalRound
+        - Market
+        - BankAddress
+        - RouletteRound
+        - RouletteBet
+        - PayoutTransaction
+        - User
+        - UserMarketStats
+        - ContractRole
+        - RoleHolder
+        - ContractUpgrade
+        - DailyStat
+      abis:
+        - name: Game
+          file: ./abis/Game.json
+        - name: BankVault4626
+          file: ./abis/BankVault4626.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: RoulettePayment(uint64,uint32,address,address,uint256)
+          handler: handleRoulettePayment
+        - event: JackpotPayment(uint64,address,address,uint256)
+          handler: handleJackpotPayment
+        - event: BetRecorded(uint32,uint64,address,uint256,bytes)
+          handler: handleBetRecorded
+        - event: RoundCountdownStarted(uint64,uint32,uint256)
+          handler: handleRoundCountdownStarted
+        - event: VrfRequested(uint64,uint256,uint256)
+          handler: handleVrfRequested
+        - event: VRFResult(uint64,uint8,uint8)
+          handler: handleVRFResult
+        - event: RoundResolved(uint64)
+          handler: handleRoundResolved
+        - event: PayoutProgress(uint64,uint32,uint256,uint256,uint256)
+          handler: handlePayoutProgress
+        - event: JackpotFunded(uint64,uint32,uint256)
+          handler: handleJackpotFunded
+        - event: InfrastructureFeePaid(uint64,uint32,uint256)
+          handler: handleInfrastructureFeePaid
+        - event: MarketRegistered(uint32,address,address)
+          handler: handleMarketRegistered
+        - event: ReferralSet(address,address)
+          handler: handleReferralSet
+        - event: WithdrawalQueueBatchSizeUpdated(uint256)
+          handler: handleWithdrawalQueueBatchSizeUpdated
+        - event: MaxWithdrawalQueueLengthUpdated(uint256)
+          handler: handleMaxWithdrawalQueueLengthUpdated
+        - event: RoundDurationUpdated(uint32)
+          handler: handleRoundDurationUpdated
+        - event: JackpotFunderUpdated(address,address)
+          handler: handleJackpotFunderUpdated
+        - event: JackpotTreasuryUpdated(address,address)
+          handler: handleJackpotTreasuryUpdated
+        - event: Initialized(uint64)
+          handler: handleGameInitialized
+        - event: Upgraded(indexed address)
+          handler: handleGameUpgraded
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+      file: ./src/mappings/roulette.ts
+  - name: BRBJackpotFunder
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: BRBJackpotFunder
+      address: "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - JackpotBuy
+        - JackpotFundingSkip
+        - JackpotFunderConfig
+        - JackpotFunderIncident
+        - FundingVaultBalance
+        - FundingLedgerSnapshot
+        - FundingInputImport
+        - Market
+      abis:
+        - name: BRBJackpotFunder
+          file: ./abis/BRBJackpotFunder.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: FundingAttemptStarted(uint256,uint32,address,uint256,uint256)
+          handler: handleFundingAttemptStarted
+        - event: FundingReconciled(uint32,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleFundingReconciled
+        - event: FundingRetryScheduled(uint32,uint8,uint256,bool)
+          handler: handleFundingRetryScheduled
+        - event: FundingRetryReset(uint32)
+          handler: handleFundingRetryReset
+        - event: FundingImported(uint32,address,uint256,bytes32)
+          handler: handleFundingImported
+        - event: FundingAttemptCompleted(uint256,uint256,uint256)
+          handler: handleFundingAttemptCompleted
+        - event: PendingBrbDistributed(uint32,uint256,uint256)
+          handler: handlePendingBrbDistributed
+        - event: FundedFromMarket(uint32,address,uint256,uint256,uint256,uint256)
+          handler: handleFundedFromMarket
+        - event: FundFromMarketSkipped(uint32,address,uint8)
+          handler: handleFundFromMarketSkipped
+        - event: JackpotBurnFailed(uint32,uint256)
+          handler: handleJackpotBurnFailed
+        - event: JackpotTreasuryTransferFailed(uint32,address,uint256)
+          handler: handleJackpotTreasuryTransferFailed
+        - event: TokenSwept(address,address,uint256)
+          handler: handleTokenSwept
+        - event: SwapAssetBpsUpdated(uint256)
+          handler: handleSwapAssetBpsUpdated
+        - event: TreasuryBrbSplitUpdated(uint256,uint256)
+          handler: handleTreasuryBrbSplitUpdated
+        - event: SlippageBpsUpdated(uint256)
+          handler: handleSlippageBpsUpdated
+        - event: ColdSlippageBpsUpdated(uint256)
+          handler: handleColdSlippageBpsUpdated
+        - event: TwapWindowUpdated(uint32)
+          handler: handleTwapWindowUpdated
+        - event: PairObservationUpdated(address,uint32)
+          handler: handlePairObservationUpdated
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+      file: ./src/mappings/jackpot-funder.ts
+  - name: BRBReferral
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: BRBReferral
+      address: "0x6d19c9d21ce7b2670fc5f142f27d9819dd888544"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - BRBReferalTransfer
+        - User
+        - BRBPointsConfig
+        - TokenApproval
+      abis:
+        - name: BRBReferral
+          file: ./abis/BRBReferral.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+      file: ./src/mappings/referral.ts
+  - name: SideBet
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: SideBet
+      address: "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - SideBet
+        - SideBetSettlement
+        - SideBetConfig
+        - SideBetGlobalConfig
+        - Market
+        - User
+        - UserMarketStats
+        - ContractRole
+        - RoleHolder
+        - ContractUpgrade
+      abis:
+        - name: SideBet
+          file: ./abis/SideBet.json
+      eventHandlers:
+        - event: ConfigAdded(uint256,uint32,uint8)
+          handler: handleConfigAdded
+        - event: ConfigUpdated(uint256)
+          handler: handleConfigUpdated
+        - event: ConfigStakeLimitsUpdated(uint256,uint256,uint256)
+          handler: handleConfigStakeLimitsUpdated
+        - event: ConfigRemoved(uint256)
+          handler: handleConfigRemoved
+        - event: SideBetPlaced(uint256,address,uint256,uint32,uint256,uint256,uint64,uint16)
+          handler: handleSideBetPlaced
+        - event: SideBetSettled(uint256,address,uint8,uint256)
+          handler: handleSideBetSettled
+        - event: SideBetJackpotFunded(uint32,uint256)
+          handler: handleSideBetJackpotFunded
+        - event: SideBetInfrastructureFeePaid(uint32,uint256)
+          handler: handleSideBetInfrastructureFeePaid
+        - event: MultiplierBandUpdated(uint32,uint32)
+          handler: handleMultiplierBandUpdated
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: Upgraded(indexed address)
+          handler: handleSideBetUpgraded
+      file: ./src/mappings/side-bet.ts
+  - name: UpkeepScheduler
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: UpkeepScheduler
+      address: "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - SchedulerState
+        - SchedulerLaneCursor
+        - ContractRole
+        - RoleHolder
+      abis:
+        - name: UpkeepScheduler
+          file: ./abis/UpkeepScheduler.json
+      eventHandlers:
+        - event: ScanLimitUpdated(uint32)
+          handler: handleScanLimitUpdated
+        - event: MaxPayoutsPerCallUpdated(uint32)
+          handler: handleMaxPayoutsPerCallUpdated
+        - event: ForwarderAuthorityUpdated(address)
+          handler: handleForwarderAuthorityUpdated
+        - event: LaneCursorAdvanced(uint256,uint32,uint32)
+          handler: handleLaneCursorAdvanced
+        - event: SideBetCursorAdvanced(uint256,uint256,uint256)
+          handler: handleSideBetCursorAdvanced
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+      file: ./src/mappings/upkeep-scheduler.ts
+  - name: CreExecutionAuthority
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: CreExecutionAuthority
+      address: "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - CreExecutorApproval
+        - ContractRole
+        - RoleHolder
+      abis:
+        - name: CreExecutionAuthority
+          file: ./abis/CreExecutionAuthority.json
+      eventHandlers:
+        - event: ExecutorApprovalUpdated(address,bool)
+          handler: handleExecutorApprovalUpdated
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+      file: ./src/mappings/cre-authority.ts
+  - name: TipJar
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: TipJar
+      address: "0xa65ad745721b0f1382653328b837ef75f79b99ce"
+      startBlock: 515103224
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Tip
+        - TipTotal
+      abis:
+        - name: TipJar
+          file: ./abis/TipJar.json
+      eventHandlers:
+        - event: TipSent(address,address,address,uint256)
+          handler: handleTipSent
+      file: ./src/mappings/tips.ts
+  - name: BRBJackpotFunderRouted20261029
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: BRBJackpotFunder
+      address: "0xd0083c4d3056f6d2bb2b98aeb4fee0dd36c3bdb5"
+      startBlock: 519451162
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - JackpotBuy
+        - JackpotFundingSkip
+        - JackpotFunderConfig
+        - JackpotFunderIncident
+        - FundingVaultBalance
+        - FundingLedgerSnapshot
+        - FundingInputImport
+        - Market
+      abis:
+        - name: BRBJackpotFunder
+          file: ./abis/BRBJackpotFunder.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: FundingAttemptStarted(uint256,uint32,address,uint256,uint256)
+          handler: handleFundingAttemptStarted
+        - event: FundingReconciled(uint32,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleFundingReconciled
+        - event: FundingRetryScheduled(uint32,uint8,uint256,bool)
+          handler: handleFundingRetryScheduled
+        - event: FundingRetryReset(uint32)
+          handler: handleFundingRetryReset
+        - event: FundingImported(uint32,address,uint256,bytes32)
+          handler: handleFundingImported
+        - event: FundingAttemptCompleted(uint256,uint256,uint256)
+          handler: handleFundingAttemptCompleted
+        - event: PendingBrbDistributed(uint32,uint256,uint256)
+          handler: handlePendingBrbDistributed
+        - event: FundedFromMarket(uint32,address,uint256,uint256,uint256,uint256)
+          handler: handleFundedFromMarket
+        - event: FundFromMarketSkipped(uint32,address,uint8)
+          handler: handleFundFromMarketSkipped
+        - event: JackpotBurnFailed(uint32,uint256)
+          handler: handleJackpotBurnFailed
+        - event: JackpotTreasuryTransferFailed(uint32,address,uint256)
+          handler: handleJackpotTreasuryTransferFailed
+        - event: TokenSwept(address,address,uint256)
+          handler: handleTokenSwept
+        - event: SwapAssetBpsUpdated(uint256)
+          handler: handleSwapAssetBpsUpdated
+        - event: TreasuryBrbSplitUpdated(uint256,uint256)
+          handler: handleTreasuryBrbSplitUpdated
+        - event: SlippageBpsUpdated(uint256)
+          handler: handleSlippageBpsUpdated
+        - event: ColdSlippageBpsUpdated(uint256)
+          handler: handleColdSlippageBpsUpdated
+        - event: TwapWindowUpdated(uint32)
+          handler: handleTwapWindowUpdated
+        - event: PairObservationUpdated(address,uint32)
+          handler: handlePairObservationUpdated
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+      file: ./src/mappings/jackpot-funder.ts
+templates:
+  - name: MarketAsset
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: BRB
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - GlobalState
+        - Market
+        - User
+        - UserMarketStats
+        - RouletteRound
+        - RouletteBet
+        - PayoutTransaction
+        - JackpotPayout
+        - DailyStat
+        - HourlyVolumeSnapshot
+      abis:
+        - name: BRB
+          file: ./abis/BRB.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleMarketAssetTransfer
+      file: ./src/mappings/market-asset.ts
+  - name: BankVault
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: MergedEvents
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - GlobalState
+        - Market
+        - VaultDeposit
+        - VaultWithdrawal
+        - LargeWithdrawalRequest
+        - User
+        - UserMarketStats
+        - TokenApproval
+        - ContractRole
+        - RoleHolder
+        - MarketAPYSnapshot
+        - DailyStat
+        - HourlyVolumeSnapshot
+      abis:
+        - name: BankVault4626
+          file: ./abis/BankVault4626.json
+        - name: MergedEvents
+          file: ./abis/MergedEvents.json
+      eventHandlers:
+        - event: WithdrawalIdentified(uint256,address,address,uint16)
+          handler: handleWithdrawalIdentified
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+        - event: WithdrawalProcessed(uint256,address,address,uint16,uint256,uint256)
+          handler: handleWithdrawalProcessed
+        - event: BetsReleased(uint256,uint256)
+          handler: handleBetsReleased
+        - event: SideBetStakeLocked(address,uint256,uint256,uint256)
+          handler: handleSideBetStakeLocked
+        - event: BetPlaced(address,uint256,bytes,uint256)
+          handler: handleBetPlaced
+        - event: PayoutBatchProcessed(uint256,uint256)
+          handler: handlePayoutBatchProcessed
+        - event: FundsTransferred(address,uint256)
+          handler: handleFundsTransferred
+        - event: MinBetUpdated(uint256,uint256)
+          handler: handleMinBetUpdated
+        - event: SideBetControllerUpdated(address,address)
+          handler: handleSideBetControllerUpdated
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: WithdrawalSkipped(uint256,address,address,uint16)
+          handler: handleWithdrawalSkipped
+      file: ./src/mappings/mainnet-bank-vault.ts
+  - name: TipJar
+    kind: ethereum/contract
+    network: arbitrum-one
+    source:
+      abi: TipJar
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Tip
+        - TipTotal
+      abis:
+        - name: TipJar
+          file: ./abis/TipJar.json
+      eventHandlers:
+        - event: TipSent(address,address,address,uint256)
+          handler: handleTipSent
+      file: ./src/mappings/tips.ts
+features:
+  - grafting
+graft:
+  base: QmV6Dv8QFeceY59xBQVFxkUzHegC5a7Mop616njxZFu7km
+  block: 519451161

@@ -1,0 +1,169 @@
+{
+  "commit": "5ee1ade2c85c4212a974b688e7a6adde8f6bce75",
+  "mappingSourcesUnchangedFromSavedProductionBaseline": true,
+  "schemaSha256": "26b2aff781d4252291241ef6da4afdef1d7733e75634d1f08333f928cb7dca3b",
+  "mappingSources": [
+    {
+      "path": "src/helpers/access-control.ts",
+      "sha256": "bd790f684f2a36de088d473c443123db117262175aaf0952e080e103db26349d"
+    },
+    {
+      "path": "src/helpers/aggregation.ts",
+      "sha256": "1ff8e41a47b62e09e56c48b4201872fb421ab3fd4415bbbda6165a3604638e59"
+    },
+    {
+      "path": "src/helpers/bet-data.ts",
+      "sha256": "a41f0a0da4b5f61c1a948db93cd14df00559483e80dcc0e16c2667f6a5038c4f"
+    },
+    {
+      "path": "src/helpers/betting.ts",
+      "sha256": "b84ff5cb09ba316272694b4ea9287b64d38bd544f4b1e0259a4cf1576dedfc78"
+    },
+    {
+      "path": "src/helpers/bigintToBytes.ts",
+      "sha256": "413c7c1c288e5f4bb261f6d46e407692566f94aee33cb1b74a71c71e7eaa8acb"
+    },
+    {
+      "path": "src/helpers/brb-points.ts",
+      "sha256": "ed2e95c8177966bb639a9400a9c6e24d13d43221a8a1ac544ea56dc21a52cb41"
+    },
+    {
+      "path": "src/helpers/decodeWrapper.ts",
+      "sha256": "b9374cc812472e2965d580b9852331ad47f78121efe25bfe4e17785dca6c306b"
+    },
+    {
+      "path": "src/helpers/globalRound.ts",
+      "sha256": "45cc3187fe7209dd07f3c212c79eafae2e4d854efd3d307b80c441aa09f4d19d"
+    },
+    {
+      "path": "src/helpers/globalState.ts",
+      "sha256": "a97994bc24284e86f7cd9f22c92c9df41d7bc46f713fb629e2e20530c41fe9e3"
+    },
+    {
+      "path": "src/helpers/jackpot-funder.ts",
+      "sha256": "cc600ae384856d256bb897b1709acd6e01c5e32203983307cf9d0926087503c5"
+    },
+    {
+      "path": "src/helpers/market-accounting.ts",
+      "sha256": "40dd58098a1f4f7ae5f8cec10fd996cbb9263d6ad98fb994a7dc68069975becf"
+    },
+    {
+      "path": "src/helpers/market-returns.ts",
+      "sha256": "b3260bbd8773852340c234ee5d9d47165e8eb78e4fd432d7ed204dcd281e8a27"
+    },
+    {
+      "path": "src/helpers/market.ts",
+      "sha256": "d2ef7284697dadc8448b41de0b7eb8dd39685dfc5b91854db0b4b23bf758e809"
+    },
+    {
+      "path": "src/helpers/marketApy.ts",
+      "sha256": "b2382a2c03b52753cb3f15c099efa2fa6023772203fc65a672d31dbb2d46d030"
+    },
+    {
+      "path": "src/helpers/multiMarketRoulette.ts",
+      "sha256": "8c17e3c6d1893868e5812d64a2250af4bb66d0c736cc98362f7715b46f5d59ee"
+    },
+    {
+      "path": "src/helpers/number.ts",
+      "sha256": "a073e092f6ca3c795de1220d2650664082f6b4505f23388dc1b484dc4949d5ae"
+    },
+    {
+      "path": "src/helpers/payout-transfer.ts",
+      "sha256": "3da8481a81946fe6bd3011ec1b687e449b7d89a62b7dfdac9c75dcbf1d099243"
+    },
+    {
+      "path": "src/helpers/referral-engine.ts",
+      "sha256": "3e17ffc07bedb141738e077184c8b792c0016e991a4b353a7573bf0271c0054a"
+    },
+    {
+      "path": "src/helpers/rouletteRound.ts",
+      "sha256": "ef439bda3500335eee672379a1ff154950ac0cd2c4140561982dae9b23d511b8"
+    },
+    {
+      "path": "src/helpers/round-sync.ts",
+      "sha256": "fdb1e0711a24112a8b15e740ca34dac1aa16e7ea753088bdccb3e71ad9280725"
+    },
+    {
+      "path": "src/helpers/side-bet-vrf.ts",
+      "sha256": "624481322569ea40b7a509ab3ce6831edf2f363eeba5b810662d98bce92bc273"
+    },
+    {
+      "path": "src/helpers/side-bet.ts",
+      "sha256": "e3d418026f090ad9d4c387e83006d979e00ed2746b422569166ba1f5faff0a25"
+    },
+    {
+      "path": "src/helpers/tx-activity.ts",
+      "sha256": "6330aaa619003e2ab569a7d5e646d15ec7acbf562a9d9a96d0c507c16a7da9bd"
+    },
+    {
+      "path": "src/helpers/user-market-stats.ts",
+      "sha256": "ba16fbc88fc22ed000c6b7abb3318428ff4f0f7b59eecbfafc205147eb83b250"
+    },
+    {
+      "path": "src/helpers/user.ts",
+      "sha256": "ec3e12576ff2fb2978d9f73b8ced30fffb3bd6b05f5488ea5d941411f1a0845d"
+    },
+    {
+      "path": "src/helpers/vault-ledger.ts",
+      "sha256": "076ea236a8d3053c21bda35d639b960472d6e0844cebc3dfddc0bb160f6b9596"
+    },
+    {
+      "path": "src/helpers/vault-liquidity.ts",
+      "sha256": "35508c8a9800407504ac5527accbc41997164d226ef51cdc55f92213d12dd1d7"
+    },
+    {
+      "path": "src/helpers/vaultClassTotals.ts",
+      "sha256": "05138774f23e81cfa5feea185f725d11d373c09036ce695107186f551c67b0b8"
+    },
+    {
+      "path": "src/mappings/automation-receiver.ts",
+      "sha256": "0eb031e5b777768295b44b261fdc6740d2c49afc1f8b0cf80d057039c2d0f088"
+    },
+    {
+      "path": "src/mappings/bank-vault.ts",
+      "sha256": "74d3be8902d19d6547f003e7a9af7556d237e6646567c6bb0843808fc957b83f"
+    },
+    {
+      "path": "src/mappings/brb.ts",
+      "sha256": "283b42e23cf3b54f53e95e747b8ed2d4acc2a94dcc970d64e6ede1f3d2060705"
+    },
+    {
+      "path": "src/mappings/cre-authority.ts",
+      "sha256": "22790a7d8362222219352c43e3509ad2e537ea601da51a71589a93c968f2eb69"
+    },
+    {
+      "path": "src/mappings/jackpot-funder.ts",
+      "sha256": "4c8512efb507ecdc4cb54e278cc256e4caaeb078f71290e181844d0b9b18036a"
+    },
+    {
+      "path": "src/mappings/mainnet-bank-vault.ts",
+      "sha256": "6590079e0adcf5b78a28a120b80e81a72af94c6c6f0445c1cf363b9952f37de4"
+    },
+    {
+      "path": "src/mappings/market-asset.ts",
+      "sha256": "97e2898dcf95940006d437467a1c669f6e12189ab05a54274d487e0e1ef1db12"
+    },
+    {
+      "path": "src/mappings/referral.ts",
+      "sha256": "45d0b9e9f38ea67987fd638f09b256189e403e7058a5e251dd92b65f5294c541"
+    },
+    {
+      "path": "src/mappings/roulette.ts",
+      "sha256": "e8e477f509816dfe604353b3b3f9c7dad294d859b2939667e9ea11c2f5af4e8f"
+    },
+    {
+      "path": "src/mappings/side-bet.ts",
+      "sha256": "5ae0aee480901716c28615895ace6f2775a63039fe09c16b3374da41f83e506b"
+    },
+    {
+      "path": "src/mappings/tips.ts",
+      "sha256": "360df6ce84d861b2ce6399144ad13947cf374c4bb83d9c476be7e27cee1e696e"
+    },
+    {
+      "path": "src/mappings/upkeep-scheduler.ts",
+      "sha256": "69b1a002836307fe6a3c835c51ca8bfc8e4d502abf82494dc6b686ae2afcfae0"
+    }
+  ],
+  "addressConstantsAppliedFromMainnetManifest": true,
+  "addedStaticSource": "BRBJackpotFunderRouted20261029"
+}

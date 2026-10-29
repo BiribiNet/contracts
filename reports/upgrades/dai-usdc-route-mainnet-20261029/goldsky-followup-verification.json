@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-29T20:24:11.682Z",
+  "pipeline": "biribi-roulette-events",
+  "pipelineStatus": "ACTIVE",
+  "pipelineIncludesOldAndNewFunders": true,
+  "subgraph": "biribi-arbitrum-one",
+  "productionVersion": "1.1.4",
+  "healthy": "healthy",
+  "synced": true,
+  "indexedBlock": 519461209,
+  "indexedFunder": "0xd0083c4d3056f6d2bb2b98aeb4fee0dd36c3bdb5"
+}

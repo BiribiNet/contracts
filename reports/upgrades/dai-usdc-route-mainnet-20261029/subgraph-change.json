@@ -1,0 +1,16 @@
+{
+  "oldFunderRetained": {
+    "abi": "BRBJackpotFunder",
+    "address": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+    "startBlock": 515103224
+  },
+  "addedFunder": {
+    "abi": "BRBJackpotFunder",
+    "address": "0xd0083c4d3056f6d2bb2b98aeb4fee0dd36c3bdb5",
+    "startBlock": 519451162
+  },
+  "addedName": "BRBJackpotFunderRouted20261029",
+  "existingSourcesAndTemplatesUnchanged": true,
+  "mappingCodeChanged": false,
+  "sourceBaseline": "Workspace source exactly matches the saved publication patch from 2026-10-18"
+}

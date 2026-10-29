@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "promotedAt": "2026-10-29T20:10:39.219Z",
+  "previousVersion": "1.1.0",
+  "newVersion": "1.1.4",
+  "privateOnly": true,
+  "deployment": "QmfG1ToFGgvhdQnhvLnfMeLJEZwmZDLCVq2G816WiHiyAz",
+  "indexedBlock": 519458284,
+  "oldVersionsRetained": true,
+  "testnetUntouched": true
+}

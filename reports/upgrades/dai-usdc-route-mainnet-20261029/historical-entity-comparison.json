@@ -1,0 +1,375 @@
+{
+  "status": "passed",
+  "block": 519451161,
+  "candidateVersion": "1.1.4",
+  "entities": [
+    {
+      "collection": "automationCallAllowances",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "automationCalls",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "bankAddresses",
+      "count": 3,
+      "sha256": "6d94e71b35dde36ece952261ce3f799948057d4d8d4be8aadc0010e68ffdc211",
+      "equal": true
+    },
+    {
+      "collection": "brbburns",
+      "count": 69,
+      "sha256": "cabc06337cb3669bd9c62d36ef8bd1e4b5923e62798281be38e9892646eecd39",
+      "equal": true
+    },
+    {
+      "collection": "brbpointsConfigs",
+      "count": 1,
+      "sha256": "9f602d07375ac0d92ea2fe854f55df71b9a8be37a4330b08b9764e099024e265",
+      "equal": true
+    },
+    {
+      "collection": "brbreferalTransfers",
+      "count": 119,
+      "sha256": "a0745506595072098ea72459da17040f53d9153941c00f5d1df8e81040a7a927",
+      "equal": true
+    },
+    {
+      "collection": "brbtransfers",
+      "count": 531,
+      "sha256": "c0a686aa36d11020acc7aa4dbf05eaae89ce4e7681c860f48762b6c30accf627",
+      "equal": true
+    },
+    {
+      "collection": "contractRoles",
+      "count": 21,
+      "sha256": "b784e28f66919b36e9c903e3815b4b29adb9b3510caf6b1dd14265631301071e",
+      "equal": true
+    },
+    {
+      "collection": "contractUpgrades",
+      "count": 3,
+      "sha256": "8db1fc87b6ed967fff01dcb900a35001b8eeac43bd5fca180d2007408462074c",
+      "equal": true
+    },
+    {
+      "collection": "creExecutorApprovals",
+      "count": 1,
+      "sha256": "638ef1cc98715e06b6b7e944f3e79fd763301d694cfa363473532c7918b8339f",
+      "equal": true
+    },
+    {
+      "collection": "dailyPlayers",
+      "count": 11,
+      "sha256": "d449197cb4418c0a3aca13c3a8dd374afc4e22a9e0eb89627171444a921a0fce",
+      "equal": true
+    },
+    {
+      "collection": "dailyStats",
+      "count": 11,
+      "sha256": "3b73a896dfe452fa5c22eac8cc97a80feb762f9ee44ef7a8dca5ea536cf60769",
+      "equal": true
+    },
+    {
+      "collection": "fundingInputImports",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "fundingLedgerSnapshots",
+      "count": 147,
+      "sha256": "71723726f96f35299319f5fca6c021c696547b8e2064c18b02ed5c796b4eb4cf",
+      "equal": true
+    },
+    {
+      "collection": "fundingVaultBalances",
+      "count": 3,
+      "sha256": "6adf2cea294aa02985d484cd9e4dd0e4ce9af661d7ae9c4a4e3a8a1645ab3116",
+      "equal": true
+    },
+    {
+      "collection": "globalRounds",
+      "count": 98,
+      "sha256": "1b9e1c5e2ee458478086a8b6a9388cd2ba3acd2de8ed886df93b186df00f83e7",
+      "equal": true
+    },
+    {
+      "collection": "globalStates",
+      "count": 1,
+      "sha256": "25657538324fcdba1501203e45a9985bafe0ebf62571aebaa631d92194b6361c",
+      "equal": true
+    },
+    {
+      "collection": "hourlyPlayers",
+      "count": 30,
+      "sha256": "0befb3921b8812bfbc26a822288e06bd57706a9b9ddcf83bfa208e30b5a55394",
+      "equal": true
+    },
+    {
+      "collection": "hourlyVolumeSnapshots",
+      "count": 29,
+      "sha256": "860379885e55baa6f48d6c4be1b50a3533b91cdbc03dff15c2e6ee00acf3ee3c",
+      "equal": true
+    },
+    {
+      "collection": "jackpotBuys",
+      "count": 69,
+      "sha256": "c0c8801165f6c72dfc1c91c329f28adf324baeb1c6b706020ddf9fdd355db33d",
+      "equal": true
+    },
+    {
+      "collection": "jackpotFunderConfigs",
+      "count": 1,
+      "sha256": "037ffaa6fb0eed28a9f6bf91733521910efb1a198fc75c5dbaa62e41ed342762",
+      "equal": true
+    },
+    {
+      "collection": "jackpotFunderIncidents",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "jackpotFundingRecoveries",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "jackpotFundingSkips",
+      "count": 3,
+      "sha256": "e90ea8d5423729251fedd146ae29b6c678168599bb3fe5d425f4991634bd1510",
+      "equal": true
+    },
+    {
+      "collection": "jackpotPayouts",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "largeWithdrawalRequests",
+      "count": 2,
+      "sha256": "16346ec154d3aed41a7d612f44bb2911b354ede5b0ee94f4a8602dd274fdbcbe",
+      "equal": true
+    },
+    {
+      "collection": "marketAccountingEvents",
+      "count": 309,
+      "sha256": "43691afc519378caa717d44132a2cae4e0855bb53341efeebd2d3a8ac58716ae",
+      "equal": true
+    },
+    {
+      "collection": "marketAccountingPlayers",
+      "count": 48,
+      "sha256": "70edc03618f49064abe211124b9d6ee98138ee1f880b981b1281dea94201d8b1",
+      "equal": true
+    },
+    {
+      "collection": "marketAccountingStats",
+      "count": 35,
+      "sha256": "1de410c90ca901df22a82de8ae45b5fca884fd8b5962cd02c2f9852ca3a5709c",
+      "equal": true
+    },
+    {
+      "collection": "marketAPYSnapshots",
+      "count": 13,
+      "sha256": "bc4f62151aaaa9e40bfdfa75cd15fd839fdea892b68d32f142f33f0670434a17",
+      "equal": true
+    },
+    {
+      "collection": "marketDailyStats",
+      "count": 13,
+      "sha256": "ac5a529d235c528cc1cf84aac4201b7968f9759230aa3b9f01e550bbcb239961",
+      "equal": true
+    },
+    {
+      "collection": "marketReturnObservations",
+      "count": 3,
+      "sha256": "4974537de10c493f316d890c265283153fce632d5a4ad91a98d5d9b7cc13238c",
+      "equal": true
+    },
+    {
+      "collection": "markets",
+      "count": 3,
+      "sha256": "41770d03bf639305068cb41b0c2209433d4892c480121bfce61cfaeb1a0a494a",
+      "equal": true
+    },
+    {
+      "collection": "openWithdrawalRequests",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "payoutTransactions",
+      "count": 69,
+      "sha256": "64d78f2f2ba0fc8e44b22b6624f86a29a1075d43eb78b453b5f34861c0236b2c",
+      "equal": true
+    },
+    {
+      "collection": "pendingBrbBurns",
+      "count": 69,
+      "sha256": "35ac6710025dcbb67f644addea0df47ffcc08d290d1362ac1c41de066269f44b",
+      "equal": true
+    },
+    {
+      "collection": "protocolFundingAttempts",
+      "count": 72,
+      "sha256": "4e9f49a62aead0b44549bb44b1f0fa22139344a6795e5e90501f857b7bb96e9f",
+      "equal": true
+    },
+    {
+      "collection": "protocolPaymentReceipts",
+      "count": 69,
+      "sha256": "3967f841da4bc877520f116012578a15128f6ba3d5cfb56facf7faed38564022",
+      "equal": true
+    },
+    {
+      "collection": "protocolWithdrawalReceipts",
+      "count": 2,
+      "sha256": "85bc330edaa71bc76d439dd70f0b1e6be94c0275990d082e1f8785572a71b49d",
+      "equal": true
+    },
+    {
+      "collection": "roleHolders",
+      "count": 21,
+      "sha256": "58590e7d834e5054f64e262ed2ebe06b0a2dec5286c5510f3c252cb85542d4b5",
+      "equal": true
+    },
+    {
+      "collection": "rouletteBets",
+      "count": 104,
+      "sha256": "92c6b3c2575a8e902102d1be15ec1b7081379b165b5fe657fc55ba1c9679cc2b",
+      "equal": true
+    },
+    {
+      "collection": "roulettePlacements",
+      "count": 130,
+      "sha256": "61abde62fca1f4fb5c8cf63c60b63f23d9ad600b955ac8a384857be349bcbf5f",
+      "equal": true
+    },
+    {
+      "collection": "rouletteRounds",
+      "count": 100,
+      "sha256": "704810fff952625e01c8b1de77c27419c3e585a934ce23b4f2f54921362a57dc",
+      "equal": true
+    },
+    {
+      "collection": "schedulerLaneCursors",
+      "count": 2,
+      "sha256": "e95aa37a9c6d7778946dcc64845eb34fbfab76f9156bf5050ab672d5ca21a6b4",
+      "equal": true
+    },
+    {
+      "collection": "schedulerStates",
+      "count": 1,
+      "sha256": "e866b1db703c22ef17aceff6cb4edeb421779f6b5a753ce4aa321eb9e08ab69f",
+      "equal": true
+    },
+    {
+      "collection": "sideBetConfigs",
+      "count": 159,
+      "sha256": "b53208b96babdc91fbff4475f998ccc466e81f08f929a890bf91665cd7b7107a",
+      "equal": true
+    },
+    {
+      "collection": "sideBetGlobalConfigs",
+      "count": 1,
+      "sha256": "009201f23b13a33831bd94df028ca359cce1150701ba143b93ff2fba66770778",
+      "equal": true
+    },
+    {
+      "collection": "sideBetRoundPendings",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "sideBets",
+      "count": 7,
+      "sha256": "9b10e8457196e6a937320dc65d19e3697a35a10513849f288ae3d62b7c9aad41",
+      "equal": true
+    },
+    {
+      "collection": "sideBetSettlements",
+      "count": 7,
+      "sha256": "e4e67893583fe608c3e08419f83f398d61a6cc2e085226077f464f15393ae02b",
+      "equal": true
+    },
+    {
+      "collection": "tips",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "tipTotals",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "tokenApprovals",
+      "count": 8,
+      "sha256": "fb17bdeebbb1a948ae1f582ab951de843c5246d98c96352e01bbea0e0aa301e6",
+      "equal": true
+    },
+    {
+      "collection": "txActivities",
+      "count": 138,
+      "sha256": "b574e54c3072f92b90bfb5fb63aa3d0ef707051f2aa48832483ae0db9d2bbd12",
+      "equal": true
+    },
+    {
+      "collection": "txBrbDonations",
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "equal": true
+    },
+    {
+      "collection": "userDailyPoints_collection",
+      "count": 24,
+      "sha256": "e139d1cbcb2186ef46f1d6df14f69558e18ca6e326aeb1cd4ccd6b3f831ac37d",
+      "equal": true
+    },
+    {
+      "collection": "userMarketStats_collection",
+      "count": 6,
+      "sha256": "3847ec7214bd2975155f9f83a8a414e766a4320e00a1de3892ad70a723924462",
+      "equal": true
+    },
+    {
+      "collection": "users",
+      "count": 20,
+      "sha256": "fb255abba8271c742cb84e2400b8f91cf2fc4433c53ea01da5f5ad48fee3d35c",
+      "equal": true
+    },
+    {
+      "collection": "vaultDeposits",
+      "count": 8,
+      "sha256": "5796958a2155415a2d378b899c040d9009807a1043eaf6a7c571c8056c1d52e0",
+      "equal": true
+    },
+    {
+      "collection": "vaultWithdrawals",
+      "count": 2,
+      "sha256": "b6528075edcadad658c16ecd180bbf969df66e705282457011331947dbcbe62e",
+      "equal": true
+    },
+    {
+      "collection": "withdrawTransactions",
+      "count": 1,
+      "sha256": "9ceb6b35d54bbdb9168cbd207b8564259020028400838312a24f5edcd22eb168",
+      "equal": true
+    }
+  ],
+  "recordsCompared": 2597,
+  "checkedAt": "2026-10-29T20:09:52.247Z"
+}

@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "scope": "Isolated local fork; no mainnet writes",
+  "publicRpcForwardedMethods": {
+    "eth_chainId": 2,
+    "eth_blockNumber": 63,
+    "net_version": 1,
+    "eth_getBalance": 249,
+    "eth_getCode": 249,
+    "eth_getTransactionCount": 249,
+    "eth_getBlockByNumber": 1,
+    "eth_getStorageAt": 231,
+    "eth_feeHistory": 1
+  },
+  "publicRpcRejectedMethods": [
+    "eth_sendRawTransaction"
+  ],
+  "pinnedArbitrumBlock": 519450847,
+  "exactPlan": true,
+  "sourceRuntimeHash": "0x6c3f7ddbf44a82b427753a4799d014a0d789d609f23d3412706c3c0c4ec86c3e",
+  "newFunder": "0xd0083c4D3056F6D2bb2b98aEB4FEe0DD36C3bDB5",
+  "transactions": [
+    {
+      "label": "deploy routed funder",
+      "localHash": "0x5cdefbd92dcfd772ece735b6f6e0cfe849daed29b9cdb3311422be65afc30e2c",
+      "gasUsed": "4100175"
+    },
+    {
+      "label": "seed both route observations",
+      "localHash": "0x6f9024ec2e476337b53977659d8a3954e7d7b5bdc3bd996ee264c1dd398dda06",
+      "gasUsed": "332019"
+    }
+  ],
+  "gas": {
+    "DAI": "465205",
+    "USDC": "341722",
+    "BRB": "195702"
+  },
+  "onlyEngineStorageSlotChanged": 2,
+  "implementationUnchanged": true,
+  "oldDaiQueuePreserved": true,
+  "checks": [
+    "Exact planned deployment address, calldata and nonces",
+    "Exact live constructor immutables and copied policies",
+    "Only JACKPOT_FUNDER storage slot changes",
+    "Engine implementation and all other captured engine storage unchanged",
+    "DAI routed and USDC direct swaps plus BRB distribution reconcile",
+    "Old accepted DAI residual remains untouched"
+  ]
+}

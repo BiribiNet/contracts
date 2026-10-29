@@ -16,6 +16,8 @@ async function main() {
   if (apply && chainId === 42161 && process.env.CONFIRM_MAINNET_FUNDING !== 'arbitrum-one:42161') throw new Error('Mainnet funding requires CONFIRM_MAINNET_FUNDING=arbitrum-one:42161');
   console.log(JSON.stringify({ chainId, funder: address, mode: apply ? 'execute' : 'read-only' }));
   const funder = await viem.getContractAt('BRBJackpotFunder', address);
+  // Read the deployed budget: routed funders need more isolated execution gas than direct-only ones.
+  const attemptGas = await funder.read.ATTEMPT_GAS();
   const engine = await viem.getContractAt('RouletteEngine', await funder.read.engine());
   if ((await engine.read.JACKPOT_FUNDER()).toLowerCase() !== address.toLowerCase()) throw new Error('Funder is not active on this engine');
   const registry = await viem.getContractAt('MarketRegistry', await engine.read.REGISTRY());
@@ -43,7 +45,7 @@ async function main() {
         observations++;
         observationTimes.set(key, now);
         try {
-          const hash = await funder.write.updateObservation([cfg.asset], { gas: 200000n });
+          const hash = await funder.write.updateObservation([cfg.asset], { gas: 400000n });
           const receipt = await client.waitForTransactionReceipt({ hash });
           if (receipt.status !== 'success') console.error(`Observation failed for ${cfg.asset}: ${hash}`);
         } catch { console.error(`Observation unavailable for ${cfg.asset}`); }
@@ -60,7 +62,7 @@ async function main() {
   if (apply) {
     for (let i = 0; i < markets.length; i += 10) {
       const batch = markets.slice(i, i + 10);
-      const hash = await funder.write.processFundingBatch([batch], { gas: BigInt(batch.length) * 650000n + 150000n });
+      const hash = await funder.write.processFundingBatch([batch], { gas: BigInt(batch.length) * (attemptGas + 150000n) + 150000n });
       const receipt = await client.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error(`Funding batch failed: ${hash}`);
       console.log(`Funding batch confirmed: ${hash}`);

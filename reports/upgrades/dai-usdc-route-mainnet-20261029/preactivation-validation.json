@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-29T20:02:37.851Z",
+  "regressionTests": 71,
+  "exactAddressForkPassed": true,
+  "exactPlanForkBlock": 519450847,
+  "onlyEngineStorageSlotChanged": 2,
+  "sourceHash": "b8cc0f5f7fb1d2b8f1c91de7486b748deb27ff888357f9b25a4b1f8c1c4bba52",
+  "sourceVerified": true,
+  "chainId": 42161,
+  "oldDaiResidualOwnerAccepted": true,
+  "replacementDeployed": true,
+  "engineActivationPending": true,
+  "liveWagerOrFundingTransfersMade": false
+}
