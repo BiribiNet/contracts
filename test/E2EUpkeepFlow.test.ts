@@ -7,6 +7,7 @@ import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
 import { deployRouletteEngine } from "../scripts/utils/deployRouletteEngine";
 
 import { runParallelLanesUntilIdle } from "./helpers/parallelUpkeep";
+import { customErrorPattern } from "./helpers/customErrorPattern";
 
 function encodeSingleBet(betType: bigint, number: bigint, amount: bigint) {
     return encodeAbiParameters(
@@ -127,13 +128,13 @@ describe("E2E upkeep flow", function () {
             await token.write.approve([bank.address, funds], { account: alice.account });
             await expect(bank.write.placeBet([stake, encodeSingleBet(2n, 4n, stake), zeroAddress], {
                 account: alice.account,
-            })).to.be.rejectedWith("InvalidBetNumber");
+            })).to.be.rejectedWith(customErrorPattern("InvalidBetNumber()"));
             if (outcome === 0n) {
                 for (let id = 0n; id <= 36n; id++) {
                     if (id >= 1n && id <= 4n) continue; // Valid splits and 0/4 checked separately.
                     await expect(bank.write.placeBet([stake, encodeSingleBet(2n, id, stake), zeroAddress], {
                         account: alice.account,
-                    })).to.be.rejectedWith("InvalidBetNumber");
+                    })).to.be.rejectedWith(customErrorPattern("InvalidBetNumber()"));
                 }
             }
 
