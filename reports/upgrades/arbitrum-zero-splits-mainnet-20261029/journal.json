@@ -1,0 +1,76 @@
+{
+  "status": "upgraded-verified",
+  "transactions": [
+    {
+      "label": "deploy RouletteBetLib",
+      "nonce": 270,
+      "transactionHash": "0xa256a8a923fdfc80d52b064d5b4dbd87914e5e3d481f229f6d1a230f6f4e813b",
+      "status": "success",
+      "dataHash": "0xa58562d274a20620ba7fa653fdeccea340f636115c17372b315416281a9d22fc",
+      "to": null,
+      "blockNumber": "519391460",
+      "gasUsed": "694122",
+      "effectiveGasPrice": "20000000"
+    },
+    {
+      "label": "deploy RouletteBetCodecLib",
+      "nonce": 271,
+      "transactionHash": "0xca870135fc96a4ea72f7c81cf7f55a55e972395d077f5db068ee47117081cfc2",
+      "status": "success",
+      "dataHash": "0x2872ee46f3ac4640c6b64c68a29ac891b540b2302ed330bf9a9b96fce69d8ef7",
+      "to": null,
+      "blockNumber": "519391468",
+      "gasUsed": "256651",
+      "effectiveGasPrice": "20000000"
+    },
+    {
+      "label": "deploy RoulettePayoutSweepLib",
+      "nonce": 272,
+      "transactionHash": "0x024debc888174a05ad898727347e2428aded4edf786ecdeb2f9d2d2434135acb",
+      "status": "success",
+      "dataHash": "0x8b2a816d28e733dc01fb7eb363e2add72b5024698e3c911813e8f035029a66b7",
+      "to": null,
+      "blockNumber": "519391476",
+      "gasUsed": "1703029",
+      "effectiveGasPrice": "20000000"
+    },
+    {
+      "label": "deploy RouletteUpkeepScanLib",
+      "nonce": 273,
+      "transactionHash": "0x4bc3f24795081406d2597e83eddfbdab949f9ed52cf213d0d0c56c481decb1be",
+      "status": "success",
+      "dataHash": "0xec3c03b7ad4594e50b94af1472b8f1e3b5d2c693fa48db330e1e5293b2c625e0",
+      "to": null,
+      "blockNumber": "519391483",
+      "gasUsed": "1390342",
+      "effectiveGasPrice": "20122000"
+    },
+    {
+      "label": "deploy RouletteEngine",
+      "nonce": 274,
+      "transactionHash": "0x6384bd3cc08328269fa931547ab43debedc278ef1384344fabbf6e82577f1070",
+      "status": "success",
+      "dataHash": "0x87ff2b9b66823a13d8ee955ad81d5da3cf7eb308f59fa80907a2662248c3886d",
+      "to": null,
+      "blockNumber": "519391491",
+      "gasUsed": "4944849",
+      "effectiveGasPrice": "20090000"
+    },
+    {
+      "label": "upgrade engine proxy for zero splits",
+      "nonce": 275,
+      "transactionHash": "0xc25251201b7397ae2668a35ac81a7490df9510f95a9219facdebe65278301966",
+      "status": "success",
+      "dataHash": "0xd498076a62824467728ed3b67e5cdca61ffc920c144d2c20d66270055aa800af",
+      "to": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "blockNumber": "519393034",
+      "gasUsed": "40557",
+      "effectiveGasPrice": "20028000"
+    }
+  ],
+  "upgradeTransactionHash": "0xc25251201b7397ae2668a35ac81a7490df9510f95a9219facdebe65278301966",
+  "newImplementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+  "constructorArgumentsUnchanged": true,
+  "configurationStoragePreserved": true,
+  "completedAt": "2026-10-29T15:09:34.335Z"
+}

@@ -1,0 +1,768 @@
+{
+  "checkedAt": "2026-10-29T15:16:05.981Z",
+  "chainId": 42161,
+  "blockNumber": "519394584",
+  "blockHash": "0x58fe0e78f7eff3c2bc2f7ca6574db8489a540d8cc3b2575106c51b56792415bd",
+  "contracts": 28,
+  "matchedRuntimes": 28,
+  "checks": [
+    {
+      "name": "runtime BRBToken 0x58871cf545f8f0df790443492a80edc414df4504",
+      "ok": true,
+      "detail": {
+        "bytes": 3852,
+        "candidateBytes": 3852,
+        "candidateHash": "0x660230fc00e10886b2b0ed6e79e50961ed3a659119657fb417e1e7c59ccab82c",
+        "deployedHash": "0x660230fc00e10886b2b0ed6e79e50961ed3a659119657fb417e1e7c59ccab82c",
+        "constructorImmutableRanges": 7,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/BRBToken.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime BRBReferal 0x6d19c9d21ce7b2670fc5f142f27d9819dd888544",
+      "ok": true,
+      "detail": {
+        "bytes": 1878,
+        "candidateBytes": 1878,
+        "candidateHash": "0x2d545db5d02ddf3d165f7645d27e299c5d8a36de2f0eaa9320fdb8e8b1999f68",
+        "deployedHash": "0x2d545db5d02ddf3d165f7645d27e299c5d8a36de2f0eaa9320fdb8e8b1999f68",
+        "constructorImmutableRanges": 1,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/BRBReferal.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime MarketRegistry 0x2afd5402faeb550045aea5884bcf33409a91679a",
+      "ok": true,
+      "detail": {
+        "bytes": 5370,
+        "candidateBytes": 5370,
+        "candidateHash": "0x4453a377afdb5f1128932c58b21859afb6bb62a7e3b11f89b9050f5d28fb8af3",
+        "deployedHash": "0x4453a377afdb5f1128932c58b21859afb6bb62a7e3b11f89b9050f5d28fb8af3",
+        "constructorImmutableRanges": 4,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/MarketRegistry.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime RouletteEngine 0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+      "ok": true,
+      "detail": {
+        "bytes": 22379,
+        "candidateBytes": 22379,
+        "candidateHash": "0x712cb4791d6df22a240d6bcde2b4d0b6f5e4360a1b0ba03aa6147f1f7d23e326",
+        "deployedHash": "0x712cb4791d6df22a240d6bcde2b4d0b6f5e4360a1b0ba03aa6147f1f7d23e326",
+        "constructorImmutableRanges": 16,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/RouletteEngine.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime ERC1967Proxy 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "bytes": 122,
+        "candidateBytes": 122,
+        "candidateHash": "0x8d2d7c10b377edb88323ab9c121c24b49d79daf08cec8ab3c1c020d050d0dbdf",
+        "deployedHash": "0x8d2d7c10b377edb88323ab9c121c24b49d79daf08cec8ab3c1c020d050d0dbdf",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime SideBet 0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+      "ok": true,
+      "detail": {
+        "bytes": 20898,
+        "candidateBytes": 20898,
+        "candidateHash": "0x4b7b4de13e756098ba3d43326553e122abdd15fbde7e013867cf81849f666d96",
+        "deployedHash": "0x4b7b4de13e756098ba3d43326553e122abdd15fbde7e013867cf81849f666d96",
+        "constructorImmutableRanges": 7,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/SideBet.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": true
+      }
+    },
+    {
+      "name": "runtime ERC1967Proxy 0x96e34298425c310422bfba424bd4ed455b597d7f",
+      "ok": true,
+      "detail": {
+        "bytes": 122,
+        "candidateBytes": 122,
+        "candidateHash": "0x8d2d7c10b377edb88323ab9c121c24b49d79daf08cec8ab3c1c020d050d0dbdf",
+        "deployedHash": "0x8d2d7c10b377edb88323ab9c121c24b49d79daf08cec8ab3c1c020d050d0dbdf",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime SideBetChallengeEvaluator 0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+      "ok": true,
+      "detail": {
+        "bytes": 7215,
+        "candidateBytes": 7215,
+        "candidateHash": "0x1a973c3ffd7eadf7adc590155b9db40259e11abc6f6d340ccbdb2853dc3e09f3",
+        "deployedHash": "0x1a973c3ffd7eadf7adc590155b9db40259e11abc6f6d340ccbdb2853dc3e09f3",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/SideBetChallengeEvaluator.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": true
+      }
+    },
+    {
+      "name": "runtime UpkeepScheduler 0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+      "ok": true,
+      "detail": {
+        "bytes": 8601,
+        "candidateBytes": 8601,
+        "candidateHash": "0x63d081c0b2d021342e94d70eea30d0207db2f18059dfbd2ad667e48ad82b926d",
+        "deployedHash": "0x63d081c0b2d021342e94d70eea30d0207db2f18059dfbd2ad667e48ad82b926d",
+        "constructorImmutableRanges": 11,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/UpkeepScheduler.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime CreExecutionAuthority 0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+      "ok": true,
+      "detail": {
+        "bytes": 1368,
+        "candidateBytes": 1368,
+        "candidateHash": "0xd2cae27d590d8ee5f73b329cab606e74b249ad8514af30c6da3ff938c7acee45",
+        "deployedHash": "0xd2cae27d590d8ee5f73b329cab606e74b249ad8514af30c6da3ff938c7acee45",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/CreExecutionAuthority.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime JackpotTreasury 0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+      "ok": true,
+      "detail": {
+        "bytes": 2092,
+        "candidateBytes": 2092,
+        "candidateHash": "0xc10c49a18e995388c16ff965a7ccde3a59b0aa1033d309d43707e1d305ffe7da",
+        "deployedHash": "0xc10c49a18e995388c16ff965a7ccde3a59b0aa1033d309d43707e1d305ffe7da",
+        "constructorImmutableRanges": 5,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/JackpotTreasury.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime BRBJackpotFunder 0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "ok": true,
+      "detail": {
+        "bytes": 16759,
+        "candidateBytes": 16759,
+        "candidateHash": "0x920b41ffff364b8d65c80505ba701a1ff6e2dc8b026d6b4f0be30f6861e282fe",
+        "deployedHash": "0x920b41ffff364b8d65c80505ba701a1ff6e2dc8b026d6b4f0be30f6861e282fe",
+        "constructorImmutableRanges": 32,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/BRBJackpotFunder.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime TipJar 0xa65ad745721b0f1382653328b837ef75f79b99ce",
+      "ok": true,
+      "detail": {
+        "bytes": 1347,
+        "candidateBytes": 1347,
+        "candidateHash": "0x7e24dd914dcc741b51c6e00dd67b6d384b9942e0f716e8f9c23117d9c38a4300",
+        "deployedHash": "0x7e24dd914dcc741b51c6e00dd67b6d384b9942e0f716e8f9c23117d9c38a4300",
+        "constructorImmutableRanges": 11,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/TipJar.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime BankVault4626 0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+      "ok": true,
+      "detail": {
+        "bytes": 15435,
+        "candidateBytes": 15435,
+        "candidateHash": "0x4e50809305fbb85faedd61805d42447bfa428871f38a021298e012668de99147",
+        "deployedHash": "0x4e50809305fbb85faedd61805d42447bfa428871f38a021298e012668de99147",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/BankVault4626.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime UpgradeableBeacon 0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+      "ok": true,
+      "detail": {
+        "bytes": 624,
+        "candidateBytes": 624,
+        "candidateHash": "0x7f718e9addcabb6b5226ca7fdfb80218a1b3b0734c6b767f4f3af2b0bc8cc21a",
+        "deployedHash": "0x7f718e9addcabb6b5226ca7fdfb80218a1b3b0734c6b767f4f3af2b0bc8cc21a",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime BeaconProxy 0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+      "ok": true,
+      "detail": {
+        "bytes": 242,
+        "candidateBytes": 242,
+        "candidateHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "deployedHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "constructorImmutableRanges": 1,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime BeaconProxy 0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+      "ok": true,
+      "detail": {
+        "bytes": 242,
+        "candidateBytes": 242,
+        "candidateHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "deployedHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "constructorImmutableRanges": 1,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "runtime BeaconProxy 0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+      "ok": true,
+      "detail": {
+        "bytes": 242,
+        "candidateBytes": 242,
+        "candidateHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "deployedHash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185",
+        "constructorImmutableRanges": 1,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteLib",
+      "ok": true,
+      "detail": {
+        "actual": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+        "expected": "0x487695f12853c259d745b15cd214b85aa4c3f636"
+      }
+    },
+    {
+      "name": "runtime RouletteLib 0x487695f12853c259d745b15cd214b85aa4c3f636",
+      "ok": true,
+      "detail": {
+        "bytes": 315,
+        "candidateBytes": 315,
+        "candidateHash": "0x4af856604b6faaeeca60f1cb2803443dd2fddde3abcd14132fda314d2393eb77",
+        "deployedHash": "0x4af856604b6faaeeca60f1cb2803443dd2fddde3abcd14132fda314d2393eb77",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/RouletteLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteBetLib",
+      "ok": true,
+      "detail": {
+        "actual": "0x21fab94a7771402876b0772523b90856679c1e3e",
+        "expected": "0x21FaB94a7771402876B0772523B90856679C1e3E"
+      }
+    },
+    {
+      "name": "runtime RouletteBetLib 0x21FaB94a7771402876B0772523B90856679C1e3E",
+      "ok": true,
+      "detail": {
+        "bytes": 2948,
+        "candidateBytes": 2948,
+        "candidateHash": "0x926949f13ed0a35a622d7ec57f727a0d816d2bde989f618c8ebca0f0dd1fb78a",
+        "deployedHash": "0x926949f13ed0a35a622d7ec57f727a0d816d2bde989f618c8ebca0f0dd1fb78a",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RouletteBetLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address JackpotBatchLib",
+      "ok": true,
+      "detail": {
+        "actual": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+        "expected": "0xb426ca0701025c50776a502973ac0cf2a40d0a53"
+      }
+    },
+    {
+      "name": "runtime JackpotBatchLib 0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+      "ok": true,
+      "detail": {
+        "bytes": 3338,
+        "candidateBytes": 3338,
+        "candidateHash": "0xb605a064c076c34941ff42fef5b55a4c8ff8644e1f528fa1d509a0869f1b1e32",
+        "deployedHash": "0xb605a064c076c34941ff42fef5b55a4c8ff8644e1f528fa1d509a0869f1b1e32",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/JackpotBatchLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RoulettePayoutMulLib",
+      "ok": true,
+      "detail": {
+        "actual": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+        "expected": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db"
+      }
+    },
+    {
+      "name": "runtime RoulettePayoutMulLib 0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+      "ok": true,
+      "detail": {
+        "bytes": 433,
+        "candidateBytes": 433,
+        "candidateHash": "0xd79c550d5a01835e0f86165554c5da0ff54dbba54d2fcb94207a0aa74ce9bdbb",
+        "deployedHash": "0xd79c550d5a01835e0f86165554c5da0ff54dbba54d2fcb94207a0aa74ce9bdbb",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RoulettePayoutMulLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteExposureLib",
+      "ok": true,
+      "detail": {
+        "actual": "0x44641e1e3328ac759a88599438c663b291a357e7",
+        "expected": "0x44641e1e3328ac759a88599438c663b291a357e7"
+      }
+    },
+    {
+      "name": "runtime RouletteExposureLib 0x44641e1e3328ac759a88599438c663b291a357e7",
+      "ok": true,
+      "detail": {
+        "bytes": 1857,
+        "candidateBytes": 1857,
+        "candidateHash": "0xc934819ed74a26368d1ecabd52f7c3b05e1535c8b106dc11b2f9816d182c5763",
+        "deployedHash": "0xc934819ed74a26368d1ecabd52f7c3b05e1535c8b106dc11b2f9816d182c5763",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RouletteExposureLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteJackpotCollectLib",
+      "ok": true,
+      "detail": {
+        "actual": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+        "expected": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8"
+      }
+    },
+    {
+      "name": "runtime RouletteJackpotCollectLib 0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+      "ok": true,
+      "detail": {
+        "bytes": 6822,
+        "candidateBytes": 6822,
+        "candidateHash": "0x30bc057790a2effc77350abcacd67769fc9d6277d8be68de1668f3e47f8e1c75",
+        "deployedHash": "0x30bc057790a2effc77350abcacd67769fc9d6277d8be68de1668f3e47f8e1c75",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RouletteJackpotCollectLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RoulettePayoutSweepLib",
+      "ok": true,
+      "detail": {
+        "actual": "0x2d44a00122e0e8aaa81cdb3c363149b5f227e5bb",
+        "expected": "0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB"
+      }
+    },
+    {
+      "name": "runtime RoulettePayoutSweepLib 0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB",
+      "ok": true,
+      "detail": {
+        "bytes": 7599,
+        "candidateBytes": 7599,
+        "candidateHash": "0x358cb7f2367db7226feaaa2e1c514428425f8dd5af1671e0653e2b8a91e59b25",
+        "deployedHash": "0x358cb7f2367db7226feaaa2e1c514428425f8dd5af1671e0653e2b8a91e59b25",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RoulettePayoutSweepLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteLiabilityMathLib",
+      "ok": true,
+      "detail": {
+        "actual": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+        "expected": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6"
+      }
+    },
+    {
+      "name": "runtime RouletteLiabilityMathLib 0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+      "ok": true,
+      "detail": {
+        "bytes": 2317,
+        "candidateBytes": 2317,
+        "candidateHash": "0xc68162b5e90c2ae9c9a3a65fe965be062dc2c441db12e13dcf864d8c42e6d901",
+        "deployedHash": "0xc68162b5e90c2ae9c9a3a65fe965be062dc2c441db12e13dcf864d8c42e6d901",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RouletteLiabilityMathLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteBetCodecLib",
+      "ok": true,
+      "detail": {
+        "actual": "0x482aea76783ed79306e45b6ffd73040fa24109d1",
+        "expected": "0x482AEA76783eD79306E45b6FFd73040fa24109D1"
+      }
+    },
+    {
+      "name": "runtime RouletteBetCodecLib 0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+      "ok": true,
+      "detail": {
+        "bytes": 933,
+        "candidateBytes": 933,
+        "candidateHash": "0xf71a6270f867b312b0d974f35789cd42037f4036fef7cd9546366a75f416fb85",
+        "deployedHash": "0xf71a6270f867b312b0d974f35789cd42037f4036fef7cd9546366a75f416fb85",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RouletteBetCodecLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "library self address RouletteUpkeepScanLib",
+      "ok": true,
+      "detail": {
+        "actual": "0x72b9fa4fb11ec4139447ae463e36bf982a74a46b",
+        "expected": "0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b"
+      }
+    },
+    {
+      "name": "runtime RouletteUpkeepScanLib 0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b",
+      "ok": true,
+      "detail": {
+        "bytes": 6154,
+        "candidateBytes": 6154,
+        "candidateHash": "0x23cdaae879afaa8de15fd49cf2cf337d9284990d353a29648b9f710e13af29c2",
+        "deployedHash": "0x23cdaae879afaa8de15fd49cf2cf337d9284990d353a29648b9f710e13af29c2",
+        "constructorImmutableRanges": 0,
+        "linkedWith": "currently deployed library addresses",
+        "sourceName": "contracts/libraries/RouletteUpkeepScanLib.sol",
+        "solcLongVersion": "0.8.27+commit.40a35a09",
+        "viaIR": false
+      }
+    },
+    {
+      "name": "proxy implementation 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0xa50f1ef3ae42d8ace07d1c0747a33a1c8f030193",
+        "expected": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193"
+      }
+    },
+    {
+      "name": "proxy implementation 0x96e34298425c310422bfba424bd4ed455b597d7f",
+      "ok": true,
+      "detail": {
+        "actual": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+        "expected": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26"
+      }
+    },
+    {
+      "name": "bank beacon",
+      "ok": true,
+      "detail": {
+        "actual": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+        "expected": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b"
+      }
+    },
+    {
+      "name": "REGISTRY at 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0x2AFd5402FAeB550045aEA5884BCf33409a91679A",
+        "expected": "0x2afd5402faeb550045aea5884bcf33409a91679a"
+      }
+    },
+    {
+      "name": "JACKPOT_TREASURY at 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0x2A7c5023581F2A5c75D699cF3A7f0c37d7919EaE",
+        "expected": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae"
+      }
+    },
+    {
+      "name": "JACKPOT_FUNDER at 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0xA55E108B9AE4F50b2d63Ea94A3d2c48Add969e4E",
+        "expected": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e"
+      }
+    },
+    {
+      "name": "UPKEEP_SCHEDULER at 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0xcf0c459014ffBa7DCc9026f15D5ADE1351092ef2",
+        "expected": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2"
+      }
+    },
+    {
+      "name": "INFRA_RECIPIENT at 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+        "expected": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6"
+      }
+    },
+    {
+      "name": "BRB_REFERRAL at 0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "ok": true,
+      "detail": {
+        "actual": "0x6d19c9d21CE7b2670fC5f142f27d9819DD888544",
+        "expected": "0x6d19c9d21ce7b2670fc5f142f27d9819dd888544"
+      }
+    },
+    {
+      "name": "ENGINE at 0x2afd5402faeb550045aea5884bcf33409a91679a",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "SIDE_BET at 0x2afd5402faeb550045aea5884bcf33409a91679a",
+      "ok": true,
+      "detail": {
+        "actual": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+        "expected": "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      }
+    },
+    {
+      "name": "vaultBeacon at 0x2afd5402faeb550045aea5884bcf33409a91679a",
+      "ok": true,
+      "detail": {
+        "actual": "0x7b23cCdDB62B982245c50BdAAF1D13B3d12D632b",
+        "expected": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b"
+      }
+    },
+    {
+      "name": "ENGINE at 0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "SIDE_BET at 0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+      "ok": true,
+      "detail": {
+        "actual": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+        "expected": "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      }
+    },
+    {
+      "name": "forwarderAuthority at 0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+      "ok": true,
+      "detail": {
+        "actual": "0xc5C5A4b77652BA88853a1C3Ad4C6b04891ddd601",
+        "expected": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601"
+      }
+    },
+    {
+      "name": "ENGINE at 0x96e34298425c310422bfba424bd4ed455b597d7f",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "REGISTRY at 0x96e34298425c310422bfba424bd4ed455b597d7f",
+      "ok": true,
+      "detail": {
+        "actual": "0x2AFd5402FAeB550045aEA5884BCf33409a91679A",
+        "expected": "0x2afd5402faeb550045aea5884bcf33409a91679a"
+      }
+    },
+    {
+      "name": "CHALLENGE_EVALUATOR at 0x96e34298425c310422bfba424bd4ed455b597d7f",
+      "ok": true,
+      "detail": {
+        "actual": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+        "expected": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18"
+      }
+    },
+    {
+      "name": "engine at 0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "brb at 0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+      "ok": true,
+      "detail": {
+        "actual": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "expected": "0x58871cf545f8f0df790443492a80edc414df4504"
+      }
+    },
+    {
+      "name": "engine at 0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "sideBet at 0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "ok": true,
+      "detail": {
+        "actual": "0x96e34298425c310422bFba424Bd4ed455b597D7f",
+        "expected": "0x96e34298425c310422bfba424bd4ed455b597d7f"
+      }
+    },
+    {
+      "name": "brb at 0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "ok": true,
+      "detail": {
+        "actual": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "expected": "0x58871cf545f8f0df790443492a80edc414df4504"
+      }
+    },
+    {
+      "name": "router at 0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "ok": true,
+      "detail": {
+        "actual": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+        "expected": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24"
+      }
+    },
+    {
+      "name": "jackpotTreasury at 0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "ok": true,
+      "detail": {
+        "actual": "0x2A7c5023581F2A5c75D699cF3A7f0c37d7919EaE",
+        "expected": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae"
+      }
+    },
+    {
+      "name": "TOKEN at 0xa65ad745721b0f1382653328b837ef75f79b99ce",
+      "ok": true,
+      "detail": {
+        "actual": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "expected": "0x58871cf545f8f0df790443492a80edc414df4504"
+      }
+    },
+    {
+      "name": "RECIPIENT at 0xa65ad745721b0f1382653328b837ef75f79b99ce",
+      "ok": true,
+      "detail": {
+        "actual": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+        "expected": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6"
+      }
+    },
+    {
+      "name": "implementation at 0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+      "ok": true,
+      "detail": {
+        "actual": "0x8CbE21a2203c5cfB5e6F7Ee7E13603e70DA9E700",
+        "expected": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700"
+      }
+    },
+    {
+      "name": "owner at 0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+      "ok": true,
+      "detail": {
+        "actual": "0x90416a578646be1c3b2e6aa0A2F593445ca3Ebce",
+        "expected": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce"
+      }
+    },
+    {
+      "name": "asset at 0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+      "ok": true,
+      "detail": {
+        "actual": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+        "expected": "0x58871cf545f8f0df790443492a80edc414df4504"
+      }
+    },
+    {
+      "name": "ENGINE at 0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+      "ok": true,
+      "detail": {
+        "actual": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "expected": "0xfc6474d1594952ef5beb779b97ba69198b4e7625"
+      }
+    },
+    {
+      "name": "worker lane count matches chain",
+      "ok": true,
+      "detail": {
+        "chain": 1,
+        "worker": 1
+      }
+    }
+  ],
+  "passed": true,
+  "scope": "Read-only final deployed graph runtime, immutable, proxy and worker check."
+}

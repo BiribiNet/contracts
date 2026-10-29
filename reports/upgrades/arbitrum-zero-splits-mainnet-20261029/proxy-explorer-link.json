@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-29T15:12:35.035Z",
+  "proxy": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+  "expectedImplementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+  "explorerImplementation": "0xa50f1ef3ae42d8ace07d1c0747a33a1c8f030193",
+  "linked": true,
+  "status": "1",
+  "message": "The proxy's (0xfc6474d1594952ef5beb779b97ba69198b4e7625) implementation contract is found at 0xa50f1ef3ae42d8ace07d1c0747a33a1c8f030193 and is successfully updated."
+}

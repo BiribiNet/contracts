@@ -25,9 +25,7 @@
       }
     ],
     "triggers": {
-      "crons": [
-        "* * * * *"
-      ]
+      "crons": []
     },
     "observability": {
       "enabled": true
@@ -40,12 +38,17 @@
     "funder": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
     "authority": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
     "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
-    "laneCount": 2,
+    "laneCount": 1,
     "marketIds": [
       1,
       2,
       3
     ],
-    "maxTransactionsPerWake": 5
-  }
+    "maxTransactionsPerWake": 5,
+    "maintenancePaused": false
+  },
+  "triggerMode": "webhook-only",
+  "paused": false,
+  "verifiedAt": "2026-10-29T13:00:59.612Z",
+  "workerDeploymentVersion": "c9198472-0b10-4168-842c-07b1ce1b1721"
 }

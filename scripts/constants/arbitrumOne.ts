@@ -57,7 +57,7 @@ export const VRF_CALLBACK_GAS_LIMIT = 2_500_000;
 /** Chainlink Arbitrum One minimum is 1 — https://docs.chain.link/vrf/v2-5/supported-networks */
 export const VRF_CONFIRMATIONS = 1;
 export const ROUND_DURATION_SECONDS = 60;
-export const PAYOUT_LANE_COUNT = 2;
+export const PAYOUT_LANE_COUNT = 1;
 export const UPKEEP_SCAN_LIMIT = 25;
 export const UPKEEP_MAX_PAYOUTS_PER_CALL = 60;
 export const KEEPER_MAX_DRAIN_ITERATIONS = 5;

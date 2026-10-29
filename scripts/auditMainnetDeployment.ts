@@ -134,7 +134,7 @@ async function main() {
     check("VRF subscription configured", await engine.read.VRF_SUBSCRIPTION_ID() === BigInt(m.vrf.subscriptionId));
     check("VRF callback gas configured", await engine.read.VRF_CALLBACK_GAS_LIMIT() === m.vrf.callbackGasLimit);
     check("round duration configured", await engine.read.ROUND_DURATION() === 60);
-    check("payout lanes configured", await engine.read.payoutParallelLaneCount() === 2);
+    check("payout lanes configured", await engine.read.payoutParallelLaneCount() === m.automation.payoutLaneCount);
     check("VRF confirmations configured", await engine.read.VRF_CONFIRMATIONS() === m.vrf.confirmations);
     for (const [getter, expected] of [["VRF_KEY_HASH_2_GWEI", m.vrf.keyHash2Gwei], ["VRF_KEY_HASH_30_GWEI", m.vrf.keyHash30Gwei], ["VRF_KEY_HASH_150_GWEI", m.vrf.keyHash150Gwei]] as Array<[string, string]>) {
         const actual = await pc.readContract({ address: a.engine, abi: parseAbi([`function ${getter}() view returns(bytes32)`]), functionName: getter, blockNumber }) as string;

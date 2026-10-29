@@ -41,6 +41,7 @@ library RouletteBetLib {
     }
 
     function isValidSplit(uint256 splitId) external pure returns (bool) {
+        if (splitId >= 1 && splitId <= 3) return true; // 0/1, 0/2, 0/3
         if (splitId > 3636 || splitId < 100) return false;
         uint256 num1 = splitId / 100;
         uint256 num2 = splitId % 100;
@@ -60,11 +61,15 @@ library RouletteBetLib {
         splits = new uint256[](4);
         uint256 count;
         if (num == 0) {
+            splits[0] = 1;
+            splits[1] = 2;
+            splits[2] = 3;
             assembly {
-                mstore(splits, 0)
+                mstore(splits, 3)
             }
             return splits;
         }
+        if (num <= 3) splits[count++] = num;
         if (num % 3 != 0 && num < 36) splits[count++] = _getSplitId(num, num + 1);
         if (num % 3 != 1 && num > 1) splits[count++] = _getSplitId(num - 1, num);
         if (num <= 33) splits[count++] = _getSplitId(num, num + 3);

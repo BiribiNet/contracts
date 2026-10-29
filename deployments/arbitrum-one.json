@@ -63,15 +63,15 @@
   "verificationComplete": true,
   "linkedLibraries": {
     "rouletteLib": "0x487695f12853c259d745b15cd214b85aa4c3f636",
-    "rouletteBetLib": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+    "rouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
     "jackpotBatchLib": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
     "roulettePayoutMulLib": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
     "rouletteLiabilityMathLib": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
-    "rouletteBetCodecLib": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
-    "roulettePayoutSweepLib": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+    "rouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+    "roulettePayoutSweepLib": "0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB",
     "rouletteJackpotCollectLib": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
     "rouletteExposureLib": "0x44641e1e3328ac759a88599438c663b291a357e7",
-    "rouletteUpkeepScanLib": "0xa672a7c0233a651026d9441eb7384da09b731b8b"
+    "rouletteUpkeepScanLib": "0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b"
   },
   "proxyInitialization": {
     "engine": "0xb6d56f5d0000000000000000000000002afd5402faeb550045aea5884bcf33409a91679a0000000000000000000000002a7c5023581f2a5c75d699cf3a7f0c37d7919eae000000000000000000000000a55e108b9ae4f50b2d63ea94a3d2c48add969e4e000000000000000000000000d7eb223002c71d539894a2dba5accb6cf032b5d634bdd67935c84d15006789e2d3830b313129fad993912a3bc7ad98694b48877c00000000000000000000000000000000000000000000000000000000002625a0000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000090416a578646be1c3b2e6aa0a2f593445ca3ebce000000000000000000000000cf0c459014ffba7dcc9026f15d5ade1351092ef2",
@@ -85,7 +85,7 @@
     "mode": "cloudflare-keeper",
     "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
     "cloudflareWorkerName": "biribi-round-watcher-arbitrum-one",
-    "payoutLaneCount": 2,
+    "payoutLaneCount": 1,
     "scanLimit": 25,
     "maxPayoutsPerCall": 60,
     "keeperMaxDrainIterations": 5,
@@ -99,22 +99,26 @@
       "funder": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
       "authority": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
       "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
-      "laneCount": 2,
+      "laneCount": 1,
       "marketIds": [
         1,
         2,
         3
       ],
-      "maxTransactionsPerWake": 5
+      "maxTransactionsPerWake": 5,
+      "maintenancePaused": false
     },
-    "workerDeployedAt": "2026-10-16T15:05:18.194Z",
+    "workerDeployedAt": "2026-10-29T12:59:59.675511Z",
     "workerUrl": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
     "marketCatalogUpdatePending": false,
     "worker": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
     "executorApprovalIndexed": false,
     "goldskyWakeupsEnabled": true,
     "webhookMode": "wake-only",
-    "workerDeploymentVersion": "a660e565-ed42-433d-a15a-3606a456617c"
+    "workerDeploymentVersion": "c9198472-0b10-4168-842c-07b1ce1b1721",
+    "workerPaused": false,
+    "triggerMode": "webhook-only",
+    "maintenanceVerifiedAt": "2026-10-29T13:00:59.612Z"
   },
   "addresses": {
     "brb": "0x58871cf545f8f0df790443492a80edc414df4504",
@@ -122,7 +126,7 @@
     "registry": "0x2afd5402faeb550045aea5884bcf33409a91679a",
     "roulette": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
     "engine": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
-    "engineImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+    "engineImplementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
     "sideBet": "0x96e34298425c310422bfba424bd4ed455b597d7f",
     "sideBetImplementation": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
     "challengeEvaluator": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
@@ -265,7 +269,7 @@
         "artifact": "RouletteLib"
       },
       {
-        "address": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+        "address": "0x21FaB94a7771402876B0772523B90856679C1e3E",
         "artifact": "RouletteBetLib"
       },
       {
@@ -289,15 +293,15 @@
         "artifact": "RouletteLiabilityMathLib"
       },
       {
-        "address": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
+        "address": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
         "artifact": "RouletteBetCodecLib"
       },
       {
-        "address": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+        "address": "0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB",
         "artifact": "RoulettePayoutSweepLib"
       },
       {
-        "address": "0xa672a7c0233a651026d9441eb7384da09b731b8b",
+        "address": "0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b",
         "artifact": "RouletteUpkeepScanLib"
       },
       {
@@ -305,7 +309,7 @@
         "artifact": "SideBet"
       },
       {
-        "address": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+        "address": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
         "artifact": "RouletteEngine"
       },
       {
@@ -716,5 +720,52 @@
       "data": "0x00000000000000000000000029984d0c50ddaa5be680b750025dc88d16c57ab80000000000000000000000000000000000000000000000000000000000000001"
     }
   },
-  "abiProfile": "arbitrum-one-2026-10-15"
+  "abiProfile": "arbitrum-one-2026-10-15",
+  "upgradeHistory": [
+    {
+      "kind": "roulette-zero-splits",
+      "date": "2026-10-29T15:09:34.335Z",
+      "previousImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+      "newImplementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+      "previousLinkedLibraries": {
+        "rouletteLib": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+        "rouletteBetLib": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+        "jackpotBatchLib": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+        "roulettePayoutMulLib": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+        "rouletteLiabilityMathLib": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+        "rouletteBetCodecLib": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
+        "roulettePayoutSweepLib": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+        "rouletteJackpotCollectLib": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+        "rouletteExposureLib": "0x44641e1e3328ac759a88599438c663b291a357e7",
+        "rouletteUpkeepScanLib": "0xa672a7c0233a651026d9441eb7384da09b731b8b"
+      },
+      "linkedLibraries": {
+        "rouletteLib": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+        "rouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
+        "jackpotBatchLib": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+        "roulettePayoutMulLib": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+        "rouletteLiabilityMathLib": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+        "rouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+        "roulettePayoutSweepLib": "0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB",
+        "rouletteJackpotCollectLib": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+        "rouletteExposureLib": "0x44641e1e3328ac759a88599438c663b291a357e7",
+        "rouletteUpkeepScanLib": "0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b"
+      },
+      "transactionHash": "0xc25251201b7397ae2668a35ac81a7490df9510f95a9219facdebe65278301966",
+      "constructorArguments": [
+        "0x3C0Ca683b403E37668AE3DC4FB62F4B29B6f7a3e",
+        "0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a38897",
+        "0x8472ba59cf7134dfe321f4d61a430c4857e8b19cdd5230b09952a92671c24409",
+        "0xe9f223d7d83ec85c4f78042a4845af3a1c8df7757b4997b815ce4b8d07aca68c",
+        1,
+        "0x6d19c9d21CE7b2670fC5f142f27d9819DD888544"
+      ],
+      "report": "reports/upgrades/arbitrum-zero-splits-mainnet-20261029/journal.json",
+      "sourceSha256": "e8a7d4445a821aae84f9857e2042105db91fe9339249a099649a1457fc54a452",
+      "lockfileSha256": "173698842459763ab49eb686a5be1e7de2f911f8c8ab0b9fd2cc280abdde7e1d",
+      "constructorArgumentsUnchanged": true,
+      "configurationSlotsUnchanged": 64,
+      "forkReport": "reports/upgrades/arbitrum-zero-splits-mainnet-20261029/actual-address-fork/report.json"
+    }
+  ]
 }

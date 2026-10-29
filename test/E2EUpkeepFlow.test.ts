@@ -1,6 +1,6 @@
 import { viem } from "hardhat";
 
-import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { encodeAbiParameters, parseUnits, zeroAddress } from "viem";
 
@@ -107,6 +107,53 @@ async function runUpkeepUntilIdle(scheduler: Parameters<typeof runParallelLanesU
 }
 
 describe("E2E upkeep flow", function () {
+    async function deployZeroSplitStack() {
+        return deployE2EStack({ marketCount: 1, maxPayoutsPerCall: 1 });
+    }
+
+    for (const outcome of [0n, 1n, 2n, 3n, 4n]) {
+        it(`settles zero splits correctly for outcome ${outcome} and rejects 0/4 at placement`, async function () {
+            const { admin, alice, assets, banks, scheduler, engine, vrf } = await loadFixture(deployZeroSplitStack);
+            const token = assets[0];
+            const bank = banks[0];
+            const liquidity = parseUnits("5000", 6);
+            await token.write.mint([admin.account.address, liquidity]);
+            await token.write.approve([bank.address, liquidity], { account: admin.account });
+            await bank.write.deposit([liquidity, admin.account.address], { account: admin.account });
+
+            const funds = parseUnits("100", 6);
+            const stake = parseUnits("1", 6);
+            await token.write.mint([alice.account.address, funds]);
+            await token.write.approve([bank.address, funds], { account: alice.account });
+            await expect(bank.write.placeBet([stake, encodeSingleBet(2n, 4n, stake), zeroAddress], {
+                account: alice.account,
+            })).to.be.rejectedWith("InvalidBetNumber");
+            if (outcome === 0n) {
+                for (let id = 0n; id <= 36n; id++) {
+                    if (id >= 1n && id <= 4n) continue; // Valid splits and 0/4 checked separately.
+                    await expect(bank.write.placeBet([stake, encodeSingleBet(2n, id, stake), zeroAddress], {
+                        account: alice.account,
+                    })).to.be.rejectedWith("InvalidBetNumber");
+                }
+            }
+
+            for (const id of [1n, 2n, 3n]) {
+                await bank.write.placeBet([stake, encodeSingleBet(2n, id, stake), zeroAddress], {
+                    account: alice.account,
+                });
+            }
+            await time.increase(550);
+            await runUpkeepUntilIdle(scheduler);
+            await vrf.write.fulfillWithJackpot([engine.address, 1n, outcome, 36n]);
+            await runUpkeepUntilIdle(scheduler);
+
+            const winningBets = outcome === 0n ? 3n : outcome <= 3n ? 1n : 0n;
+            expect(await token.read.balanceOf([alice.account.address]))
+                .to.equal(funds - stake * 3n + stake * 18n * winningBets);
+            expect(await bank.read.lockedBetLiquidity()).to.equal(0n);
+        });
+    }
+
     it("runs full rounds end-to-end and keeps upkeep surface consistent", async function () {
         const { scheduler, engine, banks, alice, bob, carol, dave, assets, vrf, publicClient, admin, brb } =
             await deployE2EStack({ marketCount: 4, maxPayoutsPerCall: 2 });

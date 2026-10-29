@@ -1,0 +1,263 @@
+{
+  "passed": true,
+  "sourceChainId": 42161,
+  "sourceBlock": "519392333",
+  "localChainId": 31337,
+  "proxy": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+  "previousImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+  "LOCAL_ONLY_newImplementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+  "LOCAL_ONLY_libraries": {
+    "rouletteLib": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+    "rouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
+    "jackpotBatchLib": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+    "roulettePayoutMulLib": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+    "rouletteLiabilityMathLib": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+    "rouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+    "roulettePayoutSweepLib": "0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB",
+    "rouletteJackpotCollectLib": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+    "rouletteExposureLib": "0x44641e1e3328ac759a88599438c663b291a357e7",
+    "rouletteUpkeepScanLib": "0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b"
+  },
+  "initialRound": "91",
+  "initialDiagnostics": {
+    "requestId": "0",
+    "requestedAt": "0",
+    "available": false,
+    "fulfilled": false,
+    "winningNumber": 0,
+    "jackpotNumber": 0,
+    "marketsParticipating": 0,
+    "marketsSettled": 0,
+    "jackpotCursor": 0,
+    "jackpotPaid": "0",
+    "jackpotDistributed": false
+  },
+  "upgradedAtRound": "91",
+  "constructorArgs": [
+    "0x3C0Ca683b403E37668AE3DC4FB62F4B29B6f7a3e",
+    "0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a38897",
+    "0x8472ba59cf7134dfe321f4d61a430c4857e8b19cdd5230b09952a92671c24409",
+    "0xe9f223d7d83ec85c4f78042a4845af3a1c8df7757b4997b815ce4b8d07aca68c",
+    1,
+    "0x6d19c9d21CE7b2670fC5f142f27d9819DD888544"
+  ],
+  "statePreserved": true,
+  "upgradeStorageWrites": [
+    {
+      "depth": 2,
+      "slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+      "value": "0x000000000000000000000000a50f1ef3ae42d8ace07d1c0747a33a1c8f030193"
+    }
+  ],
+  "invalidZeroSplitsRejected": "0/0 and 0/4 through 0/36",
+  "payoutLanes": 1,
+  "cases": [
+    {
+      "outcome": "0",
+      "round": "91",
+      "stake": "1000000000000000000",
+      "expectedGross": "108000000000000000000",
+      "actualGross": "108000000000000000000",
+      "settled": true,
+      "postPaymentRawStorageVerified": true,
+      "receiptTransfersReconciled": true,
+      "nextRoundBetSimulationPassed": true
+    },
+    {
+      "outcome": "1",
+      "round": "91",
+      "stake": "1000000000000000000",
+      "expectedGross": "180000000000000000000",
+      "actualGross": "180000000000000000000",
+      "settled": true,
+      "postPaymentRawStorageVerified": true,
+      "receiptTransfersReconciled": true,
+      "nextRoundBetSimulationPassed": true
+    },
+    {
+      "outcome": "2",
+      "round": "91",
+      "stake": "1000000000000000000",
+      "expectedGross": "108000000000000000000",
+      "actualGross": "108000000000000000000",
+      "settled": true,
+      "postPaymentRawStorageVerified": true,
+      "receiptTransfersReconciled": true,
+      "nextRoundBetSimulationPassed": true
+    },
+    {
+      "outcome": "3",
+      "round": "91",
+      "stake": "1000000000000000000",
+      "expectedGross": "54000000000000000000",
+      "actualGross": "54000000000000000000",
+      "settled": true,
+      "postPaymentRawStorageVerified": true,
+      "receiptTransfersReconciled": true,
+      "nextRoundBetSimulationPassed": true
+    },
+    {
+      "outcome": "4",
+      "round": "91",
+      "stake": "1000000000000000000",
+      "expectedGross": "90000000000000000000",
+      "actualGross": "90000000000000000000",
+      "settled": true,
+      "postPaymentRawStorageVerified": true,
+      "receiptTransfersReconciled": true,
+      "nextRoundBetSimulationPassed": true
+    }
+  ],
+  "mainnetImplementationUnchanged": true,
+  "safety": {
+    "allowedWriteNetwork": "in-process hardhat",
+    "allowedWriteChainId": 31337,
+    "configuredPublicSigningNetworks": 0,
+    "privateKeysLoadedByConfigOrScript": false,
+    "upstreamGatewayReadOnly": true,
+    "upstreamBroadcastRequestsForwarded": 0,
+    "broadcastRejectionTestPassed": true,
+    "blockedMethods": [
+      "eth_sendRawTransaction"
+    ],
+    "upstreamMethods": {
+      "eth_chainId": 2,
+      "eth_getBlockByNumber": 2,
+      "eth_getStorageAt": 438,
+      "eth_blockNumber": 142,
+      "net_version": 1,
+      "eth_getBalance": 270,
+      "eth_getCode": 270,
+      "eth_getTransactionCount": 270,
+      "eth_feeHistory": 1,
+      "eth_getTransactionByHash": 1
+    },
+    "localWrites": {
+      "hardhat_reset": 1,
+      "hardhat_impersonateAccount": 4,
+      "hardhat_setBalance": 4,
+      "eth_sendTransaction": 23,
+      "evm_snapshot": 6,
+      "evm_revert": 5,
+      "evm_increaseTime": 5,
+      "evm_mine": 5
+    }
+  },
+  "transactions": [
+    {
+      "label": "LOCAL FORK proxy upgrade",
+      "hash": "0x14b47844d523a749d6c1ab5fbfb605dec6c490f3eb5aa6aced26fea09bd2f4d5",
+      "localChainId": 31337
+    },
+    {
+      "label": "local fixture player funding",
+      "hash": "0x7d6fbede60c2303f9a1466e484af33c72b7a17cf52d288171185401c064cdc61",
+      "localChainId": 31337
+    },
+    {
+      "label": "local player approval",
+      "hash": "0x4125f5e624b044b2f48cb9f409b99716a491f41d878b5cb351dcd404778d58d5",
+      "localChainId": 31337
+    },
+    {
+      "label": "local ticket for outcome 0",
+      "hash": "0xf06c0a4f0081e35ff4368f95095651194d2996fb7611e6cbb0aa1b724c178c6d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0xff3bf54a17c747bb01cd22569417899869b4f7a0169eb8abfe4cabf0e6e69870",
+      "localChainId": 31337
+    },
+    {
+      "label": "local simulated VRF callback",
+      "hash": "0xb2ffe4fb1302955793b02787522fa47f98392ee6eac8435706abc15faed34de8",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0x0ca83f724fa5b1a0d9e5dfb69465be8c356e4dca0af7642f4971284581565636",
+      "localChainId": 31337
+    },
+    {
+      "label": "local ticket for outcome 1",
+      "hash": "0xf06c0a4f0081e35ff4368f95095651194d2996fb7611e6cbb0aa1b724c178c6d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0xff3bf54a17c747bb01cd22569417899869b4f7a0169eb8abfe4cabf0e6e69870",
+      "localChainId": 31337
+    },
+    {
+      "label": "local simulated VRF callback",
+      "hash": "0xc886d2274a40cfd48ed0f0e79a7c15a825225bea8bdb368d164bda4a9305002d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0xa779075c9059a13544aa24c9e35e3a49180d24084c2027b62e15826e0f6e8cd1",
+      "localChainId": 31337
+    },
+    {
+      "label": "local ticket for outcome 2",
+      "hash": "0xf06c0a4f0081e35ff4368f95095651194d2996fb7611e6cbb0aa1b724c178c6d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0xff3bf54a17c747bb01cd22569417899869b4f7a0169eb8abfe4cabf0e6e69870",
+      "localChainId": 31337
+    },
+    {
+      "label": "local simulated VRF callback",
+      "hash": "0xe60e5f14946f8480b4134c7219e87eb8edadb8fef77bba566b72c9e0c5cb2753",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0x45537172ef3ce5ef1dc794d5073f2311572fd123efe39ab7c6aeb580a70b969b",
+      "localChainId": 31337
+    },
+    {
+      "label": "local ticket for outcome 3",
+      "hash": "0xf06c0a4f0081e35ff4368f95095651194d2996fb7611e6cbb0aa1b724c178c6d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0xff3bf54a17c747bb01cd22569417899869b4f7a0169eb8abfe4cabf0e6e69870",
+      "localChainId": 31337
+    },
+    {
+      "label": "local simulated VRF callback",
+      "hash": "0xefde3c5ef0c80dd541213bcccab76d2235c1a33a22751680dd4ef8a0a46da01b",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0x7ca7db28367b268610f7b7bfd457d7e88735a3e323a1319f6e5d11ab8771ec6c",
+      "localChainId": 31337
+    },
+    {
+      "label": "local ticket for outcome 4",
+      "hash": "0xf06c0a4f0081e35ff4368f95095651194d2996fb7611e6cbb0aa1b724c178c6d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0xff3bf54a17c747bb01cd22569417899869b4f7a0169eb8abfe4cabf0e6e69870",
+      "localChainId": 31337
+    },
+    {
+      "label": "local simulated VRF callback",
+      "hash": "0x80e2343713a2dde0a5b34e57138ee91c86c75abc85ee473eafffa84fa1da184d",
+      "localChainId": 31337
+    },
+    {
+      "label": "local scheduler upkeep",
+      "hash": "0x50747f5bee6ee2bc637a82cd361793f8389d182f525391a371ed249d4beccaaa",
+      "localChainId": 31337
+    }
+  ]
+}
