@@ -1,7 +1,7 @@
 {
-  "profile": "arbitrum-one-2026-10-15",
+  "profile": "arbitrum-one-2026-11-04",
   "chainId": 42161,
-  "sourceRevision": "fa2ab78cb308893b99d0a219e62832e9c3c5dcf3",
+  "sourceRevision": "7b03dcbe9b8d82a0403ccc94d68385203b82b18e",
   "compiler": "0.8.27",
   "contracts": {
     "RouletteEngine": {
@@ -2200,7 +2200,7 @@
     },
     "BankVault4626": {
       "source": "contracts/BankVault4626.sol",
-      "sourceSha256": "1d2d104ec309f04144cd7e9e3faa23c8d3397d42e4d07df8b04bc3d215f3aaf9",
+      "sourceSha256": "2dcfcf96e1e3661475309c585a02e9b52d89ea48735f6758fe7099d0d248c528",
       "abi": [
         {
           "inputs": [],
@@ -6023,7 +6023,7 @@
     },
     "SideBet": {
       "source": "contracts/SideBet.sol",
-      "sourceSha256": "b16faafd7a051f87f05909659fb3699440e76fc29772ed0a0b2d2b770665d4bd",
+      "sourceSha256": "4a2b891994c0e4d6dcff5679deab3afa8aa0e3765eeb7dd0b1c4bfb5aa4155e7",
       "abi": [
         {
           "inputs": [],
@@ -6145,6 +6145,11 @@
         },
         {
           "inputs": [],
+          "name": "SideBetsDisabled",
+          "type": "error"
+        },
+        {
+          "inputs": [],
           "name": "StakeLimitsNotSet",
           "type": "error"
         },
@@ -6167,6 +6172,11 @@
             }
           ],
           "name": "UUPSUnsupportedProxiableUUID",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "UnauthorizedRecoveryCaller",
           "type": "error"
         },
         {
@@ -6507,6 +6517,19 @@
             }
           ],
           "name": "SideBetSettled",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "bool",
+              "name": "disabled",
+              "type": "bool"
+            }
+          ],
+          "name": "SideBetsDisabledUpdated",
           "type": "event"
         },
         {
@@ -7489,6 +7512,19 @@
         {
           "inputs": [
             {
+              "internalType": "bool",
+              "name": "disabled",
+              "type": "bool"
+            }
+          ],
+          "name": "setSideBetsDisabled",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "components": [
                 {
                   "internalType": "uint256",
@@ -7669,6 +7705,19 @@
               "internalType": "uint64",
               "name": "",
               "type": "uint64"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "sideBetsDisabled",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
             }
           ],
           "stateMutability": "view",
