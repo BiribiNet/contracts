@@ -56,6 +56,8 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         /// incrementally, so it is only valid from a proxy that adopted it while empty
         /// (`initializeReservedAccounting`).
         mapping(uint32 => uint256) reservedByMarket;
+        // Appended. Set atomically with upgradeToAndCall when adopting the incident implementation.
+        bool sideBetsDisabled;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.SideBet")) - 1)) & ~bytes32(uint256(0xff));
@@ -127,6 +129,22 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     function initializeReservedAccounting() external reinitializer(2) {
         if (_s().betCount != 0) revert ReservedAccountingMigrationUnsafe();
     }
+
+    error SideBetsDisabled();
+    error UnauthorizedRecoveryCaller();
+    modifier onlyRecoveryBank() {
+        if (msg.sender != REGISTRY.getMarket(1).bank) revert UnauthorizedRecoveryCaller();
+        _;
+    }
+    event SideBetsDisabledUpdated(bool disabled);
+    function sideBetsDisabled() public view returns (bool) { return _s().sideBetsDisabled; }
+    function setSideBetsDisabled(bool disabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _s().sideBetsDisabled = disabled;
+        emit SideBetsDisabledUpdated(disabled);
+    }
+
+    /// @notice One route only: BankVault.recoverNovember2026(). No payout or refund.
+
 
     // --- Config management ---------------------------------------------------
 
@@ -246,6 +264,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     // --- Betting -------------------------------------------------------------
 
     function placeBet(uint256 configId, uint256 stake) external override nonReentrant returns (uint256 betId) {
+        if (sideBetsDisabled()) revert SideBetsDisabled();
         SideBetData storage $ = _s();
         if (configId >= $.configCount) revert UnknownConfig();
         SideBetConfig storage cfg = $.configs[configId];
@@ -308,6 +327,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         override
         returns (SettleRow[] memory rows, uint256 nextCursorBetId, SettleVaultApply[] memory vaultApplies)
     {
+        if (sideBetsDisabled()) return (new SettleRow[](0), cursorBetId, new SettleVaultApply[](0));
         if (maxBets == 0 || laneCount == 0 || lane >= laneCount) {
             return (new SettleRow[](0), cursorBetId, new SettleVaultApply[](0));
         }
@@ -383,6 +403,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     function settleBatch(LegacySettleRow[] calldata rows, SettleVaultApply[] calldata)
         external override nonReentrant onlyRole(SETTLEMENT_ROLE) returns (uint256 settled)
     {
+        if (sideBetsDisabled()) revert SideBetsDisabled();
         SideBetData storage $ = _s();
         SettleRow[] memory candidates = new SettleRow[](rows.length);
         uint256 count;
@@ -409,6 +430,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
         onlyRole(SETTLEMENT_ROLE)
         returns (uint256 settled)
     {
+        if (sideBetsDisabled()) revert SideBetsDisabled();
         return _settleBatch(rows);
     }
 
@@ -742,6 +764,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     }
 
     function isConfigActive(uint256 configId) external view override returns (bool active) {
+        if (sideBetsDisabled()) return false;
         SideBetData storage $ = _s();
         return configId < $.configCount && $.configs[configId].marketId != 0;
     }
@@ -772,6 +795,7 @@ contract SideBet is Initializable, AccessControlUpgradeable, UUPSUpgradeable, Re
     }
 
     function isResolvable(uint256 betId) external view override returns (bool) {
+        if (sideBetsDisabled()) return false;
         SideBetData storage $ = _s();
         if (betId >= $.betCount) return false;
         return _isResolvable($, betId);

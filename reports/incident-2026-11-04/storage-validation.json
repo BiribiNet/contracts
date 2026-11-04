@@ -1,0 +1,2762 @@
+{
+  "reference": "Explorer-verified deployed standard JSON inputs",
+  "contracts": [
+    {
+      "name": "BankVault4626",
+      "compatible": true,
+      "fieldsBefore": 14,
+      "fieldsNow": 14,
+      "fieldsAfterRecoveryRemoval": 14,
+      "layouts": {
+        "deployed": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 21327,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "marketId",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 21330,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "ENGINE",
+                "offset": 4,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)33790"
+              },
+              {
+                "astId": 21332,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "lockedBetLiquidity",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 21334,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "sideBetController",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_address"
+              },
+              {
+                "astId": 21336,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "minBet",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 21338,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "assetDecimals",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint8"
+              },
+              {
+                "astId": 21340,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "flatWithdrawFee",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 21343,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_withdrawalQueue",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_array(t_address)dyn_storage"
+              },
+              {
+                "astId": 21345,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_queueHead",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 21350,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_pendingWithdrawal",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)33359_storage)"
+              },
+              {
+                "astId": 21354,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_userQueueIndex",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 21356,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "nextWithdrawalId",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 21360,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "pendingWithdrawalId",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 21365,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "withdrawalReceipts",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)21324_storage)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_address)dyn_storage": {
+                "base": "t_address",
+                "encoding": "dynamic_array",
+                "label": "address[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IRouletteEngine)33790": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              },
+              "t_mapping(t_address,t_struct(QueuedWithdrawal)33359_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => struct IBankVault.QueuedWithdrawal)",
+                "numberOfBytes": "32",
+                "value": "t_struct(QueuedWithdrawal)33359_storage"
+              },
+              "t_mapping(t_address,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_struct(WithdrawalReceipt)21324_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct BankVault4626.WithdrawalReceipt)",
+                "numberOfBytes": "32",
+                "value": "t_struct(WithdrawalReceipt)21324_storage"
+              },
+              "t_struct(BankVaultStorage)21366_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.BankVaultStorage",
+                "members": [
+                  {
+                    "astId": 21327,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 21330,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "ENGINE",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_contract(IRouletteEngine)33790"
+                  },
+                  {
+                    "astId": 21332,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "lockedBetLiquidity",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21334,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sideBetController",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 21336,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minBet",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21338,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "assetDecimals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 21340,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "flatWithdrawFee",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21343,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_withdrawalQueue",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_array(t_address)dyn_storage"
+                  },
+                  {
+                    "astId": 21345,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_queueHead",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21350,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_pendingWithdrawal",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)33359_storage)"
+                  },
+                  {
+                    "astId": 21354,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_userQueueIndex",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 21356,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "nextWithdrawalId",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21360,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "pendingWithdrawalId",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 21365,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "withdrawalReceipts",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)21324_storage)"
+                  }
+                ],
+                "numberOfBytes": "416"
+              },
+              "t_struct(QueuedWithdrawal)33359_storage": {
+                "encoding": "inplace",
+                "label": "struct IBankVault.QueuedWithdrawal",
+                "members": [
+                  {
+                    "astId": 33356,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bps",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 33358,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "receiver",
+                    "offset": 2,
+                    "slot": "0",
+                    "type": "t_address"
+                  }
+                ],
+                "numberOfBytes": "32"
+              },
+              "t_struct(WithdrawalReceipt)21324_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.WithdrawalReceipt",
+                "members": [
+                  {
+                    "astId": 21311,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "owner",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 21313,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "receiver",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 21315,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bps",
+                    "offset": 20,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 21317,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "requestedAt",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21319,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "processedAt",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21321,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "assetsPaid",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 21323,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sharesBurned",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        },
+        "current": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 7553,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "marketId",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7556,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "ENGINE",
+                "offset": 4,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)9916"
+              },
+              {
+                "astId": 7558,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "lockedBetLiquidity",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7560,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "sideBetController",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_address"
+              },
+              {
+                "astId": 7562,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "minBet",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7564,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "assetDecimals",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint8"
+              },
+              {
+                "astId": 7566,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "flatWithdrawFee",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7569,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_withdrawalQueue",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_array(t_address)dyn_storage"
+              },
+              {
+                "astId": 7571,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_queueHead",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7576,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_pendingWithdrawal",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9594_storage)"
+              },
+              {
+                "astId": 7580,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_userQueueIndex",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7582,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "nextWithdrawalId",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7586,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "pendingWithdrawalId",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7591,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "withdrawalReceipts",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7550_storage)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_address)dyn_storage": {
+                "base": "t_address",
+                "encoding": "dynamic_array",
+                "label": "address[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IRouletteEngine)9916": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              },
+              "t_mapping(t_address,t_struct(QueuedWithdrawal)9594_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => struct IBankVault.QueuedWithdrawal)",
+                "numberOfBytes": "32",
+                "value": "t_struct(QueuedWithdrawal)9594_storage"
+              },
+              "t_mapping(t_address,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7550_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct BankVault4626.WithdrawalReceipt)",
+                "numberOfBytes": "32",
+                "value": "t_struct(WithdrawalReceipt)7550_storage"
+              },
+              "t_struct(BankVaultStorage)7592_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.BankVaultStorage",
+                "members": [
+                  {
+                    "astId": 7553,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7556,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "ENGINE",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_contract(IRouletteEngine)9916"
+                  },
+                  {
+                    "astId": 7558,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "lockedBetLiquidity",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7560,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sideBetController",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7562,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minBet",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7564,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "assetDecimals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7566,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "flatWithdrawFee",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7569,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_withdrawalQueue",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_array(t_address)dyn_storage"
+                  },
+                  {
+                    "astId": 7571,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_queueHead",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7576,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_pendingWithdrawal",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9594_storage)"
+                  },
+                  {
+                    "astId": 7580,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_userQueueIndex",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7582,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "nextWithdrawalId",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7586,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "pendingWithdrawalId",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7591,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "withdrawalReceipts",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7550_storage)"
+                  }
+                ],
+                "numberOfBytes": "416"
+              },
+              "t_struct(QueuedWithdrawal)9594_storage": {
+                "encoding": "inplace",
+                "label": "struct IBankVault.QueuedWithdrawal",
+                "members": [
+                  {
+                    "astId": 9591,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bps",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 9593,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "receiver",
+                    "offset": 2,
+                    "slot": "0",
+                    "type": "t_address"
+                  }
+                ],
+                "numberOfBytes": "32"
+              },
+              "t_struct(WithdrawalReceipt)7550_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.WithdrawalReceipt",
+                "members": [
+                  {
+                    "astId": 7537,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "owner",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7539,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "receiver",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7541,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bps",
+                    "offset": 20,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7543,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "requestedAt",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7545,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "processedAt",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7547,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "assetsPaid",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7549,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sharesBurned",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        },
+        "afterRemoval": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 7553,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "marketId",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 7556,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "ENGINE",
+                "offset": 4,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)9889"
+              },
+              {
+                "astId": 7558,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "lockedBetLiquidity",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7560,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "sideBetController",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_address"
+              },
+              {
+                "astId": 7562,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "minBet",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7564,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "assetDecimals",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_uint8"
+              },
+              {
+                "astId": 7566,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "flatWithdrawFee",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7569,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_withdrawalQueue",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_array(t_address)dyn_storage"
+              },
+              {
+                "astId": 7571,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_queueHead",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7576,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_pendingWithdrawal",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9567_storage)"
+              },
+              {
+                "astId": 7580,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "_userQueueIndex",
+                "offset": 0,
+                "slot": "9",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7582,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "nextWithdrawalId",
+                "offset": 0,
+                "slot": "10",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 7586,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "pendingWithdrawalId",
+                "offset": 0,
+                "slot": "11",
+                "type": "t_mapping(t_address,t_uint256)"
+              },
+              {
+                "astId": 7591,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "withdrawalReceipts",
+                "offset": 0,
+                "slot": "12",
+                "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7550_storage)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_address)dyn_storage": {
+                "base": "t_address",
+                "encoding": "dynamic_array",
+                "label": "address[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IRouletteEngine)9889": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              },
+              "t_mapping(t_address,t_struct(QueuedWithdrawal)9567_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => struct IBankVault.QueuedWithdrawal)",
+                "numberOfBytes": "32",
+                "value": "t_struct(QueuedWithdrawal)9567_storage"
+              },
+              "t_mapping(t_address,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7550_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct BankVault4626.WithdrawalReceipt)",
+                "numberOfBytes": "32",
+                "value": "t_struct(WithdrawalReceipt)7550_storage"
+              },
+              "t_struct(BankVaultStorage)7592_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.BankVaultStorage",
+                "members": [
+                  {
+                    "astId": 7553,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7556,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "ENGINE",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_contract(IRouletteEngine)9889"
+                  },
+                  {
+                    "astId": 7558,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "lockedBetLiquidity",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7560,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sideBetController",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7562,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minBet",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7564,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "assetDecimals",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7566,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "flatWithdrawFee",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7569,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_withdrawalQueue",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_array(t_address)dyn_storage"
+                  },
+                  {
+                    "astId": 7571,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_queueHead",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7576,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_pendingWithdrawal",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_mapping(t_address,t_struct(QueuedWithdrawal)9567_storage)"
+                  },
+                  {
+                    "astId": 7580,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "_userQueueIndex",
+                    "offset": 0,
+                    "slot": "9",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7582,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "nextWithdrawalId",
+                    "offset": 0,
+                    "slot": "10",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7586,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "pendingWithdrawalId",
+                    "offset": 0,
+                    "slot": "11",
+                    "type": "t_mapping(t_address,t_uint256)"
+                  },
+                  {
+                    "astId": 7591,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "withdrawalReceipts",
+                    "offset": 0,
+                    "slot": "12",
+                    "type": "t_mapping(t_uint256,t_struct(WithdrawalReceipt)7550_storage)"
+                  }
+                ],
+                "numberOfBytes": "416"
+              },
+              "t_struct(QueuedWithdrawal)9567_storage": {
+                "encoding": "inplace",
+                "label": "struct IBankVault.QueuedWithdrawal",
+                "members": [
+                  {
+                    "astId": 9564,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bps",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 9566,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "receiver",
+                    "offset": 2,
+                    "slot": "0",
+                    "type": "t_address"
+                  }
+                ],
+                "numberOfBytes": "32"
+              },
+              "t_struct(WithdrawalReceipt)7550_storage": {
+                "encoding": "inplace",
+                "label": "struct BankVault4626.WithdrawalReceipt",
+                "members": [
+                  {
+                    "astId": 7537,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "owner",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7539,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "receiver",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7541,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bps",
+                    "offset": 20,
+                    "slot": "1",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7543,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "requestedAt",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7545,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "processedAt",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7547,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "assetsPaid",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7549,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sharesBurned",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "192"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [],
+            "types": null
+          }
+        }
+      }
+    },
+    {
+      "name": "SideBet",
+      "compatible": true,
+      "fieldsBefore": 11,
+      "fieldsNow": 12,
+      "fieldsAfterRecoveryRemoval": 12,
+      "layouts": {
+        "deployed": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 2673,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "configCount",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2678,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "configs",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_mapping(t_uint256,t_struct(SideBetConfig)6906_storage)"
+              },
+              {
+                "astId": 2680,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "betCount",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2685,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "bets",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_mapping(t_uint256,t_struct(Bet)6938_storage)"
+              },
+              {
+                "astId": 2690,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "playerBets",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+              },
+              {
+                "astId": 2692,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "minMultiplierBps",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2694,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "maxMultiplierBps",
+                "offset": 4,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2697,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "jackpotFunder",
+                "offset": 8,
+                "slot": "5",
+                "type": "t_contract(IBRBJackpotFunder)6436"
+              },
+              {
+                "astId": 2699,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "infraRecipient",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_address"
+              },
+              {
+                "astId": 2702,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "settleTimeout",
+                "offset": 20,
+                "slot": "6",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 2707,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "reservedByMarket",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_mapping(t_uint32,t_uint256)"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_uint256)dyn_storage": {
+                "base": "t_uint256",
+                "encoding": "dynamic_array",
+                "label": "uint256[]",
+                "numberOfBytes": "32"
+              },
+              "t_contract(IBRBJackpotFunder)6436": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_enum(SideBetColor)6877": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetColor",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetStatus)6883": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetStatus",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetType)6874": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetType",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_uint256)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_struct(Bet)6938_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.Bet)",
+                "numberOfBytes": "32",
+                "value": "t_struct(Bet)6938_storage"
+              },
+              "t_mapping(t_uint256,t_struct(SideBetConfig)6906_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.SideBetConfig)",
+                "numberOfBytes": "32",
+                "value": "t_struct(SideBetConfig)6906_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_struct(Bet)6938_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.Bet",
+                "members": [
+                  {
+                    "astId": 6908,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 6910,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 20,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6912,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "stake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6914,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "payout",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6916,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "startGlobalRound",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 6918,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 8,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6921,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betType",
+                    "offset": 10,
+                    "slot": "3",
+                    "type": "t_enum(SideBetType)6874"
+                  },
+                  {
+                    "astId": 6924,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "color",
+                    "offset": 11,
+                    "slot": "3",
+                    "type": "t_enum(SideBetColor)6877"
+                  },
+                  {
+                    "astId": 6926,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 12,
+                    "slot": "3",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6928,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetCount",
+                    "offset": 13,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6930,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 15,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6933,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "status",
+                    "offset": 17,
+                    "slot": "3",
+                    "type": "t_enum(SideBetStatus)6883"
+                  },
+                  {
+                    "astId": 6935,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "placedAt",
+                    "offset": 18,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 6937,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "resolvedAt",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  }
+                ],
+                "numberOfBytes": "160"
+              },
+              "t_struct(SideBetConfig)6906_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.SideBetConfig",
+                "members": [
+                  {
+                    "astId": 6885,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6888,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betType",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_enum(SideBetType)6874"
+                  },
+                  {
+                    "astId": 6891,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "color",
+                    "offset": 5,
+                    "slot": "0",
+                    "type": "t_enum(SideBetColor)6877"
+                  },
+                  {
+                    "astId": 6893,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 6,
+                    "slot": "0",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6895,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetCount",
+                    "offset": 7,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6897,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 9,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6899,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 11,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6901,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "multiplierBps",
+                    "offset": 13,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6903,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minStake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 6905,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "maxStake",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "96"
+              },
+              "t_struct(SideBetData)2708_storage": {
+                "encoding": "inplace",
+                "label": "struct SideBet.SideBetData",
+                "members": [
+                  {
+                    "astId": 2673,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "configCount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2678,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "configs",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_mapping(t_uint256,t_struct(SideBetConfig)6906_storage)"
+                  },
+                  {
+                    "astId": 2680,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2685,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bets",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_mapping(t_uint256,t_struct(Bet)6938_storage)"
+                  },
+                  {
+                    "astId": 2690,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "playerBets",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+                  },
+                  {
+                    "astId": 2692,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minMultiplierBps",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2694,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "maxMultiplierBps",
+                    "offset": 4,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2697,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "jackpotFunder",
+                    "offset": 8,
+                    "slot": "5",
+                    "type": "t_contract(IBRBJackpotFunder)6436"
+                  },
+                  {
+                    "astId": 2699,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "infraRecipient",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 2702,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "settleTimeout",
+                    "offset": 20,
+                    "slot": "6",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 2707,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "reservedByMarket",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_mapping(t_uint32,t_uint256)"
+                  }
+                ],
+                "numberOfBytes": "256"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [
+              {
+                "astId": 2667,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "ENGINE",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)6828"
+              },
+              {
+                "astId": 2670,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IMarketRegistry)6639"
+              }
+            ],
+            "types": {
+              "t_contract(IMarketRegistry)6639": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IRouletteEngine)6828": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              }
+            }
+          }
+        },
+        "current": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 2673,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "configCount",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2678,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "configs",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_mapping(t_uint256,t_struct(SideBetConfig)7119_storage)"
+              },
+              {
+                "astId": 2680,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "betCount",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2685,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "bets",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_mapping(t_uint256,t_struct(Bet)7151_storage)"
+              },
+              {
+                "astId": 2690,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "playerBets",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+              },
+              {
+                "astId": 2692,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "minMultiplierBps",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2694,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "maxMultiplierBps",
+                "offset": 4,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2697,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "jackpotFunder",
+                "offset": 8,
+                "slot": "5",
+                "type": "t_contract(IBRBJackpotFunder)6649"
+              },
+              {
+                "astId": 2699,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "infraRecipient",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_address"
+              },
+              {
+                "astId": 2702,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "settleTimeout",
+                "offset": 20,
+                "slot": "6",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 2707,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "reservedByMarket",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_mapping(t_uint32,t_uint256)"
+              },
+              {
+                "astId": 2709,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "sideBetsDisabled",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_bool"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_uint256)dyn_storage": {
+                "base": "t_uint256",
+                "encoding": "dynamic_array",
+                "label": "uint256[]",
+                "numberOfBytes": "32"
+              },
+              "t_bool": {
+                "encoding": "inplace",
+                "label": "bool",
+                "numberOfBytes": "1"
+              },
+              "t_contract(IBRBJackpotFunder)6649": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_enum(SideBetColor)7090": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetColor",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetStatus)7096": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetStatus",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetType)7087": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetType",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_uint256)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_struct(Bet)7151_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.Bet)",
+                "numberOfBytes": "32",
+                "value": "t_struct(Bet)7151_storage"
+              },
+              "t_mapping(t_uint256,t_struct(SideBetConfig)7119_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.SideBetConfig)",
+                "numberOfBytes": "32",
+                "value": "t_struct(SideBetConfig)7119_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_struct(Bet)7151_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.Bet",
+                "members": [
+                  {
+                    "astId": 7121,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7123,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 20,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7125,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "stake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7127,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "payout",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7129,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "startGlobalRound",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 7131,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 8,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7134,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betType",
+                    "offset": 10,
+                    "slot": "3",
+                    "type": "t_enum(SideBetType)7087"
+                  },
+                  {
+                    "astId": 7137,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "color",
+                    "offset": 11,
+                    "slot": "3",
+                    "type": "t_enum(SideBetColor)7090"
+                  },
+                  {
+                    "astId": 7139,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 12,
+                    "slot": "3",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7141,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetCount",
+                    "offset": 13,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7143,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 15,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7146,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "status",
+                    "offset": 17,
+                    "slot": "3",
+                    "type": "t_enum(SideBetStatus)7096"
+                  },
+                  {
+                    "astId": 7148,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "placedAt",
+                    "offset": 18,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 7150,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "resolvedAt",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  }
+                ],
+                "numberOfBytes": "160"
+              },
+              "t_struct(SideBetConfig)7119_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.SideBetConfig",
+                "members": [
+                  {
+                    "astId": 7098,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7101,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betType",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_enum(SideBetType)7087"
+                  },
+                  {
+                    "astId": 7104,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "color",
+                    "offset": 5,
+                    "slot": "0",
+                    "type": "t_enum(SideBetColor)7090"
+                  },
+                  {
+                    "astId": 7106,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 6,
+                    "slot": "0",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7108,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetCount",
+                    "offset": 7,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7110,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 9,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7112,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 11,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7114,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "multiplierBps",
+                    "offset": 13,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7116,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minStake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7118,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "maxStake",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "96"
+              },
+              "t_struct(SideBetData)2710_storage": {
+                "encoding": "inplace",
+                "label": "struct SideBet.SideBetData",
+                "members": [
+                  {
+                    "astId": 2673,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "configCount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2678,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "configs",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_mapping(t_uint256,t_struct(SideBetConfig)7119_storage)"
+                  },
+                  {
+                    "astId": 2680,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2685,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bets",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_mapping(t_uint256,t_struct(Bet)7151_storage)"
+                  },
+                  {
+                    "astId": 2690,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "playerBets",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+                  },
+                  {
+                    "astId": 2692,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minMultiplierBps",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2694,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "maxMultiplierBps",
+                    "offset": 4,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2697,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "jackpotFunder",
+                    "offset": 8,
+                    "slot": "5",
+                    "type": "t_contract(IBRBJackpotFunder)6649"
+                  },
+                  {
+                    "astId": 2699,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "infraRecipient",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 2702,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "settleTimeout",
+                    "offset": 20,
+                    "slot": "6",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 2707,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "reservedByMarket",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_mapping(t_uint32,t_uint256)"
+                  },
+                  {
+                    "astId": 2709,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sideBetsDisabled",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_bool"
+                  }
+                ],
+                "numberOfBytes": "288"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [
+              {
+                "astId": 2667,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "ENGINE",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)7041"
+              },
+              {
+                "astId": 2670,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IMarketRegistry)6852"
+              }
+            ],
+            "types": {
+              "t_contract(IMarketRegistry)6852": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IRouletteEngine)7041": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              }
+            }
+          }
+        },
+        "afterRemoval": {
+          "custom": {
+            "storage": [
+              {
+                "astId": 2673,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "configCount",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2678,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "configs",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_mapping(t_uint256,t_struct(SideBetConfig)7008_storage)"
+              },
+              {
+                "astId": 2680,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "betCount",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_uint256"
+              },
+              {
+                "astId": 2685,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "bets",
+                "offset": 0,
+                "slot": "3",
+                "type": "t_mapping(t_uint256,t_struct(Bet)7040_storage)"
+              },
+              {
+                "astId": 2690,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "playerBets",
+                "offset": 0,
+                "slot": "4",
+                "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+              },
+              {
+                "astId": 2692,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "minMultiplierBps",
+                "offset": 0,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2694,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "maxMultiplierBps",
+                "offset": 4,
+                "slot": "5",
+                "type": "t_uint32"
+              },
+              {
+                "astId": 2697,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "jackpotFunder",
+                "offset": 8,
+                "slot": "5",
+                "type": "t_contract(IBRBJackpotFunder)6538"
+              },
+              {
+                "astId": 2699,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "infraRecipient",
+                "offset": 0,
+                "slot": "6",
+                "type": "t_address"
+              },
+              {
+                "astId": 2702,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "settleTimeout",
+                "offset": 20,
+                "slot": "6",
+                "type": "t_uint64"
+              },
+              {
+                "astId": 2707,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "reservedByMarket",
+                "offset": 0,
+                "slot": "7",
+                "type": "t_mapping(t_uint32,t_uint256)"
+              },
+              {
+                "astId": 2709,
+                "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                "label": "sideBetsDisabled",
+                "offset": 0,
+                "slot": "8",
+                "type": "t_bool"
+              }
+            ],
+            "types": {
+              "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+              },
+              "t_array(t_uint256)dyn_storage": {
+                "base": "t_uint256",
+                "encoding": "dynamic_array",
+                "label": "uint256[]",
+                "numberOfBytes": "32"
+              },
+              "t_bool": {
+                "encoding": "inplace",
+                "label": "bool",
+                "numberOfBytes": "1"
+              },
+              "t_contract(IBRBJackpotFunder)6538": {
+                "encoding": "inplace",
+                "label": "contract IBRBJackpotFunder",
+                "numberOfBytes": "20"
+              },
+              "t_enum(SideBetColor)6979": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetColor",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetStatus)6985": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetStatus",
+                "numberOfBytes": "1"
+              },
+              "t_enum(SideBetType)6976": {
+                "encoding": "inplace",
+                "label": "enum ISideBet.SideBetType",
+                "numberOfBytes": "1"
+              },
+              "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+                "encoding": "mapping",
+                "key": "t_address",
+                "label": "mapping(address => uint256[])",
+                "numberOfBytes": "32",
+                "value": "t_array(t_uint256)dyn_storage"
+              },
+              "t_mapping(t_uint256,t_struct(Bet)7040_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.Bet)",
+                "numberOfBytes": "32",
+                "value": "t_struct(Bet)7040_storage"
+              },
+              "t_mapping(t_uint256,t_struct(SideBetConfig)7008_storage)": {
+                "encoding": "mapping",
+                "key": "t_uint256",
+                "label": "mapping(uint256 => struct ISideBet.SideBetConfig)",
+                "numberOfBytes": "32",
+                "value": "t_struct(SideBetConfig)7008_storage"
+              },
+              "t_mapping(t_uint32,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_uint32",
+                "label": "mapping(uint32 => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+              },
+              "t_struct(Bet)7040_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.Bet",
+                "members": [
+                  {
+                    "astId": 7010,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "player",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 7012,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 20,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7014,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "stake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7016,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "payout",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7018,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "startGlobalRound",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 7020,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 8,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7023,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betType",
+                    "offset": 10,
+                    "slot": "3",
+                    "type": "t_enum(SideBetType)6976"
+                  },
+                  {
+                    "astId": 7026,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "color",
+                    "offset": 11,
+                    "slot": "3",
+                    "type": "t_enum(SideBetColor)6979"
+                  },
+                  {
+                    "astId": 7028,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 12,
+                    "slot": "3",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 7030,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetCount",
+                    "offset": 13,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7032,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 15,
+                    "slot": "3",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7035,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "status",
+                    "offset": 17,
+                    "slot": "3",
+                    "type": "t_enum(SideBetStatus)6985"
+                  },
+                  {
+                    "astId": 7037,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "placedAt",
+                    "offset": 18,
+                    "slot": "3",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 7039,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "resolvedAt",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_uint64"
+                  }
+                ],
+                "numberOfBytes": "160"
+              },
+              "t_struct(SideBetConfig)7008_storage": {
+                "encoding": "inplace",
+                "label": "struct ISideBet.SideBetConfig",
+                "members": [
+                  {
+                    "astId": 6987,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "marketId",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 6990,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betType",
+                    "offset": 4,
+                    "slot": "0",
+                    "type": "t_enum(SideBetType)6976"
+                  },
+                  {
+                    "astId": 6993,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "color",
+                    "offset": 5,
+                    "slot": "0",
+                    "type": "t_enum(SideBetColor)6979"
+                  },
+                  {
+                    "astId": 6995,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetNumber",
+                    "offset": 6,
+                    "slot": "0",
+                    "type": "t_uint8"
+                  },
+                  {
+                    "astId": 6997,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "targetCount",
+                    "offset": 7,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 6999,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "redRatioBps",
+                    "offset": 9,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7001,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "windowSpins",
+                    "offset": 11,
+                    "slot": "0",
+                    "type": "t_uint16"
+                  },
+                  {
+                    "astId": 7003,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "multiplierBps",
+                    "offset": 13,
+                    "slot": "0",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 7005,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minStake",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 7007,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "maxStake",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  }
+                ],
+                "numberOfBytes": "96"
+              },
+              "t_struct(SideBetData)2710_storage": {
+                "encoding": "inplace",
+                "label": "struct SideBet.SideBetData",
+                "members": [
+                  {
+                    "astId": 2673,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "configCount",
+                    "offset": 0,
+                    "slot": "0",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2678,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "configs",
+                    "offset": 0,
+                    "slot": "1",
+                    "type": "t_mapping(t_uint256,t_struct(SideBetConfig)7008_storage)"
+                  },
+                  {
+                    "astId": 2680,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "betCount",
+                    "offset": 0,
+                    "slot": "2",
+                    "type": "t_uint256"
+                  },
+                  {
+                    "astId": 2685,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "bets",
+                    "offset": 0,
+                    "slot": "3",
+                    "type": "t_mapping(t_uint256,t_struct(Bet)7040_storage)"
+                  },
+                  {
+                    "astId": 2690,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "playerBets",
+                    "offset": 0,
+                    "slot": "4",
+                    "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)"
+                  },
+                  {
+                    "astId": 2692,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "minMultiplierBps",
+                    "offset": 0,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2694,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "maxMultiplierBps",
+                    "offset": 4,
+                    "slot": "5",
+                    "type": "t_uint32"
+                  },
+                  {
+                    "astId": 2697,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "jackpotFunder",
+                    "offset": 8,
+                    "slot": "5",
+                    "type": "t_contract(IBRBJackpotFunder)6538"
+                  },
+                  {
+                    "astId": 2699,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "infraRecipient",
+                    "offset": 0,
+                    "slot": "6",
+                    "type": "t_address"
+                  },
+                  {
+                    "astId": 2702,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "settleTimeout",
+                    "offset": 20,
+                    "slot": "6",
+                    "type": "t_uint64"
+                  },
+                  {
+                    "astId": 2707,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "reservedByMarket",
+                    "offset": 0,
+                    "slot": "7",
+                    "type": "t_mapping(t_uint32,t_uint256)"
+                  },
+                  {
+                    "astId": 2709,
+                    "contract": "IncidentStorageProbe.sol:IncidentStorageProbe",
+                    "label": "sideBetsDisabled",
+                    "offset": 0,
+                    "slot": "8",
+                    "type": "t_bool"
+                  }
+                ],
+                "numberOfBytes": "288"
+              },
+              "t_uint16": {
+                "encoding": "inplace",
+                "label": "uint16",
+                "numberOfBytes": "2"
+              },
+              "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+              },
+              "t_uint32": {
+                "encoding": "inplace",
+                "label": "uint32",
+                "numberOfBytes": "4"
+              },
+              "t_uint64": {
+                "encoding": "inplace",
+                "label": "uint64",
+                "numberOfBytes": "8"
+              },
+              "t_uint8": {
+                "encoding": "inplace",
+                "label": "uint8",
+                "numberOfBytes": "1"
+              }
+            }
+          },
+          "ordinary": {
+            "storage": [
+              {
+                "astId": 2667,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "ENGINE",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_contract(IRouletteEngine)6930"
+              },
+              {
+                "astId": 2670,
+                "contract": "contracts/SideBet.sol:SideBet",
+                "label": "REGISTRY",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_contract(IMarketRegistry)6741"
+              }
+            ],
+            "types": {
+              "t_contract(IMarketRegistry)6741": {
+                "encoding": "inplace",
+                "label": "contract IMarketRegistry",
+                "numberOfBytes": "20"
+              },
+              "t_contract(IRouletteEngine)6930": {
+                "encoding": "inplace",
+                "label": "contract IRouletteEngine",
+                "numberOfBytes": "20"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

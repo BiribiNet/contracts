@@ -130,8 +130,8 @@
     "engine": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
     "engineImplementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
     "sideBet": "0x96e34298425c310422bfba424bd4ed455b597d7f",
-    "sideBetImplementation": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
-    "challengeEvaluator": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+    "sideBetImplementation": "0xc097778ffDF918Df9777B32251D0A5f6139C00A6",
+    "challengeEvaluator": "0x36Ac820FC931307bDF61dCc990A7Fe470dB72e74",
     "scheduler": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
     "creExecutionAuthority": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
     "jackpotTreasury": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
@@ -146,9 +146,9 @@
       "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2"
     ],
     "rouletteImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
-    "bankVaultImplementation": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+    "bankVaultImplementation": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
     "bankVaultBeacon": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
-    "sideBetChallengeEvaluator": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18"
+    "sideBetChallengeEvaluator": "0x36Ac820FC931307bDF61dCc990A7Fe470dB72e74"
   },
   "markets": {
     "brb": {

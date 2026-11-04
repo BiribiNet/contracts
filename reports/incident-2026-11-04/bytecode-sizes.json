@@ -1,0 +1,26 @@
+[
+  {
+    "name": "BankVault4626",
+    "revision": "recovery",
+    "runtimeBytes": 15606,
+    "initcodeBytes": 15634
+  },
+  {
+    "name": "BankVault4626",
+    "revision": "after-removal",
+    "runtimeBytes": 15435,
+    "initcodeBytes": 15463
+  },
+  {
+    "name": "SideBet",
+    "revision": "recovery",
+    "runtimeBytes": 22152,
+    "initcodeBytes": 29739
+  },
+  {
+    "name": "SideBet",
+    "revision": "after-removal",
+    "runtimeBytes": 21302,
+    "initcodeBytes": 28889
+  }
+]

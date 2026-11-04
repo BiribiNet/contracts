@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "currentSourcesMatchExecutedCleanupBytecodes": true,
+  "recoveryArtifactsArchived": true,
+  "storageCompatible": true,
+  "contractSizeBypass": false,
+  "fullContractTestsPassing": 519,
+  "optInTestsSkipped": 13,
+  "nodeGuardAndPreflightTestsPassing": 23,
+  "forkExecutionChainId": 31337,
+  "forkSourceBlock": 521259858,
+  "forkTransactions": 9,
+  "forkStatus": "passed",
+  "mainnetExecutionCompleted": true,
+  "mainnetVerification": "mainnet-verification.json",
+  "mainnetConfirmedTransactions": 9,
+  "currentCleanupImplementations": {
+    "bank": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
+    "side": "0xc097778ffDF918Df9777B32251D0A5f6139C00A6"
+  },
+  "bytecodeSizes": [
+    {
+      "name": "BankVault4626",
+      "revision": "recovery",
+      "runtimeBytes": 15606,
+      "initcodeBytes": 15634
+    },
+    {
+      "name": "BankVault4626",
+      "revision": "after-removal",
+      "runtimeBytes": 15435,
+      "initcodeBytes": 15463
+    },
+    {
+      "name": "SideBet",
+      "revision": "recovery",
+      "runtimeBytes": 22152,
+      "initcodeBytes": 29739
+    },
+    {
+      "name": "SideBet",
+      "revision": "after-removal",
+      "runtimeBytes": 21302,
+      "initcodeBytes": 28889
+    }
+  ]
+}

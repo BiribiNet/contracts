@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "executionChainId": 42161,
+  "sourceBlock": 521260674,
+  "verifiedAtBlock": 521261087,
+  "confirmedTransactions": 9,
+  "adminNonce": 304,
+  "mainnetJournal": "reports/incident-2026-11-04/mainnet-execution-2026-11-04T18-59-44-816Z.json",
+  "recoveryTransaction": "0xf8b5c580d8dba7963ef04b80b91eeba4983e641baa1046847d959d5165ed6187",
+  "holderShares": "0",
+  "sideBetsDisabled": true,
+  "ticketsCancelled": [
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "reserved": "0",
+  "locked": "0",
+  "brbBalancesAndSupplyUnchanged": true,
+  "keeperApprovalPreserved": true,
+  "schedulerSettlementRolePreserved": true,
+  "recoveryFunctionsRemoved": true,
+  "queueUnchanged": {
+    "_withdrawalQueue": "0",
+    "_queueHead": "0"
+  },
+  "cleanBank": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
+  "cleanSide": "0xc097778ffDF918Df9777B32251D0A5f6139C00A6",
+  "normalDepositSimulationPassed": true,
+  "authorizedSchedulerBlockedByDisableFlag": true,
+  "simulationsAtBlock": 521261332
+}

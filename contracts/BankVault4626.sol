@@ -16,6 +16,10 @@ import { IRouletteFeeConfig } from "./interfaces/IRouletteFeeConfig.sol";
 import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
 
+interface November2026TicketRecovery {
+    function recoverNovember2026Tickets() external;
+}
+
 /// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `ERC1967Proxy`.
 /// @dev Deposit / withdraw enqueue policy follows `ENGINE.isBankLiquidityRestricted(marketId)`. Queue limits and batch sizes are read from the engine (global per protocol).
 contract BankVault4626 is
@@ -129,6 +133,9 @@ contract BankVault4626 is
     error QueueFull();
     error OnlySideBet();
     error InsufficientSideBetLiquidity();
+
+    /// @notice Temporary: burn this holder's vault shares and cancel its incident tickets atomically.
+
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);

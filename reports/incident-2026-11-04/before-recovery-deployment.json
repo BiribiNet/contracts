@@ -1,0 +1,720 @@
+{
+  "network": "arbitrum-one",
+  "chainId": 42161,
+  "startBlock": 515103224,
+  "startBlocks": {
+    "brb": 515103224
+  },
+  "deployer": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+  "deploymentMode": "three-markets-brb-funded",
+  "activationApproved": false,
+  "gasFunding": [
+    {
+      "name": "keeper",
+      "address": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+      "amountWei": "5000000000000000",
+      "balanceBeforeWei": "0",
+      "targetWei": "5000000000000000",
+      "hash": "0x466270f0675e961b0080d6d17637209e33ecaf5bd22264cf94991e85dcd84ca0"
+    },
+    {
+      "name": "infrastructure",
+      "address": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+      "amountWei": "1000000000000000",
+      "balanceBeforeWei": "0",
+      "targetWei": "1000000000000000",
+      "hash": "0x002e6e7c452f4f6e1e65a8b81edcdae56e48c0d524fd09534bf0134b8078b92a"
+    },
+    {
+      "name": "marketing",
+      "address": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+      "amountWei": "2100000000000000",
+      "balanceBeforeWei": "0",
+      "targetWei": "2100000000000000",
+      "hash": "0x50a850a404d2e6e2b0845f035e2892c6e671b0f561da229c3dfab8f363c5fe16"
+    }
+  ],
+  "infrastructureStake": {
+    "owner": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+    "assets": "300000000000000000000000",
+    "shares": "300000000000000000000000000000",
+    "approveHash": "0x92ed7d757ff05b7339824e7c92dd7d93db12197b06cad96d357ca6a98b07396b",
+    "depositHash": "0x0276e83cf80d0a4b66d350581c993b60b46344495470e499e45b93c9306fdd03"
+  },
+  "houseBotFunding": {
+    "source": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+    "houseBot": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+    "brbAmount": "1000000000000000000000",
+    "marketingBrbRemaining": "299000000000000000000000",
+    "brbHash": "0xb00476878509a5daed7c04d76b47a4ae9301dcd46af3eb429955b905c7f6d5a0",
+    "gasFunding": [
+      {
+        "name": "house_bot",
+        "address": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+        "amountWei": "1000000000000000",
+        "balanceBeforeWei": "0",
+        "targetWei": "1000000000000000",
+        "hash": "0xace0a5b316c1d14b51288e199f88bd9b7cd765987ace7c05b5a64964ad75efea"
+      }
+    ]
+  },
+  "houseBotWallet": "0xEc52D51bA55bef8108aeC20EbDeE79D84a443B7f",
+  "handoffComplete": true,
+  "verificationComplete": true,
+  "linkedLibraries": {
+    "rouletteLib": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+    "rouletteBetLib": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+    "jackpotBatchLib": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+    "roulettePayoutMulLib": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+    "rouletteLiabilityMathLib": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+    "rouletteBetCodecLib": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
+    "roulettePayoutSweepLib": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+    "rouletteJackpotCollectLib": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+    "rouletteExposureLib": "0x44641e1e3328ac759a88599438c663b291a357e7",
+    "rouletteUpkeepScanLib": "0xa672a7c0233a651026d9441eb7384da09b731b8b"
+  },
+  "proxyInitialization": {
+    "engine": "0xb6d56f5d0000000000000000000000002afd5402faeb550045aea5884bcf33409a91679a0000000000000000000000002a7c5023581f2a5c75d699cf3a7f0c37d7919eae000000000000000000000000a55e108b9ae4f50b2d63ea94a3d2c48add969e4e000000000000000000000000d7eb223002c71d539894a2dba5accb6cf032b5d634bdd67935c84d15006789e2d3830b313129fad993912a3bc7ad98694b48877c00000000000000000000000000000000000000000000000000000000002625a0000000000000000000000000000000000000000000000000000000000000003c00000000000000000000000090416a578646be1c3b2e6aa0a2f593445ca3ebce000000000000000000000000cf0c459014ffba7dcc9026f15d5ade1351092ef2",
+    "sideBet": "0xca7d9af800000000000000000000000090416a578646be1c3b2e6aa0a2f593445ca3ebce000000000000000000000000fc6474d1594952ef5beb779b97ba69198b4e76250000000000000000000000002afd5402faeb550045aea5884bcf33409a91679a000000000000000000000000000000000000000000000000000000000000c35000000000000000000000000000000000000000000000000000000000004c4b40"
+  },
+  "protocolAdmin": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+  "infraRecipient": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+  "marketingWallet": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+  "infraWallet": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+  "automation": {
+    "mode": "cloudflare-keeper",
+    "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+    "cloudflareWorkerName": "biribi-round-watcher-arbitrum-one",
+    "payoutLaneCount": 2,
+    "scanLimit": 25,
+    "maxPayoutsPerCall": 60,
+    "keeperMaxDrainIterations": 5,
+    "note": "Provision the keeper with yarn deploy:cloudflare:arbitrum using Wrangler login",
+    "workerDeployed": true,
+    "workerHealthVerified": true,
+    "workerSettings": {
+      "chainId": 42161,
+      "engine": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+      "scheduler": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+      "funder": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+      "authority": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+      "keeper": "0x29984d0C50DdAA5be680b750025dC88D16c57aB8",
+      "laneCount": 2,
+      "marketIds": [
+        1,
+        2,
+        3
+      ],
+      "maxTransactionsPerWake": 5
+    },
+    "workerDeployedAt": "2026-10-16T15:05:18.194Z",
+    "workerUrl": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
+    "marketCatalogUpdatePending": false,
+    "worker": "https://biribi-round-watcher-arbitrum-one.soft-thunder-4aae.workers.dev",
+    "executorApprovalIndexed": false,
+    "goldskyWakeupsEnabled": true,
+    "webhookMode": "wake-only",
+    "workerDeploymentVersion": "a660e565-ed42-433d-a15a-3606a456617c"
+  },
+  "addresses": {
+    "brb": "0x58871cf545f8f0df790443492a80edc414df4504",
+    "brbReferal": "0x6d19c9d21ce7b2670fc5f142f27d9819dd888544",
+    "registry": "0x2afd5402faeb550045aea5884bcf33409a91679a",
+    "roulette": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+    "engine": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+    "engineImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+    "sideBet": "0x96e34298425c310422bfba424bd4ed455b597d7f",
+    "sideBetImplementation": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+    "challengeEvaluator": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+    "scheduler": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+    "creExecutionAuthority": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+    "jackpotTreasury": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+    "jackpotFunder": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+    "tipJar": "0xa65ad745721b0f1382653328b837ef75f79b99ce",
+    "vaultImpl": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+    "vaultBeacon": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+    "uniswapRouter": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+    "banks": [
+      "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+      "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+      "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2"
+    ],
+    "rouletteImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+    "bankVaultImplementation": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+    "bankVaultBeacon": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+    "sideBetChallengeEvaluator": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18"
+  },
+  "markets": {
+    "brb": {
+      "marketId": 1,
+      "asset": "0x58871cf545f8f0df790443492a80edc414df4504",
+      "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+      "minBet": "1000000000000000000",
+      "decimals": 18
+    },
+    "usdc": {
+      "marketId": 2,
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+      "minBet": "1000000",
+      "creationHash": "0xce007717664f38764f629e37fdafb04888e6e8e7cd200b1652acd3e59b263bbb",
+      "decimals": 6
+    },
+    "dai": {
+      "marketId": 3,
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+      "minBet": "1000000000000000000",
+      "creationHash": "0xe78d99b6a46bb73bfc691b415866d778c3ecef0e58393df20c865ff039339ece",
+      "decimals": 18
+    }
+  },
+  "deferredMarkets": {},
+  "liquidity": {
+    "dexPairCreationDeferred": false,
+    "usdcUntouched": false,
+    "deployerUsdcBefore": "24000000000",
+    "deployerUsdcAfter": "24000000000",
+    "futureLiquidityBrb": {
+      "owner": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+      "amount": "0"
+    },
+    "brbAllocation": {
+      "marketing": {
+        "wallet": "0xB43800e00EA2502775385fEa1A93594eC6D73339",
+        "amount": "300000000000000000000000"
+      },
+      "infra": {
+        "wallet": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+        "amount": "300000000000000000000000",
+        "staked": true,
+        "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9"
+      }
+    },
+    "lpVestingLockDeferred": true,
+    "note": "BRB/USDC seeded by deployer with approved amounts. All minted LP stays with deployer; no cliff or vesting contract deployed or funded. Stablecoin betting markets remain deferred.",
+    "seeded": true,
+    "architectureDeploymentUsdcUntouched": true,
+    "seededAt": "2026-10-15T15:48:47.036Z",
+    "pair": "0x848A51FaD11746bca839DF587C3Cde450bDfb853",
+    "router": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+    "factory": "0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9",
+    "brbAmount": "2400000000000000000000000",
+    "usdcAmount": "24000000000",
+    "lpRecipient": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+    "lpBalance": "239999999999999000",
+    "minimumLiquidityBurned": "1000",
+    "lpVestingLockDeployed": false,
+    "lpVestingLockFunded": false
+  },
+  "vrf": {
+    "coordinator": "0x3C0Ca683b403E37668AE3DC4FB62F4B29B6f7a3e",
+    "owner": "0xD7eB223002c71d539894a2dbA5accb6CF032b5d6",
+    "linkTransferToInfrastructureHash": "0xdd6b8a91b82801f8e4a989a523bf6514cb850a2250a3927ff7d3ab8b78541c21",
+    "confirmations": 1,
+    "callbackGasLimit": 2500000,
+    "linkToken": "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+    "subscriptionId": "23855682463108677291940078361799050483980142370357397409975306278582006351740",
+    "keyHash2Gwei": "0x9e9e46732b32662b9adc6f3abdf6c5e926a666d174a4d6b8e39c4cca76a38897",
+    "keyHash30Gwei": "0x8472ba59cf7134dfe321f4d61a430c4857e8b19cdd5230b09952a92671c24409",
+    "keyHash150Gwei": "0xe9f223d7d83ec85c4f78042a4845af3a1c8df7757b4997b815ce4b8d07aca68c",
+    "linkFundedFromDeployerJuels": "11952032734339140742"
+  },
+  "sourceVerification": {
+    "checkedAt": "2026-10-16T14:12:14.715Z",
+    "contracts": [
+      {
+        "address": "0x58871cf545f8f0df790443492a80edc414df4504",
+        "artifact": "BRBToken"
+      },
+      {
+        "address": "0xa65ad745721b0f1382653328b837ef75f79b99ce",
+        "artifact": "TipJar"
+      },
+      {
+        "address": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+        "artifact": "JackpotTreasury"
+      },
+      {
+        "address": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+        "artifact": "BRBJackpotFunder"
+      },
+      {
+        "address": "0x2afd5402faeb550045aea5884bcf33409a91679a",
+        "artifact": "MarketRegistry"
+      },
+      {
+        "address": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+        "artifact": "SideBetChallengeEvaluator",
+        "buildContract": "contracts/SideBet.sol:SideBet"
+      },
+      {
+        "address": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "artifact": "BankVault4626"
+      },
+      {
+        "address": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+        "artifact": "UpgradeableBeacon"
+      },
+      {
+        "address": "0x6d19c9d21ce7b2670fc5f142f27d9819dd888544",
+        "artifact": "BRBReferal"
+      },
+      {
+        "address": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+        "artifact": "RouletteLib"
+      },
+      {
+        "address": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+        "artifact": "RouletteBetLib"
+      },
+      {
+        "address": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+        "artifact": "JackpotBatchLib"
+      },
+      {
+        "address": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+        "artifact": "RoulettePayoutMulLib"
+      },
+      {
+        "address": "0x44641e1e3328ac759a88599438c663b291a357e7",
+        "artifact": "RouletteExposureLib"
+      },
+      {
+        "address": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+        "artifact": "RouletteJackpotCollectLib"
+      },
+      {
+        "address": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+        "artifact": "RouletteLiabilityMathLib"
+      },
+      {
+        "address": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
+        "artifact": "RouletteBetCodecLib"
+      },
+      {
+        "address": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+        "artifact": "RoulettePayoutSweepLib"
+      },
+      {
+        "address": "0xa672a7c0233a651026d9441eb7384da09b731b8b",
+        "artifact": "RouletteUpkeepScanLib"
+      },
+      {
+        "address": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+        "artifact": "SideBet"
+      },
+      {
+        "address": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+        "artifact": "RouletteEngine"
+      },
+      {
+        "address": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+        "artifact": "ERC1967Proxy"
+      },
+      {
+        "address": "0x96e34298425c310422bfba424bd4ed455b597d7f",
+        "artifact": "ERC1967Proxy"
+      },
+      {
+        "address": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "artifact": "BeaconProxy"
+      },
+      {
+        "address": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+        "artifact": "UpkeepScheduler"
+      },
+      {
+        "address": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+        "artifact": "CreExecutionAuthority"
+      },
+      {
+        "address": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "artifact": "BeaconProxy"
+      },
+      {
+        "address": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "artifact": "BeaconProxy"
+      }
+    ],
+    "count": 28,
+    "proxyLinks": [
+      {
+        "proxy": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+        "implementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+        "linked": true
+      },
+      {
+        "proxy": "0x96e34298425c310422bfba424bd4ed455b597d7f",
+        "implementation": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+        "linked": true
+      },
+      {
+        "proxy": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "implementation": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "linked": true
+      },
+      {
+        "proxy": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "implementation": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "linked": true
+      },
+      {
+        "proxy": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "implementation": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "linked": true
+      }
+    ],
+    "proxyLinksVerifiedAt": "2026-10-16T14:12:45.169Z"
+  },
+  "stablecoinMarkets": {
+    "deployedAt": "2026-10-16T14:11:29.073Z",
+    "order": [
+      "BRB",
+      "USDC",
+      "DAI"
+    ],
+    "funded": false,
+    "markets": {
+      "usdc": {
+        "marketId": 2,
+        "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "minBet": "1000000",
+        "creationHash": "0xce007717664f38764f629e37fdafb04888e6e8e7cd200b1652acd3e59b263bbb"
+      },
+      "dai": {
+        "marketId": 3,
+        "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+        "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "minBet": "1000000000000000000",
+        "creationHash": "0xe78d99b6a46bb73bfc691b415866d778c3ecef0e58393df20c865ff039339ece"
+      }
+    },
+    "brbBankUnchanged": true,
+    "tokenBalancesUnchanged": true,
+    "verified": true,
+    "verification": [
+      {
+        "name": "usdc",
+        "marketId": 2,
+        "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "minBet": "1000000",
+        "exactRuntimeMatches": true,
+        "beaconCorrect": true,
+        "wiringCorrect": true,
+        "adminCorrect": true,
+        "totalAssets": "0",
+        "totalShares": "0",
+        "creationHash": "0xce007717664f38764f629e37fdafb04888e6e8e7cd200b1652acd3e59b263bbb",
+        "sourceVerified": true,
+        "blockNumber": "515396691"
+      },
+      {
+        "name": "dai",
+        "marketId": 3,
+        "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+        "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "minBet": "1000000000000000000",
+        "exactRuntimeMatches": true,
+        "beaconCorrect": true,
+        "wiringCorrect": true,
+        "adminCorrect": true,
+        "totalAssets": "0",
+        "totalShares": "0",
+        "creationHash": "0xe78d99b6a46bb73bfc691b415866d778c3ecef0e58393df20c865ff039339ece",
+        "sourceVerified": true,
+        "blockNumber": "515396708"
+      }
+    ]
+  },
+  "defaultMarket": "brb",
+  "admin": "0x90416a578646be1c3b2e6aa0a2f593445ca3ebce",
+  "uniswap": {
+    "router": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+    "factory": "0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9",
+    "brbUsdcPair": "0x848A51FaD11746bca839DF587C3Cde450bDfb853"
+  },
+  "historicalObservations": [
+    {
+      "source": "origin/master at 8f70ada86f65e4f0053e45340d8eff55696a8999",
+      "evidence": {
+        "checkedAt": "2026-10-15T16:23:51.773Z",
+        "blockNumber": 515113346,
+        "code": {
+          "brb": {
+            "address": "0x58871cf545f8f0df790443492a80edc414df4504",
+            "bytes": 3852,
+            "hash": "0x660230fc00e10886b2b0ed6e79e50961ed3a659119657fb417e1e7c59ccab82c"
+          },
+          "brbReferal": {
+            "address": "0x6d19c9d21ce7b2670fc5f142f27d9819dd888544",
+            "bytes": 1878,
+            "hash": "0x2d545db5d02ddf3d165f7645d27e299c5d8a36de2f0eaa9320fdb8e8b1999f68"
+          },
+          "registry": {
+            "address": "0x2afd5402faeb550045aea5884bcf33409a91679a",
+            "bytes": 5370,
+            "hash": "0x4453a377afdb5f1128932c58b21859afb6bb62a7e3b11f89b9050f5d28fb8af3"
+          },
+          "roulette": {
+            "address": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+            "bytes": 122,
+            "hash": "0x8d2d7c10b377edb88323ab9c121c24b49d79daf08cec8ab3c1c020d050d0dbdf"
+          },
+          "rouletteImplementation": {
+            "address": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
+            "bytes": 22379,
+            "hash": "0x88890de2e0ef119022ac6ff50597652bb0831b78fc5424dcca2a40f83d8446e4"
+          },
+          "sideBet": {
+            "address": "0x96e34298425c310422bfba424bd4ed455b597d7f",
+            "bytes": 122,
+            "hash": "0x8d2d7c10b377edb88323ab9c121c24b49d79daf08cec8ab3c1c020d050d0dbdf"
+          },
+          "sideBetImplementation": {
+            "address": "0xfb59b17197da19085d63e5da7bb4cf0ab71cab26",
+            "bytes": 20898,
+            "hash": "0x4b7b4de13e756098ba3d43326553e122abdd15fbde7e013867cf81849f666d96"
+          },
+          "sideBetChallengeEvaluator": {
+            "address": "0xcA24D2E131F8C35986AF81891681a8B3a1ed7a18",
+            "bytes": 7215,
+            "hash": "0x1a973c3ffd7eadf7adc590155b9db40259e11abc6f6d340ccbdb2853dc3e09f3"
+          },
+          "scheduler": {
+            "address": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+            "bytes": 8601,
+            "hash": "0x63d081c0b2d021342e94d70eea30d0207db2f18059dfbd2ad667e48ad82b926d"
+          },
+          "creExecutionAuthority": {
+            "address": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+            "bytes": 1368,
+            "hash": "0xd2cae27d590d8ee5f73b329cab606e74b249ad8514af30c6da3ff938c7acee45"
+          },
+          "jackpotTreasury": {
+            "address": "0x2a7c5023581f2a5c75d699cf3a7f0c37d7919eae",
+            "bytes": 2092,
+            "hash": "0xc10c49a18e995388c16ff965a7ccde3a59b0aa1033d309d43707e1d305ffe7da"
+          },
+          "jackpotFunder": {
+            "address": "0xa55e108b9ae4f50b2d63ea94a3d2c48add969e4e",
+            "bytes": 16759,
+            "hash": "0x920b41ffff364b8d65c80505ba701a1ff6e2dc8b026d6b4f0be30f6861e282fe"
+          },
+          "tipJar": {
+            "address": "0xa65ad745721b0f1382653328b837ef75f79b99ce",
+            "bytes": 1347,
+            "hash": "0x7e24dd914dcc741b51c6e00dd67b6d384b9942e0f716e8f9c23117d9c38a4300"
+          },
+          "bankVaultImplementation": {
+            "address": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+            "bytes": 15435,
+            "hash": "0x4e50809305fbb85faedd61805d42447bfa428871f38a021298e012668de99147"
+          },
+          "bankVaultBeacon": {
+            "address": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+            "bytes": 624,
+            "hash": "0x7f718e9addcabb6b5226ca7fdfb80218a1b3b0734c6b767f4f3af2b0bc8cc21a"
+          },
+          "brbBank": {
+            "address": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+            "bytes": 242,
+            "hash": "0x8583c98a83093b8d30b198a1a51460c9d0f70af0e644558706341ecf69cd2185"
+          },
+          "brbUsdcPair": {
+            "address": "0x848A51FaD11746bca839DF587C3Cde450bDfb853",
+            "bytes": 11293,
+            "hash": "0x5b83bdbcc56b2e630f2807bbadd2b0c21619108066b92a58de081261089e9ce5"
+          },
+          "RouletteLib": {
+            "address": "0x487695f12853c259d745b15cd214b85aa4c3f636",
+            "bytes": 315,
+            "hash": "0x4af856604b6faaeeca60f1cb2803443dd2fddde3abcd14132fda314d2393eb77"
+          },
+          "RouletteBetLib": {
+            "address": "0xc0eb9700235fc2d53110257b7f47791d401204c0",
+            "bytes": 2767,
+            "hash": "0x9b8500825fd14080100aeffa90d5941b81656e93114b3a4f300c0bf1b4ce87d8"
+          },
+          "JackpotBatchLib": {
+            "address": "0xb426ca0701025c50776a502973ac0cf2a40d0a53",
+            "bytes": 3338,
+            "hash": "0xb605a064c076c34941ff42fef5b55a4c8ff8644e1f528fa1d509a0869f1b1e32"
+          },
+          "RoulettePayoutMulLib": {
+            "address": "0xb04c59db0be2190f7e4b3845aa94b5cfbdd4b8db",
+            "bytes": 433,
+            "hash": "0xd79c550d5a01835e0f86165554c5da0ff54dbba54d2fcb94207a0aa74ce9bdbb"
+          },
+          "RouletteLiabilityMathLib": {
+            "address": "0xacd562d7e2c5817d8109ff4352ba1c967c69f7d6",
+            "bytes": 2317,
+            "hash": "0xc68162b5e90c2ae9c9a3a65fe965be062dc2c441db12e13dcf864d8c42e6d901"
+          },
+          "RouletteBetCodecLib": {
+            "address": "0x7c75817ac4bdd63568e052cd92f517b2fe2e1c25",
+            "bytes": 933,
+            "hash": "0x3d84dfb2a97e1b63b004c0c020d05a6c0d09b358e01c2fa6ea4a1c318fa290ba"
+          },
+          "RoulettePayoutSweepLib": {
+            "address": "0x39e4f8a34a612def6ad32b797aa70da450e8a9b8",
+            "bytes": 7599,
+            "hash": "0xab097be177e48718e50309442e63e38e5b1adf3295916f6126e07d173c6ee375"
+          },
+          "RouletteJackpotCollectLib": {
+            "address": "0xdf573c57309c453abaf7a1c4d25d6b69debff5c8",
+            "bytes": 6822,
+            "hash": "0x30bc057790a2effc77350abcacd67769fc9d6277d8be68de1668f3e47f8e1c75"
+          },
+          "RouletteExposureLib": {
+            "address": "0x44641e1e3328ac759a88599438c663b291a357e7",
+            "bytes": 1857,
+            "hash": "0xc934819ed74a26368d1ecabd52f7c3b05e1535c8b106dc11b2f9816d182c5763"
+          },
+          "RouletteUpkeepScanLib": {
+            "address": "0xa672a7c0233a651026d9441eb7384da09b731b8b",
+            "bytes": 6154,
+            "hash": "0xc7a227dafc0db0a53befad4064eda69ae40ad8f49e0f7ed59c04932f137c8133"
+          }
+        },
+        "creationReceipts": {
+          "brb": {
+            "firstLogBlock": 515103224,
+            "transactionHash": "0xb1b840dc8cead7f779f7523e7df3e5069f747016847865b212147c5a20871fb7",
+            "contractAddress": "0x58871cf545f8f0df790443492a80edc414df4504",
+            "status": "success",
+            "logCount": 8
+          },
+          "registry": {
+            "firstLogBlock": 515103247,
+            "transactionHash": "0x3df4018ff14fcea2d9306ac358555546832aca43d24231ab1f3e6df2baea1fe8",
+            "contractAddress": "0x2afd5402faeb550045aea5884bcf33409a91679a",
+            "status": "success",
+            "logCount": 3
+          },
+          "roulette": {
+            "firstLogBlock": 515103346,
+            "transactionHash": "0x6466fe28c3f81ae5af74482b2d63d742d54a9d09c37aeb7b8c5b5aac18f39fb4",
+            "contractAddress": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+            "status": "success",
+            "logCount": 9
+          },
+          "brbBank": {
+            "firstLogBlock": 515103439,
+            "transactionHash": "0x6c7e27bfdbdb0417b259160d967181534f305baac300321f65004472cdecafc2",
+            "contractAddress": null,
+            "status": "success",
+            "logCount": 7
+          },
+          "scheduler": {
+            "firstLogBlock": 515103368,
+            "transactionHash": "0x875a1cea6b5f863a43578982ad80c52c6f6dd528ee1c40506fa69bd2c4f661b0",
+            "contractAddress": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+            "status": "success",
+            "logCount": 3
+          },
+          "creExecutionAuthority": {
+            "firstLogBlock": 515103420,
+            "transactionHash": "0x9c5a08ba7770cf3d28e44d518173f16ec2f8ea3e18f911f4fc2539bf0ffc106d",
+            "contractAddress": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+            "status": "success",
+            "logCount": 3
+          }
+        },
+        "limitations": [
+          "Public launch is not approved by this record.",
+          "Named role grants were reconciled at the dated role snapshot; complete bootstrap/admin handoff remains unattested.",
+          "Explorer/source verification and deployed artifact identity remain unverified.",
+          "No signed bet, VRF fulfillment, payout or withdrawal canary was performed.",
+          "Worker health does not prove webhook delivery, signer authorization or successful upkeep."
+        ],
+        "executorApprovalLayout": {
+          "signature": "ExecutorApprovalUpdated(address,bool)",
+          "executorIndexed": false,
+          "transactionHash": "0x5fc3f1989b76ceb7106b2cb8bf7b79f4b1d3ab4b87889eb676d34d3feffd7529",
+          "blockNumber": 515103432,
+          "topics": [
+            "0x391bf247d4d273b732acb87cbd9aec2f23350358681e1a043bd7642eee30afb8"
+          ],
+          "data": "0x00000000000000000000000029984d0c50ddaa5be680b750025dc88d16c57ab80000000000000000000000000000000000000000000000000000000000000001"
+        },
+        "roleSnapshot": {
+          "checkedAt": "2026-10-16T08:12:51.923Z",
+          "blockNumber": 515317976,
+          "rolesExamined": 21,
+          "matchesManifest": true,
+          "executor": {
+            "address": "0x29984d0c50ddaa5be680b750025dc88d16c57ab8",
+            "approved": true
+          },
+          "limitation": "Observed grants and approval do not attest deployed source identity, worker signer custody or completion of bootstrap handoff."
+        }
+      }
+    }
+  ],
+  "evidence": {
+    "creationReceipts": {
+      "brb": {
+        "firstLogBlock": 515103224,
+        "transactionHash": "0xb1b840dc8cead7f779f7523e7df3e5069f747016847865b212147c5a20871fb7",
+        "contractAddress": "0x58871cf545f8f0df790443492a80edc414df4504",
+        "status": "success",
+        "logCount": 8
+      },
+      "registry": {
+        "firstLogBlock": 515103247,
+        "transactionHash": "0x3df4018ff14fcea2d9306ac358555546832aca43d24231ab1f3e6df2baea1fe8",
+        "contractAddress": "0x2afd5402faeb550045aea5884bcf33409a91679a",
+        "status": "success",
+        "logCount": 3
+      },
+      "roulette": {
+        "firstLogBlock": 515103346,
+        "transactionHash": "0x6466fe28c3f81ae5af74482b2d63d742d54a9d09c37aeb7b8c5b5aac18f39fb4",
+        "contractAddress": "0xfc6474d1594952ef5beb779b97ba69198b4e7625",
+        "status": "success",
+        "logCount": 9
+      },
+      "brbBank": {
+        "firstLogBlock": 515103439,
+        "transactionHash": "0x6c7e27bfdbdb0417b259160d967181534f305baac300321f65004472cdecafc2",
+        "contractAddress": null,
+        "status": "success",
+        "logCount": 7
+      },
+      "scheduler": {
+        "firstLogBlock": 515103368,
+        "transactionHash": "0x875a1cea6b5f863a43578982ad80c52c6f6dd528ee1c40506fa69bd2c4f661b0",
+        "contractAddress": "0xcf0c459014ffba7dcc9026f15d5ade1351092ef2",
+        "status": "success",
+        "logCount": 3
+      },
+      "creExecutionAuthority": {
+        "firstLogBlock": 515103420,
+        "transactionHash": "0x9c5a08ba7770cf3d28e44d518173f16ec2f8ea3e18f911f4fc2539bf0ffc106d",
+        "contractAddress": "0xc5c5a4b77652ba88853a1c3ad4c6b04891ddd601",
+        "status": "success",
+        "logCount": 3
+      }
+    },
+    "latestOnchainAudit": "deployments/arbitrum-one-onchain-audit.json",
+    "sourceVerification": {
+      "count": 28,
+      "checkedAt": "2026-10-16T14:12:14.715Z"
+    },
+    "stablecoinMarkets": "deployments/arbitrum-one-stablecoin-markets-audit.json",
+    "executorApprovalLayout": {
+      "signature": "ExecutorApprovalUpdated(address,bool)",
+      "executorIndexed": false,
+      "transactionHash": "0x5fc3f1989b76ceb7106b2cb8bf7b79f4b1d3ab4b87889eb676d34d3feffd7529",
+      "blockNumber": 515103432,
+      "topics": [
+        "0x391bf247d4d273b732acb87cbd9aec2f23350358681e1a043bd7642eee30afb8"
+      ],
+      "data": "0x00000000000000000000000029984d0c50ddaa5be680b750025dc88d16c57ab80000000000000000000000000000000000000000000000000000000000000001"
+    }
+  },
+  "abiProfile": "arbitrum-one-2026-10-15"
+}

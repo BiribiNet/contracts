@@ -1,0 +1,95 @@
+{
+  "status": "passed",
+  "chainId": 42161,
+  "blockchainTransactionsSent": false,
+  "contracts": [
+    {
+      "key": "cleanBank",
+      "address": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
+      "url": "https://arbiscan.io/address/0x129cAf686c2489685841Ef1E9d442Fd8b963797D#code",
+      "status": "verified-similar",
+      "before": {
+        "sourcePresent": true,
+        "contractName": "BankVault4626",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "exactMatch": false
+      },
+      "submissionId": "8etbybshsymuxztfcnbztb3hbbr3uiuhneyllgsgnmfgrczj4n",
+      "result": "Already Verified",
+      "after": {
+        "sourcePresent": true,
+        "contractName": "BankVault4626",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "0x8cbe21a2203c5cfb5e6f7ee7e13603e70da9e700",
+        "exactMatch": false
+      },
+      "note": "Explorer retains Similar Match and returns Already Verified for exact resubmission. Exact compiler-input/deployment reproduction was checked independently."
+    },
+    {
+      "key": "cleanSide",
+      "address": "0xc097778ffDF918Df9777B32251D0A5f6139C00A6",
+      "url": "https://arbiscan.io/address/0xc097778ffDF918Df9777B32251D0A5f6139C00A6#code",
+      "status": "verified",
+      "before": {
+        "sourcePresent": true,
+        "contractName": "SideBet",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "",
+        "exactMatch": true
+      },
+      "after": {
+        "sourcePresent": true,
+        "contractName": "SideBet",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "",
+        "exactMatch": true
+      }
+    },
+    {
+      "key": "recoveryBank",
+      "address": "0x85566C1D9Aa6e7248e8981dAF56DeEd376E815eF",
+      "url": "https://arbiscan.io/address/0x85566C1D9Aa6e7248e8981dAF56DeEd376E815eF#code",
+      "status": "verified",
+      "before": {
+        "sourcePresent": false,
+        "contractName": "",
+        "compilerVersion": "",
+        "similarMatch": "",
+        "exactMatch": false
+      },
+      "submissionId": "s5rbqavrwftbhyypinkj6afvey28t98pffne3bjd35j272a3k4",
+      "result": "Pass - Verified",
+      "after": {
+        "sourcePresent": true,
+        "contractName": "BankVault4626",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "",
+        "exactMatch": true
+      }
+    },
+    {
+      "key": "recoverySide",
+      "address": "0xbD98B048E6D14433BFfAdE95a40FDcB48cd1868d",
+      "url": "https://arbiscan.io/address/0xbD98B048E6D14433BFfAdE95a40FDcB48cd1868d#code",
+      "status": "verified",
+      "before": {
+        "sourcePresent": true,
+        "contractName": "SideBet",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "",
+        "exactMatch": true
+      },
+      "after": {
+        "sourcePresent": true,
+        "contractName": "SideBet",
+        "compilerVersion": "v0.8.27+commit.40a35a09",
+        "similarMatch": "",
+        "exactMatch": true
+      }
+    }
+  ],
+  "allCompilerInputsReproduceDeploymentBytecode": true,
+  "cleanBankExecutableMatchesOriginal": true,
+  "allExactMatches": false
+}
