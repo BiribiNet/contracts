@@ -122,8 +122,8 @@ mapping(uint64 => mapping(uint32 => MaskBetEntry[])) roundMaskBets;
 mapping(uint64 => mapping(uint32 => uint256[3])) roundMaskWinCounts;
 /// Option (a) : somme des gains masque du (round, marché)
 mapping(uint64 => mapping(uint32 => uint256)) roundMaskWeightedPayout;
-uint32 maxMaskLegsPerMarketRound;   // 0 ⇒ masques désactivés (interrupteur)
-uint16 maxMaskLiabilityBps;         // plafond de passif masque (§4)
+mapping(uint32 => uint32) maxMaskLegsPerMarketRound; // marché ; 0 ⇒ masques désactivés
+mapping(uint32 => uint16) maxMaskLiabilityBps;       // plafond par marché (§4, D18)
 ```
 
 `roundMaskWinCounts` est la clé de la compatibilité avec le callback VRF (§2.3) : le nombre de gagnants masque pour le numéro tiré se lit en O(1).
@@ -226,11 +226,11 @@ Scénarios (mises de 100 unités, gains arrondis ; calculés par le script de l'
 | Scénario | (a) Σ gains | (b) max par numéro | Ratio |
 |---|---|---|---|
 | 10 joueurs sur le même masque « premier » | 3 270 | 3 270 | 1,0 |
-| « supérieur » + « inférieur » au précédent p = 18 | 400 | 200 | 2,0 |
+| « supérieur » + « inférieur » au précédent p = 18 (0 exclu) | 411 | 211 | ≈ 1,95 |
 | 4 masques couleur × parité (partition de 1–36) | 1 620 | 450 | 3,6 |
 | 18 paires disjointes (pire cas théorique) | 32 400 | 1 800 | 18,0 |
 
-Le sur-provisionnement de (a) est au plus égal au nombre de masques **disjoints** (≤ 18 car `|S| ≥ 2`) et nul quand les joueurs se concentrent sur les mêmes presets (cas attendu avec un catalogue). Il ne coûte rien tant que la contrainte de solvabilité ne mord pas : le passif n'est **pas** bloqué dans le vault (seuls les stakes le sont), il ne fait que rejeter des paris plus tôt.
+Le ratio de sur-provisionnement de (a) est au plus **37/2 = 18,5** : la somme des passifs sur les 37 numéros vaut `Σ size_i × payout_i ≥ 2 × Σ payout_i`, donc le maximum par numéro vaut au moins `2 × Σ payout_i / 37`. La borne est atteinte par 37 masques de deux numéros adjacents sur un cycle, de gains identiques : chaque numéro appartient à deux masques. Pour des masques disjoints, le ratio est au plus 18 ; il vaut 1 quand tous les masques sont identiques. Le passif n'est **pas** bloqué dans le vault (seuls les stakes le sont) : le sur-provisionnement rejette des paris plus tôt lorsque la solvabilité ou le plafond est atteint.
 
 ### 3.5 Recommandation v1 : option (a)
 
@@ -372,7 +372,7 @@ Règles UI (frontend) :
 
 - Presets « liés au précédent » **grisés** tant que le numéro de `r−1` n'est pas connu côté client (événement Ably `VRFResult`, repli RPC `roundOutcome(currentRound − 1)` au bootstrap) et pour `r = 1`.
 - **Grisés aussi** quand le `|S|` calculé sort de `[2, 24]` (« supérieur » actif pour `p ∈ [12, 34]`, « inférieur » (0 exclu, D14) pour `p ∈ [3, 25]`, couleur/douzaine désactivées si `p = 0`) — voir annexe.
-- **Risque UX** : une transaction construite pour `r` peut être minée dans `r+1` si `r` se ferme entre-temps ; le masque, calculé sur `r−1`, est alors joué « hors contexte ». Atténuations v1 : désactiver ces presets à l'approche de `lockAt` (marge à définir) et dès `VrfRequested` ; afficher dans l'historique « masque calculé sur le tirage du round X » (le `roundId` réel est dans `BetPlaced`, `BankVault4626.sol:268`). **Garde on-chain retenue (D19)** : le frontend pose `guard = 1` et `expectedPrev = p` sur **tout** preset lié au précédent ; si la transaction est minée dans un autre round que prévu, le précédent n'est plus `p` et le pari revert `PreviousOutcomeMismatch` (message traduit côté frontend, l'utilisateur rejoue). Les masques libres et les presets statiques ne posent pas la garde.
+- **Risque UX** : une transaction construite pour `r` peut être minée dans `r+1` si `r` se ferme entre-temps ; le masque, calculé sur `r−1`, est alors joué « hors contexte ». Atténuations v1 : désactiver ces presets à l'approche de `lockAt` (marge à définir) et dès `VrfRequested` ; afficher dans l'historique « masque calculé sur le tirage du round X » (le `roundId` réel est dans `BetPlaced`, `BankVault4626.sol:268`). **Garde on-chain retenue (D19)** : le frontend pose `guard = 1` et `expectedPrev = p` sur **tout** preset lié au précédent ; si le numéro précédent a changé, le pari revert `PreviousOutcomeMismatch` (message traduit côté frontend, l'utilisateur rejoue). Cette garde compare seulement le numéro : si deux rounds précédents donnent le même `p`, elle accepte la transaction dans le round suivant. Elle préserve le contexte numérique du preset, sans garantir l'identité du round. Une garantie de round exact nécessiterait un identifiant de round attendu, hors de cet encodage v1. Les masques libres et les presets statiques ne posent pas la garde.
 
 ---
 
@@ -423,7 +423,7 @@ Unitaires — validation et gain :
 - Gain = `floor(amount × 36 / size)` pour tout `size ∈ [2, 24]`, avec `amount ∈ {minBet, minBet+1, 10^dec, valeurs premières}`, en **6 et 18 décimales**.
 - `presetId` sans effet : deux paris identiques avec `presetId` différents ⇒ mêmes compteurs, même gain ; `presetId` présent dans `BetRecorded`/`BetPlaced`.
 - Jambe masque `< minBet` dans une transaction dont le total `≥ minBet` ⇒ `MaskLegBelowMinBet`.
-- Garde : `guard = 1` et `expectedPrev` = numéro réel de `r − 1` ⇒ accepté ; numéro différent ⇒ `PreviousOutcomeMismatch` ; `r = 1` ⇒ `PreviousOutcomeMismatch` ; `guard = 0` avec `expectedPrev ≠ 0` ⇒ `InvalidBetNumber` ; `expectedPrev = 37..63` ⇒ revert ; plusieurs jambes gardées dans une transaction ⇒ un seul `SLOAD` du résultat (mesure de gaz) ; jambe gardée préparée en `r` et minée en `r + 1` (scénario CRE) ⇒ revert.
+- Garde : `guard = 1` et `expectedPrev` = numéro réel de `r − 1` ⇒ accepté ; numéro différent ⇒ `PreviousOutcomeMismatch` ; `r = 1` ⇒ `PreviousOutcomeMismatch` ; `guard = 0` avec `expectedPrev ≠ 0` ⇒ `InvalidBetNumber` ; `expectedPrev = 37..63` ⇒ revert ; plusieurs jambes gardées dans une transaction ⇒ un seul `SLOAD` du résultat (mesure de gaz) ; jambe gardée préparée en `r` et minée en `r + 1` ⇒ revert si le numéro précédent diffère ; si les deux numéros précédents sont identiques, elle est acceptée (pas de garde de round exact).
 - Plafond de jambes : `N` accepté, `N+1` rejeté ; `0` ⇒ `MaskBetsDisabled` ; setter par marché : contrôle d'accès + événement ; un marché à `0` n'affecte pas les autres.
 - Jackpot : round où le numéro gagnant = numéro jackpot avec uniquement des masques couvrant ce numéro ⇒ aucun gagnant jackpot ; mélange plein + masque ⇒ seul le plein est éligible.
 - Paris classiques : non-régression complète (suites existantes), y compris `ZeroBetLegRejection`, `PayoutLiabilityBound`, `MultiBetCost`.
@@ -441,7 +441,7 @@ Solvabilité et invariant NAV :
 - Vault upgradé : `lockSideBetStake`/`setSideBetController` absents de l'ABI ; ancien contrôleur ⇒ `releaseBets`/`payoutBatch`/`transferOut` revert `OnlyEngine`.
 
 Fuzz / propriétés :
-- Pour tout `(mask, amount)` valide : `payout ≤ amount × 36 / |S|` et `payout × 37 ≤ amount × 36 × 37 / |S|` (avantage ≥ 1/37).
+- Pour tout `(mask, amount)` valide : `payout = floor(amount × 36 / |S|)` et `|S| × payout ≤ amount × 36` (retour espéré `|S| × payout / (37 × amount) ≤ 36/37`).
 - Pour toute séquence de paris (classiques + masques) et tout numéro tiré : paiement réel ≤ passif bufferisé au moment du dernier pari.
 - Pour toute séquence `placeBet` : `totalAssets()` après = `totalAssets()` avant.
 
@@ -457,7 +457,7 @@ Upgrade et stockage :
 
 Ordre recommandé :
 
-1. **Subgraph** tolérant (MASK reconnu, plus de repli `STRAIGHT`) déployé et synchronisé.
+1. **Subgraph Sepolia** tolérant (MASK reconnu, plus de repli `STRAIGHT`) déployé et synchronisé ; répéter ce prérequis sur le réseau concerné avant toute activation ultérieure.
 2. **Frontend** tolérant (types/historique/mirror) ; UI masques masquée derrière un flag.
 3. **Sepolia — moteur E1** : nouvelles libs + implémentation (masques désactivés, `totalAssets()`), upgrade en phase `Open`.
 4. **Sepolia — vault V1** via le beacon Sepolia, après preflight §6.2.
@@ -469,7 +469,7 @@ Rollback :
 
 | Situation | Action |
 |---|---|
-| Problème fonctionnel masques | `setMaskBetLimits(0, …)` : désactivation immédiate, sans upgrade ; les masques du round en cours se règlent normalement |
+| Problème fonctionnel masques | `setMaskBetLimits(marketId, 0, …)` pour chaque marché concerné : désactivation immédiate, sans upgrade ; les masques du round en cours se règlent normalement |
 | Bug du moteur v2, aucun masque dans un round non résolu | Réupgrade vers l'implémentation précédente (layout append-only : l'ancienne ignore les nouveaux champs). Prérequis : le vault en place expose `availableForSideBet()` (conservé en V1, §6.2) ; sinon restaurer d'abord un vault compatible |
 | Bug du moteur v2 **avec** des masques dans le round en cours | **Pas de rollback** avant résolution du round (l'ancienne implémentation ne paierait pas les masques mais garderait les stakes) ; désactiver, laisser régler, puis rollback |
 | Bug du vault V1 | Réupgrade du beacon vers l'implémentation précédente (réintroduit la surface side bet, inerte tant que `sideBetsDisabled`) ; préférer un correctif V2 |
