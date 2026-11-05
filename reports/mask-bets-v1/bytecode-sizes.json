@@ -1,0 +1,153 @@
+{
+  "scope": "deployedBytecode / bytecode lengths of Hardhat artifacts (solc 0.8.27, optimizer runs 1, viaIR false; SideBet viaIR). Before = origin/master 54bc30d.",
+  "limits": {
+    "runtime": 24576,
+    "initcode": 49152
+  },
+  "rows": [
+    {
+      "name": "RouletteEngine",
+      "runtimeBefore": 22379,
+      "runtimeAfter": 23130,
+      "runtimeDelta": 751,
+      "initcodeBefore": 22944,
+      "initcodeAfter": 23695,
+      "runtimeMarginAfter": 1446
+    },
+    {
+      "name": "BankVault4626",
+      "runtimeBefore": 15435,
+      "runtimeAfter": 14401,
+      "runtimeDelta": -1034,
+      "initcodeBefore": 15463,
+      "initcodeAfter": 14429,
+      "runtimeMarginAfter": 10175
+    },
+    {
+      "name": "SideBet",
+      "runtimeBefore": 21302,
+      "runtimeAfter": 21302,
+      "runtimeDelta": 0,
+      "initcodeBefore": 28889,
+      "initcodeAfter": 28889,
+      "runtimeMarginAfter": 3274
+    },
+    {
+      "name": "UpkeepScheduler",
+      "runtimeBefore": 8601,
+      "runtimeAfter": 8601,
+      "runtimeDelta": 0,
+      "initcodeBefore": 9311,
+      "initcodeAfter": 9311,
+      "runtimeMarginAfter": 15975
+    },
+    {
+      "name": "RoulettePayoutSweepLib",
+      "runtimeBefore": 7599,
+      "runtimeAfter": 8318,
+      "runtimeDelta": 719,
+      "initcodeBefore": 7651,
+      "initcodeAfter": 8370,
+      "runtimeMarginAfter": 16258
+    },
+    {
+      "name": "RouletteJackpotCollectLib",
+      "runtimeBefore": 6822,
+      "runtimeAfter": 6822,
+      "runtimeDelta": 0,
+      "initcodeBefore": 6874,
+      "initcodeAfter": 6874,
+      "runtimeMarginAfter": 17754
+    },
+    {
+      "name": "RouletteUpkeepScanLib",
+      "runtimeBefore": 6154,
+      "runtimeAfter": 6154,
+      "runtimeDelta": 0,
+      "initcodeBefore": 6206,
+      "initcodeAfter": 6206,
+      "runtimeMarginAfter": 18422
+    },
+    {
+      "name": "JackpotBatchLib",
+      "runtimeBefore": 3338,
+      "runtimeAfter": 3338,
+      "runtimeDelta": 0,
+      "initcodeBefore": 3390,
+      "initcodeAfter": 3390,
+      "runtimeMarginAfter": 21238
+    },
+    {
+      "name": "RouletteBetLib",
+      "runtimeBefore": 2948,
+      "runtimeAfter": 2948,
+      "runtimeDelta": 0,
+      "initcodeBefore": 3000,
+      "initcodeAfter": 3000,
+      "runtimeMarginAfter": 21628
+    },
+    {
+      "name": "RouletteLiabilityMathLib",
+      "runtimeBefore": 2317,
+      "runtimeAfter": 2674,
+      "runtimeDelta": 357,
+      "initcodeBefore": 2369,
+      "initcodeAfter": 2726,
+      "runtimeMarginAfter": 21902
+    },
+    {
+      "name": "RouletteExposureLib",
+      "runtimeBefore": 1857,
+      "runtimeAfter": 1857,
+      "runtimeDelta": 0,
+      "initcodeBefore": 1909,
+      "initcodeAfter": 1909,
+      "runtimeMarginAfter": 22719
+    },
+    {
+      "name": "RouletteBetCodecLib",
+      "runtimeBefore": 933,
+      "runtimeAfter": 933,
+      "runtimeDelta": 0,
+      "initcodeBefore": 985,
+      "initcodeAfter": 985,
+      "runtimeMarginAfter": 23643
+    },
+    {
+      "name": "RoulettePayoutMulLib",
+      "runtimeBefore": 433,
+      "runtimeAfter": 433,
+      "runtimeDelta": 0,
+      "initcodeBefore": 485,
+      "initcodeAfter": 485,
+      "runtimeMarginAfter": 24143
+    },
+    {
+      "name": "RouletteLib",
+      "runtimeBefore": 315,
+      "runtimeAfter": 315,
+      "runtimeDelta": 0,
+      "initcodeBefore": 367,
+      "initcodeAfter": 367,
+      "runtimeMarginAfter": 24261
+    },
+    {
+      "name": "MarketFeeLib",
+      "runtimeBefore": 92,
+      "runtimeAfter": 92,
+      "runtimeDelta": 0,
+      "initcodeBefore": 142,
+      "initcodeAfter": 142,
+      "runtimeMarginAfter": 24484
+    },
+    {
+      "name": "RouletteMaskBetLib",
+      "runtimeBefore": null,
+      "runtimeAfter": 3008,
+      "runtimeDelta": 3008,
+      "initcodeBefore": null,
+      "initcodeAfter": 3060,
+      "runtimeMarginAfter": 21568
+    }
+  ]
+}
