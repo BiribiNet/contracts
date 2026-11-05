@@ -10,7 +10,7 @@ import { VRFConsumerBaseV2 } from "./external/VRFConsumerBaseV2.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IBankVault } from "./interfaces/IBankVault.sol";
-import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IJackpotTreasury } from "./interfaces/IJackpotTreasury.sol";
 import { IBRBJackpotFunder } from "./interfaces/IBRBJackpotFunder.sol";
 import { IBRBReferal } from "./interfaces/IBRBReferal.sol";
@@ -20,6 +20,7 @@ import { RouletteBetCodecLib } from "./libraries/RouletteBetCodecLib.sol";
 import { RouletteLiabilityMathLib } from "./libraries/RouletteLiabilityMathLib.sol";
 import { RouletteEngineStorageLib } from "./libraries/RouletteEngineStorageLib.sol";
 import { RouletteExposureLib } from "./libraries/RouletteExposureLib.sol";
+import { RouletteMaskBetLib } from "./libraries/RouletteMaskBetLib.sol";
 import { RoulettePayoutSweepLib } from "./libraries/RoulettePayoutSweepLib.sol";
 import { RouletteJackpotCollectLib } from "./libraries/RouletteJackpotCollectLib.sol";
 import { MarketFeeLib } from "./libraries/MarketFeeLib.sol";
@@ -48,6 +49,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     uint8 private constant BET_HIGH = 13;
     uint8 private constant BET_TRIO_012 = 14;
     uint8 private constant BET_TRIO_023 = 15;
+    /// @dev Arbitrary set of 2..24 numbers, recorded by `RouletteMaskBetLib` (never through `BetEntry`).
+    uint8 private constant BET_MASK = 16;
 
     uint32 public constant DEFAULT_PAYOUT_LANE_COUNT = 10;
     /// @dev Matches Chainlink VRF request expiry: fund LINK inside this window and the original request fulfills.
@@ -154,6 +157,13 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     error PayoutExceedsMarketLiability();
     error InvalidReferrer();
     error PayoutLaneCountLockedWhileSettling();
+    // Mask bets — raised by the linked libraries, declared here for the engine ABI.
+    error MaskBetsDisabled();
+    error MaskLegBelowMinBet();
+    error MaskLegCapExceeded();
+    error MaskLiabilityCapExceeded();
+    error PreviousOutcomeMismatch();
+    error InvalidMaskBetLimits();
 
     event MarketRegistered(uint32 marketId, address asset, address bank);
 
@@ -183,6 +193,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     event JackpotFunderUpdated(address previousFunder, address newFunder);
     event JackpotTreasuryUpdated(address previousTreasury, address newTreasury);
     event UpkeepSchedulerUpdated(address previousScheduler, address newScheduler);
+    /// @dev Emitted by `RouletteMaskBetLib.setMaskBetLimits` (declared here for the engine ABI).
+    event MaskBetLimitsUpdated(uint32 marketId, uint32 maxLegsPerRound, uint16 maxLiabilityBps);
 
     modifier onlyScheduler() {
         if (msg.sender != _s().UPKEEP_SCHEDULER) revert UnauthorizedScheduler();
@@ -249,8 +261,8 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         RouletteEngineStorageLib.Layout storage $ = _s();
         uint64 roundId = $._globalRound;
         uint256 liability = RouletteLiabilityMathLib.bufferedMarketMaxLiabilityFromRound($, roundId, marketId);
-        // Stakes are already inside `lockedBetLiquidity`, so they are not part of the free liquidity
-        // the vault would otherwise hand to a side bet — only the shortfall above them counts.
+        // Stakes are already inside `lockedBetLiquidity`, so they are not part of the vault's free
+        // liquidity — only the shortfall above them (classic and mask payouts) counts.
         uint256 stakes = $.marketRoundStateByRound[roundId][marketId].totals.totalAmount;
         return liability > stakes ? liability - stakes : 0;
     }
@@ -331,6 +343,35 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         emit UpkeepSchedulerUpdated(previous, newScheduler);
     }
 
+    /// @notice Per-market mask-bet limits. `maxLegsPerRound = 0` disables masks on that market immediately
+    /// (emergency switch, no upgrade); masks already recorded in the open round still settle normally.
+    /// @param maxLegsPerRound mask legs allowed per (round, market), at most 65 535
+    /// @param maxLiabilityBps cap on the round's summed mask payouts, in bps of free liquidity (≤ 10 000)
+    function setMaskBetLimits(uint32 marketId, uint32 maxLegsPerRound, uint16 maxLiabilityBps)
+        external
+        onlyRole(ENGINE_ROUND_ROLE)
+    {
+        RouletteMaskBetLib.setMaskBetLimits(_s(), marketId, maxLegsPerRound, maxLiabilityBps);
+    }
+
+    /// @return maxLegsPerRound current per-market leg cap (`0` = masks disabled)
+    /// @return maxLiabilityBps current per-market liability cap
+    /// @return legCount mask legs recorded for (round, market)
+    /// @return weightedPayout prudent mask liability term of (round, market): sum of every leg's payout
+    function maskBetState(uint64 roundId, uint32 marketId)
+        external
+        view
+        returns (uint32 maxLegsPerRound, uint16 maxLiabilityBps, uint256 legCount, uint256 weightedPayout)
+    {
+        RouletteEngineStorageLib.Layout storage $ = _s();
+        return (
+            $.maxMaskLegsPerMarketRound[marketId],
+            $.maxMaskLiabilityBps[marketId],
+            $.roundMaskBets[roundId][marketId].length,
+            $.roundMaskWeightedPayout[roundId][marketId]
+        );
+    }
+
     function registerMarketFromRegistry(uint32 marketId, address bank) external onlyRegistry {
         _registerMarket(marketId, bank);
     }
@@ -372,21 +413,17 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
             emit RoundCountdownStarted(roundId, marketId, lockAt);
         }
 
-        uint256 runningSum = _recordMultiBetPayload($, roundId, marketId, player, betData);
+        (uint256 runningSum, bool hasMaskLeg) = _recordMultiBetPayload($, roundId, marketId, player, betData, cfg.bank);
         if (runningSum != amount) revert IRouletteBetErrors.InvalidBetNumber();
         mr.totals.addBet(amount);
         emit BetRecorded(marketId, roundId, player, amount, betData);
 
-        // Bets are recorded before the vault pulls tokens, so `amount` is not in the vault balance yet.
-        // Measure genuinely free liquidity instead of the raw balance: `availableForSideBet()` nets out
-        // `lockedBetLiquidity`, which holds side-bet payout reserves as well as this round's roulette
-        // stakes. Those stakes do back this market's own liability, so they are added back; the
-        // side-bet reserves do not, and counting them let both systems commit the same tokens — the
-        // one that settled second could not be paid, reverting its lane and stalling the round.
-        uint256 freeLiquidity = ISideBetVault(cfg.bank).availableForSideBet() + mr.totals.totalAmount + amount;
-        if (freeLiquidity < RouletteLiabilityMathLib.bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
-            revert InsufficientBankForMaxPayout();
-        }
+        // Bets are recorded before the vault pulls tokens, so `amount` is not in the vault balance yet
+        // although the vault already added it to `lockedBetLiquidity`. `totalAssets()` nets out that lock
+        // (this round's roulette stakes, `amount` included); the stakes back this market's own liability,
+        // so they are added back, and `amount` once more for the tokens still to arrive.
+        uint256 freeLiquidity = IERC4626(cfg.bank).totalAssets() + mr.totals.totalAmount + amount;
+        RouletteLiabilityMathLib.assertSolventAfterBet($, roundId, marketId, freeLiquidity, hasMaskLeg);
     }
 
     function _applyReferral(address player, uint256 amount, address referral) private {
@@ -409,8 +446,9 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         uint64 roundId,
         uint32 marketId,
         address player,
-        bytes calldata betData
-    ) private returns (uint256 runningSum) {
+        bytes calldata betData,
+        address bank
+    ) private returns (uint256 runningSum, bool hasMaskLeg) {
         (uint256[] memory betTypes, uint256[] memory numbers, uint256[] memory amounts) =
             abi.decode(betData, (uint256[], uint256[], uint256[]));
         uint256 len = betTypes.length;
@@ -420,8 +458,13 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         for (uint256 i; i < len; ) {
             a = amounts[i];
             runningSum += a;
-            _recordSingleBet($, roundId, marketId, player, a, betTypes[i], numbers[i]);
+            if (betTypes[i] == BET_MASK) hasMaskLeg = true;
+            else _recordSingleBet($, roundId, marketId, player, a, betTypes[i], numbers[i]);
             unchecked { ++i; }
+        }
+        // One library call validates and records every mask leg (minBet and previous outcome read once).
+        if (hasMaskLeg) {
+            RouletteMaskBetLib.recordMaskLegs($, roundId, marketId, player, bank, betTypes, numbers, amounts);
         }
     }
 

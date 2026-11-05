@@ -7,7 +7,36 @@ import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 /// @dev Linked library: worst-case liability aggregation + safety buffer (moves bytecode off `RouletteEngine`).
 import { IBankVault } from "../interfaces/IBankVault.sol";
 library RouletteLiabilityMathLib {
+    uint256 internal constant BPS_DENOMINATOR = 10_000;
+
     error PayoutExceedsMarketLiability();
+    /// @dev Same selector as `RouletteEngine.InsufficientBankForMaxPayout`.
+    error InsufficientBankForMaxPayout();
+    error MaskLiabilityCapExceeded();
+
+    /// @notice Single post-bet check: buffered liability (classic + mask term) against free liquidity, then
+    /// the per-market mask liability cap when this bet carried a mask leg.
+    /// @dev `freeLiquidity` must be `totalAssets()` plus this round's recorded stakes, the current bet
+    /// included (it is not in the vault balance yet). During `Open` free liquidity can only grow (deposits;
+    /// the queue is blocked by `marketRouletteLiquidityNeed`; only the engine moves vault funds), so checking
+    /// once per bet is sufficient. The cap is not re-checked on classic-only bets: lowering it mid-round must
+    /// never block ordinary roulette.
+    function assertSolventAfterBet(
+        RouletteEngineStorageLib.Layout storage $,
+        uint64 roundId,
+        uint32 marketId,
+        uint256 freeLiquidity,
+        bool hasMaskLeg
+    ) external view {
+        if (freeLiquidity < bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
+            revert InsufficientBankForMaxPayout();
+        }
+        if (!hasMaskLeg) return;
+        uint256 maskPayout = $.roundMaskWeightedPayout[roundId][marketId];
+        if (maskPayout * BPS_DENOMINATOR > uint256($.maxMaskLiabilityBps[marketId]) * freeLiquidity) {
+            revert MaskLiabilityCapExceeded();
+        }
+    }
     function assertPayoutWithinLiability(
         uint64 roundId,
         uint32 marketId,
@@ -43,6 +72,8 @@ library RouletteLiabilityMathLib {
         uint256 col2;
         uint256 col3;
         uint256 otherBetsWeightedPayout;
+        /// @dev Option (a) of the mask spec: every mask leg assumed to win at once (prudent upper bound).
+        uint256 maskWeightedPayout;
     }
 
     function bufferedMarketMaxLiability(Inputs memory i) internal pure returns (uint256) {
@@ -53,7 +84,7 @@ library RouletteLiabilityMathLib {
             uint256 lh = RouletteLib.max(i.lowSum, i.highSum) * 2;
             uint256 dc = RouletteLib.max3(i.dozen1, i.dozen2, i.dozen3) * 3
                 + RouletteLib.max3(i.col1, i.col2, i.col3) * 3;
-            uint256 raw = ss + rb + oe + lh + dc + i.otherBetsWeightedPayout;
+            uint256 raw = ss + rb + oe + lh + dc + i.otherBetsWeightedPayout + i.maskWeightedPayout;
             return RouletteLib.applySafetyBuffer(raw);
         }
     }
@@ -79,6 +110,7 @@ library RouletteLiabilityMathLib {
         i.col2 = $.roundColumnBetsSum[rid][mid][2];
         i.col3 = $.roundColumnBetsSum[rid][mid][3];
         i.otherBetsWeightedPayout = $.roundOtherBetsWeightedPayout[rid][mid];
+        i.maskWeightedPayout = $.roundMaskWeightedPayout[rid][mid];
         return bufferedMarketMaxLiability(i);
     }
 }

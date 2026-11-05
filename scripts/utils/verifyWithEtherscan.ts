@@ -103,6 +103,8 @@ export type RouletteLinkedLibraries = {
     rouletteJackpotCollectLib: `0x${string}`;
     rouletteExposureLib: `0x${string}`;
     rouletteUpkeepScanLib: `0x${string}`;
+    /** Mask bets v1. Absent from manifests of engine implementations deployed before it. */
+    rouletteMaskBetLib?: `0x${string}`;
 };
 
 /** Library map passed to `RouletteEngine` implementation verification. */
@@ -115,6 +117,9 @@ export function buildRouletteEngineLibraryMap(linked: RouletteLinkedLibraries): 
         "contracts/libraries/RouletteLiabilityMathLib.sol:RouletteLiabilityMathLib": linked.rouletteLiabilityMathLib,
         "contracts/libraries/RoulettePayoutSweepLib.sol:RoulettePayoutSweepLib": linked.roulettePayoutSweepLib,
         "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib": linked.rouletteUpkeepScanLib,
+        ...(linked.rouletteMaskBetLib
+            ? { "contracts/libraries/RouletteMaskBetLib.sol:RouletteMaskBetLib": linked.rouletteMaskBetLib }
+            : {}),
     };
 }
 
@@ -141,6 +146,7 @@ export async function verifyRouletteLinkedLibraries(linked: RouletteLinkedLibrar
         [FQ_ROULETTE_JACKPOT_COLLECT_LIB]: linked.rouletteJackpotCollectLib,
         [FQ_ROULETTE_PAYOUT_SWEEP_LIB]: linked.roulettePayoutSweepLib,
     });
+    if (linked.rouletteMaskBetLib) await verifyContractWithDelay(linked.rouletteMaskBetLib, [], delayMs);
 }
 
 export type RouletteEngineImplCtorArgs = readonly [
