@@ -143,6 +143,25 @@ library RouletteEngineStorageLib {
         mapping(uint64 => bool) diagnosticsAvailable;
         // Append-only: existing ERC-7201 fields and mapped structs retain their offsets.
         mapping(uint64 => JackpotPreparation) jackpotPreparation;
+        // --- Mask bets v1 (`docs/spec-mask-bets-v1.md` §1.4). Append-only, after `jackpotPreparation`. ---
+        /// @dev Mask legs of a (round, market), in placement order. Never routed through `BetEntry`.
+        mapping(uint64 => mapping(uint32 => MaskBetEntry[])) roundMaskBets;
+        /// @dev 37 packed uint16 counters (mask legs covering number `n`), 16 per word ⇒ 3 words.
+        mapping(uint64 => mapping(uint32 => uint256[3])) roundMaskWinCounts;
+        /// @dev Option (a): sum of every mask leg's payout, as if all masks won together.
+        mapping(uint64 => mapping(uint32 => uint256)) roundMaskWeightedPayout;
+        /// @dev Per market; `0` disables mask bets on that market (shipped default).
+        mapping(uint32 => uint32) maxMaskLegsPerMarketRound;
+        /// @dev Per market cap on `roundMaskWeightedPayout`, in bps of the free liquidity at bet time.
+        mapping(uint32 => uint16) maxMaskLiabilityBps;
+    }
+
+    /// @dev Two slots: `player | mask | size` (slot 0) then `amount` (slot 1).
+    struct MaskBetEntry {
+        address player;
+        uint40 mask;
+        uint8 size;
+        uint128 amount;
     }
 
     // keccak256(abi.encode(uint256(keccak256("biribi.storage.RouletteEngine")) - 1)) & ~bytes32(uint256(0xff));
