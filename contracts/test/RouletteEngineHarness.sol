@@ -54,6 +54,15 @@ contract RouletteEngineHarness is RouletteEngine {
         gr.jackpotCursor = cursor;
     }
 
+    /// @dev Mask-bet preview cost: jump a lane's cursor to its last winner so the sweep walks every mask.
+    function harnessSetPayoutCursor(uint64 roundId, uint32 marketId, uint32 lane, uint256 cursor) external {
+        RouletteEngineStorageLib.layout().payoutCursorByShard[roundId][marketId][lane] = cursor;
+    }
+
+    function harnessWinningCountByShard(uint64 roundId, uint32 marketId, uint32 lane) external view returns (uint256) {
+        return RouletteEngineStorageLib.layout().winningBetCountByShard[roundId][marketId][lane];
+    }
+
     function harnessPreviewPayoutBundle(Job memory job, uint32 maxPayoutsPerCall) external view {
         this.previewPayoutBundle(job, maxPayoutsPerCall);
     }
