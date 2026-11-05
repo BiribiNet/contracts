@@ -123,6 +123,18 @@ const bankReadAbi = parseAbi([
     "function sideBetController() view returns (address)",
 ]);
 
+/**
+ * Reads `sideBetController()` from a vault deployed with the pre-mask-bets implementation.
+ * The current `BankVault4626` source no longer exposes it (the field is `_deprecatedSideBetController`);
+ * these verification scripts audit the historical deployment, so they read it through an explicit ABI.
+ */
+export async function readLegacySideBetController(
+    publicClient: Pick<PublicClient, "readContract">,
+    bank: Address,
+): Promise<Address> {
+    return publicClient.readContract({ address: bank, abi: bankReadAbi, functionName: "sideBetController" });
+}
+
 /** Reconstruct vault proxy init calldata from an initialized bank (for re-verification). */
 export async function encodeBankVaultProxyInitDataFromBank(
     publicClient: PublicClient,

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import { BankVault4626 } from "../BankVault4626.sol";
+import { LegacySideBetBankVault4626 } from "./legacy/LegacySideBetBankVault4626.sol";
 import { BRBJackpotFunder } from "../BRBJackpotFunder.sol";
 import { RouletteEngine } from "../RouletteEngine.sol";
 import { SideBet } from "../SideBet.sol";
@@ -17,8 +18,20 @@ contract CoverageProbe {
         }
     }
 
-    function trySetSideBetController(BankVault4626 vault, address controller) external returns (bool ok) {
+    /// @dev Side-bet surface only exists on the frozen pre-mask-bets vault (`legacy/`).
+    function trySetSideBetController(LegacySideBetBankVault4626 vault, address controller) external returns (bool ok) {
         try vault.setSideBetController(controller) {
+            ok = true;
+        } catch {
+            ok = false;
+        }
+    }
+
+    function tryLockSideBetStake(LegacySideBetBankVault4626 vault, address player, uint256 stake, uint256 payoutReserve)
+        external
+        returns (bool ok)
+    {
+        try vault.lockSideBetStake(player, stake, payoutReserve) {
             ok = true;
         } catch {
             ok = false;
@@ -55,17 +68,6 @@ contract CoverageProbe {
         bytes32 s
     ) external returns (bool ok) {
         try vault.placeBetWithPermit(amount, betData, referral, deadline, v, r, s) {
-            ok = true;
-        } catch {
-            ok = false;
-        }
-    }
-
-    function tryLockSideBetStake(BankVault4626 vault, address player, uint256 stake, uint256 payoutReserve)
-        external
-        returns (bool ok)
-    {
-        try vault.lockSideBetStake(player, stake, payoutReserve) {
             ok = true;
         } catch {
             ok = false;

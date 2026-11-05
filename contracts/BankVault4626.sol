@@ -13,12 +13,7 @@ import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/Reentran
 import { IBankVault } from "./interfaces/IBankVault.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IRouletteFeeConfig } from "./interfaces/IRouletteFeeConfig.sol";
-import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
-
-interface November2026TicketRecovery {
-    function recoverNovember2026Tickets() external;
-}
 
 /// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `ERC1967Proxy`.
 /// @dev Deposit / withdraw enqueue policy follows `ENGINE.isBankLiquidityRestricted(marketId)`. Queue limits and batch sizes are read from the engine (global per protocol).
@@ -27,8 +22,7 @@ contract BankVault4626 is
     ERC4626Upgradeable,
     AccessControlUpgradeable,
     ReentrancyGuardTransient,
-    IBankVault,
-    ISideBetVault
+    IBankVault
 {
     using SafeERC20 for IERC20;
 
@@ -42,6 +36,8 @@ contract BankVault4626 is
         address engine;
         address admin;
         uint256 minBet;
+        /// @dev Ignored since mask bets v1. Kept so `initialize`'s selector stays the one the
+        /// non-upgradeable `MarketRegistry` encodes.
         address sideBetController;
     }
 
@@ -62,7 +58,9 @@ contract BankVault4626 is
         uint32 marketId;
         IRouletteEngine ENGINE;
         uint256 lockedBetLiquidity;
-        address sideBetController;
+        /// @dev Former side-bet controller. Same type and position to keep the 14-field layout; never read
+        /// or written by this implementation (its stale value on upgraded proxies is inert).
+        address _deprecatedSideBetController;
         uint256 minBet;
         uint8 assetDecimals;
         uint256 flatWithdrawFee;
@@ -97,11 +95,10 @@ contract BankVault4626 is
         return _s().lockedBetLiquidity;
     }
 
-    function sideBetController() external view returns (address) {
-        return _s().sideBetController;
-    }
-
-    function availableForSideBet() public view returns (uint256) {
+    /// @notice Legacy read-only view (= `totalAssets()`), stateless and unprivileged.
+    /// @dev Kept so that the previous `RouletteEngine` implementation, which calls it on every bet, can
+    /// still be restored by a rollback without touching the vault beacon.
+    function availableForSideBet() external view returns (uint256) {
         return totalAssets();
     }
 
@@ -119,7 +116,6 @@ contract BankVault4626 is
     }
 
     error OnlyEngine();
-    error UnauthorizedSettlementCaller();
     error InvalidAssetDecimals();
     error ZeroAmount();
     error BetTooSmall();
@@ -131,11 +127,6 @@ contract BankVault4626 is
     error UnauthorizedCaller();
     error InvalidReceiver();
     error QueueFull();
-    error OnlySideBet();
-    error InsufficientSideBetLiquidity();
-
-    /// @notice Temporary: burn this holder's vault shares and cancel its incident tickets atomically.
-
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
@@ -161,25 +152,8 @@ contract BankVault4626 is
         ahead = pending ? s._userQueueIndex[owner] - s._queueHead : 0;
     }
 
-    event SideBetControllerUpdated(address previousController, address newController);
-    event SideBetStakeLocked(address player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
-
     modifier onlyEngine() {
         if (msg.sender != address(_s().ENGINE)) revert OnlyEngine();
-        _;
-    }
-
-    modifier onlySideBet() {
-        if (msg.sender != _s().sideBetController) revert OnlySideBet();
-        _;
-    }
-
-    /// @dev Roulette engine or the configured {SideBet} module may settle via `releaseBets` / `payoutBatch` / `transferOut`.
-    modifier onlyEngineOrSideBet() {
-        BankVaultStorage storage $ = _s();
-        if (msg.sender != address($.ENGINE) && msg.sender != $.sideBetController) {
-            revert UnauthorizedSettlementCaller();
-        }
         _;
     }
 
@@ -198,38 +172,9 @@ contract BankVault4626 is
         $.minBet = p.minBet;
         $.assetDecimals = decimals;
         $.flatWithdrawFee = 10 ** uint256(decimals);
-        $.sideBetController = p.sideBetController;
 
         _grantRole(DEFAULT_ADMIN_ROLE, p.admin);
         _grantRole(BANK_ADMIN_ROLE, p.admin);
-
-        if (p.sideBetController != address(0)) {
-            emit SideBetControllerUpdated(address(0), p.sideBetController);
-        }
-    }
-
-    function setSideBetController(address newController) external onlyRole(BANK_ADMIN_ROLE) {
-        if (newController == address(0)) revert ZeroAmount();
-        BankVaultStorage storage $ = _s();
-        address previous = $.sideBetController;
-        $.sideBetController = newController;
-        emit SideBetControllerUpdated(previous, newController);
-    }
-
-    function lockSideBetStake(address player, uint256 stake, uint256 payoutReserve) public virtual onlySideBet {
-        if (player == address(0) || stake == 0) revert ZeroAmount();
-        BankVaultStorage storage $ = _s();
-        uint256 free = availableForSideBet();
-        // `lockedBetLiquidity` holds roulette stakes but never the worst case they can pay out, so
-        // free liquidity alone overstates what a side bet may reserve. The engine's solvency check
-        // is not re-run after the last bet, so without this a side bet placed late could quietly
-        // take liquidity the round still owes its winners.
-        uint256 rouletteNeed = $.ENGINE.marketRouletteLiquidityNeed($.marketId);
-        free = free > rouletteNeed ? free - rouletteNeed : 0;
-        if (free + stake < payoutReserve) revert InsufficientSideBetLiquidity();
-        IERC20(asset()).safeTransferFrom(player, address(this), stake);
-        $.lockedBetLiquidity += payoutReserve;
-        emit SideBetStakeLocked(player, stake, payoutReserve, $.lockedBetLiquidity);
     }
 
     function setMinBet(uint256 newMinBet) external onlyRole(BANK_ADMIN_ROLE) {
@@ -260,6 +205,10 @@ contract BankVault4626 is
         _placeBetCore(amount, betData, referral);
     }
 
+    /// @dev The only writer that increases `lockedBetLiquidity`, matched one-for-one by the tokens pulled at
+    /// the end of the same transaction: a bet (classic or mask) leaves `totalAssets()` unchanged. In between,
+    /// only trusted calls run (engine, referral mint) under `nonReentrant`; market assets must not have
+    /// transfer hooks (no ERC-777).
     function _placeBetCore(uint256 amount, bytes calldata betData, address referral) private nonReentrant {
         BankVaultStorage storage $ = _s();
         if (amount < $.minBet) revert BetTooSmall();
@@ -269,14 +218,14 @@ contract BankVault4626 is
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function releaseBets(uint256 amount) public virtual onlyEngineOrSideBet {
+    function releaseBets(uint256 amount) public virtual onlyEngine {
         BankVaultStorage storage $ = _s();
         if (amount > $.lockedBetLiquidity) $.lockedBetLiquidity = 0;
         else $.lockedBetLiquidity -= amount;
         emit BetsReleased(amount, $.lockedBetLiquidity);
     }
 
-    function payoutBatch(Payout[] calldata payouts) external onlyEngineOrSideBet returns (uint256 totalPaid) {
+    function payoutBatch(Payout[] calldata payouts) external onlyEngine returns (uint256 totalPaid) {
         IERC20 token = IERC20(asset());
         uint256 length = payouts.length;
         Payout calldata payout;
@@ -292,7 +241,7 @@ contract BankVault4626 is
         return totalPaid;
     }
 
-    function transferOut(address recipient, uint256 amount) external onlyEngineOrSideBet {
+    function transferOut(address recipient, uint256 amount) external onlyEngine {
         IERC20(asset()).safeTransfer(recipient, amount);
         emit FundsTransferred(recipient, amount);
     }
@@ -346,10 +295,10 @@ contract BankVault4626 is
     /// `payoutBatch` runs out of balance. `marketRouletteLiquidityNeed` is exactly that shortfall.
     ///
     /// Refusing at zero NAV matters too — the queue burns shares whether or not it can pay, so
-    /// draining a fully-locked vault would burn for nothing. Still deliberately NOT requiring
-    /// `lockedBetLiquidity == 0`: that counts side-bet reserves, and one open dust side bet would
-    /// be enough to block the hatch for everyone. The roulette shortfall is zero for exactly the
-    /// quiet markets this hatch exists to unstick.
+    /// draining a fully-locked vault would burn for nothing. `marketRouletteLiquidityNeed` includes
+    /// the mask-bet liability term, so an open round with masks blocks the hatch like one with
+    /// straights. The roulette shortfall is zero for exactly the quiet markets this hatch exists to
+    /// unstick.
     function drainWithdrawalQueue(uint256 maxCount) external nonReentrant returns (uint256 processed) {
         BankVaultStorage storage $ = _s();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
