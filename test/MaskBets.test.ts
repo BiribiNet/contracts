@@ -277,7 +277,7 @@ describe("Mask bets v1 — per-market limits", function () {
     it("setter: role-gated, emits MaskBetLimitsUpdated, validates bounds and the market id", async function () {
         const s = await deployMaskFixture({ markets: 2 });
         await expect(s.engine.write.setMaskBetLimits([1, LAUNCH_MAX_LEGS, LAUNCH_MAX_BPS], { account: s.stranger.account }))
-            .to.be.rejectedWith(/AccessControlUnauthorizedAccount/);
+            .to.be.rejectedWith(rejectWith("AccessControlUnauthorizedAccount(address,bytes32)"));
         const hash = await s.engine.write.setMaskBetLimits([2, LAUNCH_MAX_LEGS, LAUNCH_MAX_BPS]);
         const receipt = await s.publicClient.waitForTransactionReceipt({ hash });
         const events = await s.publicClient.getContractEvents({
