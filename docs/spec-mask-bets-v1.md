@@ -323,7 +323,8 @@ La taille réelle doit être mesurée au premier commit d'implémentation (comme
 Layout ERC-7201 `biribi.storage.BankVault4626` : 14 champs (`BankVault4626.sol:61-76`), **conservés à l'identique** :
 
 - `sideBetController` (4e champ, `address`) est **renommé** `_deprecatedSideBetController`, même type, même position, jamais lu. Pas de remise à zéro (éviterait une transaction par proxy, sans gain de sécurité puisque plus aucun code ne le lit).
-- Supprimés : `ISideBetVault` de l'héritage, `sideBetController()`, `availableForSideBet()`, `setSideBetController`, `lockSideBetStake`, modificateurs `onlySideBet` / `onlyEngineOrSideBet` (`BankVault4626.sol:172-184, 211-233`), erreurs `OnlySideBet` / `InsufficientSideBetLiquidity`, événements `SideBetControllerUpdated` / `SideBetStakeLocked`, interface résiduelle `November2026TicketRecovery` (`BankVault4626.sol:19-21` ; la nouvelle implémentation a de toute façon de nouvelles métadonnées).
+- **Conservé en lecture seule** : `availableForSideBet()` (renvoie `totalAssets()`, sans état ni privilège). L'implémentation actuelle du moteur l'appelle à chaque pari (`RouletteEngine.sol:386`) ; le garder rend le rollback du moteur (§ Rollback) indépendant de la version du vault.
+- Supprimés : `ISideBetVault` de l'héritage (la vue ci-dessus reste exposée sans l'interface), `sideBetController()`, `setSideBetController`, `lockSideBetStake`, modificateurs `onlySideBet` / `onlyEngineOrSideBet` (`BankVault4626.sol:172-184, 211-233`), erreurs `OnlySideBet` / `InsufficientSideBetLiquidity`, événements `SideBetControllerUpdated` / `SideBetStakeLocked`, interface résiduelle `November2026TicketRecovery` (`BankVault4626.sol:19-21` ; la nouvelle implémentation a de toute façon de nouvelles métadonnées).
 - `releaseBets`, `payoutBatch`, `transferOut` passent en **`onlyEngine`** (`BankVault4626.sol:272-298`) : plus aucune adresse tierce ne peut déplacer des fonds du vault.
 - `InitializeParams` **garde** son champ `sideBetController` (ignoré) : `MarketRegistry` est non upgradeable et encode ce struct avec `SIDE_BET` immuable (`contracts/MarketRegistry.sol:99-113`, `:20, :90`). Changer le struct changerait le sélecteur d'`initialize` et casserait `createMarket`.
 - Vérification du layout : même procédure que l'incident (`reports/incident-2026-11-04/storage-validation.json`), limites runtime 24 576 / initcode 49 152 sans contournement.
@@ -455,7 +456,7 @@ Rollback :
 | Situation | Action |
 |---|---|
 | Problème fonctionnel masques | `setMaskBetLimits(0, …)` : désactivation immédiate, sans upgrade ; les masques du round en cours se règlent normalement |
-| Bug du moteur v2, aucun masque dans un round non résolu | Réupgrade vers l'implémentation précédente (layout append-only : l'ancienne ignore les nouveaux champs) |
+| Bug du moteur v2, aucun masque dans un round non résolu | Réupgrade vers l'implémentation précédente (layout append-only : l'ancienne ignore les nouveaux champs). Prérequis : le vault en place expose `availableForSideBet()` (conservé en V1, §6.2) ; sinon restaurer d'abord un vault compatible |
 | Bug du moteur v2 **avec** des masques dans le round en cours | **Pas de rollback** avant résolution du round (l'ancienne implémentation ne paierait pas les masques mais garderait les stakes) ; désactiver, laisser régler, puis rollback |
 | Bug du vault V1 | Réupgrade du beacon vers l'implémentation précédente (réintroduit la surface side bet, inerte tant que `sideBetsDisabled`) ; préférer un correctif V2 |
 
