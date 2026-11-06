@@ -1,0 +1,267 @@
+{
+  "date": "2026-11-06",
+  "rpc": "public https://arb1.arbitrum.io/rpc (no key)",
+  "transactionsSent": 0,
+  "manifestDryRun": {
+    "status": "blocked",
+    "error": "Beacon implementation differs from the manifest",
+    "liveBeaconImplementation": "0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC",
+    "manifestBeaconImplementation": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D"
+  },
+  "liveVaultEvidence": {
+    "deployedBy": "0x90416a578646be1c3b2e6aa0A2F593445ca3Ebce",
+    "deploymentNonce": 304,
+    "upgradeTransaction": "0xb63c808cb835b0246b7478b8fc8c714bb69d57ed7d2c5a4af353c4e9cf82dbe0",
+    "upgradeBlock": 521482387,
+    "upgradeTimeUtc": "2026-11-05T13:04:03Z",
+    "runtimeBytes": 16072,
+    "dispatches": {
+      "lockSideBetStake(address,uint256,uint256)": true,
+      "setSideBetController(address)": true,
+      "availableForSideBet()": true,
+      "drainWithdrawalQueue(uint256)": false
+    },
+    "sourceInRepository": false
+  },
+  "informativeDryRunWithLiveVault": {
+    "note": "Manifest beacon implementation replaced by the live one ONLY to exercise the remaining checks; not an approved plan",
+    "block": 521744433,
+    "window": {
+      "round": "165",
+      "phase": "Open"
+    },
+    "sideBets": {
+      "ticketCount": 14,
+      "activeTickets": 0,
+      "banks": [
+        {
+          "marketId": 1,
+          "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+          "locked": "0",
+          "roundStakes": "0",
+          "betsReleased": false
+        },
+        {
+          "marketId": 2,
+          "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+          "locked": "0",
+          "roundStakes": "0",
+          "betsReleased": false
+        },
+        {
+          "marketId": 3,
+          "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+          "locked": "0",
+          "roundStakes": "0",
+          "betsReleased": false
+        }
+      ]
+    },
+    "storage": {
+      "engineFieldsBefore": 45,
+      "engineFieldsAfter": 50,
+      "appended": [
+        "roundMaskBets",
+        "roundMaskWinCounts",
+        "roundMaskWeightedPayout",
+        "maxMaskLegsPerMarketRound",
+        "maxMaskLiabilityBps"
+      ],
+      "vaultFieldsDeployed": 14,
+      "vaultFieldsAfter": 14,
+      "renamed": {
+        "sideBetController": "_deprecatedSideBetController"
+      }
+    },
+    "libraries": [
+      {
+        "name": "RouletteLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0x487695f12853c259D745B15cd214b85aa4C3F636"
+      },
+      {
+        "name": "RouletteBetLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0x21FaB94a7771402876B0772523B90856679C1e3E"
+      },
+      {
+        "name": "JackpotBatchLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0xb426ca0701025C50776A502973ac0cF2a40D0A53"
+      },
+      {
+        "name": "RoulettePayoutMulLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0xB04c59Db0Be2190F7e4B3845aa94B5cfbdd4B8Db"
+      },
+      {
+        "name": "RouletteExposureLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0x44641e1e3328ac759a88599438c663B291a357E7"
+      },
+      {
+        "name": "RouletteJackpotCollectLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0xdf573C57309c453ABAF7a1c4d25d6b69debff5C8"
+      },
+      {
+        "name": "RoulettePayoutSweepLib",
+        "action": "deploy",
+        "reason": "executable runtime differs from the deployed library",
+        "current": "0x2d44A00122e0E8aaA81Cdb3c363149b5F227e5bB"
+      },
+      {
+        "name": "RouletteLiabilityMathLib",
+        "action": "deploy",
+        "reason": "executable runtime differs from the deployed library",
+        "current": "0xacd562d7E2c5817D8109ff4352Ba1C967C69f7D6"
+      },
+      {
+        "name": "RouletteBetCodecLib",
+        "action": "reuse",
+        "reason": "identical executable runtime",
+        "current": "0x482AEA76783eD79306E45b6FFd73040fa24109D1"
+      },
+      {
+        "name": "RouletteUpkeepScanLib",
+        "action": "deploy",
+        "reason": "links redeployed RoulettePayoutSweepLib",
+        "current": "0x72b9Fa4FB11ec4139447aE463e36BF982A74a46b"
+      },
+      {
+        "name": "RouletteMaskBetLib",
+        "action": "deploy",
+        "reason": "new library",
+        "current": null
+      }
+    ],
+    "balances": [
+      {
+        "marketId": 1,
+        "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "totalAssets": "302564696844651296788841",
+        "totalSupply": "274523634831654689002891394529"
+      },
+      {
+        "marketId": 2,
+        "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "totalAssets": "5950000",
+        "totalSupply": "6000000000000"
+      },
+      {
+        "marketId": 3,
+        "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "totalAssets": "6900000000000000000",
+        "totalSupply": "6000000000000000000000000"
+      }
+    ],
+    "bankAdminRoles": [
+      {
+        "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+        "adminHasDefaultRole": true
+      },
+      {
+        "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+        "adminHasDefaultRole": true
+      },
+      {
+        "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+        "adminHasDefaultRole": true
+      }
+    ],
+    "steps": [
+      {
+        "index": 0,
+        "nonce": 313,
+        "label": "Deploy RoulettePayoutSweepLib",
+        "kind": "deploy",
+        "to": null,
+        "predicted": "0x4e55aC737b634ff7C9Ad766113BE37883D53AE34",
+        "dataBytes": 8370,
+        "dataHash": "0xedab5c34aa913b344c554b3895151afbaa9138d7fc7b34c52a3892e19ec60895",
+        "gasEstimate": "1867924"
+      },
+      {
+        "index": 1,
+        "nonce": 314,
+        "label": "Deploy RouletteLiabilityMathLib",
+        "kind": "deploy",
+        "to": null,
+        "predicted": "0xFB63D0b8293A66b5D10733eE1eD19f12b8F75996",
+        "dataBytes": 2726,
+        "dataHash": "0xed3d102dbedd6726f71ed45b2a7bd79254ebe902a4f61730995ffbb8ff071461",
+        "gasEstimate": "637868"
+      },
+      {
+        "index": 2,
+        "nonce": 315,
+        "label": "Deploy RouletteUpkeepScanLib",
+        "kind": "deploy",
+        "to": null,
+        "predicted": "0x63e7e612009eDfFD8ca463D17ed958F34A81F4ae",
+        "dataBytes": 6206,
+        "dataHash": "0x1c992b5c95bd1924aca70f57a98cd942c4b5a301c8cd6772fb0cac56e014faf7",
+        "gasEstimate": "1396184"
+      },
+      {
+        "index": 3,
+        "nonce": 316,
+        "label": "Deploy RouletteMaskBetLib",
+        "kind": "deploy",
+        "to": null,
+        "predicted": "0xfF46D89F88189c7A7ca91f262D1Ce85aA2c5A7C9",
+        "dataBytes": 3060,
+        "dataHash": "0x8a1ef1be7df47f928566c02e9a6c0750a55bfa79fbd7e674e8634f2eb2616f54",
+        "gasEstimate": "710611"
+      },
+      {
+        "index": 4,
+        "nonce": 317,
+        "label": "Deploy RouletteEngine implementation",
+        "kind": "deploy",
+        "to": null,
+        "predicted": "0xB220aBf131c3924FD76B7eFA38c1F07c1722f3F1",
+        "dataBytes": 23887,
+        "dataHash": "0x29ee836060ac9d9a642bdfe74a44b4fddb700942ef18833d91c954e90457b796",
+        "gasEstimate": "5126059"
+      },
+      {
+        "index": 5,
+        "nonce": 318,
+        "label": "Deploy BankVault4626 implementation",
+        "kind": "deploy",
+        "to": null,
+        "predicted": "0x5A46eFCC7B4ED27049A310eb77c4a0444F363525",
+        "dataBytes": 14429,
+        "dataHash": "0x6db1f2d4bbc95f9b20fc6c53045ec3bb5d9b4c8d91035f48af0e1c58ea068fbb",
+        "gasEstimate": "3193933"
+      },
+      {
+        "index": 6,
+        "nonce": 319,
+        "label": "Upgrade RouletteEngine proxy (UUPS, masks disabled)",
+        "kind": "call",
+        "to": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+        "dataBytes": 100,
+        "dataHash": "0x2f645566dbc723dbf5f93f94289d2ddf3a910e2539608ad498fbb91fd11eda2b",
+        "data": "0x4f1ef286000000000000000000000000b220abf131c3924fd76b7efa38c1f07c1722f3f100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "index": 7,
+        "nonce": 320,
+        "label": "Upgrade BankVault4626 beacon",
+        "kind": "call",
+        "to": "0x7b23cCdDB62B982245c50BdAAF1D13B3d12D632b",
+        "dataBytes": 36,
+        "dataHash": "0x2e40c6fb3a3b4c46198ec93bcd39741b81592f53ba589fd6079367c4f95b04bf",
+        "data": "0x3659cfe60000000000000000000000005a46efcc7b4ed27049a310eb77c4a0444f363525"
+      }
+    ]
+  }
+}
