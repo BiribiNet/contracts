@@ -4,6 +4,8 @@ import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { keccak256, zeroAddress, type Address } from "viem";
 
+import { readLegacySideBetController } from "../scripts/utils/proxyVerification";
+
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { encodeMultiBet } from "./helpers/multiBetEncode";
 import { fulfillVrfForGlobalRound, runParallelLanesUntilGlobalRound, runParallelLanesUntilVrfPending } from "./helpers/parallelUpkeep";
@@ -89,8 +91,15 @@ describe("Mask bets v1 — mainnet upgrade script (local Hardhat network only)",
             const v = await viem.getContractAt("BankVault4626", b);
             return [await v.read.totalAssets(), await v.read.totalSupply()];
         }));
+        const publicClient = await viem.getPublicClient();
+        const legacyVault = await viem.getContractAt("LegacySideBetBankVault4626", banks[0]);
+        const controller = await legacyVault.read.sideBetController();
+        expect(await readLegacySideBetController(publicClient, banks[0])).to.equal(controller);
         const reportPath = `${hre.config.paths.cache}/mask-bets-v1-local-execution.json`;
         const report = await Upgrade.executeUpgrade({ ...options(d), signer, reportPath });
+        // Verification scripts still read the deprecated field (same slot) once the getter is gone.
+        await expect(legacyVault.read.sideBetController()).to.be.rejected;
+        expect(await readLegacySideBetController(publicClient, banks[0])).to.equal(controller);
         expect(report.status).to.equal("passed");
         expect(report.transactions.map((t: { status: string }) => t.status)).to.deep.equal(Array(5).fill("confirmed"));
         // Engine upgraded strictly before the beacon.
