@@ -2,16 +2,30 @@ import { network, viem } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { mkdirSync, writeFileSync } from "fs";
+import { join } from "path";
 import { encodeFunctionData, parseUnits, zeroAddress } from "viem";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deployEngineLibs } from "./helpers/deployEngineLibs";
 import { encodeMultiBet } from "./helpers/multiBetEncode";
 
+/**
+ * Measurements are printed, never written to a tracked file. Set `VRF_BUDGET_REPORT_DIR` (for example
+ * `reports/local`, ignored by git) to also save them as JSON. The archived evidence files
+ * (`deployments/vrf-callback-budget-2026-10-15.json`, `reports/mask-bets-v1/vrf-callback-budget.json`) are
+ * historical records, updated by hand only.
+ */
+function saveMeasurement(fileName: string, payload: string) {
+    const dir = process.env.VRF_BUDGET_REPORT_DIR;
+    if (!dir) return;
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, fileName), payload);
+}
+
 describe("VRF callback budget at the production ten-lane setting", function () {
     this.timeout(120_000);
     const measurements: object[] = [];
     after(function () {
-        writeFileSync("deployments/vrf-callback-budget-2026-10-15.json", JSON.stringify({
+        saveMeasurement("vrf-callback-budget.json", JSON.stringify({
             scope: "Local exact engine callback from impersonated configured coordinator; not a live DON delivery or full coordinator billing test",
             gasLimit: 2_500_000, laneCount: 10, measurements,
         }, null, 2) + "\n");
@@ -77,8 +91,7 @@ describe("VRF callback budget with mask bets at the launch leg cap", function ()
     const toJson = (_key: string, value: unknown) => (typeof value === "bigint" ? value.toString() : value);
     after(function () {
         if (Object.keys(results).length === 0) return;
-        mkdirSync("reports/mask-bets-v1", { recursive: true });
-        writeFileSync("reports/mask-bets-v1/vrf-callback-budget.json", JSON.stringify({
+        saveMeasurement("mask-vrf-callback-budget.json", JSON.stringify({
             scope: "Local exact engine callback from impersonated configured coordinator (same method as deployments/vrf-callback-budget-2026-10-15.json); preview cost = gas of one previewPayoutBundle eth_call on the last chunk of a lane, measured by StaticCallGasProbe",
             gasLimit: 2_500_000, laneCount: 10, marketCount: 3, straightLegsPerMarket: 100, maskLegsPerMarket: MASK_LEGS_PER_MARKET,
             ...results,
