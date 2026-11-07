@@ -6,7 +6,7 @@ import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { encodeAbiParameters, encodeFunctionData, parseUnits, zeroAddress, type Address, type Hex } from "viem";
 
-import { createMarketWithBeacon } from "./helpers/createMarket";
+import { createMarketWithLegacySideBetBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
@@ -46,7 +46,7 @@ describe("Branch coverage — last 16 arms", function () {
         expect(await stack.sideBet.read.settleTimeout()).to.equal(86_400n);
     });
 
-    describe("BankVault4626", function () {
+    describe("LegacySideBetBankVault4626", function () {
         function vaultInit(asset: Address, engine: Address, admin: Address): Hex {
             return encodeFunctionData({
                 abi: [
@@ -93,12 +93,12 @@ describe("Branch coverage — last 16 arms", function () {
             const mockEngine = await viem.deployContract("MockEngine");
 
             async function deployVault(useHarness: boolean) {
-                const impl = await viem.deployContract(useHarness ? "BankVault4626Harness" : "BankVault4626");
+                const impl = await viem.deployContract(useHarness ? "LegacySideBetBankVault4626Harness" : "LegacySideBetBankVault4626");
                 const proxy = await viem.deployContract("ERC1967Proxy", [
                     impl.address,
                     vaultInit(usdc.address, mockEngine.address, admin.account.address),
                 ]);
-                return viem.getContractAt(useHarness ? "BankVault4626Harness" : "BankVault4626", proxy.address);
+                return viem.getContractAt(useHarness ? "LegacySideBetBankVault4626Harness" : "LegacySideBetBankVault4626", proxy.address);
             }
 
             const vault = await deployVault(true);
@@ -156,7 +156,7 @@ describe("Branch coverage — last 16 arms", function () {
             const probe = await viem.deployContract("CoverageProbe");
             const usdc = await viem.deployContract("MockUSDC");
             const roundEngine = await viem.deployContract("MockRoundEngine");
-            const vaultImpl = await viem.deployContract("BankVault4626Harness");
+            const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626Harness");
             const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
             const { registry } = await deploySideBetRegistryStack({
                 admin: admin.account.address,
@@ -174,7 +174,7 @@ describe("Branch coverage — last 16 arms", function () {
                 [{ asset: usdc.address, bankAdmin: admin.account.address, minBet: 1_000_000n }],
                 { account: admin.account },
             );
-            const bank = await viem.getContractAt("BankVault4626Harness", (await registry.read.getMarket([1])).bank);
+            const bank = await viem.getContractAt("LegacySideBetBankVault4626Harness", (await registry.read.getMarket([1])).bank);
 
             const sideBetImpl = await viem.deployContract("SideBet");
             await expect(
@@ -278,7 +278,7 @@ describe("Branch coverage — last 16 arms", function () {
             const stack = await deployProtocolStack({ maxPayoutsPerCall: 1 });
             const { engine, scheduler, registry, vrf, brb, treasury, deployer } = stack;
             const usdc = await viem.deployContract("MockUSDC");
-            const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+            const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
             await brb.write.transfer([treasury.address, parseUnits("500", 18)], { account: admin.account });
             await usdc.write.mint([admin.account.address, USDC("30000")]);
@@ -438,7 +438,7 @@ describe("Branch coverage — last 16 arms", function () {
                 const stack = await deployProtocolStack();
                 const { engine, scheduler, registry, vrf } = stack;
                 const usdc = await viem.deployContract("MockUSDC");
-                const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+                const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
                 await usdc.write.mint([admin.account.address, USDC("3000")]);
                 await usdc.write.approve([bank.address, USDC("3000")], { account: admin.account });

@@ -3,7 +3,7 @@ import { viem } from "hardhat";
 import { expect } from "chai";
 import { parseUnits, zeroAddress } from "viem";
 
-import { createMarketWithBeacon } from "./helpers/createMarket";
+import { createMarketWithLegacySideBetBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 
@@ -23,7 +23,7 @@ async function deployMarketWithSideBetReserve() {
     const { engine, registry } = await deployProtocolStack();
 
     const usdc = await viem.deployContract("MockUSDC");
-    const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+    const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
     await bank.write.setSideBetController([sideBetOperator.account.address], { account: admin.account });
 
     // LP liquidity.

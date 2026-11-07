@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { encodeFunctionData, parseUnits, zeroAddress, type Address } from "viem";
 import { getAddress } from "viem";
 
-import { createMarketWithBeacon } from "./helpers/createMarket";
+import { createMarketWithLegacySideBetBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
@@ -66,19 +66,19 @@ describe("Branch coverage — complete matrix", function () {
             const permitToken = await viem.deployContract("MockERC20Permit");
             const mockEngine = await viem.deployContract("MockEngine");
             const sideBetAddr = admin.account.address;
-            const impl = await viem.deployContract("BankVault4626");
+            const impl = await viem.deployContract("LegacySideBetBankVault4626");
 
             const proxyNoSideBet = await viem.deployContract("ERC1967Proxy", [
                 impl.address,
                 vaultInit(usdc.address, mockEngine.address, admin.account.address, 1_000_000n, zeroAddress),
             ]);
-            const vault0 = await viem.getContractAt("BankVault4626", proxyNoSideBet.address);
+            const vault0 = await viem.getContractAt("LegacySideBetBankVault4626", proxyNoSideBet.address);
 
             const proxySb = await viem.deployContract("ERC1967Proxy", [
                 impl.address,
                 vaultInit(permitToken.address, mockEngine.address, admin.account.address, 1_000_000n, sideBetAddr),
             ]);
-            const vaultSb = await viem.getContractAt("BankVault4626", proxySb.address);
+            const vaultSb = await viem.getContractAt("LegacySideBetBankVault4626", proxySb.address);
 
             await expect(vault0.write.processWithdrawalQueue([1n], { account: admin.account })).to.be.rejected;
             await expect(vaultSb.write.lockSideBetStake([alice.account.address, 1n, 1n], { account: admin.account })).to.be
@@ -119,9 +119,9 @@ describe("Branch coverage — complete matrix", function () {
             const [admin, alice] = await viem.getWalletClients();
             const usdc = await viem.deployContract("MockUSDC");
             const mockEngine = await viem.deployContract("MockEngine");
-            const impl = await viem.deployContract("BankVault4626");
+            const impl = await viem.deployContract("LegacySideBetBankVault4626");
             const vault = await viem.getContractAt(
-                "BankVault4626",
+                "LegacySideBetBankVault4626",
                 (await viem.deployContract("ERC1967Proxy", [
                     impl.address,
                     vaultInit(usdc.address, mockEngine.address, admin.account.address, 1_000_000n),
@@ -208,7 +208,7 @@ describe("Branch coverage — complete matrix", function () {
             ).to.be.rejected;
 
             const roundEngine = await viem.deployContract("MockRoundEngine");
-            const vaultImpl = await viem.deployContract("BankVault4626");
+            const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
             const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
             const { registry } = await deploySideBetRegistryStack({
                 admin: admin.account.address,
@@ -248,7 +248,7 @@ describe("Branch coverage — complete matrix", function () {
             const stack = await deployProtocolStack();
             const { engine, registry } = stack;
             const usdc = await viem.deployContract("MockUSDC");
-            const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+            const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
             await expect(
                 engine.write.recordBet([1, stranger.account.address, 1n, "0x", zeroAddress], {
                     account: stranger.account,

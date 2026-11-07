@@ -44,6 +44,9 @@ gasReporterOutput.json
 # MacOS
 .DS_Store
 
+# Local measurement output (e.g. VRF_BUDGET_REPORT_DIR=reports/local)
+/reports/local/
+
 # Local credentials and generated audit build caches
 /scripts/constants/arbitrumOne.local.json
 __pycache__/

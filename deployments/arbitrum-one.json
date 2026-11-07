@@ -146,7 +146,7 @@
       "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2"
     ],
     "rouletteImplementation": "0x8bf0ef0bb643fea71e3facc47b084dd55ad0e20c",
-    "bankVaultImplementation": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
+    "bankVaultImplementation": "0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC",
     "bankVaultBeacon": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
     "sideBetChallengeEvaluator": "0x36Ac820FC931307bDF61dCc990A7Fe470dB72e74"
   },
@@ -782,6 +782,23 @@
       "engineImplementationChanged": false,
       "transactionHash": "0x32849f48a2a37122fe8b3d78e06f9e50d4362792024f5fd4ad5185f8443132b2",
       "report": "reports/upgrades/dai-usdc-route-mainnet-20261029/journal.json"
+    },
+    {
+      "kind": "bank-vault-flat-withdraw-fee",
+      "date": "2026-11-05T13:04:03Z",
+      "previousImplementation": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
+      "newImplementation": "0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC",
+      "beacon": "0x7b23ccddb62b982245c50bdaaf1d13b3d12d632b",
+      "transactionHash": "0xb63c808cb835b0246b7478b8fc8c714bb69d57ed7d2c5a4af353c4e9cf82dbe0",
+      "blockNumber": 521482387,
+      "deployer": "0x90416a578646be1c3b2e6aa0A2F593445ca3Ebce",
+      "deploymentNonce": 304,
+      "deploymentTransactionPrefix": "0x218a9816d3",
+      "followUp": "setFlatWithdrawFee(100e18) on the BRB bank 0x5F9332b04b2590850c7681850cA445dDF7f64aa9 (FlatWithdrawFeeUpdated 1e18 -> 100e18); USDC and DAI banks keep 1 unit",
+      "source": "reports/vault-2026-11-05/BankVault4626.sol",
+      "proof": "reports/vault-2026-11-05/match.json",
+      "verify": "node scripts/verifyVault20261105.cjs",
+      "note": "Deployed by the protocol admin outside the repository; source reconstructed from the runtime (no new storage field, 14-field ERC-7201 layout unchanged)."
     }
   ],
   "previousJackpotFunders": [

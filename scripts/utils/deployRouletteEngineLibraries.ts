@@ -12,6 +12,7 @@ const ROULETTE_PAYOUT_SWEEP_LIB = "contracts/libraries/RoulettePayoutSweepLib.so
 const ROULETTE_JACKPOT_COLLECT_LIB = "contracts/libraries/RouletteJackpotCollectLib.sol:RouletteJackpotCollectLib" as const;
 const ROULETTE_EXPOSURE_LIB = "contracts/libraries/RouletteExposureLib.sol:RouletteExposureLib" as const;
 const ROULETTE_UPKEEP_SCAN_LIB = "contracts/libraries/RouletteUpkeepScanLib.sol:RouletteUpkeepScanLib" as const;
+const ROULETTE_MASK_BET_LIB = "contracts/libraries/RouletteMaskBetLib.sol:RouletteMaskBetLib" as const;
 
 export type RouletteEngineLibraryAddresses = {
     rouletteLib: Address;
@@ -24,6 +25,7 @@ export type RouletteEngineLibraryAddresses = {
     rouletteJackpotCollectLib: Address;
     rouletteExposureLib: Address;
     rouletteUpkeepScanLib: Address;
+    rouletteMaskBetLib: Address;
 };
 
 export type RouletteEngineLibraryLinks = Record<string, Address>;
@@ -80,6 +82,9 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
         [ROULETTE_PAYOUT_SWEEP_LIB]: roulettePayoutSweepLib.address,
     });
 
+    // Mask bets v1: appended last so the CREATE order (and addresses) of the ten existing libraries is unchanged.
+    const rouletteMaskBetLib = await deployLib("RouletteMaskBetLib", account);
+
     const addresses: RouletteEngineLibraryAddresses = {
         rouletteLib: rouletteLib.address,
         rouletteBetLib: rouletteBetLib.address,
@@ -91,6 +96,7 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
         rouletteJackpotCollectLib: rouletteJackpotCollectLib.address,
         rouletteExposureLib: rouletteExposureLib.address,
         rouletteUpkeepScanLib: rouletteUpkeepScanLib.address,
+        rouletteMaskBetLib: rouletteMaskBetLib.address,
     };
 
     const engineLinks: RouletteEngineLibraryLinks = {
@@ -101,6 +107,7 @@ export async function deployRouletteEngineLibraries(account: Account): Promise<{
         [ROULETTE_JACKPOT_COLLECT_LIB]: rouletteJackpotCollectLib.address,
         [ROULETTE_EXPOSURE_LIB]: rouletteExposureLib.address,
         [ROULETTE_UPKEEP_SCAN_LIB]: rouletteUpkeepScanLib.address,
+        [ROULETTE_MASK_BET_LIB]: rouletteMaskBetLib.address,
     };
 
     return { addresses, engineLinks };

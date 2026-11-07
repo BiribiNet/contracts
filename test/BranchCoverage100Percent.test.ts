@@ -11,7 +11,7 @@ import {
     type Hex,
 } from "viem";
 
-import { createMarketWithBeacon } from "./helpers/createMarket";
+import { createMarketWithLegacySideBetBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
@@ -41,7 +41,7 @@ describe("Branch coverage — 100% target", function () {
             const probe = await viem.deployContract("CoverageProbe");
             const mockEngine = await viem.deployContract("MockEngine");
             const usdc = await viem.deployContract("MockUSDC");
-            const bankImpl = await viem.deployContract("BankVault4626");
+            const bankImpl = await viem.deployContract("LegacySideBetBankVault4626");
 
             const goodInit = {
                 assetToken: usdc.address,
@@ -56,11 +56,11 @@ describe("Branch coverage — 100% target", function () {
             await probe.write.tryBankInitialize([bankImpl.address, { ...goodInit, minBet: 0n }], {
                 account: admin.account,
             });
-            const freshImpl = await viem.deployContract("BankVault4626");
+            const freshImpl = await viem.deployContract("LegacySideBetBankVault4626");
             await probe.write.tryBankInitialize([freshImpl.address, goodInit], { account: admin.account });
 
             const vault = await viem.getContractAt(
-                "BankVault4626",
+                "LegacySideBetBankVault4626",
                 (
                     await viem.deployContract("ERC1967Proxy", [
                         bankImpl.address,
@@ -143,13 +143,13 @@ describe("Branch coverage — 100% target", function () {
             const probe = await viem.deployContract("CoverageProbe");
             const mockEngine = await viem.deployContract("MockEngine");
             const usdc = await viem.deployContract("MockUSDC");
-            const impl = await viem.deployContract("BankVault4626");
+            const impl = await viem.deployContract("LegacySideBetBankVault4626");
 
             const goodProxy = await viem.deployContract("ERC1967Proxy", [
                 impl.address,
                 vaultInit(usdc.address, mockEngine.address, admin.account.address, 2_000_000n),
             ]);
-            const vault = await viem.getContractAt("BankVault4626", goodProxy.address);
+            const vault = await viem.getContractAt("LegacySideBetBankVault4626", goodProxy.address);
             const bankAdmin = await vault.read.BANK_ADMIN_ROLE();
             await vault.write.grantRole([bankAdmin, probe.address], { account: admin.account });
 
@@ -158,7 +158,7 @@ describe("Branch coverage — 100% target", function () {
             await vault.write.setSideBetController([alice.account.address], { account: admin.account });
             await vault.write.setMinBet([3_000_000n], { account: admin.account });
 
-            const badImpl = await viem.deployContract("BankVault4626");
+            const badImpl = await viem.deployContract("LegacySideBetBankVault4626");
             await probe.write.tryBankInitialize([
                 badImpl.address,
                 {
@@ -180,9 +180,9 @@ describe("Branch coverage — 100% target", function () {
             const [admin, alice] = await viem.getWalletClients();
             const usdc = await viem.deployContract("MockUSDC");
             const mockEngine = await viem.deployContract("MockEngine");
-            const impl = await viem.deployContract("BankVault4626");
+            const impl = await viem.deployContract("LegacySideBetBankVault4626");
             const vault = await viem.getContractAt(
-                "BankVault4626",
+                "LegacySideBetBankVault4626",
                 (
                     await viem.deployContract("ERC1967Proxy", [
                         impl.address,
@@ -234,7 +234,7 @@ describe("Branch coverage — 100% target", function () {
             const { engine, scheduler, registry, vrf } = stack;
             const testClient = await viem.getTestClient();
             const usdc = await viem.deployContract("MockUSDC");
-            const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+            const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
             await usdc.write.mint([admin.account.address, USDC("3000")]);
             await usdc.write.approve([bank.address, USDC("3000")], { account: admin.account });
             await bank.write.deposit([USDC("1000"), admin.account.address], { account: admin.account });
@@ -269,7 +269,7 @@ describe("Branch coverage — 100% target", function () {
             const usdc = await viem.deployContract("MockUSDC");
             await brb.write.transfer([router.address, parseUnits("2000000", 18)], { account: admin.account });
             await brb.write.transfer([treasury.address, parseUnits("500", 18)], { account: admin.account });
-            const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+            const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
             const emptyPayload = encodeAbiParameters(
                 [{ type: "uint256[]" }, { type: "uint256[]" }, { type: "uint256[]" }],
@@ -510,7 +510,7 @@ function encodePerformData(
 async function deploySideBetStack(admin: Awaited<ReturnType<typeof viem.getWalletClients>>[0]) {
     const usdc = await viem.deployContract("MockUSDC");
     const roundEngine = await viem.deployContract("MockRoundEngine");
-    const vaultImpl = await viem.deployContract("BankVault4626");
+    const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     const { registry } = await deploySideBetRegistryStack({
         admin: admin.account.address,
@@ -528,7 +528,7 @@ async function deploySideBetStack(admin: Awaited<ReturnType<typeof viem.getWalle
         [{ asset: usdc.address, bankAdmin: admin.account.address, minBet: 1_000_000n }],
         { account: admin.account },
     );
-    const bank = await viem.getContractAt("BankVault4626", (await registry.read.getMarket([1])).bank);
+    const bank = await viem.getContractAt("LegacySideBetBankVault4626", (await registry.read.getMarket([1])).bank);
     return { sideBet, bank, usdc, roundEngine, registry };
 }
 

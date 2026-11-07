@@ -1,6 +1,7 @@
 import { viem } from "hardhat";
 import { parseAbi, type Address, type PublicClient, type WalletClient } from "viem";
 import { USDC, DAI, MIN_BET_USDC, MIN_BET_DAI } from "../constants/arbitrumOne";
+import { readLegacySideBetController } from "./proxyVerification";
 
 /** Adds USDC then DAI to the existing BRB-first registry. Creates vaults without moving any tokens. */
 export async function deployStablecoinMarkets(params: {
@@ -39,7 +40,7 @@ export async function deployStablecoinMarkets(params: {
         if (!code || code === "0x" || market.asset.toLowerCase() !== asset.toLowerCase() ||
             await registry.read.assetToMarket([asset]) !== marketId || await bank.read.marketId() !== marketId ||
             (await bank.read.asset()).toLowerCase() !== asset.toLowerCase() || (await bank.read.ENGINE()).toLowerCase() !== params.engine.toLowerCase() ||
-            (await bank.read.sideBetController()).toLowerCase() !== params.sideBet.toLowerCase() || await bank.read.minBet() !== minBet ||
+            (await readLegacySideBetController(params.client, market.bank)).toLowerCase() !== params.sideBet.toLowerCase() || await bank.read.minBet() !== minBet ||
             await bank.read.flatWithdrawFee() !== minBet || await bank.read.totalAssets() !== 0n || await bank.read.totalSupply() !== 0n ||
             !await bank.read.hasRole([await bank.read.BANK_ADMIN_ROLE(), params.admin])) throw new Error(`New ${name} bank initialization read-back failed`);
         markets[name] = { marketId, asset, bank: market.bank, minBet: minBet.toString(), creationHash: hash };

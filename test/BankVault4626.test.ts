@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { encodeFunctionData, parseUnits, zeroAddress, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
+import { customErrorPattern } from "./helpers/customErrorPattern";
 import { vaultInitMinBet18, vaultInitMinBetUsdc6 } from "./helpers/marketLimits";
 
 describe("BankVault4626", function () {
@@ -105,7 +106,7 @@ describe("BankVault4626", function () {
         await vault.write.deposit([parseUnits("2", 6), alice.account.address], { account: alice.account });
     });
 
-    it("allows withdraw requests below the flat fee when bps is nonzero", async function () {
+    it("rejects withdraw requests worth no more than the flat fee, accepts just above", async function () {
         const [admin, alice] = await viem.getWalletClients();
         const usdc = await viem.deployContract("MockUSDC");
         const mockEngine = await viem.deployContract("MockEngine");
@@ -120,7 +121,9 @@ describe("BankVault4626", function () {
         await usdc.write.approve([vault.address, parseUnits("100", 6)], { account: alice.account });
         await vault.write.deposit([parseUnits("50", 6), alice.account.address], { account: alice.account });
 
-        await vault.write.withdraw([1_000_000n, alice.account.address, alice.account.address], { account: alice.account });
+        await expect(vault.write.withdraw([1_000_000n, alice.account.address, alice.account.address], { account: alice.account }))
+            .to.be.rejectedWith(customErrorPattern("WithdrawalTooSmall()"));
+        await vault.write.withdraw([1_010_000n, alice.account.address, alice.account.address], { account: alice.account });
     });
 
     it("charges one asset unit flat fee when processing a queued withdrawal", async function () {
@@ -216,7 +219,7 @@ describe("BankVault4626", function () {
         expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
     });
 
-    it("skips blocked receiver without burning; continues queue and lets owner re-request", async function () {
+    it("skips blocked receiver without burning, charges the fee in shares; continues queue and lets owner re-request", async function () {
         const [admin, alice, bob, blocked] = await viem.getWalletClients();
         const token = await viem.deployContract("MockBlockedRecipient");
         const mockEngine = await viem.deployContract("MockEngine");
@@ -242,10 +245,11 @@ describe("BankVault4626", function () {
         await vault.write.redeemBps([5_000, bob.account.address, bob.account.address], { account: bob.account });
 
         const bobBefore = await token.read.balanceOf([bob.account.address]);
+        const feeShares = await vault.read.previewWithdraw([1_000_000n]);
         await mockEngine.write.processWithdrawals([vault.address, 10n]);
 
         expect((await vault.read.pendingWithdrawalStatus([alice.account.address]))[1]).to.equal(false);
-        expect(await vault.read.balanceOf([alice.account.address])).to.equal(aliceSharesBefore);
+        expect(await vault.read.balanceOf([alice.account.address])).to.equal(aliceSharesBefore - feeShares);
         expect(await token.read.balanceOf([bob.account.address])).to.be.gt(bobBefore);
         expect((await vault.read.pendingWithdrawalStatus([bob.account.address]))[1]).to.equal(false);
 
@@ -287,7 +291,7 @@ describe("BankVault4626", function () {
         await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
     });
 
-    it("processes a queued request whose shares were transferred away after enqueueing", async function () {
+    it("refuses to transfer the shares of a queued request until it is processed", async function () {
         const [admin, alice, bob] = await viem.getWalletClients();
         const usdc = await viem.deployContract("MockUSDC");
         const mockEngine = await viem.deployContract("MockEngine");
@@ -304,16 +308,18 @@ describe("BankVault4626", function () {
 
         await vault.write.redeemBps([10_000, alice.account.address, alice.account.address], { account: alice.account });
 
-        // Shares are not escrowed at enqueue time, so the position can still empty before processing.
-        // The queue must absorb that (zero shares -> no payout) rather than revert.
+        // Shares are not escrowed at enqueue time, but since 0x6e84…f3cC they cannot move while queued:
+        // a transfer would dodge or reshape a request sized in bps of the balance at processing time.
         const shares = await vault.read.balanceOf([alice.account.address]);
-        await vault.write.transfer([bob.account.address, shares], { account: alice.account });
+        await expect(vault.write.transfer([bob.account.address, shares], { account: alice.account }))
+            .to.be.rejectedWith(customErrorPattern("SharesLockedByPendingWithdrawal()"));
 
         const balanceBefore = await usdc.read.balanceOf([alice.account.address]);
         await mockEngine.write.processWithdrawals([vault.address, 10n]);
 
-        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore);
-        expect(await vault.read.balanceOf([bob.account.address])).to.equal(shares);
+        expect(await usdc.read.balanceOf([alice.account.address])).to.equal(balanceBefore + parseUnits("49", 6));
+        expect(await vault.read.balanceOf([alice.account.address])).to.equal(0n);
+        expect(await vault.read.balanceOf([bob.account.address])).to.equal(0n);
     });
 
     it("placeBetWithPermit succeeds even if permit is stale (try/catch)", async function () {

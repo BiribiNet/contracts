@@ -4,7 +4,7 @@ import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { parseUnits, zeroAddress } from "viem";
 
-import { createMarketWithBeacon } from "./helpers/createMarket";
+import { createMarketWithLegacySideBetBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
 import { fulfillVrfForGlobalRound, runParallelLanesUntilVrfPending } from "./helpers/parallelUpkeep";
@@ -23,7 +23,7 @@ async function deployQuietMarket() {
     const { engine, registry } = await deployProtocolStack();
 
     const usdc = await viem.deployContract("MockUSDC");
-    const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+    const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
     await usdc.write.mint([alice.account.address, USDC("1000")]);
     await usdc.write.approve([bank.address, USDC("1000")], { account: alice.account });
@@ -68,7 +68,7 @@ describe("Stuck withdrawal queue escape hatch (H-1)", function () {
         await wireTestSchedulerForwarder(scheduler, admin.account);
 
         const usdc = await viem.deployContract("MockUSDC");
-        const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+        const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
         await usdc.write.mint([admin.account.address, USDC("5000")]);
         await usdc.write.approve([bank.address, USDC("5000")], { account: admin.account });
@@ -102,7 +102,7 @@ describe("Stuck withdrawal queue escape hatch (H-1)", function () {
         const { engine, registry } = await deployProtocolStack();
 
         const usdc = await viem.deployContract("MockUSDC");
-        const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+        const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
         await usdc.write.mint([admin.account.address, USDC("5000")]);
         await usdc.write.approve([bank.address, USDC("5000")], { account: admin.account });
@@ -133,7 +133,7 @@ describe("Stuck withdrawal queue escape hatch (H-1)", function () {
         const { registry } = await deployProtocolStack();
 
         const usdc = await viem.deployContract("MockUSDC");
-        const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+        const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
         await bank.write.setSideBetController([sideBetOperator.account.address], { account: admin.account });
 
         await usdc.write.mint([alice.account.address, USDC("500")]);

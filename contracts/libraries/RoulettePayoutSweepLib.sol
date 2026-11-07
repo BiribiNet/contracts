@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import { IBankVault } from "../interfaces/IBankVault.sol";
 import { RouletteBetLib } from "./RouletteBetLib.sol";
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
+import { RouletteMaskBetLib } from "./RouletteMaskBetLib.sol";
 import { RoulettePayoutMulLib } from "./RoulettePayoutMulLib.sol";
 
 /// @dev Linked library: flattened winner-stream traversal for payout preview (offloads `RouletteEngine`).
@@ -210,6 +211,12 @@ library RoulettePayoutSweepLib {
             );
         }
 
+        // Mask legs come last so the global indices of every classic bucket are unchanged. The winner
+        // count is read in O(1) from the packed per-number counters, never by walking the masks.
+        gPos = _accumulateCountShards(
+            RouletteMaskBetLib.winCount($.roundMaskWinCounts[roundId][marketId], winningNumber), gPos, shards, laneCount
+        );
+
         RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
         uint256 total;
         for (uint32 lane; lane < laneCount; ) {
@@ -233,7 +240,16 @@ library RoulettePayoutSweepLib {
         uint256[] memory shards,
         uint32 laneCount
     ) private view returns (uint256) {
-        uint256 len = bucket.length;
+        return _accumulateCountShards(bucket.length, gPos, shards, laneCount);
+    }
+
+    /// @dev Closed-form lane split of `len` consecutive winners starting at global index `gPos`.
+    function _accumulateCountShards(
+        uint256 len,
+        uint256 gPos,
+        uint256[] memory shards,
+        uint32 laneCount
+    ) private pure returns (uint256) {
         if (len == 0) return gPos;
         unchecked {
             uint256 base = len / laneCount;
@@ -284,6 +300,7 @@ library RoulettePayoutSweepLib {
         c = _sweepColumn($, c, out, wt);
         c = _sweepDozen($, c, out, wt);
         c = _sweepFlats($, c, out, wt);
+        c = _sweepMasks($, c, out, winningNumber);
 
         written = c.payoutCount;
         assembly {
@@ -445,6 +462,52 @@ library RoulettePayoutSweepLib {
         }
         if (c.payoutCount < c.payoutMax && wt.trio023) {
             c = _consumeBucket(c, out, $.roundFlatBets[c.rid][c.mid][uint8(RouletteEngineStorageLib.FlatBetBucket.Trio023)]);
+        }
+        return c;
+    }
+
+    /// @dev Walks every mask leg of the (round, market) but only winners (bit `winningNumber` set) take a
+    /// global index, in placement order — exactly the population counted at VRF time by `winCount`.
+    /// Lane/cursor selection mirrors `_consumeBucket`. Off-chain (`eth_call`) cost: one slot per leg.
+    function _sweepMasks(
+        RouletteEngineStorageLib.Layout storage $,
+        PayoutSweepCtx memory c,
+        IBankVault.Payout[] memory out,
+        uint8 winningNumber
+    ) private view returns (PayoutSweepCtx memory) {
+        if (c.payoutCount >= c.payoutMax) return c;
+        RouletteEngineStorageLib.MaskBetEntry[] storage masks = $.roundMaskBets[c.rid][c.mid];
+        uint256 len = masks.length;
+        unchecked {
+            RouletteEngineStorageLib.MaskBetEntry storage entry;
+            uint256 gi;
+            bool pay;
+            for (uint256 i; i < len && c.payoutCount < c.payoutMax; ) {
+                entry = masks[i];
+                if ((uint256(entry.mask) >> winningNumber) & 1 == 1) {
+                    gi = c.gPos++;
+                    pay = true;
+                    if (c.shardWidth > 1) {
+                        if (gi % c.shardWidth != c.shardIndex) {
+                            pay = false;
+                        } else if (c.shardSeen < c.cursorStart) {
+                            c.shardSeen++;
+                            pay = false;
+                        } else {
+                            c.shardSeen++;
+                        }
+                    } else if (gi < c.cursorStart) {
+                        pay = false;
+                    }
+                    if (pay) {
+                        out[c.payoutCount] = IBankVault.Payout(
+                            entry.player, RouletteMaskBetLib.maskPayout(uint256(entry.amount), uint256(entry.size))
+                        );
+                        c.payoutCount++;
+                    }
+                }
+                ++i;
+            }
         }
         return c;
     }

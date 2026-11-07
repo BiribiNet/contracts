@@ -31,7 +31,7 @@ Les side bets multi-tours (`contracts/SideBet.sol`) sont retirés définitivemen
 | D10 | Plafonds | Mise minimale **par jambe** masque ≥ `minBet` ; plafond de jambes masque par (round, marché) ; plafond de passif masque en bps de la liquidité libre | **Recommandé** (valeurs = question ouverte) |
 | D11 | Code nouveau | Nouvelle bibliothèque liée `RouletteMaskBetLib` ; extensions de `RoulettePayoutSweepLib` et `RouletteLiabilityMathLib` | **Recommandé** |
 | D12 | Vault | Upgrade beacon : suppression de `lockSideBetStake`, `setSideBetController`, des modificateurs side bet ; champ `sideBetController` conservé (déprécié) pour le layout | **Recommandé** |
-| D13 | Ordre d'upgrade | Subgraph → frontend tolérant → moteur (masques désactivés) → vault → activation Sepolia → audit → mainnet | **Recommandé** |
+| D13 | Ordre d'upgrade | Subgraph et frontend tolérants → upgrade direct Arbitrum One : moteur (masques désactivés) puis vault → activation par marché (§10) ; sans Sepolia ni fork | Pris (propriétaire, 06/11/2026) |
 | D14 | Le 0 dans les presets (Q1) | **Toujours exclu** des presets thématiques (propriétés arithmétiques, finales, supérieur/inférieur au précédent) ; présent seulement quand la géométrie du cylindre l'impose (voisins) | Pris (propriétaire, 05/11/2026) |
 | D15 | Doublon {7, 17, 27} (Q2) | Seule la famille des **finales** est proposée ; pas de preset « contient un 7 » | Pris (propriétaire, 05/11/2026) |
 | D16 | Voisins (Q3) | 5 numéros, **`p` inclus** (annonce « voisins d'un numéro ») | Pris (propriétaire, 05/11/2026) |
@@ -448,22 +448,48 @@ Fuzz / propriétés :
 Upgrade et stockage :
 - Layout moteur : préfixe ERC-7201 identique, nouveaux champs en fin (`EngineStorageLayout.test.ts`).
 - Layout vault : 14 champs, même slot/offset/type (mêmes outils que l'incident).
-- Fork mainnet : upgrade moteur puis beacon en phase `Open`, pari classique + masques (après activation), règlement complet par scheduler, file de retrait, dépôt suivant.
+- Script d'upgrade (remplace le fork mainnet, décision du 06/11/2026) : exécution complète sur réseau Hardhat local — upgrade moteur puis beacon en phase `Open`, refus en `Settling`, pari classique + masque après activation, règlement complet par scheduler (`MaskBetsMainnetUpgradeScript.test.ts`).
 - Tailles : runtime ≤ 24 576, initcode ≤ 49 152, sans contournement.
 
 ---
 
 ## 10. Déploiement
 
-Ordre recommandé :
+**Décision du propriétaire (06/11/2026) : upgrade direct sur Arbitrum One, sans Sepolia ni fork.** Les étapes Sepolia
+(moteur, vault, activation, campagne de charge) et la répétition sur fork mainnet ne sont plus des prérequis. Les
+masques sont livrés **désactivés** sur tous les marchés, puis activés **marché par marché** par un script séparé.
+La validation hors chaîne repose sur les suites locales (§9) et sur l'exécution complète des deux scripts sur le
+réseau Hardhat local (chaîne 31337, jamais un fork : `test/MaskBetsMainnetUpgradeScript.test.ts`).
 
-1. **Subgraph Sepolia** tolérant (MASK reconnu, plus de repli `STRAIGHT`) déployé et synchronisé ; répéter ce prérequis sur le réseau concerné avant toute activation ultérieure.
-2. **Frontend** tolérant (types/historique/mirror) ; UI masques masquée derrière un flag.
-3. **Sepolia — moteur E1** : nouvelles libs + implémentation (masques désactivés, `totalAssets()`), upgrade en phase `Open`.
-4. **Sepolia — vault V1** via le beacon Sepolia, après preflight §6.2.
-5. **Sepolia — activation** : `setMaskBetLimits` avec valeurs prudentes ; tests manuels et campagne de charge (masques au plafond, 10 lanes) ; vérifier `yarn reconcile:vaults` côté subgraph.
-6. **Audit externe** sur le diff moteur + libs + vault (focus : §3.6, concordance compteurs/parcours, bornes, layout).
-7. **Mainnet** : mêmes étapes 3 → 5, via le chemin d'administration en vigueur (rôle `DEFAULT_ADMIN_ROLE` du moteur, propriétaire du beacon `0x7b23…632b`, timelock si configuré), plafonds bas au lancement puis relevés.
+Ordre :
+
+1. **Subgraph** tolérant (MASK reconnu, plus de repli `STRAIGHT`) déployé et synchronisé sur Arbitrum One **avant
+   l'activation** (étape 5) ; **frontend** tolérant (types/historique/mirror), UI masques derrière un flag.
+2. **Revue du diff** moteur + libs + vault (focus : §3.6, concordance compteurs/parcours, bornes, layout) et du
+   verrou de release `reports/mask-bets-v1/mainnet-release-lock.json` (hachages des artefacts revus) ; la
+   décision du 06/11 ne porte que sur Sepolia et le fork.
+3. **Dry run mainnet** (lecture seule, RPC public sans clé suffisant) : `node scripts/mask-bets-v1-mainnet.cjs`.
+   Preflight bloquant : phase `Open`/`Completed` (jamais `Settling`, aucun VRF en attente, aucun marché restreint),
+   `sideBetsDisabled() == true`, aucun ticket ouvert, réserves side bet nulles, verrou de chaque vault = mises
+   roulette non libérées du round courant, rôles (`DEFAULT_ADMIN_ROLE`, `ENGINE_ROUND_ROLE`) et propriétaire du
+   beacon, implémentations en place = manifeste, bytecode du vault en place, arguments du constructeur du moteur,
+   tailles EIP-170/3860, layouts de stockage (§6), bibliothèques réutilisées seulement si leur runtime exécutable
+   est identique. Le plan affiche nonces, adresses prédites et calldata (`--out` pour un multisig).
+4. **Upgrade mainnet** : `--execute` (confirmation `MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161`, clé de
+   l'administrateur fournie par l'opérateur dans `MASK_BETS_V1_ADMIN_KEY`, jamais stockée). Déploiement de
+   `RoulettePayoutSweepLib`, `RouletteLiabilityMathLib`, `RouletteUpkeepScanLib` (relink), `RouletteMaskBetLib`,
+   du moteur et du vault, puis `upgradeToAndCall` du **moteur d'abord** (il lit `totalAssets()`, servi par les deux
+   vaults) et `upgradeTo` du **beacon ensuite**, chaque upgrade précédé d'un nouveau contrôle de fenêtre.
+   Vérifications post-upgrade : runtime déployé = artefact (immuables = arguments du constructeur), configuration
+   du moteur inchangée, `maskBetState` à 0 sur chaque marché, `totalAssets()`/`totalSupply()` identiques avant et
+   après le bloc d'upgrade du beacon, sélecteurs side bet absents du vault, `availableForSideBet() == totalAssets()`.
+5. **Activation par marché** : `node scripts/mask-bets-v1-activate.cjs --market <id>:<jambes>:<bps> …` (valeurs
+   explicites, aucune valeur par défaut ; `--print-calldata` pour un multisig ; `--execute` avec les mêmes garde-fous).
+   Plafond de lancement **448 jambes** par (round, marché) : le dernier bloc d'une lane parcourt toutes les jambes
+   (≈ 2,7 k gaz chacune) et `checkUpkeep(lane)` reste à ≈ 1,37–1,38 M gaz d'`eth_call` (≈ 1,40 M avec l'intrinsèque),
+   sous ~1,5 M ; 1 024 jambes (D18) coûtent ≈ 2,93 M et ne sont acceptées qu'avec `--allow-above-launch-cap`, après
+   confirmation du plafond de gaz des `eth_call` CRE/keeper. `maxMaskLiabilityBps = 1 000` (D18). Relèvement ensuite
+   au vu des données ; `yarn reconcile:vaults` côté subgraph après les premiers rounds.
 
 Rollback :
 

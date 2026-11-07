@@ -1,7 +1,7 @@
 import { getContractAddress, type Address } from "viem";
 
 /** Library CREATE count inside `deployRouletteEngine` before the engine implementation. */
-const ROULETTE_ENGINE_LIBRARY_COUNT = 10n;
+const ROULETTE_ENGINE_LIBRARY_COUNT = 11n;
 
 export type PredictRouletteStackOptions = {
     deployBrbReferral?: boolean;

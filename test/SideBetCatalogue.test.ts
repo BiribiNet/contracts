@@ -43,7 +43,7 @@ async function deployFixture() {
 
     const usdc = await viem.deployContract("MockUSDC");
     const roundEngine = await viem.deployContract("MockRoundEngine");
-    const vaultImpl = await viem.deployContract("BankVault4626");
+    const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
 
     const { registry } = await deploySideBetRegistryStack({
@@ -64,7 +64,7 @@ async function deployFixture() {
         { account: admin.account },
     );
     const market = await registry.read.getMarket([MARKET_ID]);
-    const vault = await viem.getContractAt("BankVault4626", market.bank);
+    const vault = await viem.getContractAt("LegacySideBetBankVault4626", market.bank);
     expect(getAddress(await vault.read.sideBetController())).to.equal(getAddress(sideBet.address));
 
     await usdc.write.mint([admin.account.address, USDC("1000000")]);

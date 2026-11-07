@@ -1,10 +1,10 @@
 import type { Address, Hex, PublicClient } from "viem";
-import { encodeFunctionData, parseAbi } from "viem";
+import { encodeFunctionData, getAddress, parseAbi } from "viem";
 
 import {
     verifyContractWithDelay,
-    type RouletteEngineImplCtorArgs,
     verifyRouletteEngineImplementation,
+    type RouletteEngineImplCtorArgs,
 } from "./verifyWithEtherscan";
 
 export const ERC1967_IMPLEMENTATION_SLOT =
@@ -120,8 +120,32 @@ const bankReadAbi = parseAbi([
     "function marketId() view returns (uint32)",
     "function minBet() view returns (uint256)",
     "function ENGINE() view returns (address)",
-    "function sideBetController() view returns (address)",
 ]);
+
+/** ERC-7201 root of `biribi.storage.BankVault4626` (`BankVault4626.sol`, unchanged across implementations). */
+export const BANK_VAULT_STORAGE_LOCATION = 0xb0c430920bd46af8c5ecb68ebf1a5f6f3805a863a6d4fa0fa5e65feb72f8e800n;
+/** 4th field: `sideBetController`, renamed `_deprecatedSideBetController` by mask bets v1 (same slot, never cleared). */
+const SIDE_BET_CONTROLLER_FIELD_SLOT = 2n;
+
+/**
+ * Side-bet controller recorded at vault initialization, read from storage rather than through
+ * `sideBetController()`: the mask-bets v1 vault no longer exposes that getter, but keeps the field at the same
+ * slot (`test/MaskBetsStorageLayout.test.ts`), so this works before and after the beacon upgrade.
+ */
+export async function readLegacySideBetController(
+    publicClient: Pick<PublicClient, "getStorageAt">,
+    bank: Address,
+): Promise<Address> {
+    const slot = `0x${(BANK_VAULT_STORAGE_LOCATION + SIDE_BET_CONTROLLER_FIELD_SLOT).toString(16).padStart(64, "0")}` as Hex;
+    const word = await publicClient.getStorageAt({ address: bank, slot });
+    if (word === undefined) throw new Error(`readLegacySideBetController: no storage word for bank ${bank}`);
+    return getAddress(`0x${word.slice(-40)}`);
+}
+
+/** Adapts an ethers provider (`getStorage`) to the viem-style reader used by `readLegacySideBetController`. */
+export function storageReaderFromEthers(provider: { getStorage: (address: string, slot: string) => Promise<string> }): Pick<PublicClient, "getStorageAt"> {
+    return { getStorageAt: async ({ address, slot }) => (await provider.getStorage(address, slot)) as Hex };
+}
 
 /** Reconstruct vault proxy init calldata from an initialized bank (for re-verification). */
 export async function encodeBankVaultProxyInitDataFromBank(
@@ -135,7 +159,7 @@ export async function encodeBankVaultProxyInitDataFromBank(
         publicClient.readContract({ address: bank, abi: bankReadAbi, functionName: "marketId" }),
         publicClient.readContract({ address: bank, abi: bankReadAbi, functionName: "minBet" }),
         publicClient.readContract({ address: bank, abi: bankReadAbi, functionName: "ENGINE" }),
-        publicClient.readContract({ address: bank, abi: bankReadAbi, functionName: "sideBetController" }),
+        readLegacySideBetController(publicClient, bank),
     ]);
     const assetAbi = parseAbi(["function asset() view returns (address)"]);
     const assetToken = await publicClient.readContract({ address: bank, abi: assetAbi, functionName: "asset" });
