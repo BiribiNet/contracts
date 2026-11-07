@@ -129,11 +129,17 @@ contract BankVault4626 is
     error InvalidReceiver();
     error QueueFull();
     error WithdrawalQueueNotEmpty();
+    error WithdrawalTooSmall();
+    /// @dev Implementation 0x6e84…f3cC reverts with selector 0xe3ee11df here; its name is unknown, so this one differs.
+    error SharesLockedByPendingWithdrawal();
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
     event MinBetUpdated(uint256 previousMinBet, uint256 newMinBet);
     event FlatWithdrawFeeUpdated(uint256 previousFee, uint256 newFee);
+    /// @notice A queued withdrawal whose receiver refused the transfer still pays the flat fee, in shares sent to infra.
+    /// @dev Same data as the event of 0x6e84…f3cC (topic 0xdebd20cf…), whose name is unknown: indexers see a new topic.
+    event SkippedWithdrawalFeeCharged(uint256 requestId, address owner, address recipient, uint256 sharesCharged, uint256 fee);
     event BetsReleased(uint256 amount, uint256 newLockedTotal);
     event PayoutBatchProcessed(uint256 payoutCount, uint256 totalPaid);
     event FundsTransferred(address recipient, uint256 amount);
@@ -313,9 +319,12 @@ contract BankVault4626 is
     /// draining a fully-locked vault would burn for nothing. `marketRouletteLiquidityNeed` includes
     /// the mask-bet liability term, so an open round with masks blocks the hatch like one with
     /// straights. The roulette shortfall is zero for exactly the quiet markets this hatch exists to
-    /// unstick.
+    /// unstick. Since implementation `0x6e84…f3cC` (2026-11-05) the hatch also waits for
+    /// `lockedBetLiquidity == 0`, i.e. no stake of the open round is held: with side bets gone the lock
+    /// only counts roulette stakes, so it never blocks the quiet markets either.
     function drainWithdrawalQueue(uint256 maxCount) external nonReentrant returns (uint256 processed) {
         BankVaultStorage storage $ = _s();
+        if ($.lockedBetLiquidity != 0) revert WithdrawalBlockedDuringResolution();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
         if ($.ENGINE.marketRouletteLiquidityNeed($.marketId) != 0) revert WithdrawalBlockedDuringResolution();
         if (totalAssets() == 0) revert ZeroAmount();
@@ -357,6 +366,7 @@ contract BankVault4626 is
                     // or settlement: on failure we clear the slot, keep shares, and the owner re-requests.
                     if (!token.trySafeTransfer(q.receiver, net)) {
                         requestId = $.pendingWithdrawalId[owner];
+                        _chargeSkippedWithdrawalFee(owner, infra, shares, fee, requestId);
                         if (requestId != 0) {
                             WithdrawalReceipt storage skipped = $.withdrawalReceipts[requestId];
                             skipped.processedAt = block.timestamp;
@@ -401,6 +411,15 @@ contract BankVault4626 is
         }
     }
 
+    /// @dev A refused receiver used to make a queued request free: the fee is now taken in shares (rounded up,
+    /// capped at the request's shares) and moved to infra, so the queue cannot be spammed at no cost.
+    function _chargeSkippedWithdrawalFee(address owner, address infra, uint256 shares, uint256 fee, uint256 requestId) private {
+        uint256 feeShares = previewWithdraw(fee);
+        if (feeShares > shares) feeShares = shares;
+        _transfer(owner, infra, feeShares);
+        emit SkippedWithdrawalFeeCharged(requestId, owner, infra, feeShares, fee);
+    }
+
     /// @dev Best-effort; if infra cannot receive, the fee remains in the vault rather than reverting settlement.
     function _payWithdrawFeeToInfra(IERC20 token, address infra, uint256 amount) private {
         if (amount == 0 || infra == address(0)) return;
@@ -426,6 +445,8 @@ contract BankVault4626 is
         _assertCanEnqueue(owner);
 
         BankVaultStorage storage $ = _s();
+        // A request worth no more than the fee would only pay infra: refused up front.
+        if (convertToAssets(_sharesForBps(owner, bps)) <= $.flatWithdrawFee) revert WithdrawalTooSmall();
         $._pendingWithdrawal[owner] = QueuedWithdrawal({ bps: bps, receiver: receiver });
         uint256 idx = $._withdrawalQueue.length;
         $._userQueueIndex[owner] = idx;
@@ -466,7 +487,8 @@ contract BankVault4626 is
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
         BankVaultStorage storage $ = _s();
-        if (assets <= $.flatWithdrawFee) revert DepositTooSmall();
+        // The resulting position must exceed the fee, so a top-up below it is accepted (as in 0x6e84…f3cC).
+        if (assets == 0 || convertToAssets(balanceOf(receiver)) + assets <= $.flatWithdrawFee) revert DepositTooSmall();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert DepositBlockedDuringResolution();
         return super.deposit(assets, receiver);
     }
@@ -474,7 +496,7 @@ contract BankVault4626 is
     function mint(uint256 shares, address receiver) public override returns (uint256) {
         BankVaultStorage storage $ = _s();
         uint256 assets = previewMint(shares);
-        if (assets <= $.flatWithdrawFee) revert DepositTooSmall();
+        if (assets == 0 || convertToAssets(balanceOf(receiver)) + assets <= $.flatWithdrawFee) revert DepositTooSmall();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert DepositBlockedDuringResolution();
         return super.mint(shares, receiver);
     }
@@ -489,6 +511,15 @@ contract BankVault4626 is
         uint256 base = super.maxRedeem(owner);
         uint256 freeLiquidityShares = convertToShares(totalAssets());
         return base > freeLiquidityShares ? freeLiquidityShares : base;
+    }
+
+    /// @dev Shares of an owner with a queued withdrawal cannot move (mint and burn still can): the request is
+    /// sized in bps of the balance at processing time, so a transfer would dodge or reshape it.
+    function _update(address from, address to, uint256 value) internal override {
+        if (from != address(0) && to != address(0) && from != to && value != 0 && _s()._pendingWithdrawal[from].bps != 0) {
+            revert SharesLockedByPendingWithdrawal();
+        }
+        super._update(from, to, value);
     }
 
     /// @inheritdoc ERC4626Upgradeable
