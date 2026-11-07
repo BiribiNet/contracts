@@ -66,10 +66,30 @@ test('linking replaces every placeholder and refuses a missing library',()=>{
   assert.equal(C.link('0x60'+placeholder+'00',refs,{L:'0x'+'ab'.repeat(20)}),'0x60'+'ab'.repeat(20)+'00');
   assert.throws(()=>C.link('0x60'+placeholder+'00',refs,{}),/No address to link L/);
 });
-test('selector detection finds removed vault entry points',()=>{
-  const selector=require('ethers').id('lockSideBetStake(address,uint256,uint256)').slice(2,10);
-  assert.equal(C.dispatchesSelector('0x6080'+'63'+selector+'14',C.REMOVED_VAULT_FUNCTIONS[0]),true);
-  assert.equal(C.dispatchesSelector('0x608060405200',C.REMOVED_VAULT_FUNCTIONS[0]),false);
+// Minimal solc-shaped dispatcher: selector load, then `DUP1 PUSHn s EQ PUSH2 t JUMPI` entries, then fallback.
+const dispatcher=entries=>'0x'+'5f35'+'60e01c'+entries.map(([push,s])=>'80'+push+s+'14'+'610100'+'57').join('')+'5b5f5ffd';
+test('selector detection reads the disassembled dispatcher, including selectors with a leading zero byte',()=>{
+  const lock=require('ethers').id('lockSideBetStake(address,uint256,uint256)').slice(2,10);
+  // 0x00e4a032 (drainWithdrawalQueue) is compared with PUSH3 e4a032: the old `63`+selector search missed it.
+  const code=dispatcher([['62','e4a032'],['63',lock]]);
+  assert.equal(C.dispatchesSelector(code,'drainWithdrawalQueue(uint256)'),true);
+  assert.equal(C.dispatchesSelector(code,C.REMOVED_VAULT_FUNCTIONS[0]),true);
+  assert.equal(C.dispatchesSelector(code,'setFlatWithdrawFee(uint256)'),false);
+  assert.equal(code.includes('63'+'00e4a032'),false,'fixture must reproduce the PUSH3 encoding');
+  // A selector hidden in PUSH data or after the table is not dispatched.
+  assert.equal(C.dispatchesSelector(dispatcher([['63','12345678']])+'7f'+'63'+lock+'00'.repeat(27),C.REMOVED_VAULT_FUNCTIONS[0]),false);
+  assert.throws(()=>C.dispatcherSelectors('0x6080604052'),/No solc selector dispatcher/);
+});
+test('the live vault runtime 0x6e84…f3cC dispatches exactly the ABI of its reconstructed source, drain and fee setter included',()=>{
+  const fs=require('node:fs'),path=require('node:path');
+  const dir=path.join(C.ROOT,'reports/vault-2026-11-05');
+  const code=fs.readFileSync(path.join(dir,'onchain-runtime-0x6e84c0ed.hex'),'utf8').trim();
+  const abi=JSON.parse(fs.readFileSync(path.join(dir,'abi.json'),'utf8'));
+  const {Interface}=require('ethers'),expected=[];
+  new Interface(abi).forEachFunction(f=>expected.push(f.selector));
+  assert.deepEqual([...C.dispatcherSelectors(code)].sort(),expected.sort());
+  for(const signature of ['setFlatWithdrawFee(uint256)','drainWithdrawalQueue(uint256)',...C.REMOVED_VAULT_FUNCTIONS])assert.equal(C.dispatchesSelector(code,signature),true,signature);
+  assert.equal(C.lower(code).includes('63'+'00e4a032'),false,'drainWithdrawalQueue is PUSH3-encoded on chain');
 });
 test('the mainnet manifest yields the live engine constructor arguments and the reviewed redeploy set',()=>{
   const d=C.loadMainnetDeployment();

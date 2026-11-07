@@ -19,8 +19,9 @@
       "lockSideBetStake(address,uint256,uint256)": true,
       "setSideBetController(address)": true,
       "availableForSideBet()": true,
-      "drainWithdrawalQueue(uint256)": false
+      "drainWithdrawalQueue(uint256)": true
     },
+    "correction2026-11-07": "drainWithdrawalQueue(uint256) was first recorded here as NOT dispatched: false positive. Its selector 0x00e4a032 starts with a zero byte, so solc compares it with PUSH3 e4a032, and the check searched the hex for a literal PUSH4 (63 + selector). A disassembled dispatcher shows it is routed, and eth_call drainWithdrawalQueue(1) on the BRB bank succeeds. The live implementation removes no function; it adds setFlatWithdrawFee (reports/vault-2026-11-05/).",
     "sourceInRepository": false
   },
   "informativeDryRunWithLiveVault": {

@@ -147,11 +147,19 @@ réelle écrit un journal horodaté `reports/mask-bets-v1/mainnet-execution-*.js
 l'implémentation du beacon des vaults sur Arbitrum One est `0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC`, pas
 `0x129cAf68…797D` du manifeste. Elle a été déployée par l'administrateur (nonce 304) et installée le
 05/11/2026 13:04 UTC (transaction `0xb63c808c…dbe0`, bloc 521 482 387) ; ni son source ni son layout ne sont dans le
-dépôt. Elle sert encore la surface side bet mais **ne dispatche plus `drainWithdrawalQueue`**, que le vault de cette
-PR conserve. L'administrateur a ensuite envoyé 7 autres transactions (nonces 306–312, non identifiées ici).
-Avant toute exécution : récupérer le source de `0x6e84…f3cC`, valider son layout, reporter dans `BankVault4626`
-ce qu'il change (en particulier le retrait du drain public, s'il est voulu), puis mettre à jour
-`deployments/arbitrum-one.json` et le verrou de release. Le script ne propose aucun contournement.
+dépôt. Elle sert encore la surface side bet. L'administrateur a ensuite envoyé 7 autres transactions (nonces
+306–312, non identifiées ici). Avant toute exécution : récupérer le source de `0x6e84…f3cC`, valider son layout,
+reporter dans `BankVault4626` ce qu'il change, puis mettre à jour `deployments/arbitrum-one.json` et le verrou de
+release. Le script ne propose aucun contournement.
+
+> **Correction (07/11/2026) — faux positif.** Ce rapport affirmait que `0x6e84…f3cC` « ne dispatche plus
+> `drainWithdrawalQueue` ». C'est faux : la fonction est toujours présente et publique (`eth_call
+> drainWithdrawalQueue(1)` réussit sur le vault BRB). Son sélecteur `0x00e4a032` commence par un octet nul ; solc
+> le compare donc avec `PUSH3 e4a032`, alors que le contrôle cherchait `63` + sélecteur (un `PUSH4` littéral) dans
+> l'hexadécimal. `dispatchesSelector` lit désormais le dispatcher désassemblé (`dispatcherSelectors`, données de
+> `PUSH` sautées, `DUP1 PUSHn s EQ PUSH2 t JUMPI` avec n ≤ 4). C'est testé sur le runtime archivé de `0x6e84`, dont
+> le dispatcher doit égaler exactement l'ABI du source reconstitué. L'implémentation en place ne retire **aucune**
+> fonction : elle ajoute `setFlatWithdrawFee` et modifie cinq comportements (`reports/vault-2026-11-05/README.md`).
 
 À titre informatif seulement, le même preflight avec l'implémentation en place substituée passe tous les autres
 contrôles (bloc 521 742 299 : round 165 `Open`, 14 tickets SideBet tous clos, réserves et verrous à 0, rôles et

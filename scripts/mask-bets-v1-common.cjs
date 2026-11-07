@@ -184,9 +184,9 @@ function dispatcherSelectors(code) {
   }
   return selectors;
 }
-/** True when the runtime dispatches `signature` (PUSH4 selector), the usual check for a removed function. */
+/** True when the runtime's dispatcher routes `signature` (see {dispatcherSelectors}; never a raw PUSH4 search). */
 function dispatchesSelector(code,signature) {
-  return lower(code).includes('63'+keccak256(Buffer.from(signature)).slice(2,10));
+  return dispatcherSelectors(code).has(id(signature).slice(0,10));
 }
 
 /** Hashes and sizes of every artifact this release deploys (reviewed once, committed as the release lock). */
