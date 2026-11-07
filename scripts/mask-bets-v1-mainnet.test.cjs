@@ -114,3 +114,17 @@ test('activation CLI: explicit values only, bounded, launch cap enforced',()=>{
   assert.deepEqual(Activate.parseArgs(['--market','1:448:1000']).settings,[{marketId:1,maxLegsPerRound:448,maxLiabilityBps:1000}]);
   assert.equal(C.LAUNCH_MASK_LEG_CAP,448);
 });
+test('the manifest points at the proven live vault 0x6e84…f3cC and expects its archived runtime',()=>{
+  const fs=require('node:fs'),path=require('node:path'),{keccak256}=require('ethers');
+  const d=C.loadMainnetDeployment();
+  assert.equal(C.lower(d.bankVaultImplementation),'0x6e84c0ed4056ba6e94dff5008abe811738f8f3cc');
+  const archived=fs.readFileSync(path.join(C.ROOT,'reports/vault-2026-11-05/onchain-runtime-0x6e84c0ed.hex'),'utf8').trim();
+  assert.equal(d.bankVaultRuntimeHash,keccak256(archived));
+});
+test('the preflight refuses a vault build that drops setFlatWithdrawFee or drainWithdrawalQueue',()=>{
+  const sel=s=>require('ethers').id(s).slice(2,10);
+  const both=dispatcher([['62','e4a032'],['63',sel('setFlatWithdrawFee(uint256)')]]);
+  assert.deepEqual(Upgrade.assertKeptVaultFunctions(both,'build'),C.KEPT_VAULT_FUNCTIONS);
+  assert.throws(()=>Upgrade.assertKeptVaultFunctions(dispatcher([['62','e4a032']]),'build'),/no longer dispatches setFlatWithdrawFee/);
+  assert.throws(()=>Upgrade.assertKeptVaultFunctions(dispatcher([['63',sel('setFlatWithdrawFee(uint256)')]]),'build'),/no longer dispatches drainWithdrawalQueue/);
+});

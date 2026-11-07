@@ -4,7 +4,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
-const {Contract,JsonRpcProvider,ZeroHash,getAddress,id,keccak256,zeroPadValue,toBeHex}=require('ethers');
+const {Contract,JsonRpcProvider,ZeroHash,getAddress,id,zeroPadValue,toBeHex}=require('ethers');
 
 const ROOT=path.resolve(__dirname,'..');
 const MAINNET_CHAIN_ID=42161;
@@ -52,6 +52,13 @@ const VAULT={name:'BankVault4626',source:'contracts/BankVault4626.sol'};
 const RELEASE_LOCK=path.join(ROOT,'reports/mask-bets-v1/mainnet-release-lock.json');
 /** Selectors the upgraded vault must no longer dispatch. */
 const REMOVED_VAULT_FUNCTIONS=['lockSideBetStake(address,uint256,uint256)','setSideBetController(address)','sideBetController()'];
+/**
+ * Entry points the live vault (0x6e84…f3cC, 2026-11-05) serves and the upgraded vault must keep: the fee setter the
+ * admin already uses and the public queue escape hatch.
+ */
+const KEPT_VAULT_FUNCTIONS=['setFlatWithdrawFee(uint256)','drainWithdrawalQueue(uint256)'];
+/** Reconstructed source + proof of the vault implementation installed on 2026-11-05 (scripts/verifyVault20261105.cjs). */
+const LIVE_VAULT_PROOF='reports/vault-2026-11-05/match.json';
 
 const ENGINE_ABI=[
   'function currentGlobalRound() view returns (uint64)',
@@ -78,7 +85,7 @@ const ENGINE_CONFIG_GETTERS=['REGISTRY','JACKPOT_TREASURY','JACKPOT_FUNDER','VRF
 const VAULT_ABI=['function totalAssets() view returns (uint256)','function totalSupply() view returns (uint256)',
   'function lockedBetLiquidity() view returns (uint256)','function availableForSideBet() view returns (uint256)',
   'function hasRole(bytes32,address) view returns (bool)','function marketId() view returns (uint32)',
-  'function lockSideBetStake(address,uint256,uint256)'];
+  'function flatWithdrawFee() view returns (uint256)','function lockSideBetStake(address,uint256,uint256)'];
 const SIDE_BET_ABI=['function sideBetsDisabled() view returns (bool)','function reservedOf(uint32) view returns (uint256)',
   'function betCount() view returns (uint256)',
   'function getBet(uint256) view returns (tuple(address player,uint32 marketId,uint256 stake,uint256 payout,uint64 startGlobalRound,uint16 windowSpins,uint8 betType,uint8 color,uint8 targetNumber,uint16 targetCount,uint16 redRatioBps,uint8 status,uint64 placedAt,uint64 resolvedAt))'];
@@ -271,13 +278,18 @@ function loadMainnetDeployment(root=ROOT) {
   const engineImplementation=a.engineImplementation;
   const history=(manifest.upgradeHistory||[]).filter(row=>row.newImplementation&&lower(row.newImplementation)===lower(engineImplementation));
   assert.equal(history.length,1,'Live engine implementation must have exactly one upgradeHistory entry');
-  const clean=JSON.parse(fs.readFileSync(path.join(root,'reports/incident-2026-11-04/future-upgrade-artifacts.json'),'utf8'));
+  // The live bank implementation must be the one whose source was reconstructed and matched byte for byte.
+  const proof=JSON.parse(fs.readFileSync(path.join(root,LIVE_VAULT_PROOF),'utf8'));
+  addressEqual(proof.implementation,a.bankVaultImplementation,'Manifest bank implementation is not the one proven in '+LIVE_VAULT_PROOF);
+  // Exact, or exact once the two constants whose names are unknown (one error selector, one event topic) are substituted.
+  assert(proof.exactRuntime===true||proof.unresolvedNames?.exactRuntimeAfterSubstitution===true,
+    LIVE_VAULT_PROOF+' does not prove a byte-for-byte runtime match');
   return {
     label:'arbitrum-one',chainId:MAINNET_CHAIN_ID,admin:getAddress(manifest.protocolAdmin),
     engine:getAddress(a.engine),engineImplementation:getAddress(engineImplementation),
     beacon:getAddress(a.vaultBeacon),bankVaultImplementation:getAddress(a.bankVaultImplementation),
-    // Runtime of the bank implementation installed by the 2026-11-04 cleanup (incident report artifact).
-    bankVaultRuntimeHash:keccak256(clean.BankVault4626.deployedBytecode),
+    // Runtime of the bank implementation installed on 2026-11-05 (0x6e84…f3cC), rebuilt from its reconstructed source.
+    bankVaultRuntimeHash:proof.onChain.runtimeKeccak,
     banks:a.banks.map(bank=>getAddress(bank)),registry:getAddress(a.registry),sideBet:getAddress(a.sideBet),
     linkedLibraries:Object.fromEntries(Object.entries(manifest.linkedLibraries).map(([k,v])=>[k,getAddress(v)])),
     engineConstructorArgs:history[0].constructorArguments,
@@ -383,6 +395,11 @@ async function bankBalances(c,markets,blockTag='latest') {
   }
   return rows;
 }
+async function flatWithdrawFees(c,markets,blockTag='latest') {
+  const rows=[];
+  for(const {marketId,bank} of markets)rows.push({marketId,bank,flatWithdrawFee:await c.bank(bank).flatWithdrawFee({blockTag})});
+  return rows;
+}
 async function engineConfig(c) {
   const out={};
   for(const getter of ENGINE_CONFIG_GETTERS)out[getter]=await c.engine[getter]();
@@ -391,8 +408,8 @@ async function engineConfig(c) {
 
 module.exports={ROOT,MAINNET_CHAIN_ID,LOCAL_CHAIN_ID,MAINNET_CONFIRMATION,CONFIRM_ENV,KEY_ENV,RPC_ENV,PUBLIC_RPC,
   RUNTIME_LIMIT,INITCODE_LIMIT,IMPLEMENTATION_SLOT,PHASES,LAUNCH_MASK_LEG_CAP,MAX_MASK_LEGS,MAX_BPS,LIBRARIES,
-  MAINNET_EXPECTED_REDEPLOY,ENGINE,VAULT,RELEASE_LOCK,REMOVED_VAULT_FUNCTIONS,ENGINE_ABI,VAULT_ABI,BEACON_ABI,
+  MAINNET_EXPECTED_REDEPLOY,ENGINE,VAULT,RELEASE_LOCK,REMOVED_VAULT_FUNCTIONS,KEPT_VAULT_FUNCTIONS,LIVE_VAULT_PROOF,ENGINE_ABI,VAULT_ABI,BEACON_ABI,
   stringify,lower,addressEqual,redact,bytesOf,readArtifact,loadArtifacts,immutableRanges,link,linkCreation,linkRuntime,
   normalizeRuntime,immutableValues,disassemble,dispatcherSelectors,dispatchesSelector,releaseLock,assertSizes,compareLayout,validateStorage,
   loadMainnetDeployment,assertNetwork,ReadOnlyProvider,rpcUrl,operatorSigner,contracts,implementationOf,beaconOf,
-  assertUpgradeWindow,assertSideBetsInert,marketsOf,bankBalances,engineConfig,ZeroHash,zeroPadValue,toBeHex};
+  assertUpgradeWindow,assertSideBetsInert,marketsOf,bankBalances,flatWithdrawFees,engineConfig,ZeroHash,zeroPadValue,toBeHex};

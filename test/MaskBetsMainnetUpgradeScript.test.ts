@@ -2,7 +2,7 @@ import hre, { viem } from "hardhat";
 
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { keccak256, zeroAddress, type Address } from "viem";
+import { keccak256, toHex, zeroAddress, type Address } from "viem";
 
 import { readLegacySideBetController } from "../scripts/utils/proxyVerification";
 
@@ -21,6 +21,8 @@ const Common = require("../scripts/mask-bets-v1-common.cjs");
 
 const SIX = 1_000_000n;
 const EIGHTEEN = 10n ** 18n;
+/** ERC-7201 root of `biribi.storage.BankVault4626` (contracts/BankVault4626.sol). */
+const VAULT_STORAGE_ROOT = 0xb0c430920bd46af8c5ecb68ebf1a5f6f3805a863a6d4fa0fa5e65feb72f8e800n;
 
 /**
  * Local replica of the Arbitrum One shape: engine on its current implementation with the ten pre-mask
@@ -95,8 +97,16 @@ describe("Mask bets v1 — mainnet upgrade script (local Hardhat network only)",
         const legacyVault = await viem.getContractAt("LegacySideBetBankVault4626", banks[0]);
         const controller = await legacyVault.read.sideBetController();
         expect(await readLegacySideBetController(publicClient, banks[0])).to.equal(controller);
+        // Mainnet runs a non-default fee (100 BRB on the BRB bank, set with setFlatWithdrawFee on 2026-11-05):
+        // emulate it on the legacy stand-in, whose fee sits at slot root + 5 of the ERC-7201 layout.
+        const raisedFee = 100n * SIX;
+        await hre.network.provider.send("hardhat_setStorageAt", [banks[0], toHex(VAULT_STORAGE_ROOT + 5n, { size: 32 }), toHex(raisedFee, { size: 32 })]);
         const reportPath = `${hre.config.paths.cache}/mask-bets-v1-local-execution.json`;
         const report = await Upgrade.executeUpgrade({ ...options(d), signer, reportPath });
+        expect(report.preflight.flatWithdrawFees.map((f: { flatWithdrawFee: bigint }) => f.flatWithdrawFee)).to.deep.equal([raisedFee, EIGHTEEN]);
+        expect(report.vaultUpgrade.flatWithdrawFees.map((f: { flatWithdrawFee: bigint }) => f.flatWithdrawFee)).to.deep.equal([raisedFee, EIGHTEEN]);
+        expect(report.vaultUpgrade.keptFunctions).to.deep.equal(["setFlatWithdrawFee(uint256)", "drainWithdrawalQueue(uint256)"]);
+        expect(await (await viem.getContractAt("BankVault4626", banks[0])).read.flatWithdrawFee()).to.equal(raisedFee);
         // Verification scripts still read the deprecated field (same slot) once the getter is gone.
         await expect(legacyVault.read.sideBetController()).to.be.rejected;
         expect(await readLegacySideBetController(publicClient, banks[0])).to.equal(controller);

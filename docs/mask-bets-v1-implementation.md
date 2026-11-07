@@ -14,7 +14,7 @@
 | Passif | `contracts/libraries/RouletteLiabilityMathLib.sol` | terme masque dans `Inputs`/`raw` (option (a)) ; `assertSolventAfterBet` (solvabilité + plafond bps) |
 | Paiement | `contracts/libraries/RoulettePayoutSweepLib.sol` | comptage O(1) au callback VRF (`_accumulateCountShards`), `_sweepMasks` **en dernier** dans l'aperçu |
 | Moteur | `contracts/RouletteEngine.sol` | `BET_MASK = 16`, appel unique à la bibliothèque par `recordBet`, `setMaskBetLimits` (`ENGINE_ROUND_ROLE`, événement `MaskBetLimitsUpdated`), `maskBetState`, lecture de `totalAssets()` (plus d'import `ISideBetVault`) |
-| Vault | `contracts/BankVault4626.sol` | surface side bet supprimée, 14 champs inchangés (`_deprecatedSideBetController`), `releaseBets`/`payoutBatch`/`transferOut` en `onlyEngine`, `InitializeParams` inchangé, `availableForSideBet()` conservé en vue |
+| Vault | `contracts/BankVault4626.sol` | surface side bet supprimée, 14 champs inchangés (`_deprecatedSideBetController`), `releaseBets`/`payoutBatch`/`transferOut` en `onlyEngine`, `InitializeParams` inchangé, `availableForSideBet()` conservé en vue ; reprend `setFlatWithdrawFee` et les autres changements de l'implémentation en place `0x6e84…f3cC` ([reconstitution](../reports/vault-2026-11-05/README.md)) |
 | Scripts | `scripts/utils/deployRouletteEngineLibraries.ts`, `predictDeployAddresses.ts` | 11ᵉ bibliothèque déployée **en dernier** (adresses des 10 existantes inchangées) |
 
 Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` sur tous les marchés tant que
@@ -68,7 +68,7 @@ mesuré par `StaticCallGasProbe` ; l'`eth_call` ajoute ≈ 21–25 k d'intrinsè
 « ronde » qui garde l'`eth_call` complet (≈ 1,40 M) sous ~1,5 M avec ≈ 7 % de marge ; elle est vérifiée par
 `test/VrfCallbackBudget.test.ts` (plafond 1,45 M interne, jambe 449 rejetée) et appliquée par le script d'activation.
 
-Tailles : `reports/mask-bets-v1/bytecode-sizes.json` (moteur 22 379 → 23 130, vault 15 435 → 14 401,
+Tailles : `reports/mask-bets-v1/bytecode-sizes.json` (moteur 22 379 → 23 130, vault 15 435 (master ; 16 072 pour `0x6e84` en place) → 15 038,
 `RouletteMaskBetLib` 3 008, `RoulettePayoutSweepLib` 7 599 → 8 318, `RouletteLiabilityMathLib` 2 317 → 2 674).
 `RouletteUpkeepScanLib` est inchangée en source mais doit être **redéployée** (adresse liée de
 `RoulettePayoutSweepLib`).
@@ -141,7 +141,19 @@ refuse toute compilation différente (`--write-lock` le régénère, à recommit
 réelle écrit un journal horodaté `reports/mask-bets-v1/mainnet-execution-*.json` / `mainnet-activation-*.json`
 (hachages de transactions, jamais de clé ni d'URL RPC).
 
-### Dry run du 06/11/2026 : **bloqué**
+### Dry run du 07/11/2026 : **passe**
+
+`reports/mask-bets-v1/mainnet-dry-run-2026-11-07.json` (RPC public, bloc 522 055 874, aucune transaction) :
+`PREFLIGHT PASSED`. Le manifeste désigne désormais `0x6e84…f3cC`, et son runtime archivé est contrôlé par
+`loadMainnetDeployment` via `reports/vault-2026-11-05/match.json`. Le round 165 est `Open` ; les 14 tickets SideBet
+sont clos ; réserves et verrous sont à 0 ; rôles et layouts sont conformes. Côté bibliothèques, 7 sont réutilisées
+et 4 déployées. Le plan compte 8 transactions, aux nonces 313 à 320 de l'admin.
+
+Le preflight relève le `flatWithdrawFee` de chaque vault : 100 BRB, 1 USDC, 1 DAI. Après l'upgrade, il vérifie
+que ces valeurs sont identiques avant et après le bloc d'upgrade du beacon. Il vérifie aussi que le nouveau runtime
+dispatche toujours `setFlatWithdrawFee` et `drainWithdrawalQueue`, comme le build compilé.
+
+### Dry run du 06/11/2026 : **bloqué** (historique)
 
 `reports/mask-bets-v1/mainnet-dry-run-2026-11-06.json` (RPC public, aucune transaction). Le preflight s'arrête :
 l'implémentation du beacon des vaults sur Arbitrum One est `0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC`, pas

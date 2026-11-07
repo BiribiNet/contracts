@@ -87,6 +87,7 @@ async function preflight({provider,d,artifacts,from,lockPath=C.RELEASE_LOCK,root
   }
   report.sizes=C.assertSizes(artifacts);
   report.storage=C.validateStorage(artifacts,root);
+  report.keptVaultFunctions=assertKeptVaultFunctions(artifacts.vault.deployedBytecode,'compiled BankVault4626');
   const c=C.contracts(provider,d);
   // Owner and roles.
   const roundRole=await c.engine.ENGINE_ROUND_ROLE();
@@ -108,6 +109,7 @@ async function preflight({provider,d,artifacts,from,lockPath=C.RELEASE_LOCK,root
     'Live engine implementation does not embed the recorded VRF coordinator');
   const markets=await C.marketsOf(c,d);
   for(const {bank} of markets)C.addressEqual(await C.beaconOf(provider,bank),d.beacon,'Bank '+bank+' is not behind the vault beacon');
+  const flatWithdrawFees=await C.flatWithdrawFees(c,markets);
   // Upgrade window and side-bet state.
   const window=await C.assertUpgradeWindow(c,markets.map(m=>m.marketId));
   const sideBets=await C.assertSideBetsInert(c,markets,window.round);
@@ -116,8 +118,14 @@ async function preflight({provider,d,artifacts,from,lockPath=C.RELEASE_LOCK,root
   const libraries=await resolveLibraries(provider,d,artifacts);
   Object.assign(report,{block:await provider.getBlockNumber(),engineImplementation,vaultImplementation,markets,window,sideBets,
     bankAdminRoles:await Promise.all(markets.map(async m=>({bank:m.bank,adminHasDefaultRole:await c.bank(m.bank).hasRole(C.ZeroHash,d.admin)}))),
-    balances:await C.bankBalances(c,markets),engineConfig:await C.engineConfig(c),libraries,nonce:latest});
+    balances:await C.bankBalances(c,markets),flatWithdrawFees,engineConfig:await C.engineConfig(c),libraries,nonce:latest});
   return report;
+}
+
+/** The vault runtime still routes `setFlatWithdrawFee` and `drainWithdrawalQueue` (disassembled dispatcher, not a PUSH4 search). */
+function assertKeptVaultFunctions(code,label) {
+  for(const signature of C.KEPT_VAULT_FUNCTIONS)assert.equal(C.dispatchesSelector(code,signature),true,label+' no longer dispatches '+signature);
+  return C.KEPT_VAULT_FUNCTIONS;
 }
 
 /** On-chain runtime equals the compiled one (linked), immutables equal to the constructor values. */
@@ -155,17 +163,20 @@ async function verifyEngineUpgrade({provider,d,newImplementation,markets,configB
 }
 
 /**
- * Beacon on the new implementation; its runtime no longer dispatches the side-bet entry points; for each bank
- * totalAssets()/totalSupply() are identical right before and after the upgrade block and availableForSideBet()
- * equals totalAssets().
+ * Beacon on the new implementation; its runtime no longer dispatches the side-bet entry points but still dispatches
+ * `setFlatWithdrawFee` and `drainWithdrawalQueue`; for each bank totalAssets()/totalSupply() and flatWithdrawFee()
+ * are identical right before and after the upgrade block and availableForSideBet() equals totalAssets().
  */
 async function verifyVaultUpgrade({provider,d,newImplementation,markets,upgradeBlock}) {
   const c=C.contracts(provider,d);
   C.addressEqual(await c.beacon.implementation(),newImplementation,'Beacon is not on the new implementation');
   const code=await provider.getCode(newImplementation);
   for(const signature of C.REMOVED_VAULT_FUNCTIONS)assert.equal(C.dispatchesSelector(code,signature),false,'Vault still dispatches '+signature);
+  assertKeptVaultFunctions(code,'Upgraded vault');
   const before=await C.bankBalances(c,markets,upgradeBlock-1),after=await C.bankBalances(c,markets,upgradeBlock);
   assert.deepEqual(after,before,'totalAssets()/totalSupply() changed across the beacon upgrade');
+  const feesBefore=await C.flatWithdrawFees(c,markets,upgradeBlock-1),feesAfter=await C.flatWithdrawFees(c,markets,upgradeBlock);
+  assert.deepEqual(feesAfter,feesBefore,'flatWithdrawFee() changed across the beacon upgrade');
   const banks=[];
   for(const {marketId,bank} of markets) {
     const v=c.bank(bank);
@@ -174,7 +185,7 @@ async function verifyVaultUpgrade({provider,d,newImplementation,markets,upgradeB
     await assert.rejects(v.lockSideBetStake.staticCall(d.admin,1n,1n),'lockSideBetStake still callable on '+bank);
     banks.push({marketId,bank,totalAssets:assets,availableForSideBet:assets});
   }
-  return {balancesAroundUpgrade:after,banks,removedFunctions:C.REMOVED_VAULT_FUNCTIONS};
+  return {balancesAroundUpgrade:after,flatWithdrawFees:feesAfter,banks,removedFunctions:C.REMOVED_VAULT_FUNCTIONS,keptFunctions:C.KEPT_VAULT_FUNCTIONS};
 }
 
 /** Dry run: preflight + plan + gas estimates for the deployments. Never signs. */
@@ -251,6 +262,8 @@ function printPlan(plan,d) {
   out.push('chain '+plan.chainId+', block '+plan.checks.block+', admin '+d.admin+', admin nonce '+plan.checks.nonce);
   out.push('window: round '+plan.checks.window.round+' '+plan.checks.window.phase+'; side bets disabled, '+plan.checks.sideBets.ticketCount+' tickets, none open, reserves 0');
   for(const b of plan.checks.sideBets.banks)out.push('  market '+b.marketId+' bank '+b.bank+' lock '+b.locked+' = unreleased round stakes');
+  for(const f of plan.checks.flatWithdrawFees)out.push('  market '+f.marketId+' flatWithdrawFee '+f.flatWithdrawFee+' (must be preserved by the beacon upgrade)');
+  out.push('vault: live '+plan.checks.vaultImplementation+' (source reconstructed, '+C.LIVE_VAULT_PROOF+'); new build keeps '+plan.checks.keptVaultFunctions.join(', '));
   out.push('libraries:');
   for(const row of plan.checks.libraries.rows)out.push('  '+row.action.padEnd(6)+' '+row.name.padEnd(26)+' '+(row.current||'-')+'  ('+row.reason+')');
   out.push('transactions (from '+d.admin+'):');
@@ -311,6 +324,6 @@ async function main() {
   } finally {provider.destroy();}
 }
 
-module.exports={resolveLibraries,buildTransactions,preflight,verifyDeployment,verifyEngineUpgrade,verifyVaultUpgrade,
+module.exports={assertKeptVaultFunctions,resolveLibraries,buildTransactions,preflight,verifyDeployment,verifyEngineUpgrade,verifyVaultUpgrade,
   planUpgrade,executeUpgrade,printPlan,parseArgs};
 if(require.main===module)main().catch(error=>{console.error(C.redact(error));process.exitCode=1;});

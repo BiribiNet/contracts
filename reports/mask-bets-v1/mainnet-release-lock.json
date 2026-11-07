@@ -74,10 +74,10 @@
       "initcodeBytes": 23695
     },
     "BankVault4626": {
-      "bytecodeHash": "0xb22c9d8a772a7d196fbb607360d41c8285f6e3399a7a3d9201db7e7af23d667a",
-      "deployedBytecodeHash": "0x2f1ae0284959279b15b5a96bd5f4e5d5a8ab4cb61e22be7266062725b2f88b72",
-      "runtimeBytes": 14401,
-      "initcodeBytes": 14429
+      "bytecodeHash": "0x0d25faefb7d63c41af729d1dc8925f065756e5e754cb9ff11c54538d42fb51bf",
+      "deployedBytecodeHash": "0x02aa69ad7ec78153d34be815df21398601534e2e15e8fac69b3101c08955baf5",
+      "runtimeBytes": 15038,
+      "initcodeBytes": 15066
     }
   }
 }

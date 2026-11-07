@@ -17,11 +17,13 @@
     {
       "name": "BankVault4626",
       "runtimeBefore": 15435,
-      "runtimeAfter": 14401,
-      "runtimeDelta": -1034,
+      "runtimeAfter": 15038,
+      "runtimeDelta": -397,
       "initcodeBefore": 15463,
-      "initcodeAfter": 14429,
-      "runtimeMarginAfter": 10175
+      "initcodeAfter": 15066,
+      "runtimeMarginAfter": 9538,
+      "runtimeLiveImplementation0x6e84": 16072,
+      "note": "runtimeBefore = master (0x129c…797D); live since 2026-11-05 is 0x6e84…f3cC (16 072 B). runtimeAfter includes setFlatWithdrawFee and the other 0x6e84 behaviour ported to this PR."
     },
     {
       "name": "SideBet",
