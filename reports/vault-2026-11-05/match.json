@@ -1,0 +1,97 @@
+{
+  "implementation": "0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC",
+  "previousImplementation": "0x129cAf686c2489685841Ef1E9d442Fd8b963797D",
+  "upgradeTransaction": "0xb63c808cb835b0246b7478b8fc8c714bb69d57ed7d2c5a4af353c4e9cf82dbe0",
+  "source": "reports/vault-2026-11-05/BankVault4626.sol",
+  "sourceKeccak": "0xabc24e13e2360e922a1c0d1433b59cc50cc5751ec562e257319209ea566c445d",
+  "compilerInput": "reports/vault-2026-11-05/compiler-input.json",
+  "compilerInputKeccak": "0x8acbeae20dc9b47f081b87932a985e97003962e84b791fac040baf26c1c59ad6",
+  "compiler": "solc 0.8.27+commit.40a35a09 (native, --standard-json)",
+  "settings": {
+    "viaIR": false,
+    "optimizer": {
+      "enabled": true,
+      "runs": 1
+    },
+    "metadata": {
+      "bytecodeHash": "none"
+    },
+    "evmVersion": "cancun",
+    "outputSelection": {
+      "contracts/BankVault4626.sol": {
+        "BankVault4626": [
+          "abi",
+          "evm.bytecode.object",
+          "evm.deployedBytecode.object",
+          "evm.methodIdentifiers"
+        ]
+      }
+    }
+  },
+  "onChain": {
+    "block": 522055224,
+    "runtimeBytes": 16072,
+    "runtimeKeccak": "0x4774728dc31f144fb56231dfd829b6956ffa2834e4da56177cc43c27a2dca6aa",
+    "executableKeccak": "0xa87bc4eb0e329cead4463125962c546279f1277609a5e8afe073ebc14dc7d44e"
+  },
+  "compiled": {
+    "runtimeBytes": 16072,
+    "runtimeKeccak": "0xaa4cb84727f4ec2444dd235bdddb4d8434b8b0339746ea8eca1052b80b5eab0f",
+    "executableKeccak": "0xdf26e2796d56ad05668e4e5cb43bf3c7ef3853f151f353f4895d447342e7a426",
+    "initcodeKeccak": "0x48eeae3bfcb36b22ec48bf55586f4d92400b239f67f0c2cb94f736e6e4250b65"
+  },
+  "exactRuntime": false,
+  "exactExecutable": false,
+  "storage": {
+    "method": "probe struct BankVault4626.BankVaultStorage, compared with reports/incident-2026-11-04/storage-validation.json (afterRemoval)",
+    "fields": [
+      "marketId",
+      "ENGINE",
+      "lockedBetLiquidity",
+      "sideBetController",
+      "minBet",
+      "assetDecimals",
+      "flatWithdrawFee",
+      "_withdrawalQueue",
+      "_queueHead",
+      "_pendingWithdrawal",
+      "_userQueueIndex",
+      "nextWithdrawalId",
+      "pendingWithdrawalId",
+      "withdrawalReceipts"
+    ],
+    "identicalToDeployed": true
+  },
+  "dispatcherMatchesAbi": true,
+  "constantDiff": {
+    "onlyCompiled": [
+      "4b23b5851ff0aa312a84fefecc64060f8ab047c12ebd029a30fafc53ab4238a9",
+      "e165e91d"
+    ],
+    "onlyOnChain": [
+      "debd20cf867e0067bf5d9e8539b5223bb556e27981cc7caca1dde99676f2c7bf",
+      "e3ee11df"
+    ]
+  },
+  "checkedAt": "2026-11-07T10:17:42.998Z",
+  "unresolvedNames": {
+    "exactRuntimeAfterSubstitution": true,
+    "substitutions": [
+      {
+        "kind": "error",
+        "signature": "SharesLockedByPendingWithdrawal()",
+        "onChain": "e3ee11df",
+        "compiled": "e165e91d",
+        "sites": 1
+      },
+      {
+        "kind": "event",
+        "signature": "SkippedWithdrawalFeeCharged(uint256,address,address,uint256,uint256)",
+        "onChain": "debd20cf867e0067bf5d9e8539b5223bb556e27981cc7caca1dde99676f2c7bf",
+        "compiled": "4b23b5851ff0aa312a84fefecc64060f8ab047c12ebd029a30fafc53ab4238a9",
+        "sites": 1
+      }
+    ],
+    "note": "Only these constants differ: substituting them in the compiled runtime gives the on-chain runtime byte for byte (CBOR trailer included)."
+  }
+}

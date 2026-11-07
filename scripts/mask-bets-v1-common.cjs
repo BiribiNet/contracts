@@ -147,6 +147,43 @@ function immutableValues(code,ranges) {
   const hex=lower(code).replace(/^0x/,'');
   return [...new Set(ranges.map(({start,length})=>'0x'+hex.slice(start*2,(start+length)*2)))].sort();
 }
+/** Opcodes of a runtime, PUSH data skipped (so a selector inside push data or metadata is never an opcode). */
+function disassemble(code) {
+  const bytes=Buffer.from(lower(code).replace(/^0x/,''),'hex'),out=[];
+  for(let pc=0;pc<bytes.length;) {
+    const op=bytes[pc];
+    if(op>=0x5f&&op<=0x7f) {
+      const size=op-0x5f;
+      out.push({pc,op,push:size,value:bytes.subarray(pc+1,pc+1+size).toString('hex')});
+      pc+=1+size;
+    } else {out.push({pc,op,push:-1,value:null});pc+=1;}
+  }
+  return out;
+}
+const OP={JUMPDEST:0x5b,DUP1:0x80,EQ:0x14,GT:0x11,LT:0x10,JUMPI:0x57,JUMP:0x56,SHR:0x1c,CALLDATALOAD:0x35};
+/**
+ * Function selectors of a solc dispatcher, read from a proper disassembly. solc compares each selector with the
+ * SMALLEST push that holds it: `0x00e4a032` (`drainWithdrawalQueue(uint256)`) is `PUSH3 e4a032`, never
+ * `PUSH4 00e4a032`, so searching the hex for `63`+selector misses it (the 2026-11-06 false positive). Reads
+ * `DUP1 PUSHn s EQ PUSH2 t JUMPI` entries (and skips `GT`/`LT` bucket pivots) from the selector load
+ * (`CALLDATALOAD PUSH1 e0 SHR`) to the end of the table. A `0x00000000` selector (`DUP1 ISZERO`) is not handled.
+ */
+function dispatcherSelectors(code) {
+  const ops=disassemble(code);
+  let i=ops.findIndex((o,k)=>o.op===OP.CALLDATALOAD&&ops[k+1]?.push===1&&ops[k+1].value==='e0'&&ops[k+2]?.op===OP.SHR);
+  assert(i>=0,'No solc selector dispatcher in this runtime');
+  const selectors=new Set();
+  const entry=k=>ops[k]?.op===OP.DUP1&&ops[k+1]?.push>=1&&ops[k+1].push<=4&&[OP.EQ,OP.GT,OP.LT].includes(ops[k+2]?.op)
+    &&ops[k+3]?.push>=1&&ops[k+4]?.op===OP.JUMPI;
+  for(i+=3;i<ops.length;) {
+    if(ops[i].op===OP.JUMPDEST){i++;continue;}
+    if(entry(i)){if(ops[i+2].op===OP.EQ)selectors.add('0x'+ops[i+1].value.padStart(8,'0'));i+=5;continue;}
+    // Jump to the shared fallback between buckets.
+    if(ops[i].push>=1&&ops[i+1]?.op===OP.JUMP&&ops[i+2]?.op===OP.JUMPDEST&&entry(i+3)){i+=2;continue;}
+    break;
+  }
+  return selectors;
+}
 /** True when the runtime dispatches `signature` (PUSH4 selector), the usual check for a removed function. */
 function dispatchesSelector(code,signature) {
   return lower(code).includes('63'+keccak256(Buffer.from(signature)).slice(2,10));
@@ -356,6 +393,6 @@ module.exports={ROOT,MAINNET_CHAIN_ID,LOCAL_CHAIN_ID,MAINNET_CONFIRMATION,CONFIR
   RUNTIME_LIMIT,INITCODE_LIMIT,IMPLEMENTATION_SLOT,PHASES,LAUNCH_MASK_LEG_CAP,MAX_MASK_LEGS,MAX_BPS,LIBRARIES,
   MAINNET_EXPECTED_REDEPLOY,ENGINE,VAULT,RELEASE_LOCK,REMOVED_VAULT_FUNCTIONS,ENGINE_ABI,VAULT_ABI,BEACON_ABI,
   stringify,lower,addressEqual,redact,bytesOf,readArtifact,loadArtifacts,immutableRanges,link,linkCreation,linkRuntime,
-  normalizeRuntime,immutableValues,dispatchesSelector,releaseLock,assertSizes,compareLayout,validateStorage,
+  normalizeRuntime,immutableValues,disassemble,dispatcherSelectors,dispatchesSelector,releaseLock,assertSizes,compareLayout,validateStorage,
   loadMainnetDeployment,assertNetwork,ReadOnlyProvider,rpcUrl,operatorSigner,contracts,implementationOf,beaconOf,
   assertUpgradeWindow,assertSideBetsInert,marketsOf,bankBalances,engineConfig,ZeroHash,zeroPadValue,toBeHex};
