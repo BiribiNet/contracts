@@ -1,5 +1,9 @@
 import hre, { ethers, artifacts, network } from 'hardhat';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readLegacySideBetController, storageReaderFromEthers } from './utils/proxyVerification';
+
+// The mask-bets v1 vault no longer exposes sideBetController(); the field is read from its unchanged slot.
+const ethersStorageReader = storageReaderFromEthers(ethers.provider);
 
 const IMPLEMENTATION_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
 const live = process.env.LIVE_APPLY === 'true';
@@ -55,7 +59,7 @@ async function main() {
     for (let id=1; id<=Number(await registry.marketCount()); id++) {
       const market = await registry.getMarket(id);
       const bank: any = await ethers.getContractAt('BankVault4626', market.bank);
-      banks.push([market.bank, await bank.totalAssets(), await bank.totalSupply(), await bank.lockedBetLiquidity(), await bank.marketId(), await bank.sideBetController()]);
+      banks.push([market.bank, await bank.totalAssets(), await bank.totalSupply(), await bank.lockedBetLiquidity(), await bank.marketId(), await readLegacySideBetController(ethersStorageReader, market.bank)]);
     }
     return JSON.stringify({ banks, bets: await side.betCount(), configs: await side.configCount(), timeout: await side.settleTimeout(), engine: await side.ENGINE(), registry: await side.REGISTRY(), scheduler: await engine.UPKEEP_SCHEDULER(), round: await engine.currentGlobalRound(), pending: await engine.hasPendingVrf(), reserved: await Promise.all([1,2,3].map(id=>side.reservedOf(id))) }, (_,v)=>typeof v==='bigint'?v.toString():v);
   };

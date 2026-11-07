@@ -319,11 +319,11 @@ describe("RoutedBRBJackpotFunder", function () {
         const next = await viem.deployContract("RoutedBRBJackpotFunder", [stack.engine.address, f.brb.address,
             f.router.address, stack.jackpotTreasury!.address, stack.sideBet.address,
             f.admin.account.address, f.dai.address, f.usdc.address]);
-        const vault = await viem.deployContract("BankVault4626");
+        const vault = await viem.deployContract("LegacySideBetBankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vault.address, f.admin.account.address]);
         await stack.registry!.write.setVaultBeacon([beacon.address]);
         await stack.registry!.write.createMarket([{ asset: f.dai.address, bankAdmin: f.admin.account.address, minBet: daiAmount("1") }]);
-        const bank = await viem.getContractAt("BankVault4626", (await stack.registry!.read.getMarket([1])).bank);
+        const bank = await viem.getContractAt("LegacySideBetBankVault4626", (await stack.registry!.read.getMarket([1])).bank);
         await f.dai.write.approve([bank.address, daiAmount("10002")]);
         await bank.write.deposit([daiAmount("10000"), f.admin.account.address]);
         if (includeSideBet) {

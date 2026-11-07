@@ -18,12 +18,12 @@ async function auditStack() {
 }
 
 async function auditMarket(stack: Awaited<ReturnType<typeof auditStack>>, asset: `0x${string}`) {
-    const impl = await viem.deployContract("BankVault4626");
+    const impl = await viem.deployContract("LegacySideBetBankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [impl.address, stack.admin]);
     await stack.registry.write.setVaultBeacon([beacon.address]);
     await stack.registry.write.createMarket([{ asset, bankAdmin: stack.admin, minBet: 1_000_000n }]);
     const market = await stack.registry.read.getMarket([1]);
-    return viem.getContractAt("BankVault4626", market.bank);
+    return viem.getContractAt("LegacySideBetBankVault4626", market.bank);
 }
 
 async function populatedStack() {
@@ -67,7 +67,7 @@ describe("Mainnet readiness audit probes (current behavior)", function () {
         const [, attacker] = await viem.getWalletClients();
         const usdc = await viem.deployContract("MockUSDC");
         const engine = await viem.deployContract("MockEngine");
-        const impl = await viem.deployContract("BankVault4626");
+        const impl = await viem.deployContract("LegacySideBetBankVault4626");
         await impl.write.initialize([{ assetToken: usdc.address, name: "Audit", symbol: "AUD", marketId: 1,
             engine: engine.address, admin: attacker.account.address, minBet: 1n, sideBetController: zeroAddress }],
             { account: attacker.account });
@@ -91,7 +91,7 @@ describe("Mainnet readiness audit probes (current behavior)", function () {
         await expect(s.engine.write.upgradeToAndCall([newEngine.address, "0x"], { account: s.attacker.account })).to.be.rejected;
         await s.engine.write.upgradeToAndCall([newEngine.address, "0x"]);
         const beacon = await viem.getContractAt("UpgradeableBeacon", await s.registry.read.vaultBeacon());
-        const vaultImpl = await viem.deployContract("BankVault4626");
+        const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
         await expect(beacon.write.upgradeTo([vaultImpl.address], { account: s.attacker.account })).to.be.rejected;
         await beacon.write.upgradeTo([vaultImpl.address]);
         const sideImpl = await viem.deployContract("SideBet");

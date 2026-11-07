@@ -1,6 +1,10 @@
 /** Fork-only rehearsal. This script refuses public networks and never broadcasts there. */
 import { ethers, network } from 'hardhat';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { readLegacySideBetController, storageReaderFromEthers } from './utils/proxyVerification';
+
+// The mask-bets v1 vault no longer exposes sideBetController(); the field is read from its unchanged slot.
+const ethersStorageReader = storageReaderFromEthers(ethers.provider);
 
 const folder = 'deployments/unindexed-upgrade-2026-10-15';
 const json = (name: string) => JSON.parse(readFileSync(`${folder}/${name}`, 'utf8'));
@@ -57,7 +61,7 @@ async function main() {
     const banks = [];
     for (const row of state.banks) {
       const bank: any = await ethers.getContractAt('BankVault4626', row.bank);
-      banks.push({ address: row.bank, assets: await bank.totalAssets(), shares: await bank.totalSupply(), locked: await bank.lockedBetLiquidity(), marketId: await bank.marketId(), sideBetController: await bank.sideBetController() });
+      banks.push({ address: row.bank, assets: await bank.totalAssets(), shares: await bank.totalSupply(), locked: await bank.lockedBetLiquidity(), marketId: await bank.marketId(), sideBetController: await readLegacySideBetController(ethersStorageReader, row.bank) });
     }
     return { banks, round: await engine.currentGlobalRound(), pendingVrf: await engine.hasPendingVrf(), registry: await engine.REGISTRY(), scheduler: await engine.UPKEEP_SCHEDULER(), treasury: await engine.JACKPOT_TREASURY(), funder: await engine.JACKPOT_FUNDER() };
   };

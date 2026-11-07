@@ -92,7 +92,7 @@ async function deployFixture() {
     const usdc = await viem.deployContract("MockUSDC");
     const roundEngine = await viem.deployContract("MockRoundEngine");
 
-    const vaultImpl = await viem.deployContract("BankVault4626");
+    const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
 
     const { registry } = await deploySideBetRegistryStack({
@@ -124,7 +124,7 @@ async function deployFixture() {
         { account: admin.account },
     );
     const market = await registry.read.getMarket([MARKET_ID]);
-    const vault = await viem.getContractAt("BankVault4626", market.bank);
+    const vault = await viem.getContractAt("LegacySideBetBankVault4626", market.bank);
     expect(getAddress(await vault.read.sideBetController())).to.equal(getAddress(sideBet.address));
 
     // LP liquidity in the vault.
@@ -440,7 +440,7 @@ for(const bad of [{betType:9,targetCount:2},{betType:10,windowSpins:2,targetCoun
         const [admin, alice] = await viem.getWalletClients();
         const usdc = await viem.deployContract("MockUSDC");
         const roundEngine = await viem.deployContract("MockRoundEngine");
-        const vaultImpl = await viem.deployContract("BankVault4626");
+        const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
         const { registry } = await deploySideBetRegistryStack({
             admin: admin.account.address,
@@ -459,7 +459,7 @@ for(const bad of [{betType:9,targetCount:2},{betType:10,windowSpins:2,targetCoun
             { account: admin.account },
         );
         const market = await registry.read.getMarket([MARKET_ID]);
-        const vault = await viem.getContractAt("BankVault4626", market.bank);
+        const vault = await viem.getContractAt("LegacySideBetBankVault4626", market.bank);
         await usdc.write.mint([admin.account.address, USDC("100")]);
         await usdc.write.approve([vault.address, USDC("100")], { account: admin.account });
         await vault.write.deposit([USDC("15"), admin.account.address], { account: admin.account });
@@ -685,7 +685,7 @@ for(const bad of [{betType:9,targetCount:2},{betType:10,windowSpins:2,targetCoun
             { account: admin.account },
         );
         const market2 = await registry.read.getMarket([2]);
-        const vault2 = await viem.getContractAt("BankVault4626", market2.bank);
+        const vault2 = await viem.getContractAt("LegacySideBetBankVault4626", market2.bank);
         await usdc2.write.mint([admin.account.address, USDC("10000")]);
         await usdc2.write.mint([alice.account.address, USDC("1000")]);
         await usdc2.write.approve([vault2.address, USDC("1000")], { account: alice.account });
@@ -725,7 +725,7 @@ for(const bad of [{betType:9,targetCount:2},{betType:10,windowSpins:2,targetCoun
             { account: admin.account },
         );
         const market2 = await registry.read.getMarket([2]);
-        const vault2 = await viem.getContractAt("BankVault4626", market2.bank);
+        const vault2 = await viem.getContractAt("LegacySideBetBankVault4626", market2.bank);
         await usdc2.write.mint([admin.account.address, USDC("10000")]);
         await usdc2.write.mint([alice.account.address, USDC("1000")]);
         await usdc2.write.approve([vault2.address, USDC("1000")], { account: alice.account });
@@ -1012,7 +1012,7 @@ describe("SideBet reserved-liquidity accounting", function () {
             { account: admin.account },
         );
         const secondMarket = await registry.read.getMarket([secondMarketId]);
-        const secondVault = await viem.getContractAt("BankVault4626", secondMarket.bank);
+        const secondVault = await viem.getContractAt("LegacySideBetBankVault4626", secondMarket.bank);
         await secondAsset.write.mint([admin.account.address, USDC("10000")]);
         await secondAsset.write.approve([secondVault.address, USDC("10000")], { account: admin.account });
         await secondVault.write.deposit([USDC("10000"), admin.account.address], { account: admin.account });
@@ -1087,7 +1087,7 @@ describe("SideBet fees", function () {
 
         const roundEngine = await viem.deployContract("MockRoundEngine");
         const mockRouter = await viem.deployContract("MockUniswapV2Router");
-        const vaultImpl = await viem.deployContract("BankVault4626");
+        const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
         const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
 
         const jackpotTreasury = await viem.deployContract("JackpotTreasury", [
@@ -1156,7 +1156,7 @@ describe("SideBet fees", function () {
             { account: admin.account },
         );
         const market = await registry.read.getMarket([MARKET_ID]);
-        const vault = await viem.getContractAt("BankVault4626", market.bank);
+        const vault = await viem.getContractAt("LegacySideBetBankVault4626", market.bank);
 
         const lpAmount = parseUnits("10000", marketAsset === "usdc" ? 6 : 18);
         if (marketAsset === "brb") {

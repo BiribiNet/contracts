@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { artifacts, viem } from "hardhat";
 import { USDC, DAI, MIN_BET_USDC, MIN_BET_DAI } from "./constants/arbitrumOne";
 import { createArbitrumFallbackPublicClient } from "./utils/hardhatRpcFailover";
-import { encodeBankVaultProxyInitDataFromAsset } from "./utils/proxyVerification";
+import { encodeBankVaultProxyInitDataFromAsset, readLegacySideBetController } from "./utils/proxyVerification";
 import { verifyExactCompilerBuild } from "./utils/verifyExactCompilerBuild";
 
 async function main() {
@@ -36,7 +36,7 @@ async function main() {
             registered.bank.toLowerCase() === market.bank.toLowerCase() && registered.asset.toLowerCase() === asset.toLowerCase() &&
             await registry.read.assetToMarket([asset]) === id && await bank.read.marketId() === id && await bank.read.assetDecimals() === decimals &&
             (await bank.read.asset()).toLowerCase() === asset.toLowerCase() && (await bank.read.ENGINE()).toLowerCase() === a.engine.toLowerCase() &&
-            (await bank.read.sideBetController()).toLowerCase() === a.sideBet.toLowerCase() && await bank.read.minBet() === minBet &&
+            (await readLegacySideBetController(client, market.bank)).toLowerCase() === a.sideBet.toLowerCase() && await bank.read.minBet() === minBet &&
             await bank.read.flatWithdrawFee() === minBet && await bank.read.totalAssets() === 0n && await bank.read.totalSupply() === 0n &&
             await bank.read.hasRole([await bank.read.BANK_ADMIN_ROLE(), m.protocolAdmin]) && await bank.read.hasRole([await bank.read.DEFAULT_ADMIN_ROLE(), m.protocolAdmin]) &&
             receipt.status === "success" && transaction.from.toLowerCase() === m.protocolAdmin.toLowerCase();

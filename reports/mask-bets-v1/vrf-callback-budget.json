@@ -1,0 +1,13 @@
+{
+  "scope": "Local exact engine callback from impersonated configured coordinator (same method as deployments/vrf-callback-budget-2026-10-15.json); preview cost = gas of one previewPayoutBundle eth_call on the last chunk of a lane, measured by StaticCallGasProbe",
+  "gasLimit": 2500000,
+  "laneCount": 10,
+  "marketCount": 3,
+  "straightLegsPerMarket": 100,
+  "maskLegsPerMarket": 1024,
+  "callbackGasWithoutMasks": "1047793",
+  "callbackGasWithMasks": "1054426",
+  "callbackGasDelta": "6633",
+  "previewPayoutBundleEthCallGasAtCap": "2925620",
+  "maxPayoutsPerCall": 10
+}

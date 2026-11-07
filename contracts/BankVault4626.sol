@@ -13,12 +13,7 @@ import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/Reentran
 import { IBankVault } from "./interfaces/IBankVault.sol";
 import { IRouletteEngine } from "./interfaces/IRouletteEngine.sol";
 import { IRouletteFeeConfig } from "./interfaces/IRouletteFeeConfig.sol";
-import { ISideBetVault } from "./interfaces/ISideBetVault.sol";
 import { IERC20PermitCompat } from "./interfaces/IERC20PermitCompat.sol";
-
-interface November2026TicketRecovery {
-    function recoverNovember2026Tickets() external;
-}
 
 /// @notice Proxy-friendly BankVault4626 (initializer-based). Deploy via `ERC1967Proxy`.
 /// @dev Deposit / withdraw enqueue policy follows `ENGINE.isBankLiquidityRestricted(marketId)`. Queue limits and batch sizes are read from the engine (global per protocol).
@@ -27,8 +22,7 @@ contract BankVault4626 is
     ERC4626Upgradeable,
     AccessControlUpgradeable,
     ReentrancyGuardTransient,
-    IBankVault,
-    ISideBetVault
+    IBankVault
 {
     using SafeERC20 for IERC20;
 
@@ -42,6 +36,8 @@ contract BankVault4626 is
         address engine;
         address admin;
         uint256 minBet;
+        /// @dev Ignored since mask bets v1. Kept so `initialize`'s selector stays the one the
+        /// non-upgradeable `MarketRegistry` encodes.
         address sideBetController;
     }
 
@@ -62,7 +58,9 @@ contract BankVault4626 is
         uint32 marketId;
         IRouletteEngine ENGINE;
         uint256 lockedBetLiquidity;
-        address sideBetController;
+        /// @dev Former side-bet controller. Same type and position to keep the 14-field layout; never read
+        /// or written by this implementation (its stale value on upgraded proxies is inert).
+        address _deprecatedSideBetController;
         uint256 minBet;
         uint8 assetDecimals;
         uint256 flatWithdrawFee;
@@ -97,11 +95,10 @@ contract BankVault4626 is
         return _s().lockedBetLiquidity;
     }
 
-    function sideBetController() external view returns (address) {
-        return _s().sideBetController;
-    }
-
-    function availableForSideBet() public view returns (uint256) {
+    /// @notice Legacy read-only view (= `totalAssets()`), stateless and unprivileged.
+    /// @dev Kept so that the previous `RouletteEngine` implementation, which calls it on every bet, can
+    /// still be restored by a rollback without touching the vault beacon.
+    function availableForSideBet() external view returns (uint256) {
         return totalAssets();
     }
 
@@ -113,13 +110,13 @@ contract BankVault4626 is
         return _s().assetDecimals;
     }
 
-    /// @notice Flat fee (1 whole token unit) charged on each processed queued withdrawal; paid to `ENGINE.INFRA_RECIPIENT()`.
+    /// @notice Flat fee charged on each processed queued withdrawal; paid to `ENGINE.INFRA_RECIPIENT()`.
+    /// @dev Initialised to 1 whole token unit; `BANK_ADMIN_ROLE` changes it with {setFlatWithdrawFee}.
     function flatWithdrawFee() external view returns (uint256) {
         return _s().flatWithdrawFee;
     }
 
     error OnlyEngine();
-    error UnauthorizedSettlementCaller();
     error InvalidAssetDecimals();
     error ZeroAmount();
     error BetTooSmall();
@@ -131,15 +128,18 @@ contract BankVault4626 is
     error UnauthorizedCaller();
     error InvalidReceiver();
     error QueueFull();
-    error OnlySideBet();
-    error InsufficientSideBetLiquidity();
-
-    /// @notice Temporary: burn this holder's vault shares and cancel its incident tickets atomically.
-
+    error WithdrawalQueueNotEmpty();
+    error WithdrawalTooSmall();
+    /// @dev Implementation 0x6e84…f3cC reverts with selector 0xe3ee11df here; its name is unknown, so this one differs.
+    error SharesLockedByPendingWithdrawal();
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
     event MinBetUpdated(uint256 previousMinBet, uint256 newMinBet);
+    event FlatWithdrawFeeUpdated(uint256 previousFee, uint256 newFee);
+    /// @notice A queued withdrawal whose receiver refused the transfer still pays the flat fee, in shares sent to infra.
+    /// @dev Same data as the event of 0x6e84…f3cC (topic 0xdebd20cf…), whose name is unknown: indexers see a new topic.
+    event SkippedWithdrawalFeeCharged(uint256 requestId, address owner, address recipient, uint256 sharesCharged, uint256 fee);
     event BetsReleased(uint256 amount, uint256 newLockedTotal);
     event PayoutBatchProcessed(uint256 payoutCount, uint256 totalPaid);
     event FundsTransferred(address recipient, uint256 amount);
@@ -161,25 +161,8 @@ contract BankVault4626 is
         ahead = pending ? s._userQueueIndex[owner] - s._queueHead : 0;
     }
 
-    event SideBetControllerUpdated(address previousController, address newController);
-    event SideBetStakeLocked(address player, uint256 stake, uint256 payoutReserve, uint256 newLockedTotal);
-
     modifier onlyEngine() {
         if (msg.sender != address(_s().ENGINE)) revert OnlyEngine();
-        _;
-    }
-
-    modifier onlySideBet() {
-        if (msg.sender != _s().sideBetController) revert OnlySideBet();
-        _;
-    }
-
-    /// @dev Roulette engine or the configured {SideBet} module may settle via `releaseBets` / `payoutBatch` / `transferOut`.
-    modifier onlyEngineOrSideBet() {
-        BankVaultStorage storage $ = _s();
-        if (msg.sender != address($.ENGINE) && msg.sender != $.sideBetController) {
-            revert UnauthorizedSettlementCaller();
-        }
         _;
     }
 
@@ -198,38 +181,9 @@ contract BankVault4626 is
         $.minBet = p.minBet;
         $.assetDecimals = decimals;
         $.flatWithdrawFee = 10 ** uint256(decimals);
-        $.sideBetController = p.sideBetController;
 
         _grantRole(DEFAULT_ADMIN_ROLE, p.admin);
         _grantRole(BANK_ADMIN_ROLE, p.admin);
-
-        if (p.sideBetController != address(0)) {
-            emit SideBetControllerUpdated(address(0), p.sideBetController);
-        }
-    }
-
-    function setSideBetController(address newController) external onlyRole(BANK_ADMIN_ROLE) {
-        if (newController == address(0)) revert ZeroAmount();
-        BankVaultStorage storage $ = _s();
-        address previous = $.sideBetController;
-        $.sideBetController = newController;
-        emit SideBetControllerUpdated(previous, newController);
-    }
-
-    function lockSideBetStake(address player, uint256 stake, uint256 payoutReserve) public virtual onlySideBet {
-        if (player == address(0) || stake == 0) revert ZeroAmount();
-        BankVaultStorage storage $ = _s();
-        uint256 free = availableForSideBet();
-        // `lockedBetLiquidity` holds roulette stakes but never the worst case they can pay out, so
-        // free liquidity alone overstates what a side bet may reserve. The engine's solvency check
-        // is not re-run after the last bet, so without this a side bet placed late could quietly
-        // take liquidity the round still owes its winners.
-        uint256 rouletteNeed = $.ENGINE.marketRouletteLiquidityNeed($.marketId);
-        free = free > rouletteNeed ? free - rouletteNeed : 0;
-        if (free + stake < payoutReserve) revert InsufficientSideBetLiquidity();
-        IERC20(asset()).safeTransferFrom(player, address(this), stake);
-        $.lockedBetLiquidity += payoutReserve;
-        emit SideBetStakeLocked(player, stake, payoutReserve, $.lockedBetLiquidity);
     }
 
     function setMinBet(uint256 newMinBet) external onlyRole(BANK_ADMIN_ROLE) {
@@ -238,6 +192,18 @@ contract BankVault4626 is
         uint256 previous = $.minBet;
         $.minBet = newMinBet;
         emit MinBetUpdated(previous, newMinBet);
+    }
+
+    /// @notice Sets the flat fee charged on each processed queued withdrawal (asset units, never 0).
+    /// @dev Same as the setter of implementation `0x6e84c0ED…f3cC` (Arbitrum One, 2026-11-05). Refused while
+    /// the withdrawal queue holds a request, so a queued LP always pays the fee in force when it queued.
+    function setFlatWithdrawFee(uint256 newFee) external onlyRole(BANK_ADMIN_ROLE) {
+        if (newFee == 0) revert ZeroAmount();
+        BankVaultStorage storage $ = _s();
+        if ($._withdrawalQueue.length != $._queueHead) revert WithdrawalQueueNotEmpty();
+        uint256 previous = $.flatWithdrawFee;
+        $.flatWithdrawFee = newFee;
+        emit FlatWithdrawFeeUpdated(previous, newFee);
     }
 
     function placeBet(uint256 amount, bytes calldata betData, address referral) external {
@@ -260,6 +226,10 @@ contract BankVault4626 is
         _placeBetCore(amount, betData, referral);
     }
 
+    /// @dev The only writer that increases `lockedBetLiquidity`, matched one-for-one by the tokens pulled at
+    /// the end of the same transaction: a bet (classic or mask) leaves `totalAssets()` unchanged. In between,
+    /// only trusted calls run (engine, referral mint) under `nonReentrant`; market assets must not have
+    /// transfer hooks (no ERC-777).
     function _placeBetCore(uint256 amount, bytes calldata betData, address referral) private nonReentrant {
         BankVaultStorage storage $ = _s();
         if (amount < $.minBet) revert BetTooSmall();
@@ -269,14 +239,14 @@ contract BankVault4626 is
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function releaseBets(uint256 amount) public virtual onlyEngineOrSideBet {
+    function releaseBets(uint256 amount) public virtual onlyEngine {
         BankVaultStorage storage $ = _s();
         if (amount > $.lockedBetLiquidity) $.lockedBetLiquidity = 0;
         else $.lockedBetLiquidity -= amount;
         emit BetsReleased(amount, $.lockedBetLiquidity);
     }
 
-    function payoutBatch(Payout[] calldata payouts) external onlyEngineOrSideBet returns (uint256 totalPaid) {
+    function payoutBatch(Payout[] calldata payouts) external onlyEngine returns (uint256 totalPaid) {
         IERC20 token = IERC20(asset());
         uint256 length = payouts.length;
         Payout calldata payout;
@@ -292,7 +262,7 @@ contract BankVault4626 is
         return totalPaid;
     }
 
-    function transferOut(address recipient, uint256 amount) external onlyEngineOrSideBet {
+    function transferOut(address recipient, uint256 amount) external onlyEngine {
         IERC20(asset()).safeTransfer(recipient, amount);
         emit FundsTransferred(recipient, amount);
     }
@@ -346,12 +316,15 @@ contract BankVault4626 is
     /// `payoutBatch` runs out of balance. `marketRouletteLiquidityNeed` is exactly that shortfall.
     ///
     /// Refusing at zero NAV matters too — the queue burns shares whether or not it can pay, so
-    /// draining a fully-locked vault would burn for nothing. Still deliberately NOT requiring
-    /// `lockedBetLiquidity == 0`: that counts side-bet reserves, and one open dust side bet would
-    /// be enough to block the hatch for everyone. The roulette shortfall is zero for exactly the
-    /// quiet markets this hatch exists to unstick.
+    /// draining a fully-locked vault would burn for nothing. `marketRouletteLiquidityNeed` includes
+    /// the mask-bet liability term, so an open round with masks blocks the hatch like one with
+    /// straights. The roulette shortfall is zero for exactly the quiet markets this hatch exists to
+    /// unstick. Since implementation `0x6e84…f3cC` (2026-11-05) the hatch also waits for
+    /// `lockedBetLiquidity == 0`, i.e. no stake of the open round is held: with side bets gone the lock
+    /// only counts roulette stakes, so it never blocks the quiet markets either.
     function drainWithdrawalQueue(uint256 maxCount) external nonReentrant returns (uint256 processed) {
         BankVaultStorage storage $ = _s();
+        if ($.lockedBetLiquidity != 0) revert WithdrawalBlockedDuringResolution();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert WithdrawalBlockedDuringResolution();
         if ($.ENGINE.marketRouletteLiquidityNeed($.marketId) != 0) revert WithdrawalBlockedDuringResolution();
         if (totalAssets() == 0) revert ZeroAmount();
@@ -393,6 +366,7 @@ contract BankVault4626 is
                     // or settlement: on failure we clear the slot, keep shares, and the owner re-requests.
                     if (!token.trySafeTransfer(q.receiver, net)) {
                         requestId = $.pendingWithdrawalId[owner];
+                        _chargeSkippedWithdrawalFee(owner, infra, shares, fee, requestId);
                         if (requestId != 0) {
                             WithdrawalReceipt storage skipped = $.withdrawalReceipts[requestId];
                             skipped.processedAt = block.timestamp;
@@ -437,6 +411,15 @@ contract BankVault4626 is
         }
     }
 
+    /// @dev A refused receiver used to make a queued request free: the fee is now taken in shares (rounded up,
+    /// capped at the request's shares) and moved to infra, so the queue cannot be spammed at no cost.
+    function _chargeSkippedWithdrawalFee(address owner, address infra, uint256 shares, uint256 fee, uint256 requestId) private {
+        uint256 feeShares = previewWithdraw(fee);
+        if (feeShares > shares) feeShares = shares;
+        _transfer(owner, infra, feeShares);
+        emit SkippedWithdrawalFeeCharged(requestId, owner, infra, feeShares, fee);
+    }
+
     /// @dev Best-effort; if infra cannot receive, the fee remains in the vault rather than reverting settlement.
     function _payWithdrawFeeToInfra(IERC20 token, address infra, uint256 amount) private {
         if (amount == 0 || infra == address(0)) return;
@@ -462,6 +445,8 @@ contract BankVault4626 is
         _assertCanEnqueue(owner);
 
         BankVaultStorage storage $ = _s();
+        // A request worth no more than the fee would only pay infra: refused up front.
+        if (convertToAssets(_sharesForBps(owner, bps)) <= $.flatWithdrawFee) revert WithdrawalTooSmall();
         $._pendingWithdrawal[owner] = QueuedWithdrawal({ bps: bps, receiver: receiver });
         uint256 idx = $._withdrawalQueue.length;
         $._userQueueIndex[owner] = idx;
@@ -502,7 +487,8 @@ contract BankVault4626 is
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
         BankVaultStorage storage $ = _s();
-        if (assets <= $.flatWithdrawFee) revert DepositTooSmall();
+        // The resulting position must exceed the fee, so a top-up below it is accepted (as in 0x6e84…f3cC).
+        if (assets == 0 || convertToAssets(balanceOf(receiver)) + assets <= $.flatWithdrawFee) revert DepositTooSmall();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert DepositBlockedDuringResolution();
         return super.deposit(assets, receiver);
     }
@@ -510,7 +496,7 @@ contract BankVault4626 is
     function mint(uint256 shares, address receiver) public override returns (uint256) {
         BankVaultStorage storage $ = _s();
         uint256 assets = previewMint(shares);
-        if (assets <= $.flatWithdrawFee) revert DepositTooSmall();
+        if (assets == 0 || convertToAssets(balanceOf(receiver)) + assets <= $.flatWithdrawFee) revert DepositTooSmall();
         if ($.ENGINE.isBankLiquidityRestricted($.marketId)) revert DepositBlockedDuringResolution();
         return super.mint(shares, receiver);
     }
@@ -525,6 +511,15 @@ contract BankVault4626 is
         uint256 base = super.maxRedeem(owner);
         uint256 freeLiquidityShares = convertToShares(totalAssets());
         return base > freeLiquidityShares ? freeLiquidityShares : base;
+    }
+
+    /// @dev Shares of an owner with a queued withdrawal cannot move (mint and burn still can): the request is
+    /// sized in bps of the balance at processing time, so a transfer would dodge or reshape it.
+    function _update(address from, address to, uint256 value) internal override {
+        if (from != address(0) && to != address(0) && from != to && value != 0 && _s()._pendingWithdrawal[from].bps != 0) {
+            revert SharesLockedByPendingWithdrawal();
+        }
+        super._update(from, to, value);
     }
 
     /// @inheritdoc ERC4626Upgradeable

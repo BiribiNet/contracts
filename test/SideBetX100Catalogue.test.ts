@@ -26,7 +26,7 @@ async function fixture() {
   const [admin, player] = await viem.getWalletClients();
   const token = await viem.deployContract('MockUSDC');
   const engine = await viem.deployContract('MockRoundEngine');
-  const implementation = await viem.deployContract('BankVault4626');
+  const implementation = await viem.deployContract('LegacySideBetBankVault4626');
   const beacon = await viem.deployContract('UpgradeableBeacon', [implementation.address, admin.account.address]);
   const { registry } = await deploySideBetRegistryStack({ admin: admin.account.address, roundEngine: engine.address });
   const { sideBet } = await deploySideBetProxy({
@@ -40,7 +40,7 @@ async function fixture() {
   await registry.write.setVaultBeacon([beacon.address]);
   await registry.write.createMarket([{ asset: token.address, bankAdmin: admin.account.address, minBet: units('1') }]);
   const market = await registry.read.getMarket([1]);
-  const vault = await viem.getContractAt('BankVault4626', market.bank);
+  const vault = await viem.getContractAt('LegacySideBetBankVault4626', market.bank);
   await token.write.mint([admin.account.address, units('1000000')]);
   await token.write.approve([vault.address, units('1000000')]);
   await vault.write.deposit([units('1000000'), admin.account.address]);

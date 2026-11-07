@@ -92,7 +92,21 @@ yarn test
 yarn coverage
 yarn clean
 yarn update:subgraph:abis
+yarn update:frontend:abis   # frontend merged-errors.json only (both chains)
 ```
+
+### Frontend ABIs
+
+- `yarn compile` regenerates `../frontend/lib/abi/generated.ts` through wagmi.
+- `frontend/lib/abi/side-bet.ts` is the **frozen Arbitrum Sepolia snapshot** (served to testnet builds by
+  `lib/abi/protocol.ts`; the frontend `AGENTS.md` forbids editing it). `yarn update:frontend:abis` refuses to
+  write it; `--sepolia-snapshot` is reserved for an actual Sepolia SideBet redeploy. Overwriting it already
+  caused BiribiNet/frontend#858.
+- Mainnet ABIs reach the frontend through `deployments/arbitrum-one-abi.json` →
+  `frontend/scripts/generate-mainnet-abi.mjs` → `frontend/lib/abi/mainnet-generated.ts`.
+- `yarn update:frontend:abis` only appends missing errors (SideBet, RouletteEngine, BankVault4626,
+  RouletteMaskBetLib, RouletteLiabilityMathLib) to `frontend/lib/abi/merged-errors.json`, deduplicated by
+  signature; `--check` fails without writing.
 
 ## Testing Notes
 

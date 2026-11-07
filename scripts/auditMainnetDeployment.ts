@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { decodeEventLog, formatEther, formatUnits, parseAbi, keccak256, encodeAbiParameters, toHex, type Address, type Hex } from "viem";
 import { createArbitrumFallbackPublicClient } from "./utils/hardhatRpcFailover";
-import { ERC1967_IMPLEMENTATION_SLOT } from "./utils/proxyVerification";
+import { ERC1967_IMPLEMENTATION_SLOT, readLegacySideBetController } from "./utils/proxyVerification";
 import { Etherscan } from "@nomicfoundation/hardhat-verify/internal/etherscan";
 import { vars } from "hardhat/config";
 import { assertProtocolRoleHandoff } from "./utils/mainnetRelease";
@@ -120,7 +120,7 @@ async function main() {
         equal(`${name} registered bank`, configured.bank, market.bank);
         equal(`${name} bank asset`, await vault.read.asset(), market.asset);
         equal(`${name} bank engine`, await vault.read.ENGINE(), a.engine);
-        equal(`${name} bank SideBet`, await vault.read.sideBetController(), a.sideBet);
+        equal(`${name} bank SideBet`, await readLegacySideBetController(pc, market.bank), a.sideBet);
         check(`${name} bank market id`, await vault.read.marketId() === market.marketId);
         check(`${name} bank minimum bet`, await vault.read.minBet() === BigInt(market.minBet));
         check(`${name} bank administrator`, await vault.read.hasRole([await vault.read.BANK_ADMIN_ROLE(), m.protocolAdmin]));

@@ -4,7 +4,7 @@ import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { encodeAbiParameters, encodeFunctionData, parseUnits, zeroAddress, type Address, type Hex } from "viem";
 
-import { createMarketWithBeacon } from "./helpers/createMarket";
+import { createMarketWithLegacySideBetBeacon } from "./helpers/createMarket";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
 import { deploySideBetProxy, deploySideBetRegistryStack } from "./helpers/deploySideBetRegistryStack";
 import { encodeSingleBet } from "./helpers/multiBetEncode";
@@ -28,7 +28,7 @@ const BetType = {
 } as const;
 
 describe("Branch coverage — final 100% gaps", function () {
-    describe("BankVault4626", function () {
+    describe("LegacySideBetBankVault4626", function () {
         function vaultInit(
             asset: Address,
             engine: Address,
@@ -81,12 +81,12 @@ describe("Branch coverage — final 100% gaps", function () {
             const usdc = await viem.deployContract("MockUSDC");
             const mockEngine = await viem.deployContract("MockEngine");
             const reentrantEngine = await viem.deployContract("MockEngineReentrant");
-            const impl = await viem.deployContract("BankVault4626Harness");
+            const impl = await viem.deployContract("LegacySideBetBankVault4626Harness");
             const proxy = await viem.deployContract("ERC1967Proxy", [
                 impl.address,
                 vaultInit(usdc.address, reentrantEngine.address, admin.account.address, vaultInitMinBetUsdc6),
             ]);
-            const vault = await viem.getContractAt("BankVault4626Harness", proxy.address);
+            const vault = await viem.getContractAt("LegacySideBetBankVault4626Harness", proxy.address);
 
             const initParams = {
                 assetToken: usdc.address,
@@ -110,12 +110,12 @@ describe("Branch coverage — final 100% gaps", function () {
             await reentrantEngine.write.setReenter([false]);
 
             const capEngine = mockEngine;
-            const capImpl = await viem.deployContract("BankVault4626Harness");
+            const capImpl = await viem.deployContract("LegacySideBetBankVault4626Harness");
             const capProxy = await viem.deployContract("ERC1967Proxy", [
                 capImpl.address,
                 vaultInit(usdc.address, capEngine.address, admin.account.address, vaultInitMinBetUsdc6),
             ]);
-            const capVault = await viem.getContractAt("BankVault4626Harness", capProxy.address);
+            const capVault = await viem.getContractAt("LegacySideBetBankVault4626Harness", capProxy.address);
 
             await usdc.write.mint([alice.account.address, USDC("200")]);
             await usdc.write.approve([capVault.address, USDC("200")], { account: alice.account });
@@ -162,12 +162,12 @@ describe("Branch coverage — final 100% gaps", function () {
             });
 
             const fee = await capVault.read.flatWithdrawFee();
-            const thinImpl = await viem.deployContract("BankVault4626Harness");
+            const thinImpl = await viem.deployContract("LegacySideBetBankVault4626Harness");
             const thinProxy = await viem.deployContract("ERC1967Proxy", [
                 thinImpl.address,
                 vaultInit(usdc.address, capEngine.address, admin.account.address, vaultInitMinBetUsdc6),
             ]);
-            const thinVault = await viem.getContractAt("BankVault4626Harness", thinProxy.address);
+            const thinVault = await viem.getContractAt("LegacySideBetBankVault4626Harness", thinProxy.address);
             await usdc.write.mint([bob.account.address, USDC("20")]);
             await usdc.write.approve([thinVault.address, USDC("20")], { account: bob.account });
             await thinVault.write.deposit([USDC("10"), bob.account.address], { account: bob.account });
@@ -189,12 +189,12 @@ describe("Branch coverage — final 100% gaps", function () {
                 account: bob.account,
             });
 
-            const cap2Impl = await viem.deployContract("BankVault4626Harness");
+            const cap2Impl = await viem.deployContract("LegacySideBetBankVault4626Harness");
             const cap2Proxy = await viem.deployContract("ERC1967Proxy", [
                 cap2Impl.address,
                 vaultInit(usdc.address, capEngine.address, admin.account.address, vaultInitMinBetUsdc6),
             ]);
-            const cap2Vault = await viem.getContractAt("BankVault4626Harness", cap2Proxy.address);
+            const cap2Vault = await viem.getContractAt("LegacySideBetBankVault4626Harness", cap2Proxy.address);
             await usdc.write.mint([bob.account.address, USDC("50")]);
             await usdc.write.approve([cap2Vault.address, USDC("50")], { account: bob.account });
             await cap2Vault.write.deposit([USDC("2"), bob.account.address], { account: bob.account });
@@ -317,7 +317,7 @@ describe("Branch coverage — final 100% gaps", function () {
             const stack = await deployProtocolStack({ maxPayoutsPerCall: 5 });
             const { engine, scheduler, registry, vrf, brb, treasury, deployer } = stack;
             const usdc = await viem.deployContract("MockUSDC");
-            const bank = await createMarketWithBeacon(registry, admin.account.address, usdc.address);
+            const bank = await createMarketWithLegacySideBetBeacon(registry, admin.account.address, usdc.address);
 
             expect(await engine.read.vrfActiveRound()).to.equal(0n);
             expect(await engine.read.hasPendingVrf()).to.equal(false);
@@ -510,14 +510,14 @@ describe("Branch coverage — final 100% gaps", function () {
             }
 
             const usdc2 = await viem.deployContract("MockUSDC");
-            const vaultImpl = await viem.deployContract("BankVault4626");
+            const vaultImpl = await viem.deployContract("LegacySideBetBankVault4626");
             const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
             await registry.write.setVaultBeacon([beacon.address], { account: admin.account });
             await registry.write.createMarket(
                 [{ asset: usdc2.address, bankAdmin: admin.account.address, minBet: 1_000_000n }],
                 { account: admin.account },
             );
-            const bank2 = await viem.getContractAt("BankVault4626", (await registry.read.getMarket([2])).bank);
+            const bank2 = await viem.getContractAt("LegacySideBetBankVault4626", (await registry.read.getMarket([2])).bank);
             await usdc2.write.mint([admin.account.address, USDC("1000")]);
             await usdc2.write.approve([bank2.address, USDC("1000")], { account: admin.account });
             await bank2.write.deposit([USDC("500"), admin.account.address], { account: admin.account });
@@ -572,7 +572,7 @@ async function deploySideBetHarnessStack(
 ) {
     const usdc = await viem.deployContract("MockUSDC");
     const roundEngine = await viem.deployContract("MockRoundEngine");
-    const vaultImpl = await viem.deployContract(useHarness ? "BankVault4626Harness" : "BankVault4626");
+    const vaultImpl = await viem.deployContract(useHarness ? "LegacySideBetBankVault4626Harness" : "LegacySideBetBankVault4626");
     const beacon = await viem.deployContract("UpgradeableBeacon", [vaultImpl.address, admin.account.address]);
     const { registry } = await deploySideBetRegistryStack({
         admin: admin.account.address,
@@ -591,7 +591,7 @@ async function deploySideBetHarnessStack(
         { account: admin.account },
     );
     const bank = await viem.getContractAt(
-        useHarness ? "BankVault4626Harness" : "BankVault4626",
+        useHarness ? "LegacySideBetBankVault4626Harness" : "LegacySideBetBankVault4626",
         (await registry.read.getMarket([1])).bank,
     );
     return { sideBet, bank, usdc, roundEngine, registry };
