@@ -110,7 +110,8 @@ contract BankVault4626 is
         return _s().assetDecimals;
     }
 
-    /// @notice Flat fee (1 whole token unit) charged on each processed queued withdrawal; paid to `ENGINE.INFRA_RECIPIENT()`.
+    /// @notice Flat fee charged on each processed queued withdrawal; paid to `ENGINE.INFRA_RECIPIENT()`.
+    /// @dev Initialised to 1 whole token unit; `BANK_ADMIN_ROLE` changes it with {setFlatWithdrawFee}.
     function flatWithdrawFee() external view returns (uint256) {
         return _s().flatWithdrawFee;
     }
@@ -127,10 +128,12 @@ contract BankVault4626 is
     error UnauthorizedCaller();
     error InvalidReceiver();
     error QueueFull();
+    error WithdrawalQueueNotEmpty();
 
     /// @dev ABI-aligned with legacy `StakedBRB.BetPlaced`; `marketId` is implicit (this vault's `marketId()`).
     event BetPlaced(address user, uint256 amount, bytes data, uint256 roundId);
     event MinBetUpdated(uint256 previousMinBet, uint256 newMinBet);
+    event FlatWithdrawFeeUpdated(uint256 previousFee, uint256 newFee);
     event BetsReleased(uint256 amount, uint256 newLockedTotal);
     event PayoutBatchProcessed(uint256 payoutCount, uint256 totalPaid);
     event FundsTransferred(address recipient, uint256 amount);
@@ -183,6 +186,18 @@ contract BankVault4626 is
         uint256 previous = $.minBet;
         $.minBet = newMinBet;
         emit MinBetUpdated(previous, newMinBet);
+    }
+
+    /// @notice Sets the flat fee charged on each processed queued withdrawal (asset units, never 0).
+    /// @dev Same as the setter of implementation `0x6e84c0ED…f3cC` (Arbitrum One, 2026-11-05). Refused while
+    /// the withdrawal queue holds a request, so a queued LP always pays the fee in force when it queued.
+    function setFlatWithdrawFee(uint256 newFee) external onlyRole(BANK_ADMIN_ROLE) {
+        if (newFee == 0) revert ZeroAmount();
+        BankVaultStorage storage $ = _s();
+        if ($._withdrawalQueue.length != $._queueHead) revert WithdrawalQueueNotEmpty();
+        uint256 previous = $.flatWithdrawFee;
+        $.flatWithdrawFee = newFee;
+        emit FlatWithdrawFeeUpdated(previous, newFee);
     }
 
     function placeBet(uint256 amount, bytes calldata betData, address referral) external {
