@@ -9,7 +9,7 @@
 
 | Zone | Fichier | Contenu |
 |---|---|---|
-| Bibliothèque neuve | `contracts/libraries/RouletteMaskBetLib.sol` | décodage/validation (bits ≥ 53, `2 ≤ \|S\| ≤ 24`, garde, `expectedPrev`), `minBet` par jambe, plafond de jambes, push `MaskBetEntry`, compteurs uint16 × 37, compteur prudent `roundMaskWeightedPayout`, setter par marché |
+| Bibliothèque neuve | `contracts/libraries/RouletteMaskBetLib.sol` | décodage/validation (bits ≥ 53, `2 ≤ \|S\| ≤ 35`, garde, `expectedPrev`), `minBet` par jambe, plafond de jambes, push `MaskBetEntry`, compteurs uint16 × 37, compteur prudent `roundMaskWeightedPayout`, setter par marché |
 | Stockage | `contracts/libraries/RouletteEngineStorageLib.sol` | `MaskBetEntry` + 5 champs **en fin** de `Layout` (après `jackpotPreparation`) |
 | Passif | `contracts/libraries/RouletteLiabilityMathLib.sol` | terme masque dans `Inputs`/`raw` (option (a)) ; `assertSolventAfterBet` (solvabilité + plafond bps) |
 | Paiement | `contracts/libraries/RoulettePayoutSweepLib.sol` | comptage O(1) au callback VRF (`_accumulateCountShards`), `_sweepMasks` **en dernier** dans l'aperçu |
@@ -19,6 +19,28 @@
 
 Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` sur tous les marchés tant que
 `setMaskBetLimits` n'a pas été appelé (valeurs de lancement D18 : 1 024 jambes, 1 000 bps).
+
+## Décisions
+
+- **08/11/2026 : plafond porté à 35 par le propriétaire, pour rendre Supérieur/Inférieur au précédent jouable**
+  (D3 de la spec ; auparavant `|S| ≤ 24`, le minimum reste 2). Seule la constante
+  `RouletteMaskBetLib.MAX_MASK_SIZE` change : ni l'ABI, ni les erreurs (`InvalidBetNumber` pour `|S| ∉ [2, 35]`),
+  ni le stockage (`MaskBetEntry.size` est un `uint8`), ni la taille du bytecode (3 008 / 3 060 octets). Le 0
+  est le bit 0 du masque et compte dans `|S|` comme tout autre numéro couvert. « Supérieur au précédent » est
+  jouable pour `p ∈ [1, 34]` et « inférieur » (0 exclu) pour `p ∈ [3, 36]`, au lieu de `[12, 34]` et `[3, 25]`.
+  Vérifications :
+  - **Passif** : `roundMaskWeightedPayout` additionne `floor(amount × 36 / |S|)` sur chaque jambe, comme si toutes
+    gagnaient à la fois (option (a)) ; aucune hypothèse sur `|S|`, et le terme décroît quand `|S|` augmente
+    (35 numéros : 1,0286 × la mise, contre 1,5 × à 24). La réservation reste un majorant ; le règlement réutilise
+    la même fonction `maskPayout` avec la taille stockée, donc le montant payé est celui qui a été réservé. Les
+    compteurs de gagnants (uint16 par numéro) comptent au plus une unité par jambe, quelle que soit sa taille :
+    la borne `maxMaskLegsPerMarketRound ≤ 65 535` suffit toujours.
+  - **Arrondi** : à 35 numéros, la perte d'arrondi est inférieure à 35 unités de base par jambe, en défaveur du
+    joueur ; retour espéré `35/37 × 36/35 = 36/37`.
+  - **Gaz** : le callback VRF reste O(1) en nombre de masques et l'aperçu de paiement coûte une lecture par jambe,
+    indépendamment de `|S|` ; `reports/mask-bets-v1/vrf-callback-budget.json` et le plafond de lancement de 448
+    jambes sont donc inchangés. Seul l'enregistrement d'une jambe coûte un peu plus (popcount sur 35 bits) :
+    282 796 gaz pour un masque de 35 numéros contre 278 070 à 24 (tableau ci-dessous).
 
 ## Écarts et précisions par rapport à la spec
 
@@ -52,11 +74,12 @@ Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` 
 | Transaction | Gaz |
 |---|---|
 | 1er pari du round (plein, démarre le compte à rebours) | 427 326 |
-| 1er masque du round (\|S\| = 2) | 305 584 |
-| masque suivant, \|S\| = 2 | 254 284 |
-| masque suivant, \|S\| = 24 | 278 048 |
+| 1er masque du round (\|S\| = 2) | 305 606 |
+| masque suivant, \|S\| = 2 | 254 306 |
+| masque suivant, \|S\| = 24 | 278 070 |
+| masque suivant, \|S\| = 35 (plafond du 08/11/2026) | 282 796 |
 | cheval suivant (référence) | 271 573 |
-| 10 masques en une transaction | 731 088 ⇒ **≈ 53 000 gaz par jambe masque marginale** |
+| 10 masques en une transaction | 731 110 ⇒ **≈ 53 000 gaz par jambe masque marginale** |
 | callback VRF, 3 marchés × (100 pleins + 1 024 masques gagnants) | 1 054 426 (sans masques : 1 047 793) |
 | `eth_call` `previewPayoutBundle`, dernier bloc d'une lane au plafond de 1 024 masques | 2 925 620 |
 | `eth_call` `UpkeepScheduler.checkUpkeep(lane)`, dernier bloc, **448 masques**, 1 lane / 60 paiements (config. Arbitrum One) | 1 366 504 |
@@ -141,7 +164,17 @@ refuse toute compilation différente (`--write-lock` le régénère, à recommit
 réelle écrit un journal horodaté `reports/mask-bets-v1/mainnet-execution-*.json` / `mainnet-activation-*.json`
 (hachages de transactions, jamais de clé ni d'URL RPC).
 
-### Dry run du 07/11/2026 : **passe**
+### Dry run du 08/11/2026 (plafond de 35) : **passe**
+
+`reports/mask-bets-v1/mainnet-dry-run-2026-11-08.json` (RPC public, bloc 522 344 832, aucune transaction, plan
+complet avec calldata) : `PREFLIGHT PASSED` avec le verrou de release régénéré, dans lequel seuls les hachages de
+`RouletteMaskBetLib` changent. Le round 169 est `Open`. Les 14 tickets SideBet sont clos, et réserves et verrous
+sont à 0. Le plan compte toujours 8 transactions, aux nonces 313 à 320 de l'admin, avec les mêmes adresses
+prédites que le 07/11. Seul l'initcode de `RouletteMaskBetLib` (nonce 316, `0xfF46…A7C9`) change ; celui du moteur
+est identique, puisque l'adresse de la bibliothèque liée ne change pas. Le dry run du 07/11 ci-dessous correspond à
+l'ancien plafond de 24 et ne passe plus le verrou.
+
+### Dry run du 07/11/2026 : **passe** (historique, plafond de 24)
 
 `reports/mask-bets-v1/mainnet-dry-run-2026-11-07.json` (RPC public, bloc 522 055 874, aucune transaction) :
 `PREFLIGHT PASSED`. Le manifeste désigne désormais `0x6e84…f3cC`, et son runtime archivé est contrôlé par

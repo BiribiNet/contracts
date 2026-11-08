@@ -6,7 +6,7 @@
 
 ## 0. Résumé
 
-Les side bets multi-tours (`contracts/SideBet.sol`) sont retirés définitivement. Ils sont remplacés par **un seul nouveau type de pari roulette, `BET_MASK = 16`**, qui couvre un ensemble arbitraire `S ⊂ {0..36}` encodé en bitmask de 37 bits, avec `2 ≤ |S| ≤ 24`. Un pari masque :
+Les side bets multi-tours (`contracts/SideBet.sol`) sont retirés définitivement. Ils sont remplacés par **un seul nouveau type de pari roulette, `BET_MASK = 16`**, qui couvre un ensemble arbitraire `S ⊂ {0..36}` encodé en bitmask de 37 bits, avec `2 ≤ |S| ≤ 35` (D3, plafond porté de 24 à 35 le 08/11/2026). Un pari masque :
 
 - passe par **exactement** le chemin des paris roulette : `BankVault4626.placeBet` → `RouletteEngine.recordBet` → règlement dans le cycle du round courant ;
 - ne bloque **que le stake** dans `lockedBetLiquidity` (jamais de réserve de paiement) : `totalAssets()` est inchangé après le pari, l'invariant violé le 04/11/2026 ne peut plus l'être ;
@@ -21,7 +21,7 @@ Les side bets multi-tours (`contracts/SideBet.sol`) sont retirés définitivemen
 |---|---|---|---|
 | D1 | Type de pari | Un seul type `BET_MASK = 16`, sémantique ignorée on-chain | Pris (propriétaire) |
 | D2 | Gain | `floor(amount × 36 / \|S\|)`, division entière unique, stake inclus | Pris ; représentation tranchée ici (§2.2) |
-| D3 | Taille | `2 ≤ \|S\| ≤ 24`, bits ≥ 37 du masque ⇒ revert | Pris (propriétaire) |
+| D3 | Taille | `2 ≤ \|S\| ≤ 35` (le 0 compte comme un numéro s'il est couvert), bits ≥ 37 du masque ⇒ revert | Pris (propriétaire) ; **08/11/2026 : plafond porté à 35 par le propriétaire, pour rendre Supérieur/Inférieur au précédent jouable** (auparavant 24) |
 | D4 | Masques libres | Tout masque valide accepté ; catalogue côté frontend | Pris (propriétaire) |
 | D5 | Jackpot | Inchangé, pleins uniquement | Pris (propriétaire) |
 | D6 | `presetId` | 9 bits (0–511), informatif, jamais lu pour un calcul | Pris (propriétaire) ; emplacement tranché ici (§1.3) |
@@ -96,7 +96,7 @@ Justification :
 Règles de validation on-chain d'une jambe masque (dans `RouletteMaskBetLib`, §5) :
 
 1. `numberRaw >> 53 == 0`, sinon `InvalidBetNumber` ;
-2. `size = popcount(mask)`, `2 ≤ size ≤ 24`, sinon `InvalidBetNumber` (un masque vide, d'un seul numéro ou de ≥ 25 numéros est rejeté) ;
+2. `size = popcount(mask)`, `2 ≤ size ≤ 35`, sinon `InvalidBetNumber` (un masque vide, d'un seul numéro ou de ≥ 36 numéros est rejeté). Le bit 0 est le numéro 0 : il compte dans `size` comme n'importe quel autre numéro couvert ({0..34} et {1..35} font 35 numéros ; {1..36} en fait 36 et est rejeté) ;
 3. `amount ≥ minBet` du vault (**par jambe**, voir §4) ;
 4. plafond de jambes et plafond de passif (§4) ;
 5. si `guard = 1` : `expectedPrev ≤ 36`, le round courant `r > 1`, `roundOutcome(r − 1)` est rempli et son numéro gagnant vaut `expectedPrev`, sinon `PreviousOutcomeMismatch` ; si `guard = 0`, `expectedPrev` doit être nul, sinon `InvalidBetNumber`. Coût : un `SLOAD` du résultat de `r − 1`, mis en cache pour toutes les jambes gardées de la transaction.
@@ -150,7 +150,7 @@ payout = (uint256(amount) * 36) / size        // une seule division entière, ar
 - **Débordement** : `amount ≤ 2^128 − 1` (type stocké) ⇒ `amount × 36 < 2^134`, aucun risque en `uint256`. Les compteurs agrégés restent en arithmétique vérifiée (pas d'`unchecked`).
 - Cohérence avec l'existant : `|S| = 2` ⇒ 18x (= cheval), `|S| = 3` ⇒ 12x (= transversale/trio), `|S| = 12` ⇒ 3x (= douzaine), `|S| = 18` ⇒ 2x (= chance simple).
 
-Table des multiplicateurs (vérifiée par script, cf. annexe A) : 2→18 ; 3→12 ; 4→9 ; 5→7,2 ; 6→6 ; 7→5,1429 ; 8→4,5 ; 9→4 ; 10→3,6 ; 11→3,2727 ; 12→3 ; 13→2,7692 ; 14→2,5714 ; 15→2,4 ; 16→2,25 ; 17→2,1176 ; 18→2 ; 19→1,8947 ; 20→1,8 ; 21→1,7143 ; 22→1,6364 ; 23→1,5652 ; 24→1,5.
+Table des multiplicateurs (vérifiée par script, cf. annexe A) : 2→18 ; 3→12 ; 4→9 ; 5→7,2 ; 6→6 ; 7→5,1429 ; 8→4,5 ; 9→4 ; 10→3,6 ; 11→3,2727 ; 12→3 ; 13→2,7692 ; 14→2,5714 ; 15→2,4 ; 16→2,25 ; 17→2,1176 ; 18→2 ; 19→1,8947 ; 20→1,8 ; 21→1,7143 ; 22→1,6364 ; 23→1,5652 ; 24→1,5 ; 25→1,44 ; 26→1,3846 ; 27→1,3333 ; 28→1,2857 ; 29→1,2414 ; 30→1,2 ; 31→1,1613 ; 32→1,125 ; 33→1,0909 ; 34→1,0588 ; 35→1,0286 (D3, 08/11/2026). À 35 numéros, le gain dépasse la mise d'environ 2,86 % ; l'arrondi vers le bas retire au plus 34 unités de base par jambe, et le retour espéré reste `35/37 × 36/35 = 36/37`.
 
 ### 2.3 Intégration au cycle de paiement
 
@@ -310,7 +310,7 @@ Le moteur n'a que ~2,2 Ko de marge : **le code neuf doit vivre dans des biblioth
 
 | Emplacement | Contenu | Estimation |
 |---|---|---|
-| **Nouvelle** `RouletteMaskBetLib` | validation (bits ≥ 53, popcount, bornes 2/24, `minBet` par jambe), push `MaskBetEntry`, compteurs de gagnants, compteur de passif, plafond de jambes | ~1,5–2,5 Ko, bibliothèque neuve |
+| **Nouvelle** `RouletteMaskBetLib` | validation (bits ≥ 53, popcount, bornes 2/35, `minBet` par jambe), push `MaskBetEntry`, compteurs de gagnants, compteur de passif, plafond de jambes | ~1,5–2,5 Ko, bibliothèque neuve |
 | `RouletteLiabilityMathLib` | terme masque dans `Inputs`/`raw` ; nouvelle `assertSolventAfterBet($, r, m, freeLiquidity)` regroupant le contrôle de `RouletteEngine.sol:386-389` et le plafond masque | +~150–300 o |
 | `RoulettePayoutSweepLib` | bloc de comptage au snapshot, `_sweepMasks`/`_consumeMaskBucket` | +~600–900 o |
 | `RouletteEngine` | branche `if (betTypeRaw == BET_MASK)` avant `RouletteEngine.sol:438`, appel à `assertSolventAfterBet`, setter `setMaskBetLimits` + événement, getters ; remplacement de `ISideBetVault.availableForSideBet()` par `IERC4626.totalAssets()` | +~400–800 o, compensé en partie par le déplacement du contrôle de solvabilité ⇒ marge résiduelle attendue ≥ 1,2 Ko |
@@ -371,7 +371,7 @@ Le masque étant explicite, il n'y a aucune ambiguïté on-chain : l'avantage ma
 Règles UI (frontend) :
 
 - Presets « liés au précédent » **grisés** tant que le numéro de `r−1` n'est pas connu côté client (événement Ably `VRFResult`, repli RPC `roundOutcome(currentRound − 1)` au bootstrap) et pour `r = 1`.
-- **Grisés aussi** quand le `|S|` calculé sort de `[2, 24]` (« supérieur » actif pour `p ∈ [12, 34]`, « inférieur » (0 exclu, D14) pour `p ∈ [3, 25]`, couleur/douzaine désactivées si `p = 0`) — voir annexe.
+- **Grisés aussi** quand le `|S|` calculé sort de `[2, 35]` (« supérieur » actif pour `p ∈ [1, 34]`, « inférieur » (0 exclu, D14) pour `p ∈ [3, 36]`, couleur/douzaine désactivées si `p = 0`) — voir annexe.
 - **Risque UX** : une transaction construite pour `r` peut être minée dans `r+1` si `r` se ferme entre-temps ; le masque, calculé sur `r−1`, est alors joué « hors contexte ». Atténuations v1 : désactiver ces presets à l'approche de `lockAt` (marge à définir) et dès `VrfRequested` ; afficher dans l'historique « masque calculé sur le tirage du round X » (le `roundId` réel est dans `BetPlaced`, `BankVault4626.sol:268`). **Garde on-chain retenue (D19)** : le frontend pose `guard = 1` et `expectedPrev = p` sur **tout** preset lié au précédent ; si le numéro précédent a changé, le pari revert `PreviousOutcomeMismatch` (message traduit côté frontend, l'utilisateur rejoue). Cette garde compare seulement le numéro : si deux rounds précédents donnent le même `p`, elle accepte la transaction dans le round suivant. Elle préserve le contexte numérique du preset, sans garantir l'identité du round. Une garantie de round exact nécessiterait un identifiant de round attendu, hors de cet encodage v1. Les masques libres et les presets statiques ne posent pas la garde.
 
 ---
@@ -419,8 +419,8 @@ Réindexation : **pas nécessaire pour la justesse** (aucun type 16 n'a jamais �
 ## 9. Plan de tests (contracts)
 
 Unitaires — validation et gain :
-- `size ∈ {2, 24}` acceptés ; `size ∈ {0, 1, 25, 37}` ⇒ `InvalidBetNumber` ; bit 37 seul, `presetId = 511` avec masque valide accepté, bit 53 ⇒ revert.
-- Gain = `floor(amount × 36 / size)` pour tout `size ∈ [2, 24]`, avec `amount ∈ {minBet, minBet+1, 10^dec, valeurs premières}`, en **6 et 18 décimales**.
+- `size ∈ {2, 24, 25, 35}` acceptés (35 avec et sans le 0) ; `size ∈ {0, 1, 36, 37}` ⇒ `InvalidBetNumber` ; gain d'un masque de 35 numéros sur le 0 couvert ; bit 37 seul, `presetId = 511` avec masque valide accepté, bit 53 ⇒ revert.
+- Gain = `floor(amount × 36 / size)` pour tout `size ∈ [2, 35]`, avec `amount ∈ {minBet, minBet+1, 10^dec, valeurs premières}`, en **6 et 18 décimales**.
 - `presetId` sans effet : deux paris identiques avec `presetId` différents ⇒ mêmes compteurs, même gain ; `presetId` présent dans `BetRecorded`/`BetPlaced`.
 - Jambe masque `< minBet` dans une transaction dont le total `≥ minBet` ⇒ `MaskLegBelowMinBet`.
 - Garde : `guard = 1` et `expectedPrev` = numéro réel de `r − 1` ⇒ accepté ; numéro différent ⇒ `PreviousOutcomeMismatch` ; `r = 1` ⇒ `PreviousOutcomeMismatch` ; `guard = 0` avec `expectedPrev ≠ 0` ⇒ `InvalidBetNumber` ; `expectedPrev = 37..63` ⇒ revert ; plusieurs jambes gardées dans une transaction ⇒ un seul `SLOAD` du résultat (mesure de gaz) ; jambe gardée préparée en `r` et minée en `r + 1` ⇒ revert si le numéro précédent diffère ; si les deux numéros précédents sont identiques, elle est acceptée (pas de garde de round exact).
@@ -562,14 +562,14 @@ Vérifié par script (ensembles, cardinaux, gains, masques hexadécimaux, ordre 
 
 | Preset | Ensemble S | \|S\| | Actif si | Gain |
 |---|---|---|---|---|
-| Supérieur au précédent | `{p+1 … 36}` | `36 − p` | `p ∈ [12, 34]` (23 valeurs) | `36/(36−p)` |
-| Inférieur au précédent (0 exclu, D14) | `{1 … p−1}` | `p − 1` | `p ∈ [3, 25]` (23 valeurs) | `36/(p−1)` |
+| Supérieur au précédent | `{p+1 … 36}` | `36 − p` | `p ∈ [1, 34]` (34 valeurs ; `p = 0` donnerait 36 numéros) | `36/(36−p)` |
+| Inférieur au précédent (0 exclu, D14) | `{1 … p−1}` | `p − 1` | `p ∈ [3, 36]` (34 valeurs) | `36/(p−1)` |
 | Voisins du précédent (cylindre, D16) | `p` + 2 voisins de chaque côté | 5 | toujours (y compris `p = 0` : {0, 3, 15, 26, 32}) ; le 0 y figure quand il est voisin (D14) | 7,2x |
 | Même couleur que le précédent | 18 rouges ou 18 noirs | 18 | `p ≠ 0` | 2x |
 | Même douzaine que le précédent | douzaine de `p` | 12 | `p ≠ 0` | 3x |
 | Égal au précédent | — | 1 | — | joué comme un **plein** (type 1), pas un masque |
 
-Tous ces presets posent la garde on-chain `expectedPrev = p` (D19). « Supérieur » et « inférieur » ne sont simultanément actifs que pour `p ∈ [12, 25]`. Exemples de voisins : `p = 26` → {0, 3, 26, 32, 35} ; `p = 17` → {2, 6, 17, 25, 34}.
+Tous ces presets posent la garde on-chain `expectedPrev = p` (D19). « Supérieur » et « inférieur » sont simultanément actifs pour `p ∈ [3, 34]` (plafond de 35, D3 du 08/11/2026 ; avec l'ancien plafond de 24, seulement pour `p ∈ [12, 25]`). Exemples de voisins : `p = 26` → {0, 3, 26, 32, 35} ; `p = 17` → {2, 6, 17, 25, 34}.
 
 ### A.4 Presets historiques — reportés (D17)
 
