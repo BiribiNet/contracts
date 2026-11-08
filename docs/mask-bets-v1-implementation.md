@@ -245,6 +245,10 @@ n'aura `RouletteMaskLeg` sur mainnet qu'après son propre redéploiement. Il ne 
 - `BetRecorded` (décodé, jambes `betType = 16`) : tours concernés, mises du round jusqu'au dernier pari masque,
   presets joués. Le passif recalculé depuis les événements est comparé à `maskBetState` ; en cas d'écart, par
   exemple pour un tour coupé par la fenêtre, la valeur du moteur est retenue et un avertissement est affiché.
+- **Tours complets seulement.** Un tour ne compte dans la règle que si la fenêtre contient son
+  `RoundCountdownStarted` (premier pari) et son `VRFResult` (plus aucun pari possible ensuite). Un tour coupé au
+  début ou à la fin est affiché « incomplet » (`incomplete: true`, compteurs de la fenêtre seulement), mais il est
+  exclu des statistiques et de la recommandation, car ses mises et ses masques ne décrivent pas le tour entier.
 - `MaskBetLimitsUpdated`, depuis le `startBlock` du manifeste : les plafonds en vigueur lors de chaque tour. Les
   masques sont livrés à 0/0.
 - Liquidité libre : même formule que `RouletteEngine._recordBetInternal`, soit `totalAssets()` du vault au bloc du
@@ -274,7 +278,10 @@ La règle (`RULE` dans le script) est la suivante :
 
 1. **Marge de gaz de 30 %.** Le callback VRF et chaque transaction de règlement observés restent sous 70 % de leur
    limite ; sinon, les hausses de jambes sont **gelées** (`gas.freeze`). L'`eth_call` modélisé au plafond
-   recommandé reste sous 70 % du plafond `eth_call` CRE/keeper fourni par `--eth-call-gas-cap`. **Sans ce
+   recommandé reste sous 70 % du plafond `eth_call` CRE/keeper fourni par `--eth-call-gas-cap`. Une **observation
+   absente** (aucun reçu de callback ou de règlement sur les tours avec masques, par exemple avec `--max-receipts`
+   trop bas) ne vaut jamais marge suffisante : toute hausse, de jambes comme de `maxBps`, est bloquée
+   (`gas.missing`, « Hausses BLOQUÉES »). **Sans ce
    plafond confirmé, jamais plus de 448 jambes** (plafond de lancement). Les jambes sont des multiples de 32.
 2. **Jamais plus de 1 024 jambes** sans nouvelle mesure, car c'est le point mesuré de la D18.
 3. **Hausse des jambes** seulement si le p95 atteint 70 % du plafond, ou si au moins 5 % des tours avec masques

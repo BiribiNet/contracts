@@ -19,6 +19,7 @@ const betData=legs=>AbiCoder.defaultAbiCoder().encode(['uint256[]','uint256[]','
 function fakeChain({latest=1000,archiveFrom=0,supportsMasks=true,rangeLimit=Infinity}={}) {
   const logs=[],receipts=new Map(),limits=new Map(),maskState=new Map(),totalAssets=new Map(),methods=[];
   let logIndex=0,txCounter=0;
+  const started=new Set();
   const chain={latest,logs,methods,receipts,limits,maskState,totalAssets,currentRound:500,
     emit(name,values,blockNumber,transactionHash){
       const {data,topics}=R.ENGINE.encodeEventLog(R.ENGINE.getEvent(name),values);
@@ -28,6 +29,7 @@ function fakeChain({latest=1000,archiveFrom=0,supportsMasks=true,rangeLimit=Infi
     },
     setLimits(marketId,legs,bps,blockNumber){chain.emit('MaskBetLimitsUpdated',[marketId,legs,bps],blockNumber);limits.set(marketId,[legs,bps]);},
     bet(roundId,marketId,legs,blockNumber){
+      if(!started.has(roundId)){started.add(roundId);chain.emit('RoundCountdownStarted',[roundId,marketId,GENESIS_TIME+blockNumber*10+300],blockNumber);}
       const total=legs.reduce((s,l)=>s+l.amount,0n);
       chain.emit('BetRecorded',[marketId,roundId,'0x'+'aa'.repeat(20),total,betData(legs)],blockNumber);
       const key=roundId+':'+marketId,state=maskState.get(key)??{legs:0n,weighted:0n};
@@ -290,4 +292,41 @@ test('should keep limits unchanged when masks are enabled but nobody played them
   assert.equal(report.markets[0].recommendation.changed,false);
   assert.match(report.markets[0].recommendation.reasons.join('\n'),/données insuffisantes/);
   assert.deepEqual(report.commands,[]);
+});
+
+test('should block every raise and say why when no gas observation covers the mask rounds',async()=>{
+  const chain=trafficChain();
+  const report=await R.buildReport({send:chain.send,d:DEPLOYMENT,budget:BUDGET,options:{fromBlock:50,toBlock:1000,ethCallGasCap:5_000_000,maxReceipts:0}});
+  assert.equal(report.gas.vrfCallback.withMasks.count,0);
+  assert.match(report.gas.missing.join('\n'),/aucune observation de gaz du callback VRF/);
+  assert.match(report.gas.missing.join('\n'),/aucune observation de gaz du règlement/);
+  const [m1,m2]=report.markets;
+  assert.deepEqual([m1.recommendation.maxLegsPerRound,m1.recommendation.changed],[64,false]);
+  assert.deepEqual([m2.recommendation.maxLiabilityBps,m2.recommendation.changed],[100,false]);
+  assert.match(m1.recommendation.reasons.join('\n'),/hausse bloquée : aucune observation de gaz/);
+  assert.deepEqual(report.commands,[]);
+  assert.match(R.formatReport(report),/Hausses BLOQUÉES/);
+});
+
+test('should show but never count rounds that the window cuts at either end',async()=>{
+  const chain=trafficChain();
+  // Tour 200 : 50 jambes au bloc 900, puis 14 au bloc 950, réglé au bloc 960 ; la fenêtre s'arrête au bloc 920.
+  chain.bet(200,1,Array.from({length:50},()=>maskLeg()),900);
+  chain.bet(200,1,Array.from({length:14},()=>maskLeg()),950);
+  chain.settle(200,1,960);
+  // La fenêtre commence au bloc 101 : le tour 100 (compte à rebours au bloc 100) est coupé au début.
+  const report=await R.buildReport({send:chain.send,d:DEPLOYMENT,budget:BUDGET,options:{fromBlock:101,toBlock:920,ethCallGasCap:5_000_000}});
+  const [m1,m2]=report.markets;
+  assert.equal(m1.activity.roundsWithMasks,24);           // tours 101..124 (100 coupé au début, 200 à la fin)
+  assert.equal(m2.activity.roundsWithMasks,24);
+  assert.equal(m1.legsPerRound.max,64);
+  assert.equal(m1.legCap.roundsAtCap,9);                 // tours 101..109
+  const cutEnd=m1.rounds.find(r=>r.roundId===200),cutStart=m2.rounds.find(r=>r.roundId===100);
+  assert.equal(cutEnd.incomplete,true);
+  assert.equal(cutEnd.legs,50);                           // compteurs de la fenêtre, pas ceux du tour entier
+  assert.equal(cutEnd.atLegCap,false);
+  assert.equal(cutStart.incomplete,true);
+  assert.equal(m1.activity.incompleteRounds,1);
+  assert.match(report.warnings.join('\n'),/incomplet/);
+  assert(m1.rounds.filter(r=>!r.incomplete).every(r=>r.roundId>=101&&r.roundId<=124));
 });

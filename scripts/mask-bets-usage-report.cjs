@@ -70,6 +70,7 @@ const ETH_CALL_MODEL=Object.freeze({anchorLegs:448,anchorGas:1_380_331,gasPerLeg
 
 const ENGINE=new Interface([
   'event BetRecorded(uint32 marketId,uint64 localRound,address player,uint256 totalAmount,bytes betData)',
+  'event RoundCountdownStarted(uint64 roundId,uint32 triggerMarketId,uint256 lockAt)',
   'event VRFResult(uint64 roundId,uint8 winningNumber,uint8 jackpotNumber)',
   'event PayoutProgress(uint64 globalRoundId,uint32 marketId,uint256 fromCursor,uint256 toCursor,uint256 paidAmount)',
   'event RoundResolved(uint64 roundId)',
@@ -79,7 +80,7 @@ const ENGINE=new Interface([
   'function maskBetState(uint64,uint32) view returns (uint32 maxLegsPerRound,uint16 maxLiabilityBps,uint256 legCount,uint256 weightedPayout)',
 ]);
 const VAULT=new Interface(['function totalAssets() view returns (uint256)']);
-const TOPIC=Object.fromEntries(['BetRecorded','VRFResult','PayoutProgress','RoundResolved','MaskBetLimitsUpdated']
+const TOPIC=Object.fromEntries(['RoundCountdownStarted','BetRecorded','VRFResult','PayoutProgress','RoundResolved','MaskBetLimitsUpdated']
   .map(name=>[name,ENGINE.getEvent(name).topicHash]));
 const READ_METHODS=new Set(['eth_chainId','hardhat_metadata','eth_blockNumber','eth_getBlockByNumber','eth_getLogs','eth_call','eth_getTransactionReceipt']);
 
@@ -140,7 +141,7 @@ function legCeiling({ethCallGasCap=null,rule=RULE,model=ETH_CALL_MODEL}={}) {
  * Pure recommendation for one market. `current` is the limit in force at the end of the window (null when the
  * engine does not serve masks yet). Returns the values to set, whether they change and every reason, in French.
  */
-function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,ethCallGasCap=null,rule=RULE}) {
+function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,gasMissing=[],ethCallGasCap=null,rule=RULE}) {
   const reasons=[];
   if(!current)return {maxLegsPerRound:null,maxLiabilityBps:null,changed:false,
     reasons:['moteur sans paris spéciaux (maskBetState absent) : rien à recommander ; activer d\'abord avec mask-bets-v1-activate.cjs']};
@@ -151,6 +152,8 @@ function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,et
   }
   const ceiling=legCeiling({ethCallGasCap,rule});
   const enough=maskRounds>=rule.minMaskRounds;
+  // Une observation de gaz absente ne vaut jamais marge suffisante : aucune hausse (jambes ni bps) sans elle.
+  const blocked=gasMissing.length?'hausse bloquée : aucune observation de gaz ('+gasMissing.join(' ; ')+')':null;
   if(maxLegs>ceiling) {
     maxLegs=ceiling;
     reasons.push('jambes ramenées à '+ceiling+' : plafond de gaz ('+(ethCallGasCap?'eth_call '+ethCallGasCap+' − 30 %':'448 sans plafond eth_call confirmé')+')');
@@ -159,6 +162,7 @@ function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,et
   } else {
     const demand=(legs.p95??0)>=rule.legDemandRatio*maxLegs||capHitRate>=rule.legCapHitRate;
     if(!demand)reasons.push('jambes inchangées : p95 '+legs.p95+' < 70 % de '+maxLegs+' et '+round2(capHitRate*100)+' % de tours au plafond < 5 %');
+    else if(blocked)reasons.push('jambes : '+blocked);
     else if(gasFreeze.length)reasons.push('jambes gelées malgré la demande : '+gasFreeze.join(' ; '));
     else {
       const target=Math.min(ceiling,ceilStep(maxLegs*rule.legGrowth,rule.legStep));
@@ -167,6 +171,7 @@ function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,et
     }
   }
   if(!enough)reasons.push('maxBps inchangé : données insuffisantes');
+  else if((capUse.p95??0)>=rule.bpsDemandRatio&&blocked)reasons.push('maxBps : '+blocked);
   else if((capUse.p95??0)>=rule.bpsDemandRatio) {
     const target=Math.min(rule.maxRecommendedBps,ceilStep(maxBps*rule.bpsGrowth,rule.bpsStep));
     if(target>maxBps){reasons.push('maxBps '+maxBps+' → '+target+' : p95 du passif = '+round2(capUse.p95*100)+' % du plafond');maxBps=target;}
@@ -307,13 +312,19 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
 
   // Logs : jeu (fenêtre) + historique complet des plafonds (filtré par topic, donc peu de résultats).
   const windowLogs=await getLogsPaged(send,{...bounds,address:d.engine,fromBlock:window.fromBlock,toBlock:window.toBlock,
-    topics:[[TOPIC.BetRecorded,TOPIC.VRFResult,TOPIC.PayoutProgress,TOPIC.RoundResolved]]});
+    topics:[[TOPIC.RoundCountdownStarted,TOPIC.BetRecorded,TOPIC.VRFResult,TOPIC.PayoutProgress,TOPIC.RoundResolved]]});
   const limitLogs=await getLogsPaged(send,{...bounds,chunkBlocks:Math.max(bounds.chunkBlocks,LIMITS_CHUNK_BLOCKS),address:d.engine,fromBlock:Math.min(options.limitsFromBlock??d.startBlock,window.toBlock),
     toBlock:window.toBlock,topics:[TOPIC.MaskBetLimitsUpdated]});
   const updates=limitLogs.map(log=>{const e=ENGINE.parseLog(log);return {...posOf(log),marketId:Number(e.args.marketId),
     maxLegsPerRound:Number(e.args.maxLegsPerRound),maxLiabilityBps:Number(e.args.maxLiabilityBps),transactionHash:log.transactionHash};});
   const byTopic=topic=>windowLogs.filter(log=>log.topics[0]===topic);
   const rows=aggregateBets(byTopic(TOPIC.BetRecorded));
+  // Un tour n'est complet que si la fenêtre contient son premier pari (RoundCountdownStarted) et son tirage
+  // (VRFResult, après lequel aucun pari n'est plus possible). Un tour coupé reste affiché, marqué « incomplet »,
+  // mais ne compte jamais dans la règle : ses mises et ses masques de la fenêtre ne décrivent pas le tour entier.
+  const startedRounds=new Set(byTopic(TOPIC.RoundCountdownStarted).map(log=>Number(ENGINE.parseLog(log).args.roundId)));
+  const drawnRounds=new Set(byTopic(TOPIC.VRFResult).map(log=>Number(ENGINE.parseLog(log).args.roundId)));
+  for(const row of rows.values())row.incomplete=!(startedRounds.has(row.roundId)&&drawnRounds.has(row.roundId));
 
   // Moteur : sert-il maskBetState ? Plafonds en vigueur à la fin de la fenêtre.
   const currentRound=Number((await call(send,d.engine,ENGINE,'currentGlobalRound',[]))[0]);
@@ -324,7 +335,10 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
   if(!supportsMasks)warnings.push('Le moteur ne sert pas maskBetState : upgrade des paris spéciaux non exécuté, aucune donnée de masque possible.');
 
   // Paris spéciaux : compteurs exacts du moteur (jamais effacés) et liquidité libre au dernier pari masque.
-  const maskRows=[...rows.values()].filter(r=>r.maskLegs>0);
+  const allMaskRows=[...rows.values()].filter(r=>r.maskLegs>0);
+  const maskRows=allMaskRows.filter(r=>!r.incomplete);
+  const incompleteMaskRows=allMaskRows.filter(r=>r.incomplete);
+  if(incompleteMaskRows.length)warnings.push(incompleteMaskRows.length+' (tour, marché) avec masques coupé(s) par la fenêtre : affiché(s) « incomplet », exclu(s) de la règle.');
   const maxStateReads=options.maxStateReads??3000;
   assert(maskRows.length*2<=maxStateReads,maskRows.length+' (tour, marché) avec masques : plus de '+maxStateReads+' lectures, réduire la fenêtre ou augmenter --max-state-reads');
   const latestAssets=new Map();
@@ -357,7 +371,7 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
     maskRows.filter(r=>r.freeLiquiditySource!=='archive').length+' tour(s) approchée par totalAssets() actuel. Relancer avec un ARBITRUM_RPC_URL archive pour des bps exacts.');
 
   // Gaz : callback VRF (tx qui émet VRFResult) et règlement (tx PayoutProgress / RoundResolved) des tours.
-  const maskRounds=new Set(maskRows.map(r=>r.roundId));
+  const maskRounds=new Set(allMaskRows.map(r=>r.roundId));
   const vrfTx=new Map(byTopic(TOPIC.VRFResult).map(log=>[Number(ENGINE.parseLog(log).args.roundId),log.transactionHash]));
   const settlementTx=new Map();
   for(const log of [...byTopic(TOPIC.PayoutProgress),...byTopic(TOPIC.RoundResolved)]) {
@@ -398,7 +412,13 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
   };
   const margin=(BPS-rule.gasMarginBps)/BPS;
   const gasFreeze=[];
-  const vrfObserved=gas.vrfCallback.withMasks.max??gas.vrfCallback.withoutMasks.max;
+  const gasMissing=[];
+  if(maskRows.length) {
+    if(gas.vrfCallback.withMasks.count===0)gasMissing.push('aucune observation de gaz du callback VRF sur les tours avec masques');
+    if(gas.settlement.withMasks.count===0)gasMissing.push('aucune observation de gaz du règlement sur les tours avec masques');
+  }
+  gas.missing=gasMissing;
+  const vrfObserved=gas.vrfCallback.withMasks.max;
   if(vrfObserved!==null&&vrfObserved>margin*vrfCallbackGasLimit)gasFreeze.push('callback VRF '+vrfObserved+' gaz > 70 % de '+vrfCallbackGasLimit);
   const settleObserved=gas.settlement.withMasks.max;
   if(settleObserved!==null&&settleObserved>margin*settlementGasLimit)gasFreeze.push('règlement '+settleObserved+' gaz > 70 % de '+settlementGasLimit);
@@ -414,8 +434,10 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
         .catch(async()=>call(send,d.engine,ENGINE,'maskBetState',[currentRound,market.marketId]));
       current={maxLegsPerRound:Number(maxLegs),maxLiabilityBps:Number(maxBps)};
     }
-    const active=[...rows.values()].filter(r=>r.marketId===market.marketId);
+    const marketRows=[...rows.values()].filter(r=>r.marketId===market.marketId);
+    const active=marketRows.filter(r=>!r.incomplete);
     const withMasks=active.filter(r=>r.maskLegs>0);
+    const cut=marketRows.filter(r=>r.incomplete&&r.maskLegs>0);
     const capHits=withMasks.filter(r=>r.atLegCap).length;
     const capHitRate=withMasks.length?capHits/withMasks.length:0;
     const legs={...summarize(withMasks.map(r=>r.maskLegs)),meanOverActiveRounds:active.length?round2(withMasks.reduce((s,r)=>s+r.maskLegs,0)/active.length):null};
@@ -424,11 +446,12 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
     const nearCap=withMasks.filter(r=>r.capUse!==null&&r.capUse>=rule.nearCapRatio).length;
     const presets={};
     for(const r of withMasks)for(const [id,count] of Object.entries(r.presets))presets[id]=(presets[id]||0)+count;
-    const recommendation=recommendMarket({current,maskRounds:withMasks.length,legs,capHitRate,capUse,gasFreeze,ethCallGasCap:options.ethCallGasCap,rule});
+    const recommendation=recommendMarket({current,maskRounds:withMasks.length,legs,capHitRate,capUse,gasFreeze,gasMissing,ethCallGasCap:options.ethCallGasCap,rule});
     if(recommendation.maxLegsPerRound!==null)recommendation.predictedEthCallGas=predictEthCallGas(recommendation.maxLegsPerRound);
     if(withMasks.some(r=>r.freeLiquiditySource!=='archive'))recommendation.reasons.push('attention : bps calculés sur une liquidité libre approchée');
     reportMarkets.push({...market,current,
-      activity:{roundsWithBets:active.length,roundsWithMasks:withMasks.length,maskLegs:withMasks.reduce((s,r)=>s+r.maskLegs,0),presets},
+      activity:{roundsWithBets:active.length,roundsWithMasks:withMasks.length,maskLegs:withMasks.reduce((s,r)=>s+r.maskLegs,0),presets,
+        incompleteRounds:cut.length},
       legsPerRound:legs,legCap:{roundsAtCap:capHits,rate:round2(capHitRate*100)/100},
       liability:{bpsOfFreeLiquidity:liabilityBps,shareOfCap:capUse,roundsNearCap:nearCap,
         maxWeightedPayout:withMasks.reduce((m,r)=>r.maskWeightedPayout>m?r.maskWeightedPayout:m,0n)},
@@ -438,12 +461,15 @@ async function buildReport({send:rawSend,d,budget,options={},network='mainnet',r
           'proxys : tours au plafond de jambes et tours ≥ 95 % du plafond de passif. Les tentatives échouées côté frontend '+
           'remontent par /api/logs/bets/attempt (Telegram).'},
       recommendation,
-      rounds:withMasks.map(r=>({roundId:r.roundId,legs:r.maskLegs,weightedPayout:r.maskWeightedPayout,freeLiquidity:r.freeLiquidity,
-        freeLiquiditySource:r.freeLiquiditySource,liabilityBps:r.liabilityBps,shareOfCap:r.capUse,limit:r.limit,atLegCap:r.atLegCap,lastMaskBlock:r.lastMask.blockNumber}))});
+      rounds:[...withMasks.map(r=>({roundId:r.roundId,incomplete:false,legs:r.maskLegs,weightedPayout:r.maskWeightedPayout,freeLiquidity:r.freeLiquidity,
+        freeLiquiditySource:r.freeLiquiditySource,liabilityBps:r.liabilityBps,shareOfCap:r.capUse,limit:r.limit,atLegCap:r.atLegCap,lastMaskBlock:r.lastMask.blockNumber})),
+        // Tours coupés : compteurs de la fenêtre seulement, sans liquidité ni plafond, hors règle.
+        ...cut.map(r=>({roundId:r.roundId,incomplete:true,legs:r.maskLegs,weightedPayout:r.maskWeightedPayout,freeLiquidity:null,
+          freeLiquiditySource:null,liabilityBps:null,shareOfCap:null,limit:null,atLegCap:false,lastMaskBlock:r.lastMask.blockNumber}))]});
   }
   const commands=reportMarkets.filter(m=>m.recommendation.changed).map(m=>activationCommand(m.marketId,m.recommendation,rule));
   const hasData=maskRows.length>0;
-  if(!hasData)warnings.push('Aucune jambe de pari spécial dans la fenêtre : aucune donnée, aucun réglage à changer.');
+  if(!hasData)warnings.push('Aucune jambe de pari spécial dans un tour complet de la fenêtre : aucune donnée, aucun réglage à changer.');
   return {
     kind:'mask-bets-usage-report',generatedAt:new Date().toISOString(),network:d.label??network,chainId,
     rpc:process.env[C.RPC_ENV]?C.RPC_ENV:'public',
@@ -472,11 +498,13 @@ function formatReport(report) {
   for(const [label,s] of [['avec masques',g.settlement.withMasks],['sans masques',g.settlement.withoutMasks]])
     lines.push('  '+label+' : '+s.count+' tx, moyenne '+fmt(s.mean)+', p95 '+fmt(s.p95)+', max '+fmt(s.max)+(s.max===null?'':' ('+s.maxShareOfLimit+' % de la limite)'));
   lines.push('eth_call checkUpkeep (modèle, non observable) : plafond eth_call '+fmt(g.ethCallModel.ethCallGasCap)+', plafond de jambes autorisé '+g.ethCallModel.legCeiling);
+  if(g.missing.length)lines.push('Hausses BLOQUÉES : '+g.missing.join(' ; '));
   if(g.freeze.length)lines.push('GEL des hausses de jambes : '+g.freeze.join(' ; '));
   for(const m of report.markets) {
     lines.push('');
     lines.push('Marché '+m.marketId+' ('+m.bank+') — plafonds actuels : '+(m.current?m.current.maxLegsPerRound+' jambes / '+m.current.maxLiabilityBps+' bps':'—'));
-    lines.push('  tours avec paris : '+m.activity.roundsWithBets+', avec masques : '+m.activity.roundsWithMasks+', jambes : '+m.activity.maskLegs);
+    lines.push('  tours complets avec paris : '+m.activity.roundsWithBets+', avec masques : '+m.activity.roundsWithMasks+', jambes : '+m.activity.maskLegs+
+      (m.activity.incompleteRounds?' ; '+m.activity.incompleteRounds+' tour(s) incomplet(s) exclu(s) de la règle':''));
     if(m.activity.roundsWithMasks===0)lines.push('  aucune donnée de paris spéciaux sur ce marché');
     else {
       lines.push('  jambes par tour : moyenne '+m.legsPerRound.mean+', p95 '+m.legsPerRound.p95+', max '+m.legsPerRound.max+' ; tours au plafond : '+m.legCap.roundsAtCap+' ('+round2(m.legCap.rate*100)+' %)');
