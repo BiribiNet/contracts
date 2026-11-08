@@ -62,8 +62,8 @@
       "initcodeBytes": 6206
     },
     "RouletteMaskBetLib": {
-      "bytecodeHash": "0x560795f54d614e9b48fc7b99926327736910afac0f4a187adeed3b55d3811e80",
-      "deployedBytecodeHash": "0x7d50d3f6d643dddc5bb445b57d3b1b32a4b031a2de01a425eb67103e53972153",
+      "bytecodeHash": "0xc1da77eb3d0e1084222bac07cb3a0ade5095fd088ec4e99f00fc7639a976698b",
+      "deployedBytecodeHash": "0xbf1366bfa8cddeb782073b1a92a1e0a97cf975e0cf59b7cf02f1cba006af1caf",
       "runtimeBytes": 3008,
       "initcodeBytes": 3060
     },

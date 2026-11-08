@@ -55,15 +55,41 @@ describe("Mask bets v1 — validation and encoding", function () {
         await place(s, [{ betType: 1n, number: 7n, amount: s.unit }]);
     });
 
-    it("accepts |S| = 2 and |S| = 24, rejects |S| ∈ {0, 1, 25, 37} with InvalidBetNumber", async function () {
+    // Plafond porté de 24 à 35 par le propriétaire le 08/11/2026 (« Supérieur / Inférieur au précédent »).
+    it("accepts |S| = 2 and |S| = 35, rejects |S| ∈ {0, 1, 36, 37} with InvalidBetNumber", async function () {
         const s = await deployMaskFixture({ maxLegs: LAUNCH_MAX_LEGS });
         await place(s, [maskLeg(firstNumbers(2), s.unit)]);
         await place(s, [maskLeg(firstNumbers(24), s.unit)]);
-        for (const size of [0, 1, 25, 37]) {
+        await place(s, [maskLeg(firstNumbers(25), s.unit)]);
+        await place(s, [maskLeg(firstNumbers(35), s.unit)]);
+        // Le 0 compte comme un numéro du masque : {1..35} et {0..34} font tous deux 35 numéros.
+        await place(s, [maskLeg(firstNumbers(35, 1), s.unit)]);
+        for (const size of [0, 1, 36, 37]) {
             await expect(place(s, [maskLeg(firstNumbers(size), s.unit)]), `size ${size}`)
                 .to.be.rejectedWith(rejectWith("InvalidBetNumber()"));
         }
-        expect((await s.engine.read.maskBetState([1n, 1]))[2]).to.equal(2n);
+        // {1..36} : 36 numéros sans le 0, refusé aussi.
+        await expect(place(s, [maskLeg(firstNumbers(36, 1), s.unit)]), "size 36 without 0")
+            .to.be.rejectedWith(rejectWith("InvalidBetNumber()"));
+        expect((await s.engine.read.maskBetState([1n, 1]))[2]).to.equal(5n);
+    });
+
+    it("pays floor(amount × 36 / 35) on a winning 35-number mask, nothing when the draw falls outside", async function () {
+        const s = await deployMaskFixture({ maxLegs: LAUNCH_MAX_LEGS });
+        const amount = 35n * s.unit + 3n;
+        // {0..34} gagne sur 0 (le 0 est couvert) ; {1..35} perd sur 0.
+        await place(s, [maskLeg(firstNumbers(35), amount)], s.alice);
+        await place(s, [maskLeg(firstNumbers(35, 1), amount)], s.bob);
+        expect((await s.engine.read.maskBetState([1n, 1]))[3]).to.equal(2n * maskPayout(amount, 35));
+        const aliceBefore = await s.token.read.balanceOf([s.alice.account.address]);
+        const bobBefore = await s.token.read.balanceOf([s.bob.account.address]);
+        await settleRound(s, 0);
+        const payout = maskPayout(amount, 35);
+        expect(payout).to.equal((amount * 36n) / 35n);
+        expect(payout > amount).to.equal(true);
+        expect(await s.token.read.balanceOf([s.alice.account.address])).to.equal(aliceBefore + payout);
+        expect(await s.token.read.balanceOf([s.bob.account.address])).to.equal(bobBefore);
+        expect(await s.bank.read.lockedBetLiquidity()).to.equal(0n);
     });
 
     it("bit 37 alone is an empty mask, presetId = 511 is accepted, any bit ≥ 53 reverts", async function () {
@@ -133,14 +159,14 @@ describe("Mask bets v1 — payout formula", function () {
     this.timeout(600_000);
 
     for (const decimals of [6, 18] as const) {
-        it(`pays floor(amount × 36 / |S|) for every |S| in [2, 24] (${decimals} decimals)`, async function () {
+        it(`pays floor(amount × 36 / |S|) for every |S| in [2, 35] (${decimals} decimals)`, async function () {
             const s = await deployMaskFixture({ decimals, maxLegs: LAUNCH_MAX_LEGS, liquidityUnits: 5_000_000n });
             const amounts = [s.unit, s.unit + 1n, 10n ** BigInt(decimals), 1_000_003n * (s.unit / 1000n) + 7n, 97n * s.unit + 13n];
             const winning = 0;
             const legs: BetLeg[] = [];
             const expected: { player: Address; amount: bigint }[] = [];
             let weighted = 0n;
-            for (let size = 2; size <= 24; size++) {
+            for (let size = 2; size <= 35; size++) {
                 for (const amount of amounts) {
                     legs.push(maskLeg(firstNumbers(size), amount));
                     expected.push({ player: s.alice.account.address, amount: maskPayout(amount, size) });
@@ -466,11 +492,12 @@ describe("Mask bets v1 — gas (local Hardhat, 6 decimals, stake = minBet)", fun
         const firstMask = await gasOf([maskLeg([1, 2], s.unit)]);
         const nextMaskTwoNumbers = await gasOf([maskLeg([3, 4], s.unit)], s.bob);
         const nextMaskTwentyFourNumbers = await gasOf([maskLeg(firstNumbers(24, 5), s.unit)], s.bob);
+        const nextMaskThirtyFiveNumbers = await gasOf([maskLeg(firstNumbers(35, 1), s.unit)], s.bob);
         const nextSplit = await gasOf([{ betType: 2n, number: 1n, amount: s.unit }], s.bob);
         const tenMasks = await gasOf(Array.from({ length: 10 }, (_, i) => maskLeg([i, i + 20], s.unit)), s.bob);
         const oneMaskForTen = await gasOf([maskLeg([30, 31], s.unit)], s.bob);
         const measurements = {
-            firstBetOfRound, firstMask, nextMaskTwoNumbers, nextMaskTwentyFourNumbers, nextSplit, tenMasks,
+            firstBetOfRound, firstMask, nextMaskTwoNumbers, nextMaskTwentyFourNumbers, nextMaskThirtyFiveNumbers, nextSplit, tenMasks,
             marginalMaskLeg: (tenMasks - oneMaskForTen) / 9n,
         };
         console.log("MASK_BET_GAS", JSON.stringify(measurements, (_k, v) => (typeof v === "bigint" ? v.toString() : v)));

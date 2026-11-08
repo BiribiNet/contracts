@@ -6,7 +6,7 @@ import { IRouletteBetErrors } from "../interfaces/IRouletteBetErrors.sol";
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 
 /// @notice Linked library: mask bets (`BET_MASK = 16`, `docs/spec-mask-bets-v1.md`).
-/// @dev A mask leg covers an arbitrary set `S ⊂ {0..36}`, `2 ≤ |S| ≤ 24`, and pays `floor(amount × 36 / |S|)`
+/// @dev A mask leg covers an arbitrary set `S ⊂ {0..36}`, `2 ≤ |S| ≤ 35`, and pays `floor(amount × 36 / |S|)`
 /// (stake included). Only the stake enters `lockedBetLiquidity` (through the vault's normal `placeBet`);
 /// the payout liability lives exclusively in `roundMaskWeightedPayout` and never touches the vault NAV.
 ///
@@ -27,7 +27,7 @@ library RouletteMaskBetLib {
     uint256 internal constant ENCODING_BITS = 53;
     uint256 internal constant MAX_WINNING_NUMBER = 36;
     uint256 internal constant MIN_MASK_SIZE = 2;
-    uint256 internal constant MAX_MASK_SIZE = 24;
+    uint256 internal constant MAX_MASK_SIZE = 35;
     /// @dev Straight-up multiplier: a mask pays `36 / |S|` times its stake.
     uint256 internal constant PAYOUT_NUMERATOR = 36;
     uint256 internal constant COUNTER_BITS = 16;
@@ -115,7 +115,7 @@ library RouletteMaskBetLib {
 
     /// @notice Decodes and validates one leg's `number` field.
     /// @return mask covered set (37 bits)
-    /// @return size `|S|`, in `[2, 24]`
+    /// @return size `|S|`, in `[2, 35]` (number 0 counts like any other covered number)
     /// @return guarded whether the previous-outcome guard is set
     /// @return expectedPrev required previous winning number (only meaningful when `guarded`)
     function decodeMaskLeg(uint256 numberRaw)

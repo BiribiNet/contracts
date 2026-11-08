@@ -108,5 +108,8 @@
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@types/chai": "4.3.7",
     "chai": "4.3.7"
+  },
+  "resolutions": {
+    "@zksync/contracts": "https://github.com/matter-labs/era-contracts/archive/446d391d34bdb48255d5f8fef8a8248925fc98b9.tar.gz"
   }
 }
