@@ -213,3 +213,105 @@ propriétaire conformes, layouts compatibles) et confirme le jeu de bibliothèqu
 `RouletteJackpotCollectLib`, `RouletteBetCodecLib`), redéploiement de `RoulettePayoutSweepLib`,
 `RouletteLiabilityMathLib`, `RouletteUpkeepScanLib` (relink) et `RouletteMaskBetLib`, soit 8 transactions
 (6 déploiements, puis moteur, puis beacon).
+
+## Bilan après une semaine
+
+Décision du propriétaire (08/11/2026, point 9) : après une semaine de trafic réel sur Arbitrum One, l'admin relit
+les plafonds de chaque marché à partir d'un bilan mesuré. `scripts/mask-bets-usage-report.cjs` produit ce bilan.
+Le script est **en lecture seule** : sans clé, il ne signe et n'envoie rien. Son fournisseur RPC refuse toute
+méthode autre que `eth_chainId`, `eth_blockNumber`, `eth_getBlockByNumber`, `eth_getLogs`, `eth_call` et
+`eth_getTransactionReceipt`.
+
+```bash
+node scripts/mask-bets-usage-report.cjs                                    # 7 derniers jours (défaut)
+node scripts/mask-bets-usage-report.cjs --from 2026-11-10 --to 2026-11-17 --out /tmp/mask-usage.json
+node scripts/mask-bets-usage-report.cjs --from-block 522400000 --to-block 524800000
+node scripts/mask-bets-usage-report.cjs --days 7 --eth-call-gas-cap <gaz>   # plafond eth_call CRE/keeper confirmé
+```
+
+La fenêtre se donne en dates (`--days`, ou `--from`/`--to` en ISO UTC) ou en blocs (`--from-block`/`--to-block`).
+Les appels sont bornés : `--chunk-blocks` (100 000, la limite du RPC public pour une requête à plusieurs topics ;
+la taille est divisée par deux en cas de refus), `--max-log-requests` (200), `--max-receipts` (600) et
+`--max-state-reads` (3 000). La sortie console est en français ; `--out` écrit le JSON complet, avec le détail par
+tour. Le RPC est `ARBITRUM_RPC_URL`, sinon le RPC public. Son URL n'est jamais écrite.
+
+### Sources
+
+Les données viennent **de la chaîne, pas du subgraph**. Le moteur est la source de vérité : `maskBetState(round,
+marché)` renvoie le nombre de jambes et le passif réservé (`roundMaskWeightedPayout`) de chaque tour, et ces
+compteurs ne sont jamais effacés. Le subgraph indexe avec un retard, peut dériver (voir `reconcile:vaults`) et
+n'aura `RouletteMaskLeg` sur mainnet qu'après son propre redéploiement. Il ne donne pas non plus le gaz.
+
+- `BetRecorded` (décodé, jambes `betType = 16`) : tours concernés, mises du round jusqu'au dernier pari masque,
+  presets joués. Le passif recalculé depuis les événements est comparé à `maskBetState` ; en cas d'écart, par
+  exemple pour un tour coupé par la fenêtre, la valeur du moteur est retenue et un avertissement est affiché.
+- **Tours complets seulement.** Un tour ne compte dans la règle que si la fenêtre contient son
+  `RoundCountdownStarted` (premier pari) et son `VRFResult` (plus aucun pari possible ensuite). Un tour coupé au
+  début ou à la fin est affiché « incomplet » (`incomplete: true`, compteurs de la fenêtre seulement), mais il est
+  exclu des statistiques et de la recommandation, car ses mises et ses masques ne décrivent pas le tour entier.
+- `MaskBetLimitsUpdated`, depuis le `startBlock` du manifeste : les plafonds en vigueur lors de chaque tour. Les
+  masques sont livrés à 0/0.
+- Liquidité libre : même formule que `RouletteEngine._recordBetInternal`, soit `totalAssets()` du vault au bloc du
+  dernier pari masque, plus les mises du round jusqu'à ce pari. Il faut un **RPC archive** : le RPC public ne garde
+  qu'environ 100 000 blocs d'état. Sans archive, `totalAssets()` actuel sert d'approximation ; chaque tour concerné
+  est marqué `latest-approximation` et la recommandation le signale.
+- Gaz : reçus des transactions qui émettent `VRFResult` (callback VRF) et `PayoutProgress` / `RoundResolved`
+  (règlement), pour les tours avec masques d'abord, puis pour des tours sans masques qui servent de référence.
+  Le gaz retenu est le gaz L2 (`gasUsed − gasUsedForL1`). Pour le callback, c'est un majorant, car la transaction
+  du coordinateur l'inclut. Le callback est comparé à `VRF_CALLBACK_GAS_LIMIT` et à
+  `reports/mask-bets-v1/vrf-callback-budget.json` ; le règlement est comparé au `writeGasLimit` CRE
+  (`--settlement-gas-limit`, 2 500 000 par défaut).
+- **Refus pour plafond** : ils ne sont **pas mesurables** on-chain. `MaskLegCapExceeded`,
+  `MaskLiabilityCapExceeded` et `MaskBetsDisabled` sont des reverts qui ne laissent aucun log, et un portefeuille
+  n'envoie normalement pas une transaction dont `estimateGas` échoue. Le bilan donne deux indicateurs indirects :
+  les tours au plafond de jambes et les tours à 95 % ou plus du plafond de passif. Les tentatives échouées côté
+  frontend remontent par `/api/logs/bets/attempt` (Telegram).
+- Le coût de l'`eth_call` `checkUpkeep(lane)` n'apparaît dans aucun reçu. Il est **modélisé** à partir des mesures
+  ci-dessus : 1 380 331 gaz à 448 jambes, plus 3 316 gaz par jambe (10 lanes, la configuration la plus chère),
+  plus environ 25 000 gaz d'intrinsèque.
+
+### Lire la recommandation
+
+Pour chaque marché, le bilan donne les jambes par tour (moyenne, p95, max) parmi les tours avec masques, le taux
+de tours au plafond, et le passif rapporté à la liquidité libre, en bps et en part du plafond (moyenne, p95, max).
+La règle (`RULE` dans le script) est la suivante :
+
+1. **Marge de gaz de 30 %.** Le callback VRF et chaque transaction de règlement observés restent sous 70 % de leur
+   limite ; sinon, les hausses de jambes sont **gelées** (`gas.freeze`). L'`eth_call` modélisé au plafond
+   recommandé reste sous 70 % du plafond `eth_call` CRE/keeper fourni par `--eth-call-gas-cap`. Une **observation
+   absente** (aucun reçu de callback ou de règlement sur les tours avec masques, par exemple avec `--max-receipts`
+   trop bas) ne vaut jamais marge suffisante : toute hausse, de jambes comme de `maxBps`, est bloquée
+   (`gas.missing`, « Hausses BLOQUÉES »). **Sans ce
+   plafond confirmé, jamais plus de 448 jambes** (plafond de lancement). Les jambes sont des multiples de 32.
+2. **Jamais plus de 1 024 jambes** sans nouvelle mesure, car c'est le point mesuré de la D18.
+3. **Hausse des jambes** seulement si le p95 atteint 70 % du plafond, ou si au moins 5 % des tours avec masques
+   l'atteignent. Le palier est de × 1,5 au plus, sous les plafonds 1 et 2. Un plafond au-dessus de la limite de
+   gaz est ramené à cette limite ; c'est la seule baisse automatique.
+4. **Hausse de `maxBps`** seulement si le p95 du passif atteint 70 % du plafond. Le palier est de × 1,5, arrondi à
+   250 bps. Au-delà de 2 500 bps (25 % de la liquidité libre), c'est une décision du propriétaire.
+5. Avec moins de 20 tours avec masques (`--min-mask-rounds`), rien ne change. Un marché à 0 jambe reste désactivé :
+   sa réactivation est une décision du propriétaire. Si le moteur ne sert pas `maskBetState`, le script ne fait
+   aucune recommandation.
+
+Le script imprime une commande par marché à changer, par exemple
+`node scripts/mask-bets-v1-activate.cjs --market 1:672:1000 --print-calldata --allow-above-launch-cap`. Le flag
+`--allow-above-launch-cap` n'apparaît qu'au-delà de 448 jambes. Si aucun réglage ne change, il imprime « Aucune
+commande : réglages inchangés ». Il ne lance pas ces commandes lui-même.
+
+### Qui applique
+
+L'**admin** du protocole (`ENGINE_ROUND_ROLE`) applique les réglages. Il relit le bilan (`--out`), lance la commande
+imprimée en dry run ou en `--print-calldata` pour le multisig, puis l'exécute avec
+`MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=… node scripts/mask-bets-v1-activate.cjs
+--market id:legs:bps --execute`. Au-delà de 448 jambes, le script d'activation exige `--allow-above-launch-cap`,
+qui n'est à passer qu'une fois le plafond `eth_call` CRE/keeper confirmé.
+
+### Essai du 08/11/2026 sur Arbitrum One (avant l'upgrade)
+
+Essai sur le RPC public, en lecture seule, sur les fenêtres de 1 jour et de 7 jours (blocs 520 265 322 →
+522 357 834), avec 22 appels `eth_getLogs` et environ 10 s d'exécution. Le moteur ne sert pas encore
+`maskBetState` : le bilan l'indique, ne fait aucune recommandation et n'imprime aucune commande. Il donne la
+référence sans masques sur 64 tours (marché 1 seulement) :
+
+- callback VRF : 316 586 gaz L2 en moyenne, 369 633 au maximum, soit 14,8 % de la limite de 2 500 000 ;
+- règlement : 354 779 gaz par transaction en moyenne, 452 910 au maximum, soit 18,1 % de la limite.
