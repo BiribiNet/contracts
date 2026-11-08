@@ -49,7 +49,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     uint8 private constant BET_HIGH = 13;
     uint8 private constant BET_TRIO_012 = 14;
     uint8 private constant BET_TRIO_023 = 15;
-    /// @dev Arbitrary set of 2..24 numbers, recorded by `RouletteMaskBetLib` (never through `BetEntry`).
+    /// @dev Arbitrary set of 2..35 numbers, recorded by `RouletteMaskBetLib` (never through `BetEntry`).
     uint8 private constant BET_MASK = 16;
 
     uint32 public constant DEFAULT_PAYOUT_LANE_COUNT = 10;

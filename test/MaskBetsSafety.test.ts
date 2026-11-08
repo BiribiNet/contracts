@@ -221,7 +221,7 @@ function randomLegs(rand: () => number, s: MaskFixture, player: Address): FuzzBe
         else if (kind === 1) legs.push({ player, betType: rand() < 0.5 ? 8n : 9n, number: 0n, amount });
         else if (kind === 2) legs.push({ player, betType: rand() < 0.5 ? 6n : 7n, number: BigInt(1 + Math.floor(rand() * 3)), amount });
         else {
-            const size = 2 + Math.floor(rand() * 23);
+            const size = 2 + Math.floor(rand() * 34);
             const numbers = new Set<number>();
             while (numbers.size < size) numbers.add(Math.floor(rand() * 37));
             legs.push({ player, ...maskLeg([...numbers], amount, { presetId: BigInt(Math.floor(rand() * 512)) }) });
@@ -236,7 +236,7 @@ describe("Mask bets v1 — properties (seeded fuzz)", function () {
     it("payout = floor(amount × 36 / |S|) and |S| × payout ≤ amount × 36 for random (mask, amount)", function () {
         const rand = prng(20261105);
         for (let i = 0; i < 20_000; i++) {
-            const size = 2 + Math.floor(rand() * 23);
+            const size = 2 + Math.floor(rand() * 34);
             const amount = BigInt(Math.floor(rand() * 2 ** 48)) * BigInt(1 + Math.floor(rand() * 1e6)) + 1n;
             const payout = maskPayout(amount, size);
             expect(BigInt(size) * payout <= amount * 36n).to.equal(true);
@@ -273,7 +273,7 @@ describe("Mask bets v1 — properties (seeded fuzz)", function () {
                 expect(await s.token.read.balanceOf([player.account.address])).to.equal(before[index] - staked + won);
             }
             const masks = all.filter((leg) => leg.betType === BET_MASK);
-            for (const leg of masks) expect(popcount(leg.number & ((1n << 37n) - 1n))).to.be.within(2, 24);
+            for (const leg of masks) expect(popcount(leg.number & ((1n << 37n) - 1n))).to.be.within(2, 35);
         });
     }
 });
