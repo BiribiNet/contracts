@@ -3796,10 +3796,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zksync/contracts@github:matter-labs/era-contracts#446d391d34bdb48255d5f8fef8a8248925fc98b9":
+"@zksync/contracts@https://github.com/matter-labs/era-contracts/archive/446d391d34bdb48255d5f8fef8a8248925fc98b9.tar.gz":
   version: 0.1.0
-  resolution: "@zksync/contracts@https://github.com/matter-labs/era-contracts.git#commit=446d391d34bdb48255d5f8fef8a8248925fc98b9"
-  checksum: 10c0/6cc292f334d028cb7cdf9b91f2c0cd19d1978dc5ca70ce870630e123a6c03cb5802bc7a297e00755bfa71ce167c57bdf7a0babaf8698f4ec6677c7fbe272bec4
+  resolution: "@zksync/contracts@https://github.com/matter-labs/era-contracts/archive/446d391d34bdb48255d5f8fef8a8248925fc98b9.tar.gz"
+  checksum: 10c0/d146324eac26cc39e259407615b8fd933a913142dfa22cbf99e9c9a65e01a35ce1a61e1f9890b92874ab82466ad4da6ad32af615184d252531b8f2a9b90942c6
   languageName: node
   linkType: hard
 
