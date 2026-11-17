@@ -4,7 +4,7 @@
 
 Biribi is an onchain roulette protocol on **Arbitrum One**. Players share a roulette draw and bet in BRB, native USDC, or DAI. Each asset has a separate bankroll vault. This repository contains the Solidity contracts, tests, and mainnet deployment records.
 
-🎡 [Explore Biribi](https://biribi.net) · 📖 [Game rules](https://biribi.net/biribi-rules) · 🔎 [Onchain evidence](https://biribi.net/infrastructure) · 📄 [Whitepaper](https://biribi.net/whitepaper)
+🎡 [Explore Biribi](https://biribi.net) · 📖 [Game rules](https://biribi.net/biribi-rules) · 🔎 [Onchain evidence](https://biribi.net/infrastructure) · 📄 [Whitepaper](https://biribi.net/whitepaper) · 💬 [Suggest a market](#suggest-a-market)
 
 **18+. Bets and deposited capital can be lost.** Vault returns vary and can be negative. Availability depends on local law.
 
@@ -39,6 +39,16 @@ Each vault accepts deposits and pays roulette winnings in its market's token. Us
 | Vault beacon | [`0x7b23cCdDB62B982245c50BdAAF1D13B3d12D632b`](https://arbiscan.io/address/0x7b23cCdDB62B982245c50BdAAF1D13B3d12D632b) | Points to the implementation shared by all three vault proxies |
 | [Referral contract](contracts/BRBReferal.sol) | [`0x6d19c9d21CE7b2670fC5f142f27d9819DD888544`](https://arbiscan.io/address/0x6d19c9d21CE7b2670fC5f142f27d9819DD888544) | Handles referral records and accounting |
 | [Tip jar](contracts/TipJar.sol) | [`0xa65aD745721B0F1382653328b837EF75f79b99ce`](https://arbiscan.io/address/0xa65aD745721B0F1382653328b837EF75f79b99ce) | Processes optional tips |
+
+## Suggest a market
+
+Anyone can suggest a token for a new Biribi roulette market. [Check existing issues](https://github.com/BiribiNet/contracts/issues) to see if someone has already suggested it, then comment there or [open a new issue](https://github.com/BiribiNet/contracts/issues/new) titled `Market suggestion for TOKEN`. You can also send your suggestion through [Biribi support](https://biribi.net/support).
+
+- Include the token name, symbol, and Arbitrum One contract address.
+- Explain why players would want to use it at the table.
+- If you have them, share links to existing liquidity, ideas for funding the initial bankroll, and details of any token transfer fees or restrictions.
+
+Registering a market onchain requires the `MARKET_FACTORY_ROLE` on the [Market Registry](contracts/MarketRegistry.sol).
 
 ## Verify a draw or payout
 
