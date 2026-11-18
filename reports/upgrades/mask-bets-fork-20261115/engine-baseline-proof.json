@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "sourceChainId": 42161,
+  "block": 524519648,
+  "referenceCommit": "86d2b97bfc4dd3c18a3a28a2265fac71104ca76b",
+  "implementation": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+  "dependencySourcesVerified": 46,
+  "normalizedRuntimeHash": "0x13c2604c34545fb0a40d812ad98f8ab3118c1b54ad153ae621d63d442622cec5",
+  "runtimeBytes": 22379,
+  "comparison": "Executable runtime with currently deployed library addresses; immutable ranges zeroed on both sides; metadata excluded"
+}

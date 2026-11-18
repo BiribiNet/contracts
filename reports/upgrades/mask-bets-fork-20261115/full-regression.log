@@ -1,0 +1,941 @@
+
+
+  Arbitrum One isolated deployment rehearsal
+    - deploys within bytecode limits, uses real USDC/V2/VRF, settles and drains queued funding
+    - rehearses mainnet deploy gates: drain all LINK, TipJar, USDC/BRB LP on deployer (no vesting lock)
+
+  AutomationReceiver bridge
+    ✔ forwards performUpkeep to scheduler when authority approves receiver (1345ms)
+    ✔ rejects direct performUpkeep from non-approved caller (319ms)
+    ✔ reverts when performUpkeep selector is not allowlisted on receiver (394ms)
+    ✔ refuses to unset the forwarder, keeping onReport permissioned (C-4) (301ms)
+    ✔ refuses to clear workflow expectations once hardened (C-4) (304ms)
+    ✔ rejects a report whose metadata is too short to decode (C-4) (299ms)
+    ✔ covers workflow name pin, isCallAllowed view, IERC165, and mismatched report metadata (406ms)
+
+  BRBJackpotFunder
+    ✔ swaps with router spot quote minus slippage and completes (98ms)
+    ✔ native BRB asset: splits fee slice without router swap (63ms)
+    ✔ returns without revert when router swap reverts (72ms)
+    ✔ reverts constructor on zero addresses (48ms)
+    ✔ exposes brbToken and admin setters with bounds (60ms)
+    ✔ updates the pair observation immediately when the TWAP window is zero (75ms)
+    ✔ skips swap when quoted minOut exceeds mock router delivery (91ms)
+    ✔ reverts admin setters from accounts without FUNDER_ADMIN_ROLE (46ms)
+    ✔ fundFromMarket: fee collector guard, empty balance, and sideBet caller (88ms)
+    ✔ sweepToken recovers stuck asset for FUNDER_ADMIN_ROLE (45ms)
+    ✔ fundFromMarket: treasury split edges and fee-hook failures (236ms)
+    ✔ sweepToken reverts when amount exceeds balance
+    ✔ skips swap when pair has no liquidity (SKIP_NO_QUOTE) (83ms)
+    ✔ uses router spot quote when pair is not deployed (104ms)
+    ✔ returns zero minOut when router returns a short amounts array (51ms)
+    ✔ returns zero minOut when getAmountsOut reverts (57ms)
+    ✔ no-ops pair observation snapshot when pair is not deployed
+    ✔ uses cold slippage on spot quotes before TWAP window is warm (90ms)
+    ✔ keeps spot as the floor reference when spot sits above TWAP (H-5) (110ms)
+    ✔ raises the floor to the TWAP when spot is pushed below it (H-5) (161ms)
+    ✔ records pair observation and uses TWAP after the window elapses (298ms)
+    ✔ engine setJackpotTreasury points jackpot payouts at a new treasury (157ms)
+    ✔ engine setJackpotFunder points settlement at a new funder (168ms)
+
+  BRBReferal
+    ✔ binds referrer on first placeBet and mints BRBR rewards on subsequent bets (455ms)
+    ✔ reverts self-referral and unauthorized mint (338ms)
+
+  BRBToken
+    ✔ mints fixed supply and supports burn
+
+  BankVault4626
+    ✔ handles bets, liquidity locking and total assets (84ms)
+    ✔ enforces guards and engine-only methods (53ms)
+    ✔ caps release and pays out via engine (86ms)
+    ✔ reverts when bet is below minBet (58ms)
+    ✔ reverts when deposit is at or below flat fee (63ms)
+    ✔ rejects withdraw requests worth no more than the flat fee, accepts just above (95ms)
+    ✔ charges one asset unit flat fee when processing a queued withdrawal (115ms)
+    ✔ settles 100% bps at process-time NAV after vault loss (104ms)
+    ✔ burns shares and sends residual gross to infra when below flat fee (112ms)
+    ✔ skips blocked receiver without burning, charges the fee in shares; continues queue and lets owner re-request (325ms)
+    ✔ rejects zero-share withdrawal requests so sybils cannot fill the queue (H-2) (142ms)
+    ✔ refuses to transfer the shares of a queued request until it is processed (125ms)
+    ✔ placeBetWithPermit succeeds even if permit is stale (try/catch) (643ms)
+    ✔ uses decimals offset 6 and resists donation inflation on second deposit (101ms)
+
+  Deployed drainWithdrawalQueue guards with side bets disabled
+    ✔ blocks an open straight-bet drain and all VRF/partial-payout windows (6 decimals) (1277ms)
+    ✔ reverts atomic bet -> queued withdrawal -> public drain (6 decimals) (465ms)
+    ✔ blocks an open straight-bet drain and all VRF/partial-payout windows (18 decimals) (1272ms)
+    ✔ reverts atomic bet -> queued withdrawal -> public drain (18 decimals) (413ms)
+    ✔ a public drain pays the queued owner, not the caller; a direct donation raises NAV (352ms)
+
+  2026-11-04 reserved-liquidity share dilution
+    ✔ reproduces the old exploit with the exact deployed implementation bytecode (360ms)
+
+  Incident recovery burns vault shares only
+    ✔ burns the current holder shares, preserves BRB balances and rejects other callers (257ms)
+
+  Branch coverage — registry & upkeep ops
+    ✔ MarketRegistry: constructor reverts, setter reverts, and ZeroImplementation beacon (45ms)
+    ✔ CreExecutionAuthority: approves executors for scheduler gate
+
+  Branch coverage — fee & treasury
+    ✔ BRBJackpotFunder: empty fund, engine guard, and fee-hook branches (149ms)
+    ✔ BRBReferal: constructor zero engine
+
+  Branch coverage — ProtocolTimelock
+    ✔ reverts execute when msg.value mismatches queued value
+
+  Branch coverage — SideBet config validation
+    ✔ reverts addConfig: NUMBER_HIT targetNumber (90ms)
+    ✔ reverts addConfig: NUMBER_HIT targetCount (93ms)
+    ✔ reverts addConfig: COLOR_COUNT targetCount (95ms)
+    ✔ reverts addConfig: RED_RATIO bps (96ms)
+    ✔ reverts addConfig: LIGHTNING_DOUBLE number (110ms)
+    ✔ reverts addConfig: LIGHTNING_DOUBLE count (114ms)
+    ✔ reverts addConfig: PERFECT_ALTERNATION window (104ms)
+    ✔ reverts addConfig: DOZEN_HIT targetNumber (108ms)
+    ✔ reverts addConfig: unknown market (107ms)
+    ✔ previewSettleBundleV2 early exits (maxBets, lane) (107ms)
+
+  Branch coverage — BankVault4626
+    ✔ withdrawal queue: zero payout when gross <= fee (95ms)
+    ✔ totalAssets when locked exceeds gross (54ms)
+
+  Branch coverage — UpkeepScheduler
+    ✔ checkUpkeep with empty checkData and invalid lane (268ms)
+    ✔ blocks performUpkeep when forwarder authority rejects caller (262ms)
+    ✔ no-ops performUpkeep on unknown work kind (trusted checkUpkeep calldata) (220ms)
+
+  Branch coverage — RouletteEngine views & admin bounds
+    ✔ exposes marketRoundStateByRound and enforces queue/lane setter bounds (230ms)
+
+  Branch coverage — BankVault4626 revert paths
+    ✔ reverts deposit, withdraw, pending withdrawal, and receiver checks (132ms)
+
+  Branch coverage — SideBet config admin
+    ✔ reverts removeConfig/updateConfig on unknown or inactive ids (121ms)
+
+  Branch coverage — §4 matrix (doc checklist)
+    ✔ CreExecutionAuthority: zero admin reverts on deploy
+    ✔ UpkeepScheduler: SideBet checkUpkeep when roulette findNextJob is empty (263ms)
+    ✔ RouletteEngine: isBankLiquidityRestricted in Locked and Settling (598ms)
+    ✔ BankVault4626: QueueFull when queue length reaches engine cap (288ms)
+    ✔ LPVestingLock: all release revert branches (43ms)
+    ✔ SideBet: setMultiplierBand bounds (91ms)
+    ✔ MarketRegistry: happy path createMarket after valid beacon (206ms)
+    ✔ BankVault4626: OnlySideBet and queue head reset after drain (102ms)
+
+  Branch coverage — 100% targets
+    MarketRegistry
+      ✔ constructor reverts on each zero address
+      ✔ setVaultBeacon reverts on zero, empty code, and invalid market reads (199ms)
+      ✔ createMarket reverts when asset, bankAdmin, or minBet is zero (204ms)
+      ✔ happy path createMarket and previewNextMarketId (249ms)
+      ✔ createMarket reverts when asset is already registered (251ms)
+    UpkeepScheduler
+      ✔ constructor reverts on invalid params
+      ✔ returns false when lane is at or beyond payoutParallelLaneCount (164ms)
+      ✔ normalizes laneCount when engine reports zero (210ms)
+      ✔ performUpkeep ignores unknown work kind; forwarder gate enforced (176ms)
+      - falls through to SideBet when payout job has no lane work
+    LegacySideBetBankVault4626
+      ✔ initialize guards and side-bet controller paths (41ms)
+      ✔ deposit blocked during resolution (384ms)
+      ✔ mint and deposit revert when assets too small or resolution blocks (50ms)
+      ✔ lockSideBetStake reverts and releaseBets partial clamp (83ms)
+      ✔ UnauthorizedSettlementCaller and setSideBetController zero (45ms)
+      ✔ processWithdrawalQueue skips transfer when gross does not exceed fee (96ms)
+    BRBJackpotFunder & JackpotTreasury
+      ✔ funder constructor zeros, sideBet caller, swap skip, and treasury payBatch zero amounts (237ms)
+      ✔ JackpotTreasury constructor reverts on zero addresses
+      ✔ fundFromMarket accepts sideBet as fee collector (47ms)
+    ProtocolTimelock & LPVestingLock
+      ✔ timelock constructor zeros and cancel on unknown id
+      ✔ LPVestingLock constructor and release revert branches (47ms)
+      ✔ LPVestingLock release() full balance overload
+    RouletteEngine
+      ✔ VRF key hash branches via tx.gasprice tiers (1878ms)
+      ✔ isBankLiquidityRestricted false when market not in round (164ms)
+      ✔ onlyRegistry registerMarket and unauthorized scheduler/bank (195ms)
+    SideBet
+      ✔ initialize reverts on invalid multiplier band
+
+  Branch coverage — 100% branch targets
+    ✔ BRBJackpotFunder: setTwapWindowSeconds role, sweepToken guards, partial sweep (75ms)
+    ✔ RouletteEngine: zero jackpot admin setters and unknown VRF request (192ms)
+    ✔ BankVault4626: redeemBps owner guard and mint during resolution lock (410ms)
+
+  Branch coverage — push to 100%
+    CoverageProbe revert instrumentation
+      ✔ hits guarded revert branches via try/catch wrapper (428ms)
+    Direct implementation initialize reverts
+      ✔ RouletteEngine, BankVault4626, and SideBet hit each guard on the implementation (119ms)
+    RouletteEngine setter and preview matrix
+      ✔ covers valid setters, invalid bounds, preview guards, and harness paths (787ms)
+      ✔ covers jackpot preview early exit and finalize idempotency (715ms)
+      ✔ covers VRF gas-price key hash tiers (1166ms)
+    BankVault4626 withdraw and queue branches
+      ✔ covers minBet revert, maxWithdraw cap, partial queue pay, and withdraw guards (583ms)
+    SideBet validation and settlement branches
+      ✔ covers config OR arms, placeBet guards, preview, and settle row skip (449ms)
+    BRBJackpotFunder and UpkeepScheduler
+      ✔ covers setter revert arms and SideBet performUpkeep branch (342ms)
+    UpkeepScheduler SideBet-only performUpkeep
+      ✔ enters SideBet branch in performUpkeep (309ms)
+
+  Branch coverage — final 100% gaps
+    LegacySideBetBankVault4626
+      ✔ covers AccessControl, reentrancy, queue math, and maxWithdraw cap arms (540ms)
+    SideBet
+      ✔ covers initialize guard, config OR arms, preview exits, inactive skip, and reentrancy (498ms)
+    RouletteEngine
+      ✔ covers multi-bet guards, VRF tiers, payout previews, and jackpot preview edges (6920ms)
+
+  Branch coverage — 100% target
+    CoverageProbe success + revert arms
+      ✔ registers both outcomes on bank, funder, engine, and side bet guards (368ms)
+    BankVault4626 direct init and guard branches
+      ✔ hits initialize success and revert arms via proxy + probe (75ms)
+    BankVault4626 queue and liquidity branches
+      ✔ caps maxWithdraw, partial queue pay, and gross<=fee skip (163ms)
+    RouletteEngine remaining branches
+      ✔ covers VRF gas-price key hash tiers via performUpkeep (437ms)
+      ✔ covers setter success paths, bet guards, preview, and upkeep flow (1246ms)
+    SideBet remaining branches
+      ✔ covers config validation arms, preview shrink path, and inactive bet skip (653ms)
+
+  Branch coverage — last 16 arms
+    ✔ covers engine setUpkeepScheduler and SideBet setSettleTimeout (186ms)
+    LegacySideBetBankVault4626
+      ✔ covers partial queue pay, paid==0, and maxWithdraw cap (457ms)
+    SideBet
+      ✔ covers initialize multiplier, dozen OR arm, and settleBatchV2 reentrancy (401ms)
+    RouletteEngine
+      ✔ covers preview guards, jackpot cursor, chunk cap, finalize idempotency, and jackpot preview exits (6771ms)
+      ✔ covers VRF gas-price key hash tiers (1980ms)
+
+  Branch coverage — complete matrix
+    BankVault4626 remaining branches
+      ✔ covers modifiers, permit, queue drain, and liquidity caps (202ms)
+      ✔ pays partial when vault balance is below net withdrawal (87ms)
+    BRBJackpotFunder admin + happy treasury transfer
+      ✔ covers setter guards and successful treasury path (56ms)
+    ProtocolTimelock success paths
+      ✔ executes and cancels queued operations
+    JackpotTreasury & MarketRegistry
+      ✔ reverts payBatch from non-engine and createMarket from stranger (72ms)
+    UpkeepScheduler admin setters
+      ✔ reverts zero scan limit and max payouts (148ms)
+    RouletteEngine branches
+      ✔ covers onlyBank recordBet rejection and referral paths (210ms)
+
+  Branch coverage — final gaps
+    RouletteEngine initialize OR-matrix
+      ✔ reverts initialize on each zero init field (107ms)
+    RouletteEngine admin + bet validation
+      ✔ covers admin setters, invalid bets, upgrade, and empty registry scan (391ms)
+    BRBJackpotFunder admin happy paths
+      ✔ covers setter success and treasury transfer ok branch (69ms)
+    BankVault4626 remaining branches
+      ✔ covers resolution block, engine-only release, and paid withdrawal (152ms)
+    SideBet views and config admin
+      ✔ covers updateConfig, getConfig reverts, and settle row guards (320ms)
+    LPVestingLock partial release
+      ✔ covers release(address,uint256) overload
+    UpkeepScheduler SideBet performUpkeep
+      ✔ executes SideBet settlement path (343ms)
+    ProtocolTimelock execute + cancel
+      ✔ covers successful execute and cancel
+
+  Branch coverage — remaining 82 gaps
+    AccessControl revert arms
+      ✔ reverts privileged calls from unauthorized accounts (450ms)
+    RouletteEngine storage and lock/VRF revert paths
+      ✔ blocks setPayoutLaneCount while a round is settling and emits on success (NEW-2) (229ms)
+      ✔ covers zero lane count, invalid bet sum, and scheduler lock guards (415ms)
+      ✔ findNextJob skips TriggerVrf until trigger market and lockAt (413ms)
+      ✔ covers preview guards, losing round jackpot skip, and finalize idempotency (633ms)
+    BankVault4626 liquidity caps and withdrawal queue
+      ✔ caps maxWithdraw/maxRedeem and pays partial queue when balance is thin (130ms)
+      ✔ blocks mint during resolution and covers initialize sideBet emit (409ms)
+    BRBJackpotFunder toBurn == 0 path
+      ✔ funds treasury only when split sends all BRB to jackpot (57ms)
+    SideBet settle row and preview branches
+      ✔ covers lost-row payout guard and undecided active bets in preview (197ms)
+    UpkeepScheduler SideBet performUpkeep
+      ✔ runs SideBet branch in performUpkeep (343ms)
+    ProtocolTimelock revert matrix
+      ✔ covers queue, execute, and cancel validation branches (53ms)
+    SideBet views and admin happy paths
+      ✔ covers availableVaultLiquidity, player bet views, and config admin success (211ms)
+    BankVault4626 remaining guards
+      ✔ covers initialize minBet, sideBet liquidity, setMinBet success, and fee-skipping queue (120ms)
+
+  Branch coverage — last 102 branches
+    MarketRegistry _registerNextMarket
+      ✔ reverts when asset or bank is zero
+    BankVault4626 remaining branches
+      ✔ covers initialize emit, admin setters, placeBet, withdraw guards, and liquidity caps (158ms)
+      ✔ blocks deposit while engine reports restricted liquidity (373ms)
+    BRBJackpotFunder admin + swap burn
+      ✔ covers setter happy paths and USDC swap with burn (106ms)
+    LPVestingLock + ProtocolTimelock success paths
+      ✔ releases via both overloads and runs timelock execute/cancel (60ms)
+    CreExecutionAuthority + UpkeepScheduler
+      ✔ updates scheduler admin knobs (145ms)
+      ✔ performUpkeep SideBet settlement path (293ms)
+    RouletteEngine lock, VRF, preview, and executeJob matrix
+      ✔ covers unauthorized caller, registry mismatch, bad bets, preview guards, and scheduler jobs (792ms)
+    SideBet remaining branches
+      ✔ covers zero-bank registry, config admin, preview guards, invalid rows, and upgrade (304ms)
+
+  Branch coverage — remainder matrix
+    SideBet _validateConfigCore per bet type
+      ✔ reverts invalid configs and accepts valid templates for every bet type (471ms)
+      ✔ initialize reverts on zero addresses and invalid multiplier band (51ms)
+      ✔ covers placeBet reverts, preview guards, views, and upgrade (279ms)
+    RouletteEngine view and admin branches
+      ✔ covers findNextJob guards, preview early returns, and setter bounds (821ms)
+    UpkeepScheduler admin happy paths
+      ✔ updates scan limit and max payouts per call (165ms)
+    BRBJackpotFunder setter happy paths and swap burn
+      ✔ covers admin setters and successful swap split (68ms)
+    BankVault4626 modifier and queue branches
+      ✔ covers transferOut onlyEngine, redeemBps guards, and partial payout (127ms)
+
+  Cloudflare production deployment wiring
+    ✔ rejects invalid funding and staking requests before any transfer
+    ✔ deploys real prefix addresses and referral, and approves only the dedicated keeper (214ms)
+
+  Contract coverage — 95% targets
+    ✔ covers RouletteEngine storage getters and admin setters (279ms)
+    ✔ covers isBankLiquidityRestricted during locked rounds (327ms)
+    ✔ covers findNextJob / previewPayoutBundle / payoutLaneHasWork edge paths (242ms)
+    ✔ reverts recordBet when bank cannot cover max liability (253ms)
+    ✔ covers settled-market preview and executeJob no-op for unknown kind (608ms)
+    ✔ covers UpkeepScheduler invalid lane and performData (221ms)
+    ✔ covers CreExecutionAuthority forwarder approval view
+    ✔ covers BankVault4626 views, side-bet controller, minBet, and partial redeem bps (150ms)
+    ✔ covers BRBJackpotFunder brbToken, empty fund, and failure hooks (195ms)
+    ✔ covers registry previewNextMarketId with existing markets (205ms)
+    ✔ covers globalRoundState view and jackpot payout preview batching (784ms)
+    ✔ covers RouletteEngine jackpot lane work before BRB distribution (1004ms)
+    ✔ covers UpkeepScheduler SideBet path and admin setters (358ms)
+    ✔ covers ProtocolTimelock receive and LPVestingLock release overload (39ms)
+    ✔ covers SideBet preview lane alignment and full batch buffer reuse (279ms)
+    ✔ covers SideBet settleBatchV2 rejecting loser rows with nonzero payout (238ms)
+    ✔ covers BankVault4626 lockSideBetStake liquidity guard (165ms)
+    ✔ covers UpkeepScheduler no-op for unknown work kind (216ms)
+
+  Coverage gaps
+    ✔ covers MarketRegistry getMarket validity and previewNextMarketId (226ms)
+    ✔ covers BankVault4626 maxWithdraw/maxRedeem paths (95ms)
+    ✔ covers BankVault4626 withdrawal queue happy path (116ms)
+    ✔ covers BankVault4626 mint happy path (56ms)
+    ✔ covers BRBJackpotFunder.setSlippageBps bounds
+    ✔ covers BRBJackpotFunder constructor and setSwapAssetBps bounds (39ms)
+    ✔ covers BRBJackpotFunder.setTreasuryBrbSplit bounds
+    ✔ covers restricted deposit/mint/withdraw paths (61ms)
+    ✔ reverts on invalid roulette bet number (covers validateBetNumber revert) (235ms)
+    ✔ reverts when non-straight bet specifies a number (covers validateBetNumber number!=0) (245ms)
+    ✔ covers trio payout multiplier path end-to-end (2001ms)
+    ✔ enforces granular roles for engine configuration (183ms)
+    ✔ enforces ENGINE_WITHDRAWAL_ROLE on withdrawal queue setters (186ms)
+
+  CreExecutionAuthority
+    ✔ approves and revokes executors
+    ✔ reverts on zero admin and zero executor
+    ✔ rejects setExecutorApproved from non-admin
+
+  Custom-error assertions
+    ✔ accepts complete static arguments and rejects truncated or extra raw data
+    ✔ accepts named and raw RPC errors for the exact expected no-argument error
+    ✔ does not mistake input calldata, a different error, or a selector prefix for the expected error
+
+  E2E upkeep flow
+    ✔ settles zero splits correctly for outcome 0 and rejects 0/4 at placement (2648ms)
+    ✔ settles zero splits correctly for outcome 1 and rejects 0/4 at placement (1268ms)
+    ✔ settles zero splits correctly for outcome 2 and rejects 0/4 at placement (1183ms)
+    ✔ settles zero splits correctly for outcome 3 and rejects 0/4 at placement (1278ms)
+    ✔ settles zero splits correctly for outcome 4 and rejects 0/4 at placement (1193ms)
+    ✔ runs full rounds end-to-end and keeps upkeep surface consistent (12881ms)
+
+  Linked engine storage compatibility
+    ✔ preserves every existing mapped type and the v1 ERC-7201 Layout prefix (464ms)
+    ✔ preserves every existing mapped type and the v2 ERC-7201 Layout prefix (660ms)
+
+  BankVault4626 setFlatWithdrawFee (implementation 0x6e84…f3cC)
+    6 decimals
+      ✔ should start at one whole unit and emit FlatWithdrawFeeUpdated(previous, new) when the admin sets it (100ms)
+      ✔ should revert AccessControlUnauthorizedAccount(BANK_ADMIN_ROLE) when the caller is not a bank admin (62ms)
+      ✔ should revert ZeroAmount when the new fee is 0 (56ms)
+      ✔ should revert WithdrawalQueueNotEmpty while a request is queued, then accept once the queue is processed (128ms)
+      ✔ should revert DepositTooSmall on deposit/mint of a new position at or below the updated fee (139ms)
+      ✔ should charge the updated fee when the queue is processed (112ms)
+    18 decimals
+      ✔ should start at one whole unit and emit FlatWithdrawFeeUpdated(previous, new) when the admin sets it (74ms)
+      ✔ should revert AccessControlUnauthorizedAccount(BANK_ADMIN_ROLE) when the caller is not a bank admin (57ms)
+      ✔ should revert ZeroAmount when the new fee is 0 (51ms)
+      ✔ should revert WithdrawalQueueNotEmpty while a request is queued, then accept once the queue is processed (115ms)
+      ✔ should revert DepositTooSmall on deposit/mint of a new position at or below the updated fee (250ms)
+      ✔ should charge the updated fee when the queue is processed (129ms)
+
+  Full balance settlement (players, jackpot BRB, LP stakers)
+    ✔ balances + LP NAV: loser-only round funds infra, swap BRB slices, vault pays stakers consistently (3651ms)
+    ✔ balances: winning straight pays USDC correctly; proportional jackpot BRB to two winners; vault + two LPs (3283ms)
+    ✔ USDC totalSupply invariant; BRB supply drops by funder burn slice on losing round (2853ms)
+
+  Funding queue and reconciliation
+    ✔ isolates two vaults sharing one token, including an older failed swap (172ms)
+    ✔ queues without touching a broken router; only the worker attempts a swap (80ms)
+    ✔ imports only unassigned backed funds and never double credits a migration (72ms)
+    ✔ splits accumulated input at one percent of reserves and preserves the remainder (287ms)
+    ✔ stops after five failures, retains every asset, and requires an admin reset (335ms)
+    ✔ maintains an oracle anchor without executing a swap (93ms)
+    ✔ does not consume retries when a caller supplies insufficient gas (64ms)
+    ✔ isolates approval failures inside the worker, retaining the credited input (112ms)
+    ✔ retries BRB debts automatically without assigning them to another vault or changing their split (172ms)
+    ✔ conserves two vault ledgers through seeded deposits, failures and split changes (17) (2512ms)
+    ✔ conserves two vault ledgers through seeded deposits, failures and split changes (9127) (2471ms)
+    ✔ conserves two vault ledgers through seeded deposits, failures and split changes (60109) (2375ms)
+
+  Gas scaling guards
+    ✔ keeps scheduler performUpkeep gas bounded for many markets (1798ms)
+
+  Hundred-player two-market lane stress
+    ✔ settles 110 same-number straight bets across two markets with 10 lanes; alternates sweep order between rounds (207636ms)
+    ✔ round 2 with all 110 winners on market 2 only — lanes exclusively settle the heavy market (201277ms)
+
+  Normal operations after removing both incident recovery functions
+    ✔ preserves roles and completes a normal wager/settlement/queued withdrawal with clean bytecode (6 decimals) (1248ms)
+    ✔ preserves roles and completes a normal wager/settlement/queued withdrawal with clean bytecode (18 decimals) (1246ms)
+
+  Jackpot batching stress
+    ✔ pays jackpot across multiple upkeep calls (respects maxPayoutsPerCall) (5157ms)
+
+  Jackpot completion across parallel lanes
+    ✔ rejects a repeated jackpot-only report without changing balances or cursors (6990ms)
+    ✔ finishes all jackpot chunks before opening the next round (2 lanes, reverse=false) (6731ms)
+    ✔ finishes all jackpot chunks before opening the next round (2 lanes, reverse=true) (6739ms)
+    ✔ finishes all jackpot chunks before opening the next round (10 lanes, reverse=false) (9670ms)
+    ✔ finishes all jackpot chunks before opening the next round (10 lanes, reverse=true) (12173ms)
+    ✔ completes a triggered draw with no eligible straight stake (663ms)
+
+  Jackpot multi-market proportional split
+jackpotAlice 333333333333333333333n
+jackpotBob 333333333333333333333n
+jackpotCarol 333333333333333333334n
+    ✔ splits 1000 BRB ~1/3 each across USDC, mock DAI, and BRB straight winners (4524ms)
+
+  JackpotTreasury (BRB payBatch)
+    ✔ pays explicit winner amounts (engine-style remainder on last) (46ms)
+    ✔ caps each row at the remaining pool instead of reverting the batch (C-3)
+    ✔ covers payBatch revert/edge branches
+    ✔ reverts constructor when engine is zero
+
+  LPVestingLock
+    ✔ reverts on zero constructor addresses
+    ✔ reverts before cliff and releases after 3 years
+    ✔ can release a partial LP amount after the cliff
+    ✔ reverts partial release with invalid args
+
+  BankVault4626 behaviour of implementation 0x6e84…f3cC
+    ✔ should charge the fee in shares to infra (SkippedWithdrawalFeeCharged) when the receiver refuses the transfer (160ms)
+    6 decimals
+      ✔ should accept a top-up below the fee when the receiver's position then exceeds it (143ms)
+      ✔ should revert WithdrawalTooSmall when the queued request is worth no more than the fee (145ms)
+      ✔ should revert SharesLockedByPendingWithdrawal on a transfer by an owner with a queued request, and allow it once processed (171ms)
+      ✔ should block drainWithdrawalQueue while lockedBetLiquidity is not zero (102ms)
+    18 decimals
+      ✔ should accept a top-up below the fee when the receiver's position then exceeds it (147ms)
+      ✔ should revert WithdrawalTooSmall when the queued request is worth no more than the fee (146ms)
+      ✔ should revert SharesLockedByPendingWithdrawal on a transfer by an owner with a queued request, and allow it once processed (165ms)
+      ✔ should block drainWithdrawalQueue while lockedBetLiquidity is not zero (104ms)
+
+  Arbitrum BRB architecture rehearsal without DEX liquidity
+    - funds configured wallets, stakes infra, settles BRB and processes funding without a pair
+
+  Deployed mainnet BRB/USDC initial liquidity rehearsal
+    - creates and funds the actual token pair, keeps LP on deployer, and rejects duplicate seeding
+
+  Mainnet readiness audit probes (current behavior)
+    ✔ reproduces deployment failure when protocol admin differs from deployer (140ms)
+    ✔ shows the standalone vault implementation is not initializer-locked (38ms)
+    ✔ preserves pending VRF, queued LP withdrawal, balances and roles through same-version UUPS and beacon upgrades (1444ms)
+    ✔ demonstrates that a report through the forwarder can redirect a roulette winner while workflow identity is unset (331ms)
+    ✔ checks real Chainlink signature verification separately from consumer workflow-owner authorization (656ms)
+    ✔ reproduces a callback gas failure with an accepted excessive lane count and verifies dust legs are accepted (3989ms)
+    ✔ skips a blocked withdrawal recipient without stalling settlement; owner keeps shares and may re-request (609ms)
+
+  Mainnet release safeguards
+    ✔ does not report proxy verification complete when explorer log lookup failed
+Lane configs: migrationType BOTH (LOG + HTTP recovery) for 1 authorized key(s)
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/config.lane0.test.json
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/config.lane0.production.json
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/config.lane1.test.json
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/config.lane1.production.json
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/workflow.yaml (2 parallel payout lane target(s))
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/config.trigger-vrf.test.json
+Wrote /var/folders/qk/bk4k9sn913vddq54g8c41p540000gn/T/biribi-cre-release-T09kPw/config.trigger-vrf.production.json
+Deploy HTTP workflow biribi-roulette-lane-arbitrum-one-trigger-vrf with config.trigger-vrf.production.json
+
+Deploy/update 2 parallel payout lane workflow(s) (production):
+  cre workflow deploy biribi-roulette-lane --target=lane0-production-settings
+  cre workflow deploy biribi-roulette-lane --target=lane1-production-settings
+    ✔ generates distinct mainnet CRE names without overwriting the Sepolia project
+    ✔ rejects invalid settings and preserves distinct VRF gas lanes
+    ✔ binds CRE reports before approving the bridge and transfers ownership/roles to a distinct admin (785ms)
+
+  USDC then DAI addition to deployed Arbitrum architecture
+    - preserves BRB market and pool, creates empty stablecoin vaults in order, rejects repeated creation
+
+  Mainnet BRB swarm
+    - 250 tickets × 37 numbers × 1 BRB, jackpot=false
+    - 250 tickets × 37 numbers × 1 BRB, jackpot=true
+    - 1000 tickets × 37 numbers × 1 BRB, jackpot=false
+    - 1000 tickets × 37 numbers × 1 BRB, jackpot=true
+
+  Mask bets v1 — validation and encoding
+    ✔ ships disabled: a fresh engine rejects every mask leg with MaskBetsDisabled (374ms)
+    ✔ accepts |S| = 2 and |S| = 35, rejects |S| ∈ {0, 1, 36, 37} with InvalidBetNumber (876ms)
+    ✔ pays floor(amount × 36 / 35) on a winning 35-number mask, nothing when the draw falls outside (1186ms)
+    ✔ bit 37 alone is an empty mask, presetId = 511 is accepted, any bit ≥ 53 reverts (551ms)
+    ✔ rejects a zero-stake mask leg (ZeroBetAmount) and bet types above 16 (InvalidBetType) (352ms)
+    ✔ enforces minBet per mask leg even when the transaction total is above minBet (511ms)
+    ✔ presetId has no effect on counters, liability or payout, and travels in BetRecorded/BetPlaced (1031ms)
+
+  Mask bets v1 — payout formula
+    ✔ pays floor(amount × 36 / |S|) for every |S| in [2, 35] (6 decimals) (19017ms)
+    ✔ pays floor(amount × 36 / |S|) for every |S| in [2, 35] (18 decimals) (18800ms)
+    ✔ matches the published multiplier table (1 USDC on 11 numbers pays 3 272 727)
+
+  Mask bets v1 — previous-outcome guard
+    ✔ round 1 has no previous outcome: a guarded leg reverts PreviousOutcomeMismatch (468ms)
+    ✔ accepts the real previous number, rejects any other, and validates the guard bits (2166ms)
+MASK_GUARD_GAS {"oneFree":"271406","twoFree":"324068","oneGuarded":"276150","twoGuarded":"328995","firstGuardCost":"4744","secondGuardCost":"183"}
+    ✔ reads the previous outcome once per transaction for every guarded leg (gas) (2096ms)
+    ✔ a leg prepared in r and mined in r+1 reverts if the previous number changed, passes if it repeated (2788ms)
+
+  Mask bets v1 — per-market limits
+    ✔ accepts exactly N legs, rejects N+1 (MaskLegCapExceeded), and 0 disables (MaskBetsDisabled) (1599ms)
+    ✔ setter: role-gated, emits MaskBetLimitsUpdated, validates bounds and the market id (517ms)
+    ✔ isolates markets: a market at 0 does not affect another, caps are counted per market (478ms)
+    ✔ liability cap: summed mask payouts ≤ maxMaskLiabilityBps of free liquidity, classic bets never blocked (432ms)
+    ✔ solvency: masks beyond the buffered liability revert InsufficientBankForMaxPayout (330ms)
+
+  Mask bets v1 — jackpot
+    ✔ a mask covering the jackpot number never wins the jackpot (1021ms)
+    ✔ straight + mask on the jackpot number: only the straight is eligible (991ms)
+
+  Mask bets v1 — settlement concordance
+    ✔ counters and sweep agree for all 37 numbers (1 lane) (8664ms)
+    ✔ counters and sweep agree for all 37 numbers (10 lanes) (40960ms)
+    ✔ pays overlapping masks + classic bets to the wei with small chunks (lanes 1, number 0) (2733ms)
+    ✔ pays overlapping masks + classic bets to the wei with small chunks (lanes 10, number 17) (3042ms)
+    ✔ pays overlapping masks + classic bets to the wei with small chunks (lanes 10, number 36) (2932ms)
+    ✔ pays overlapping masks + classic bets to the wei with small chunks (lanes 3, number 5) (2442ms)
+
+  Mask bets v1 — gas (local Hardhat, 6 decimals, stake = minBet)
+MASK_BET_GAS {"firstBetOfRound":"427326","firstMask":"305606","nextMaskTwoNumbers":"254306","nextMaskTwentyFourNumbers":"278070","nextMaskThirtyFiveNumbers":"282796","nextSplit":"271573","tenMasks":"731110","marginalMaskLeg":"52978"}
+    ✔ measures a mask bet against the classic reference transactions (685ms)
+
+  Mask bets v1 — mainnet upgrade script (local Hardhat network only)
+    ✔ dry run: passes the preflight, plans 4 deployments + engine then beacon upgrade, sends nothing (742ms)
+confirmed: Deploy RouletteMaskBetLib (0x84942dacbb90528cb1a2026eacfcc26738442289e8515e20a501a17083d4f8b1)
+confirmed: Deploy RouletteEngine implementation (0xa62065e76188fbaecc614717dc70baa6024fd20c48f1aece69af774555e66e12)
+confirmed: Deploy BankVault4626 implementation (0xb9442f922f3385497301ca66d5eb5663899fe126f2cea244c1e7e065ae2f2683)
+confirmed: Upgrade RouletteEngine proxy (UUPS, masks disabled) (0xcf67ec264213676b9a57c799d7d8fbcceb3db1b9c2f6ff38447f3f55359946e0)
+confirmed: Upgrade BankVault4626 beacon (0x96ce830865d51defaf6de274983f4115ca78fef91421d4193b9bc3ab6a4e87a7)
+confirmed: market 1 → 448 legs, 1000 bps (0xd773657e779900cd107c6363f25ba661061f9f2f9216bad2fea1ed50d46bbc75)
+confirmed: market 1 → 0 legs, 0 bps (0xfbf82e0fbcfd7eeca13617aeca8fcd9710902cc627f12f6ef1123d4b5899bcbd)
+    ✔ executes the plan: engine first, then beacon; post-checks; masks disabled until activation (1782ms)
+    ✔ refuses while the round is Settling, with the VRF pending or fulfilled (1067ms)
+    ✔ refuses while side bets are enabled (317ms)
+    ✔ refuses when the live beacon implementation is not the one in the manifest (274ms)
+    ✔ refuses an unexpected library redeploy set, a wrong signer, a non-admin owner and a fork-less mainnet mode (371ms)
+    ✔ activation refuses implicit values, values above the launch cap and a not-yet-upgraded engine (246ms)
+
+  Mask bets v1 — NAV invariant (adapted replay of the 2026-11-04 incident)
+    ✔ five 18× masks at the solvency limit leave totalAssets() unchanged; the next deposit mints at par (6 decimals) (568ms)
+    ✔ five 18× masks at the solvency limit leave totalAssets() unchanged; the next deposit mints at par (18 decimals) (580ms)
+
+  Mask bets v1 — drainWithdrawalQueue while a mask is open
+    ✔ is blocked by an open mask's liquidity need, then usable after settlement (6 decimals) (862ms)
+    ✔ reverts the atomic mask bet → withdrawal request → public drain sequence (6 decimals) (346ms)
+    ✔ is blocked by an open mask's liquidity need, then usable after settlement (18 decimals) (872ms)
+    ✔ reverts the atomic mask bet → withdrawal request → public drain sequence (18 decimals) (384ms)
+
+  Mask bets v1 — vault without the side-bet surface
+    ✔ ABI drops lockSideBetStake / setSideBetController / sideBetController, keeps availableForSideBet and initialize
+    ✔ beacon upgrade from the side-bet vault: state preserved, old controller and strangers get OnlyEngine (914ms)
+    ✔ new markets ignore InitializeParams.sideBetController (199ms)
+
+  Mask bets v1 — properties (seeded fuzz)
+    ✔ payout = floor(amount × 36 / |S|) and |S| × payout ≤ amount × 36 for random (mask, amount) (33528ms)
+    ✔ random classic + mask sequences: NAV unchanged per bet, every outcome ≤ buffered liability, exact settlement (seed 1) (5678ms)
+    ✔ random classic + mask sequences: NAV unchanged per bet, every outcome ≤ buffered liability, exact settlement (seed 2) (4967ms)
+    ✔ random classic + mask sequences: NAV unchanged per bet, every outcome ≤ buffered liability, exact settlement (seed 3) (3950ms)
+
+  Mask bets v1 — storage layouts (engine append-only, vault unchanged)
+    ✔ engine: ERC-7201 Layout keeps all 45 fields and appends exactly the five mask fields (591ms)
+    ✔ vault: 14 fields with identical slots/offsets/types vs master and vs the deployed mainnet layout (637ms)
+
+  Mask bets v1 — EIP-170 / EIP-3860 sizes without any size bypass
+    ✔ RouletteEngine fits under 24 576 / 49 152 bytes
+    ✔ BankVault4626 fits under 24 576 / 49 152 bytes
+    ✔ RouletteMaskBetLib fits under 24 576 / 49 152 bytes
+    ✔ RoulettePayoutSweepLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteLiabilityMathLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteUpkeepScanLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteJackpotCollectLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteExposureLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteBetCodecLib fits under 24 576 / 49 152 bytes
+    ✔ JackpotBatchLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteBetLib fits under 24 576 / 49 152 bytes
+    ✔ RoulettePayoutMulLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteLib fits under 24 576 / 49 152 bytes
+    ✔ MarketFeeLib fits under 24 576 / 49 152 bytes
+
+  Multi-Asset architecture
+    ✔ derives vault share name and symbol from the asset ERC-20 metadata (262ms)
+    ✔ keeps fixed upkeep surface while handling multiple markets (673ms)
+    ✔ rejects bets once lockAt elapsed, even before the TriggerVrf upkeep lands (404ms)
+    ✔ enforces single active VRF request globally (390ms)
+    ✔ keeps liquidity and APY base independent per bank asset (261ms)
+    ✔ supports typed roulette bets with legacy payout multipliers (1289ms)
+    ✔ funds and pays jackpot when winning and jackpot numbers match (1320ms)
+    ✔ takes infra fee and swaps market win slice to BRB for jackpot (1288ms)
+
+  Multi-bet placeBet cost
+    ✔ charges 30× minBet and places 30 straight legs in one tx (4162ms)
+    ✔ charges 50× minBet and places 50 distinct legs in one tx (6299ms)
+
+  multi-market crowd (50 players, sequential upkeep)
+    ✔ settles one global round with varied bets across two banks (43037ms)
+
+  Multi-market parallel lane assignment
+    ✔ assigns idle lanes to later markets while earlier markets still settle (3235ms)
+
+  Payout rows are bounded by the round's own liability
+    ✔ documents the launch blocker: an authorized report can replace an honest winner within the cap (677ms)
+    ✔ applies honest preview rows unchanged (620ms)
+    ✔ rejects a report that inflates a winner's amount beyond the round's max liability (577ms)
+    ✔ rejects an extra row that redirects funds to an address that never bet (654ms)
+
+  PayoutMathLib
+    ✔ caps payout to pool size when needed
+    ✔ computes basis-point percentages
+
+  Payout upkeep (sequential winner chunks)
+    ✔ settles a crowded round using chunked maxPayoutsPerCall on a single automation lane (1562ms)
+    ✔ settles with a larger per-call payout chunk (1029ms)
+
+  Protocol observability
+    ✔ conserves assets and shares through seeded deposit/withdrawal sequences (6 decimals) (1212ms)
+    ✔ conserves assets and shares through seeded deposit/withdrawal sequences (18 decimals) (1120ms)
+    ✔ keeps deployable implementations within EIP-170
+    ✔ keeps withdrawal IDs after queue resets and records actual net transfers (436ms)
+VRF diagnostic fixture gas: 253002
+    ✔ retains both VRF numbers, rejects overwrite, and reconciles payment receipts (1094ms)
+
+  ProtocolTimelock
+    ✔ reverts on zero constructor addresses
+    ✔ queues, waits 24h, then executes; rejects early execute and double-queue
+    ✔ execute forwards native value from msg.value (no pre-deposit)
+    ✔ admin can cancel a queued operation
+    ✔ reverts cancel and execute on unknown operations
+
+  retryVrf
+    ✔ reverts before VRF has been requested (208ms)
+    ✔ reverts when called before the 24 hour delay (329ms)
+    ✔ rejects non-admin callers even after the delay (318ms)
+    ✔ lets admin request a new VRF after 24 hours and ignores the stale callback (407ms)
+    ✔ enforces the delay again after a retry (320ms)
+    ✔ reverts after VRF has already been fulfilled (322ms)
+    ✔ allows retry on a pre-upgrade round with no vrfRequestedAt once lockAt + delay elapsed (376ms)
+    ✔ allows retry immediately when both timestamps are unset (pre-upgrade stuck round) (485ms)
+
+  RoutedBRBJackpotFunder
+    ✔ preserves the existing keeper/accounting ABI and stays below EIP-170
+    DAI cold-route worker gas: 749773
+    ✔ fixes DAI routing without a DAI/BRB pool and accounts for the exact output (335ms)
+    ✔ keeps direct USDC swaps and direct BRB distribution working in one keeper batch (266ms)
+    ✔ caps DAI input against the shallower second pool, retaining the remainder and cooldown (535ms)
+    ✔ also respects the first pool's input cap when it is shallower (68ms)
+    ✔ retains the entire queue when the first route pool is missing or empty (260ms)
+    ✔ retains the entire queue when the second route pool is missing or empty (117ms)
+    ✔ rejects a depressed first-hop price against the warm TWAP without losing input (191ms)
+    ✔ rejects a depressed second-hop price against the warm TWAP without losing input (158ms)
+    DAI warm-route worker gas: 539562
+    ✔ executes the warm route within the deployed keeper transaction budget (184ms)
+    ✔ does not assume stablecoin parity or confuse DAI and USDC decimals (182ms)
+    ✔ isolates markets, protects queued assets from sweep, and enforces worker/admin guards (182ms)
+    ✔ rejects ambiguous deployment routes
+    ✔ stops after five failed dust quotes, retains the queue and resumes only after an admin reset (368ms)
+    ✔ keeps treasury/burn debts attached to their original market and split (69ms)
+    ✔ rotates both oracle anchors without resetting the shared USDC/BRB lookback (246ms)
+    ✔ settles a DAI round with the same fee splits (1318ms)
+    ✔ settles a DAI round and an active side bet across funder cutover with the same fee splits (1563ms)
+
+  SideBet
+    ✔ keeps the legacy preview tuple stable and refunds multiple expired bets exactly once (383ms)
+    ✔ rejects unauthorized legacy settlement and leaves undecidable bets active despite forged rows (172ms)
+    ✔ rechecks a legacy expiry report when a winning round arrives before settlement (286ms)
+    ✔ clamps a populated final lane cursor to the bet count (201ms)
+    ✔ initializes the multiplier band (121ms)
+    ✔ settles a NUMBER_HIT win and pays the player + reserves liability while active (339ms)
+    ✔ settles a NUMBER_HIT loss, keeping the stake in the vault (279ms)
+    ✔ rejects placeBet once the start round's VRF is already fulfilled (C-1) (163ms)
+    ✔ wins COLOR_COUNT early and loses on a fully-observed window (438ms)
+    ✔ wins CONSECUTIVE_STREAK early and loses when the streak breaks (426ms)
+    ✔ settles RED_RATIO (early win, early loss) (475ms)
+    ✔ reverts placing a bet the vault cannot cover (130ms)
+    ✔ reverts settling before the outcome is decided, and is idempotent after (329ms)
+    ✔ removes a config and blocks new bets while existing bets still settle (290ms)
+    ✔ enforces access control on configs and stake limits (135ms)
+    ✔ rejects a multiplier outside the configured band and invalid params (129ms)
+    ✔ settles LIGHTNING_DOUBLE at >100x odds (291ms)
+    ✔ settles PERFECT_ALTERNATION (420ms)
+    ✔ settles DOZEN_HIT and COLUMN_HIT (437ms)
+    ✔ settles JACKPOT_IN_WINDOW (early win and full-window loss) (401ms)
+    ✔ settles a batch via UpkeepScheduler (281ms)
+    ✔ updates config, multiplier band, and player index views (186ms)
+    ✔ ignores invalid settle rows in settleBatchV2 (214ms)
+    ✔ settles bets across two markets in one batch (453ms)
+    ✔ pays every winner when two markets have interleaved winners in one batch (NEW-1) (630ms)
+    ✔ realigns the lane cursor without unsigned underflow when id % laneCount > lane (NEW-3) (130ms)
+    ✔ ignores a replayed settle report instead of paying winners twice (C-2) (267ms)
+    ✔ does not strand a still-undecided bet behind a settled one (H-3) (440ms)
+    ✔ expires an undecidable bet and refunds the stake (H-3) (279ms)
+    ✔ rejects a forged expiry before the timeout elapses (H-3) (162ms)
+    ✔ rejects a rewound or out-of-range settle cursor (H-3) (271ms)
+    ✔ supports UUPS upgrade by admin (124ms)
+    original challenge settlement
+      ✔ pays DOZEN_PASSPORT once and releases all reserves (262ms)
+      ✔ pays BOOMERANG once and releases all reserves (252ms)
+      ✔ pays MIRROR_PAIR once and releases all reserves (244ms)
+      ✔ pays WHEEL_NEIGHBORS once and releases all reserves (244ms)
+      ✔ pays DISTINCT_COLLECTION once and releases all reserves (258ms)
+      ✔ pays COLOR_DUEL once and releases all reserves (267ms)
+      ✔ rejects invalid challenge windows and parameters (169ms)
+
+  SideBet reserved-liquidity accounting
+    ✔ keeps reservedOf constant-gas as the bet history grows (406ms)
+    ✔ drops a bet's reserve on settlement and leaves other markets untouched (421ms)
+    ✔ releases the reserve when an undecidable bet expires (255ms)
+    ✔ refuses the reserved-accounting migration on a proxy that already holds bets (150ms)
+    ✔ accepts the reserved-accounting migration once on an empty proxy (117ms)
+
+  SideBet fees
+    ✔ keeps ticket fees invariant across batch sizes and order for usdc (688ms)
+    ✔ keeps ticket fees invariant across batch sizes and order for dai (684ms)
+    ✔ keeps ticket fees invariant across batch sizes and order for brb (802ms)
+    ✔ collects infra and BRB jackpot funding on a losing USDC side bet (475ms)
+    ✔ splits BRB in-place on a losing BRB-market side bet (no Uniswap swap) (322ms)
+
+  SideBet catalogue
+    ✔ should cover every SideBetType exactly once
+    ✔ should keep every multiplier inside the contract's band
+    ✔ should price every template at the documented house edge
+    ✔ should use unique template keys
+    ✔ should accept every catalogue entry as an on-chain config (348ms)
+    ✔ should let a player place a bet on every seeded config (734ms)
+    ✔ should reject a bet on a config whose stake limits were never set (163ms)
+    ✔ should recognise an already-seeded template so a re-run creates nothing (441ms)
+    ✔ should make getConfig revert once a config is removed, not return a zeroed struct (128ms)
+
+  SideBet catalogue stake sizing
+    ✔ should cap a max stake at what the vault can actually back
+    ✔ should return zero when the multiplier leaves no room
+    ✔ should shrink the max stake as the multiplier grows
+    ✔ should size a stake the vault genuinely honours (181ms)
+    ✔ should leave a config unactivatable when the vault is too thin (159ms)
+
+  Original challenges
+    ✔ settles type 9 on its decisive prefix
+    ✔ rejects a losing full window for type 9
+    ✔ keeps an empty prefix undecided for type 9
+    ✔ settles type 10 on its decisive prefix
+    ✔ rejects a losing full window for type 10
+    ✔ keeps an empty prefix undecided for type 10
+    ✔ settles type 11 on its decisive prefix
+    ✔ rejects a losing full window for type 11
+    ✔ keeps an empty prefix undecided for type 11
+    ✔ settles type 12 on its decisive prefix
+    ✔ rejects a losing full window for type 12
+    ✔ keeps an empty prefix undecided for type 12
+    ✔ settles type 13 on its decisive prefix
+    ✔ rejects a losing full window for type 13
+    ✔ keeps an empty prefix undecided for type 13
+    ✔ settles type 14 on its decisive prefix
+    ✔ rejects a losing full window for type 14
+    ✔ keeps an empty prefix undecided for type 14
+    ✔ locks the first colour to reach the target, including black
+    ✔ includes 0+36 in mirror and excludes numerical neighbours that are not adjacent on the wheel
+    ✔ both implementation and helper fit EIP-170 and init code fits EIP-3860
+    ✔ reproduces exact counts and rounds gross multipliers down
+    ✔ does not misrepresent the existing 5x band as compatible
+    ✔ matches closed forms for short windows
+
+  SideBet deployment compatibility gate
+    ✔ accepts the tested candidate within the deployed code size limit
+    ✔ rejects a candidate missing the deployed settlement selector
+    ✔ rejects an oversized implementation even if local Hardhat allows it
+    ✔ rejects the ambiguous preview format that caused the Sepolia failure
+
+  Exact side-bet economics and rounding policy
+    ✔ matches the cross-repository probability/pricing fingerprint
+    ✔ matches independent closed forms for the old catalogue
+    ✔ preserves old rules and chooses the largest multiplier that never undercuts 5%
+    ✔ independently matches all X100 counts
+    ✔ bounds token rounding for all stakes above the 100000 policy floor
+    ✔ bounds token rounding for all stakes above the 1000000 policy floor
+    ✔ rejects odds that cannot meet the tolerance and malformed rules
+    ✔ retires only identical historical prices in the same market and is rerunnable
+
+  Funky evaluator and catalogue
+    ✔ keeps implementation/helper runtime and init code deployable
+    ✔ early duplicate wins include a non-first zero; zigzag and finish wait for completion (85ms)
+    ✔ prices all ten offers exactly and leaves stake limits disabled
+    ✔ rejects invalid pricing arguments and matches exact small counts
+
+  SideBet incident freeze
+    ✔ disables all placement/settlement endpoints and offers no work to the scheduler (190ms)
+
+  Roulette vs side-bet liquidity collision (H-6)
+    ✔ refuses a roulette bet whose worst case is already reserved by a side bet (294ms)
+    ✔ refuses a side bet that would reserve liquidity the open round still owes (H-6) (449ms)
+    ✔ still accepts a roulette bet that the unreserved liquidity can cover (444ms)
+
+  Arbitrum Sepolia SideBet upgrade rehearsal (local fork)
+    - upgrades the actual empty proxy while preserving wiring and administrator roles
+    - seeds BRB and refunds an expired bet through the actual scheduler and bank
+    - settles a winner and loser after a locally simulated VRF callback, without double payment
+
+  SideBet economic model
+    ✔ accounts for fees on losing tickets rather than on expected net house profit
+    ✔ preserves equivalent results in six and eighteen decimal assets
+
+  Window challenge settlement
+    ✔ Déjà-vu wins exactly once and releases reserves (402ms)
+    ✔ Déjà-vu loses exactly once and releases reserves (448ms)
+    ✔ Montagnes russes wins exactly once and releases reserves (325ms)
+    ✔ Montagnes russes loses exactly once and releases reserves (344ms)
+    ✔ Aimant wins exactly once and releases reserves (317ms)
+    ✔ Aimant loses exactly once and releases reserves (334ms)
+    ✔ Photo finish wins exactly once and releases reserves (310ms)
+    ✔ Photo finish loses exactly once and releases reserves (304ms)
+    ✔ Tour des douzaines wins exactly once and releases reserves (307ms)
+    ✔ Tour des douzaines loses exactly once and releases reserves (285ms)
+    ✔ Sans doublon wins exactly once and releases reserves (286ms)
+    ✔ Sans doublon loses exactly once and releases reserves (281ms)
+    ✔ Le Retour wins exactly once and releases reserves (324ms)
+    ✔ Le Retour loses exactly once and releases reserves (355ms)
+    ✔ Le Miroir wins exactly once and releases reserves (310ms)
+    ✔ Le Miroir loses exactly once and releases reserves (283ms)
+    ✔ La Montee wins exactly once and releases reserves (290ms)
+    ✔ La Montee loses exactly once and releases reserves (253ms)
+    ✔ La Somme wins exactly once and releases reserves (277ms)
+    ✔ La Somme loses exactly once and releases reserves (260ms)
+    ✔ Le Duel final wins exactly once and releases reserves (282ms)
+    ✔ Le Duel final loses exactly once and releases reserves (296ms)
+    ✔ Le Compte exact wins exactly once and releases reserves (295ms)
+    ✔ Le Compte exact loses exactly once and releases reserves (317ms)
+    ✔ rejects invalid parameter encodings at the public config entrypoint (255ms)
+    ✔ never settles an exact count before its last result (181ms)
+
+  X100 exact pricing
+    ✔ keeps the generated pricing report synchronized
+    ✔ matches independent closed forms, including overlapping streaks
+    ✔ prices at 5% with a strict rational tolerance and maximal floor multiplier
+    ✔ covers 44 unique choices, all numbers including zero and both colours
+
+  X100 real vault integration
+    ✔ preserves and pays an old ticket after replacement activation and retirement (246ms)
+    ✔ creates and activates all choices, recognizes them on rerun and places each ticket (2309ms)
+    ✔ pays exactly once and releases reserves: PERFECT_DOZEN/0/1 win (219ms)
+    ✔ pays exactly once and releases reserves: PERFECT_DOZEN/0/1 loss (178ms)
+    ✔ pays exactly once and releases reserves: DOUBLE_NUMBER/0/7 win (311ms)
+    ✔ pays exactly once and releases reserves: DOUBLE_NUMBER/0/7 loss (295ms)
+    ✔ pays exactly once and releases reserves: DOUBLE_NUMBER/0/0 win (192ms)
+    ✔ pays exactly once and releases reserves: DOUBLE_NUMBER/0/0 loss (204ms)
+    ✔ pays exactly once and releases reserves: SEVEN_STREAK/0/0 win (372ms)
+    ✔ pays exactly once and releases reserves: SEVEN_STREAK/0/0 loss (322ms)
+    ✔ pays exactly once and releases reserves: SEVEN_STREAK/1/0 win (346ms)
+    ✔ pays exactly once and releases reserves: SEVEN_STREAK/1/0 loss (308ms)
+    ✔ pays exactly once and releases reserves: NINE_OF_TEN/0/0 win (437ms)
+    ✔ pays exactly once and releases reserves: NINE_OF_TEN/0/0 loss (389ms)
+    ✔ pays exactly once and releases reserves: NINE_OF_TEN/1/0 win (538ms)
+    ✔ pays exactly once and releases reserves: NINE_OF_TEN/1/0 loss (408ms)
+    ✔ backs the maximum stake for the largest multiplier (62ms)
+
+  Stuck withdrawal queue escape hatch (H-1)
+    ✔ lets an LP exit a market that never sees a bet (307ms)
+    ✔ is callable by anyone, not just the queued owner (325ms)
+    ✔ refuses to drain while the round is resolving, so LPs cannot exit ahead of winners (627ms)
+    ✔ refuses to drain while the round is still open and bets are live (366ms)
+    ✔ refuses to burn shares when the vault has no free assets (284ms)
+
+  Ten-lane parallel payout upkeeps
+    ✔ exposes 10 lanes and settles three markets without duplicate payouts (2161ms)
+    ✔ shards vault payouts for the same market across all lanes (1901ms)
+
+  TipJar
+    ✔ transfers the exact amount directly and emits attributable evidence (110ms)
+    ✔ rejects zero, missing allowance, insufficient funds and spending another wallet's allowance (103ms)
+    ✔ rejects invalid configuration and self contributions (126ms)
+    ✔ rolls back taxed transfers instead of emitting an incorrect contribution (98ms)
+    ✔ rejects reentrant token callbacks and false-returning token transfers (89ms)
+
+  UniswapV2TwapLib
+    ✔ uses canonical pair init code hash for production Uniswap V2
+    ✔ vendored Sepolia factory: init code hash matches compiled UniswapV2Pair
+    ✔ vendored Sepolia factory: UniswapV2Library init code hash matches compiled pair
+    ✔ vendored Sepolia factory: pair address helper matches createPair
+
+  Upkeep forwarder gate
+    ✔ refuses to unset the forwarder authority (H-7) (208ms)
+    ✔ rejects performUpkeep from non-forwarder when forwarder authority is set (276ms)
+
+  UpkeepScheduler checkLog
+    ✔ rejects logs from non-engine sources (132ms)
+    ✔ rejects engine logs with unknown topics (124ms)
+    ✔ accepts VRFResult from engine and delegates to checkUpkeep (154ms)
+    ✔ accepts PayoutProgress from engine and delegates to checkUpkeep (155ms)
+    ✔ exposes checkLog on the scheduler ABI for CRE simulation (120ms)
+
+  VRF callback budget at the production ten-lane setting
+VRF_CALLBACK_BUDGET {"marketCount":3,"legsPerMarket":100,"totalWinningLegs":300,"callbackTransactionGasUsed":"1047793","fixedBudgetSucceeded":true}
+    ✔ fulfills within 2.5M gas with 3 markets and 100 winning legs in each (3794ms)
+VRF_CALLBACK_BUDGET {"marketCount":3,"legsPerMarket":1000,"totalWinningLegs":3000,"callbackTransactionGasUsed":"1047793","fixedBudgetSucceeded":true}
+    ✔ fulfills within 2.5M gas with 3 markets and 1000 winning legs in each (58984ms)
+
+  VRF callback budget with mask bets at the launch leg cap
+MASK_VRF_CALLBACK_BUDGET {"callbackGasWithoutMasks":"1047793","callbackGasWithMasks":"1054426","callbackGasDelta":"6633","previewPayoutBundleEthCallGasAtCap":"2925620","maxPayoutsPerCall":10}
+    ✔ keeps the callback O(1) in the number of masks (3 markets × 1 024 masks + 100 straights) (67707ms)
+
+  checkUpkeep eth_call cost at the recommended mask leg cap
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":448,"checkUpkeepGas":"1366504"}
+    ✔ stays under 1450000 gas with 448 masks, 1 lane(s), 60 payouts per call (10469ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":448,"checkUpkeepGas":"1380331"}
+    ✔ stays under 1450000 gas with 448 masks, 10 lane(s), 10 payouts per call (11823ms)
+
+  Window challenge pricing
+    ✔ prices all eight offers exactly and leaves stake limits disabled (49ms)
+    ✔ never raises cheap odds to the existing 5x band
+    ✔ matches closed form probabilities and rejects malformed sum bounds
+
+  Zero-amount bet leg rejection (C-5)
+    ✔ accepts a multi-leg bet where every leg carries a positive stake (546ms)
+    ✔ rejects a bet whose individual leg has a zero stake even when the aggregate meets minBet (363ms)
+    ✔ rejects the 37-number dust jackpot-ticket payload (285ms)
+
+  Roulette zero splits
+    ✔ accepts only 0/1, 0/2 and 0/3 among IDs below 100, including explicit rejection of 0/4 (193ms)
+    ✔ preserves grid adjacency and rejects reversed or out-of-range encodings (4423ms)
+    ✔ enumerates exactly the winning splits for every outcome from 0 to 36 (670ms)
+
+
+  608 passing (17m)
+  13 pending
+

@@ -1,0 +1,44 @@
+actual-state: release lock matched, storage and balances preserved, only implementation pointers written.
+populated-state: release lock matched, storage and balances preserved, only implementation pointers written.
+outcome 0: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 1: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 2: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 3: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 4: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 5: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 6: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 7: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 8: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 9: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 10: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 11: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 12: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 13: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 14: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 15: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 16: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 17: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 18: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 19: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 20: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 21: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 22: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 23: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 24: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 25: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 26: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 27: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 28: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 29: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 30: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 31: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 32: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 33: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 34: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 35: exact payouts and next round verified on BRB, USDC, DAI.
+outcome 36: exact payouts and next round verified on BRB, USDC, DAI.
+launch cap: market 1, 384 legs accepted and leg 385 rejected.
+launch cap: market 2, 384 legs accepted and leg 385 rejected.
+launch cap: market 3, 384 legs accepted and leg 385 rejected.
+launch cap: 3 x 384 masks settled; worst checkUpkeep inner-call 1359415 gas.
+PASS: actual-state upgrade, populated-state upgrade, old bets/withdrawals and 111 market outcomes.

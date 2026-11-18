@@ -1,0 +1,52 @@
+{
+  "contractsRevision": "d2fb7981f6aeafea22c9683d8871badc3fa04c6e",
+  "nodeVersion": "22.13.0",
+  "compile": "passed",
+  "fullRegression": {
+    "passing": 608,
+    "pending": 13,
+    "failing": 0,
+    "command": "REPORT_GAS=false corepack yarn hardhat test --no-compile",
+    "logSha256": "b2a26fdbfde2341219438dd1b5211f37638049f300f362658e46e0b8c7eb6edc"
+  },
+  "nodeTests": {
+    "passing": 64,
+    "failing": 0,
+    "files": [
+      "scripts/mask-bets-v1-mainnet.test.cjs",
+      "scripts/release-manifest.test.mjs",
+      "scripts/protocol-preflight.test.mjs",
+      "scripts/update-frontend-abis.test.mjs",
+      "scripts/mask-bets-usage-report.test.cjs",
+      "scripts/export-mainnet-abis.test.mjs",
+      "scripts/incident20261104-execution.test.cjs"
+    ]
+  },
+  "vaultReconstruction": {
+    "recompiledOffline": true,
+    "matchesArchivedRuntimeAfterTwoNamedConstantSubstitutions": true,
+    "unknownConstants": [
+      "error selector 0xe3ee11df",
+      "event topic prefix 0xdebd20cf"
+    ]
+  },
+  "releaseLockSha256": "c71f8ec88df61e90ace90c29df6c794cfbc4c3e8d60423a32864a3e44d6d6ec7",
+  "mainnetTransactionsSent": 0,
+  "operatorKeyConfigured": false,
+  "completedOnClientDate": "2026-11-18",
+  "fork": {
+    "passed": true,
+    "sourceBlock": 524517798,
+    "sourceBlockHash": "0x739339c476e7b4ecfde3e1070c6dfac69110d1d992229c2700ed79c2dee3ca0e",
+    "marketOutcomes": 111,
+    "testedLegCap": 384,
+    "worstCheckUpkeepInnerCallGas": "1359415",
+    "mainnetImplementationsUnchanged": true,
+    "historical448CapWithinTarget": false,
+    "historical448WorstGas": "1520395"
+  },
+  "rehearsalScriptSha256": "4c130bcde67b52d6d571287b6c5fe815d09b7872f55dc3c5dd832e50e37669a4",
+  "latestReadOnlyPreflightBlock": 525330593,
+  "productionKeeperRpcGasCapConfirmed": false,
+  "knownIssue": "The activation guard and usage-report gas model still use the historical 448-leg recommendation; use the tested explicit 384-leg proposal and correct/revalidate those assumptions before raising it."
+}

@@ -1,0 +1,15 @@
+actual-state: release lock matched, storage and balances preserved, only implementation pointers written.
+populated-state: release lock matched, storage and balances preserved, only implementation pointers written.
+outcome 0: exact payouts and next round verified on BRB, USDC, DAI.
+launch cap: market 1, 448 legs accepted and leg 449 rejected.
+launch cap: market 2, 448 legs accepted and leg 449 rejected.
+launch cap: market 3, 448 legs accepted and leg 449 rejected.
+launch cap: 3 x 448 masks settled; worst checkUpkeep inner-call 1520395 gas.
+[
+  {
+    "name": "AssertionError",
+    "message": "Live scheduler launch-cap preview exceeds the 1.5M inner-call gas target"
+  }
+]
+
+Live scheduler launch-cap preview exceeds the 1.5M inner-call gas target

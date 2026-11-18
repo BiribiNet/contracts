@@ -1,0 +1,175 @@
+TAP version 13
+# Subtest: matches root and imported Solidity source, normalizing only line endings
+ok 1 - matches root and imported Solidity source, normalizing only line endings
+  ---
+  duration_ms: 4.605281
+  ...
+# Subtest: rejects changed imports, unknown compiler and missing ABI
+ok 2 - rejects changed imports, unknown compiler and missing ABI
+  ---
+  duration_ms: 1.427441
+  ...
+# Subtest: accepts local chain 31337 backed by Arbitrum 42161
+ok 3 - accepts local chain 31337 backed by Arbitrum 42161
+  ---
+  duration_ms: 2.197276
+  ...
+# Subtest: fork mode rejects a mainnet execution provider before touching the signer
+ok 4 - fork mode rejects a mainnet execution provider before touching the signer
+  ---
+  duration_ms: 2.708267
+  ...
+# Subtest: fork mode requires actual Hardhat metadata
+ok 5 - fork mode requires actual Hardhat metadata
+  ---
+  duration_ms: 0.425106
+  ...
+# Subtest: fork mode rejects another source chain
+ok 6 - fork mode rejects another source chain
+  ---
+  duration_ms: 0.599789
+  ...
+# Subtest: mainnet mode rejects chain 31337
+ok 7 - mainnet mode rejects chain 31337
+  ---
+  duration_ms: 0.417919
+  ...
+# Subtest: mainnet mode is gated by explicit confirmation
+ok 8 - mainnet mode is gated by explicit confirmation
+  ---
+  duration_ms: 0.571163
+  ...
+# Subtest: unknown execution mode fails closed
+ok 9 - unknown execution mode fails closed
+  ---
+  duration_ms: 0.478831
+  ...
+# Subtest: mainnet guard accepts 42161 only with confirmation and without Hardhat metadata
+ok 10 - mainnet guard accepts 42161 only with confirmation and without Hardhat metadata
+  ---
+  duration_ms: 0.295398
+  ...
+# Subtest: mainnet mode rejects a Hardhat fork even if configured as chain 42161
+ok 11 - mainnet mode rejects a Hardhat fork even if configured as chain 42161
+  ---
+  duration_ms: 0.777858
+  ...
+# Subtest: a different signer is rejected before loading artifacts or submitting transactions
+ok 12 - a different signer is rejected before loading artifacts or submitting transactions
+  ---
+  duration_ms: 1.357049
+  ...
+# Subtest: should decode only BET_MASK legs and reserve floor(amount × 36 / |S|) when the payload is mixed
+ok 13 - should decode only BET_MASK legs and reserve floor(amount × 36 / |S|) when the payload is mixed
+  ---
+  duration_ms: 18.14636
+  ...
+# Subtest: should return mean, nearest-rank p95 and max, and nulls when there is no sample
+ok 14 - should return mean, nearest-rank p95 and max, and nulls when there is no sample
+  ---
+  duration_ms: 1.245191
+  ...
+# Subtest: should cap legs at 448 without a confirmed eth_call cap and never above 1 024
+ok 15 - should cap legs at 448 without a confirmed eth_call cap and never above 1 024
+  ---
+  duration_ms: 0.606336
+  ...
+# Subtest: should keep the launch cap when legs saturate but no eth_call cap is confirmed
+ok 16 - should keep the launch cap when legs saturate but no eth_call cap is confirmed
+  ---
+  duration_ms: 0.711359
+  ...
+# Subtest: should raise legs by one 1.5× step under the gas ceiling when demand is high
+ok 17 - should raise legs by one 1.5× step under the gas ceiling when demand is high
+  ---
+  duration_ms: 0.564506
+  ...
+# Subtest: should freeze leg raises when an observed gas margin is under 30 %
+ok 18 - should freeze leg raises when an observed gas margin is under 30 %
+  ---
+  duration_ms: 0.302549
+  ...
+# Subtest: should lower legs back under the gas ceiling even without demand
+ok 19 - should lower legs back under the gas ceiling even without demand
+  ---
+  duration_ms: 0.353681
+  ...
+# Subtest: should change nothing when data is insufficient or the market is disabled
+ok 20 - should change nothing when data is insufficient or the market is disabled
+  ---
+  duration_ms: 0.238732
+  ...
+# Subtest: should raise maxBps only when p95 liability use reaches 70 % of the cap, never above 2 500
+ok 21 - should raise maxBps only when p95 liability use reaches 70 % of the cap, never above 2 500
+  ---
+  duration_ms: 0.795025
+  ...
+# Subtest: should print the activation command with --allow-above-launch-cap only above 448 legs
+ok 22 - should print the activation command with --allow-above-launch-cap only above 448 legs
+  ---
+  duration_ms: 0.921344
+  ...
+# Subtest: should page eth_getLogs, halve the chunk on a range error and stop at the request bound
+ok 23 - should page eth_getLogs, halve the chunk on a range error and stop at the request bound
+  ---
+  duration_ms: 14.713788
+  ...
+# Subtest: should find the first block at or after a timestamp
+ok 24 - should find the first block at or after a timestamp
+  ---
+  duration_ms: 1.291498
+  ...
+# Subtest: should refuse every RPC method that is not a read
+ok 25 - should refuse every RPC method that is not a read
+  ---
+  duration_ms: 1.468897
+  ...
+# Subtest: should parse the window options and reject conflicting ones
+ok 26 - should parse the window options and reject conflicting ones
+  ---
+  duration_ms: 1.768936
+  ...
+# Subtest: should report legs, cap hits, liability, gas and recommend new limits from a week of traffic
+ok 27 - should report legs, cap hits, liability, gas and recommend new limits from a week of traffic
+  ---
+  duration_ms: 465.902618
+  ...
+# Subtest: should freeze leg raises when a settlement transaction uses more than 70 % of its gas limit
+ok 28 - should freeze leg raises when a settlement transaction uses more than 70 % of its gas limit
+  ---
+  duration_ms: 407.36528
+  ...
+# Subtest: should use the limit in force at each round when limits change inside the window
+ok 29 - should use the limit in force at each round when limits change inside the window
+  ---
+  duration_ms: 364.615795
+  ...
+# Subtest: should report no data and recommend nothing when the engine does not serve mask bets yet
+ok 30 - should report no data and recommend nothing when the engine does not serve mask bets yet
+  ---
+  duration_ms: 18.917669
+  ...
+# Subtest: should keep limits unchanged when masks are enabled but nobody played them
+ok 31 - should keep limits unchanged when masks are enabled but nobody played them
+  ---
+  duration_ms: 5.160176
+  ...
+# Subtest: should block every raise and say why when no gas observation covers the mask rounds
+ok 32 - should block every raise and say why when no gas observation covers the mask rounds
+  ---
+  duration_ms: 344.934847
+  ...
+# Subtest: should show but never count rounds that the window cuts at either end
+ok 33 - should show but never count rounds that the window cuts at either end
+  ---
+  duration_ms: 337.70699
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2504.614911

@@ -1,0 +1,40 @@
+{
+  "status": "unsigned proposal; not broadcast",
+  "chainId": 42161,
+  "requiredEngineImplementation": "0x0A141596be287535Aa9499BCeB27CB358A8E5F8F",
+  "requiredVaultImplementation": "0x38EAf1Cd1a54C929e948F4D9c6b8CCA87944A928",
+  "preconditions": [
+    "Upgrade both implementations first",
+    "Verify fresh implementations, nonces, roles and deployment journal",
+    "Confirm production keeper RPC gas allowance"
+  ],
+  "calls": [
+    {
+      "marketId": 1,
+      "maxLegsPerRound": 384,
+      "maxLiabilityBps": 1000,
+      "from": "0x90416a578646be1c3b2e6aa0A2F593445ca3Ebce",
+      "to": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+      "value": "0",
+      "data": "0x8bc3e8bc0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000003e8"
+    },
+    {
+      "marketId": 2,
+      "maxLegsPerRound": 384,
+      "maxLiabilityBps": 1000,
+      "from": "0x90416a578646be1c3b2e6aa0A2F593445ca3Ebce",
+      "to": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+      "value": "0",
+      "data": "0x8bc3e8bc0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000003e8"
+    },
+    {
+      "marketId": 3,
+      "maxLegsPerRound": 384,
+      "maxLiabilityBps": 1000,
+      "from": "0x90416a578646be1c3b2e6aa0A2F593445ca3Ebce",
+      "to": "0xfC6474D1594952EF5BEB779b97BA69198b4e7625",
+      "value": "0",
+      "data": "0x8bc3e8bc0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000003e8"
+    }
+  ]
+}

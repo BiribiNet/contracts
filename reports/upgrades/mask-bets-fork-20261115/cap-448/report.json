@@ -1,0 +1,996 @@
+{
+  "passed": false,
+  "mode": "local-fork-only",
+  "sourceChainId": 42161,
+  "localChainId": 31337,
+  "sourceRevision": "d2fb7981f6aeafea22c9683d8871badc3fa04c6e",
+  "upstreamMethods": {
+    "eth_chainId": 2,
+    "eth_getBlockByNumber": 1,
+    "eth_getStorageAt": 2,
+    "eth_call": 2,
+    "eth_blockNumber": 5,
+    "eth_feeHistory": 2
+  },
+  "upstreamRetries": 0,
+  "blockedBroadcastProbe": true,
+  "upgrades": [
+    {
+      "label": "actual-state",
+      "storage": {
+        "engineFieldsBefore": 45,
+        "engineFieldsAfter": 50,
+        "appended": [
+          "roundMaskBets",
+          "roundMaskWinCounts",
+          "roundMaskWeightedPayout",
+          "maxMaskLegsPerMarketRound",
+          "maxMaskLiabilityBps"
+        ],
+        "vaultFieldsDeployed": 14,
+        "vaultFieldsAfter": 14,
+        "renamed": {
+          "sideBetController": "_deprecatedSideBetController"
+        }
+      },
+      "statePreserved": true,
+      "writes": [
+        {
+          "label": "Upgrade RouletteEngine proxy (UUPS, masks disabled)",
+          "hash": "0xf8f3c7ffe042625e4dc687211ee37342ea792451f29baacf5c1848413a3cac18",
+          "stores": [
+            {
+              "depth": 2,
+              "slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+              "value": "0x000000000000000000000000d0821efa201af10cd468c0d26c3317527a0e6e17"
+            }
+          ]
+        },
+        {
+          "label": "Upgrade BankVault4626 beacon",
+          "hash": "0xf024a47db8c0d841a579b1205306d5b538583c0139b0cb110e668ada9bd2dcaf",
+          "stores": [
+            {
+              "depth": 1,
+              "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+              "value": "0x0000000000000000000000000a141596be287535aa9499bceb27cb358a8e5f8f"
+            }
+          ]
+        }
+      ],
+      "localOnlyAddresses": {
+        "RouletteLib": "0x487695f12853c259D745B15cd214b85aa4C3F636",
+        "RouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
+        "JackpotBatchLib": "0xb426ca0701025C50776A502973ac0cF2a40D0A53",
+        "RoulettePayoutMulLib": "0xB04c59Db0Be2190F7e4B3845aa94B5cfbdd4B8Db",
+        "RouletteExposureLib": "0x44641e1e3328ac759a88599438c663B291a357E7",
+        "RouletteJackpotCollectLib": "0xdf573C57309c453ABAF7a1c4d25d6b69debff5C8",
+        "RouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+        "RoulettePayoutSweepLib": "0xfF46D89F88189c7A7ca91f262D1Ce85aA2c5A7C9",
+        "RouletteLiabilityMathLib": "0xB220aBf131c3924FD76B7eFA38c1F07c1722f3F1",
+        "RouletteUpkeepScanLib": "0x5A46eFCC7B4ED27049A310eb77c4a0444F363525",
+        "RouletteMaskBetLib": "0x4D7B3b0EF59f40F1130385A0C5B031303f903395",
+        "RouletteEngine": "0xd0821EFa201Af10Cd468C0D26C3317527a0E6E17",
+        "BankVault4626": "0x0A141596be287535Aa9499BCeB27CB358A8E5F8F"
+      },
+      "liveBalancesBefore": [
+        {
+          "marketId": 1,
+          "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+          "totalAssets": "302498646844651296788841",
+          "totalSupply": "274523634831654689002891394529"
+        },
+        {
+          "marketId": 2,
+          "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+          "totalAssets": "5950000",
+          "totalSupply": "6000000000000"
+        },
+        {
+          "marketId": 3,
+          "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+          "totalAssets": "6900000000000000000",
+          "totalSupply": "6000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "label": "populated-state",
+      "storage": {
+        "engineFieldsBefore": 45,
+        "engineFieldsAfter": 50,
+        "appended": [
+          "roundMaskBets",
+          "roundMaskWinCounts",
+          "roundMaskWeightedPayout",
+          "maxMaskLegsPerMarketRound",
+          "maxMaskLiabilityBps"
+        ],
+        "vaultFieldsDeployed": 14,
+        "vaultFieldsAfter": 14,
+        "renamed": {
+          "sideBetController": "_deprecatedSideBetController"
+        }
+      },
+      "statePreserved": true,
+      "writes": [
+        {
+          "label": "Upgrade RouletteEngine proxy (UUPS, masks disabled)",
+          "hash": "0xb5e286e205d84150c6d9f89e172847437722831679c4578c2d216c5fe6cef099",
+          "stores": [
+            {
+              "depth": 2,
+              "slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+              "value": "0x000000000000000000000000d0821efa201af10cd468c0d26c3317527a0e6e17"
+            }
+          ]
+        },
+        {
+          "label": "Upgrade BankVault4626 beacon",
+          "hash": "0x95ada7470f4fcd332ca315b1f93148f0d21ef3772617263ee1e39dccbe75572c",
+          "stores": [
+            {
+              "depth": 1,
+              "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+              "value": "0x0000000000000000000000000a141596be287535aa9499bceb27cb358a8e5f8f"
+            }
+          ]
+        }
+      ],
+      "localOnlyAddresses": {
+        "RouletteLib": "0x487695f12853c259D745B15cd214b85aa4C3F636",
+        "RouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
+        "JackpotBatchLib": "0xb426ca0701025C50776A502973ac0cF2a40D0A53",
+        "RoulettePayoutMulLib": "0xB04c59Db0Be2190F7e4B3845aa94B5cfbdd4B8Db",
+        "RouletteExposureLib": "0x44641e1e3328ac759a88599438c663B291a357E7",
+        "RouletteJackpotCollectLib": "0xdf573C57309c453ABAF7a1c4d25d6b69debff5C8",
+        "RouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+        "RoulettePayoutSweepLib": "0xfF46D89F88189c7A7ca91f262D1Ce85aA2c5A7C9",
+        "RouletteLiabilityMathLib": "0xB220aBf131c3924FD76B7eFA38c1F07c1722f3F1",
+        "RouletteUpkeepScanLib": "0x5A46eFCC7B4ED27049A310eb77c4a0444F363525",
+        "RouletteMaskBetLib": "0x4D7B3b0EF59f40F1130385A0C5B031303f903395",
+        "RouletteEngine": "0xd0821EFa201Af10Cd468C0D26C3317527a0E6E17",
+        "BankVault4626": "0x0A141596be287535Aa9499BCeB27CB358A8E5F8F"
+      },
+      "liveBalancesBefore": [
+        {
+          "marketId": 1,
+          "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+          "totalAssets": "332498646844651296788841",
+          "totalSupply": "301749241064462412246992622694"
+        },
+        {
+          "marketId": 2,
+          "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+          "totalAssets": "20105950000",
+          "totalSupply": "20274907534637389"
+        },
+        {
+          "marketId": 3,
+          "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+          "totalAssets": "20106900000000000000000",
+          "totalSupply": "17484260869565217391684310018"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "outcome": 0,
+      "round": "177",
+      "callbackGas": "326519",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100051968571428571428571",
+          "payout": "21968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100051968571",
+          "payout": "21968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100051968571428571428571",
+          "payout": "21968571428571428571"
+        }
+      ]
+    }
+  ],
+  "fixtureTokenBalanceOverrides": [
+    {
+      "asset": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+      "account": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "mappingSlot": "0"
+    },
+    {
+      "asset": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+      "account": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "mappingSlot": "0"
+    },
+    {
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "account": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "mappingSlot": "9"
+    },
+    {
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "account": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "mappingSlot": "9"
+    },
+    {
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "account": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "mappingSlot": "2"
+    },
+    {
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "account": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "mappingSlot": "2"
+    }
+  ],
+  "transactions": [
+    {
+      "label": "local token approval",
+      "hash": "0x14fc6cc0262ec6e536c2b46582b602da77f3bf4f8fb1a529d300d354a4cf4257",
+      "gasUsed": "46655"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x41f52718d7dd38bcca56646e23bcae277a331f34a4de426a116c66ece25cf4b4",
+      "gasUsed": "46655"
+    },
+    {
+      "label": "legacy LP deposit",
+      "hash": "0x35e22e009e1a387cc6993e141451b8d32668bce5340fa6b1e9f4afd0bbfb7c15",
+      "gasUsed": "109071"
+    },
+    {
+      "label": "legacy withdrawal queued",
+      "hash": "0x7de1c8399d45341676686c14d76464e0b4d748e4df4d16d3c8b37e2ad41018df",
+      "gasUsed": "254004"
+    },
+    {
+      "label": "legacy classic bet before upgrade",
+      "hash": "0x4a04c117171461b9cc089e67d34fae7eba7d45089878e8344ab03aeec71484cc",
+      "gasUsed": "425611"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x67aab6d52f62aa4ab2cb8ea64145c144b9c48335da887ec54d08ef2948471536",
+      "gasUsed": "55785"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x21d18b1ed9fefef64cfdeceb2c33184a43a47f6dc5714c2efda0d6b1fe110bed",
+      "gasUsed": "55785"
+    },
+    {
+      "label": "legacy LP deposit",
+      "hash": "0xf89605c2deb184ab7e5a7a10fa1e40ffa2c27dd88520da2f489e94a48321b201",
+      "gasUsed": "124170"
+    },
+    {
+      "label": "legacy withdrawal queued",
+      "hash": "0x7ba80317dd98b63fe9b4f33d72b5a2dda1fc89c40826fc310b17f03221260929",
+      "gasUsed": "278766"
+    },
+    {
+      "label": "legacy classic bet before upgrade",
+      "hash": "0x32dc10a58bf3dbe219d72f5b116411983fcc37ccb972e8ef63d9128db08abab9",
+      "gasUsed": "380784"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x46b436b2eb491cb86df97756f1bd54bc46169094aebd47aa53738cb7681ec04e",
+      "gasUsed": "46401"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x1114e8dcd3556bb946b86b6d7c6a15632076e235eabcb32f9998d520cd6e910b",
+      "gasUsed": "46401"
+    },
+    {
+      "label": "legacy LP deposit",
+      "hash": "0xed58ed17efa61e0cca0113459a13368c555996fbcee0a533964aceb02525c66e",
+      "gasUsed": "108274"
+    },
+    {
+      "label": "legacy withdrawal queued",
+      "hash": "0x6ac1baf9d29a0736813555b931175041805b7ea4f02b5d7c36f2be1ac168d276",
+      "gasUsed": "270660"
+    },
+    {
+      "label": "legacy classic bet before upgrade",
+      "hash": "0xf9cabf359a91f23e32726617b3e54e54d2fbfb5bd9f9934378b27ca6a035ee87",
+      "gasUsed": "365715"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x71ba1fb9364b20e937181e4c8ea747c57064249fc898c64db55c1f1524e809ab",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x9dc91f515589f4b3890c31078cf53b91384aace8c99ca6b092a33e7f348050f7",
+      "gasUsed": "433950"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xd26f0c43bc5b5557a5303ff3e700ed1ce8f69cbe001e1d8168ecfe07f8935047",
+      "gasUsed": "423373"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x5ddc0877f2ee204053adbfbff6bf1dcbe893a226d4f8ddbe3a46d25822494e1a",
+      "gasUsed": "420702"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x550bd98f438e8228e8e9941858b0f9198cb8b5789d60c2fb5cbeaeacce116a90",
+      "gasUsed": "413801"
+    },
+    {
+      "label": "local mask activation",
+      "hash": "0x913467f13047592f9f10f25ba9b966ae505f325520e85fbd864c7975aca6a737",
+      "gasUsed": "92149"
+    },
+    {
+      "label": "local mask activation",
+      "hash": "0xadabd42a8f18b0cd26b6f9b01384527a84436566e89c530e5ad07eee1bf4e7a1",
+      "gasUsed": "92149"
+    },
+    {
+      "label": "local mask activation",
+      "hash": "0xa2a39dd92926bbc534c00114c5f25f6eccae4655776104702399ef94868232dc",
+      "gasUsed": "92149"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x1425ad97d24596f9d5a0b7a167c34dc869331d7856976748d0156f401b9f546b",
+      "gasUsed": "326519"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x5b25568380f72c7adc1e5a019e040ccf39aee3d85e2b1402f58b22e4639c9517",
+      "gasUsed": "345974"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x683880ed9151b7177a6fd87bb42505ad7908ff585532075b1b2b3ce992fcaca0",
+      "gasUsed": "344486"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x46e7ba52a84b2c738b5fe189dd5cf0a10bcd9e1ca1727853bb31b782bfa3e64d",
+      "gasUsed": "336105"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x882cd4a9d63f381af49e30bc63ec74bbb82af5fedf5b32495dfad872aeff3211",
+      "gasUsed": "4172174"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xc05ae2f35109b1f3c2396ae472a92f2fa9f0f4d23d5b548515d94605a1cbad98",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xaae840f2f88ea204fd92dd0b69c8e9c11546cf5647db1a4590be7d20714a0e02",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x59e70c0da454af3e211607077d57f0f76d475226f3f2cedade58c56913a817bb",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xf02ed7bf57abe4bb7d78d1aac857ec48db28eca168b5378a5a82cce4ef7f80c7",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x67254ce1abf3bd1b7538a039cfc163fe6158ee8d09cb26c7db5d7db8f2c700b5",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x2f6c0743b47958de778e57a635e7c34c664c60998873326247e3506269cd4ccd",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xfb60b7b88cb6d8b077e5d09d7f19e897a70371de8e040bf72a0d8df03ee839b2",
+      "gasUsed": "4125079"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x5d989cec1788cb6dbd4e55dc94709cadfd6baec2c0bfae9e650f6e7c54d84320",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x097e8f1b07206ddf12f54a2a73c40bdeefc064cda99e8704e7ea741c4b87ec2d",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x8134975ae1fd545f7e65ac5aff8c8a7172d6c9308359227a9ae98ebd2b76023e",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xaa37de937dea488a6ec71ab80c9eb934c939a189c8a81fbb658e7cd0457a85aa",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x0f185578b9643dc3a1934c7efbdc53505c95eed25f70e2dfa9f859cba7723e62",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xb11db3133a3f74e081770f6502d6dfa942a3c0d0467bb7d85b3ea3c270771113",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xd39b651e7253f573f5c5f245b1985fc1586119b3b5cd6671305a934c20e0b689",
+      "gasUsed": "4112278"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x526eea9535a0678a68a733ed54a96ff6e5eef865f6eff7aa87e5d465668cb51a",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xc5c77e2ed993119a0dd1d54195c8fbdc2250092d58df25ca326959b9888a9e56",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xcfb42629adbf320b2f0a70beaf153c11ec3e9ede8817d4c88e33602302da5f90",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xf9eb3114a0869478ae86e3415b1cd7ba16bc44808f73b44a9a5aba46f0dc573f",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x7d959442ddf9cfcb267a0b2e692cd84e6f1e60c30c46c6058a8f4a3e72e718bd",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x64cde285ed42ee48a1a397e19315571a3853338b80bc2679cfa40a09967f28fb",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xd573d9d5241b0262e1629ad31cd8a950cc321bd8bcc116dbba7a879e4cca70e0",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x0d5e1ff0609b6113e5729aa087bd4acd65ae4636ca494920deb59f341f9547dc",
+      "gasUsed": "326519"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35a79139bb76d399bac6f996c2c3635ac2388f67ea21bee133dd4856243f27bc",
+      "gasUsed": "804688"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x900dc899a356a8714397e6692e587d98281352da0c720fe0a815b43e2f915fd2",
+      "gasUsed": "763418"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbed553707d01c72cfb574cb6e2f98890db29aac5db270d92db4537fd461c50fc",
+      "gasUsed": "746318"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfd95c397b915a1311ba5c2f1c277b459c7562b65ce586e589e1e6c3ce0671355",
+      "gasUsed": "746318"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x3c9828b18f199d231e6e4b24f2696da1b308e127e4384d7506f35cb00d29008d",
+      "gasUsed": "746318"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x5d8c4ce2bf03db0442dc88ade8d1b3cf06601a43cb43e6474040b936a2622bc0",
+      "gasUsed": "746330"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x09c16b8aac01b112812e777bb53f2aadcee19af7e2e38f5ca76f277c703e7d27",
+      "gasUsed": "746330"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8eb98b7c3c59602fda8a007cbb7b064566c78c2f03c76acbc04b01f3fed2d26b",
+      "gasUsed": "515492"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb173d5c15191192dc7e8e6fdd7eb9cdefcc68ee188bf009749dd5e221f2d8fc1",
+      "gasUsed": "918500"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x39b0f4c8e95bfb7c1be9413aa742a557212a8b720af0afa27fc6f6a252e53342",
+      "gasUsed": "879230"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8bcf0bbc073d6ea82807ead19696706db732ca8ebd12aef3c75861e037074ac9",
+      "gasUsed": "862130"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa5d0f704d67542a021c5736cde95bc10903d70d361eea0bbb541733141f0d666",
+      "gasUsed": "862130"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x22457537134cbcd8588ce59846efdf0e398d40e99d9fb41cb4b9d6a038f7575f",
+      "gasUsed": "862130"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x38c15f6bd128738b206a9a3a513cbdfde06e998c8d927103d79af5ee3ce5fa2c",
+      "gasUsed": "862142"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfe884d18af141a5b9d7f7674b370d7a5e9719794218e013d9775f8bfc6f0fb84",
+      "gasUsed": "862142"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa8cb562a853a2c6bb99f88db8c02b22b4f6556780e73ff4794e3bd3e4a39116b",
+      "gasUsed": "557708"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x659564cd6b72cbccfb137e6426aee80a5b2c950be7d7380e19666f1382b08841",
+      "gasUsed": "769420"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x9a5d3bc586ae576ca8c4cf7bfa2853663deb908c615fa5b204283674624b478e",
+      "gasUsed": "730150"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x752b6a5aa6fa5ea37f1249ac302eccf6006b5aca55e5775d80de5d11890dc4f9",
+      "gasUsed": "713050"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc951e6c46bf93039aca4d589e68562a4535850497ce08ed9b34550158d81d1c1",
+      "gasUsed": "713050"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x09dad948dbc3dd62a754cea92555e5786816cf8553ae2986d49791036ca2c8e8",
+      "gasUsed": "713050"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc708f2a2719e02f5dcaba6e24062d77de6a85afe37b913606179aa6d74c112a4",
+      "gasUsed": "713062"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x38b4bed3aa16b4c9991750df18bf7ff3896a288338367600e4051f1ee01fbd56",
+      "gasUsed": "713062"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x3747d7e1a3cd2252eac90e3525d624e6bd7ba8b54db313afd2a0b7ec8fd9b400",
+      "gasUsed": "493167"
+    }
+  ],
+  "sourceBlock": 524517798,
+  "sourceBlockHash": "0x739339c476e7b4ecfde3e1070c6dfac69110d1d992229c2700ed79c2dee3ca0e",
+  "implementationsBefore": {
+    "engine": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+    "vault": "0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC"
+  },
+  "disabledMasksRejectedOnAllMarkets": true,
+  "checkUpkeepMeasurements": [
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 1,
+        "marketId": 0,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 0
+      },
+      "gas": "51303"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "549751"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 60,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "710731"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 120,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "871711"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 180,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1032691"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 240,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1193671"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 300,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1354651"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 360,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1515631"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 420,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1444566"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "552133"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 60,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "713113"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 120,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "874093"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 180,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1035073"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 240,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1196053"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 300,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1357033"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 360,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1518013"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 420,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1446948"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "554515"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 60,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "715495"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 120,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "876475"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 180,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1037455"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 240,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1198435"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 300,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1359415"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 360,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1520395"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 420,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1449330"
+    }
+  ],
+  "legacyBetsAndWithdrawalsSurvived": true,
+  "launchCap": {
+    "legsPerMarket": 448,
+    "markets": [
+      {
+        "marketId": 1,
+        "expectedBalance": "100047799999999999999808"
+      },
+      {
+        "marketId": 2,
+        "expectedBalance": "100047799808"
+      },
+      {
+        "marketId": 3,
+        "expectedBalance": "100047799999999999999808"
+      }
+    ],
+    "round": "177",
+    "callbackGas": "326519",
+    "worstCheckUpkeepInnerCallGas": "1520395",
+    "gasTarget": "1500000",
+    "withinGasTarget": false,
+    "rejectedNextLeg": true,
+    "blockedWithdrawalDrainWhileBetsLocked": true,
+    "placementClock": "one local EVM second per placement block; real ROUND_DURATION unchanged",
+    "payoutLaneCount": 1,
+    "maxPayoutsPerCall": 60
+  },
+  "mainnetImplementationsUnchanged": true,
+  "functionalChecksPassed": true,
+  "error": "Live scheduler launch-cap preview exceeds the 1.5M inner-call gas target",
+  "errorCauses": [
+    {
+      "name": "AssertionError",
+      "message": "Live scheduler launch-cap preview exceeds the 1.5M inner-call gas target"
+    }
+  ]
+}

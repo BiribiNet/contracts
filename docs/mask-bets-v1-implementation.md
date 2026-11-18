@@ -1,9 +1,10 @@
 # Paris par masque v1 — notes d'implémentation
 
 > Spécification : [`spec-mask-bets-v1.md`](spec-mask-bets-v1.md) (décisions D1–D21). Ce document ne décrit que
-> ce qui a été implémenté, les écarts et les mesures. **Aucun déploiement** n'a été effectué. Déroulé : upgrade
-> **direct sur Arbitrum One, sans Sepolia ni fork** (décision du propriétaire, 06/11/2026), masques livrés
-> désactivés puis activés par marché — §10 de la spec et [Déploiement](#déploiement-arbitrum-one) ci-dessous.
+> ce qui a été implémenté, les écarts et les mesures. **Aucun upgrade mainnet** n'a été effectué par cette campagne.
+> Une répétition sur fork a été ajoutée à la demande du propriétaire après la décision initiale du 06/11/2026.
+> **Mise à jour du contrôle fork : recommander 384 jambes, pas les 448 historiques**, voir [Tests](#tests).
+> L'upgrade livre les masques désactivés ; l'activation reste explicite par marché.
 
 ## Ce qui est livré
 
@@ -87,9 +88,9 @@ Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` 
 | idem, 480 masques (1 lane / 10 lanes) | 1 452 360 / 1 486 443 |
 
 Pente mesurée : ≈ 2,7 k gaz par jambe masque supplémentaire (1 lane). Les valeurs `checkUpkeep` sont le gaz interne
-mesuré par `StaticCallGasProbe` ; l'`eth_call` ajoute ≈ 21–25 k d'intrinsèque. **448** est donc la plus grande valeur
-« ronde » qui garde l'`eth_call` complet (≈ 1,40 M) sous ~1,5 M avec ≈ 7 % de marge ; elle est vérifiée par
-`test/VrfCallbackBudget.test.ts` (plafond 1,45 M interne, jambe 449 rejetée) et appliquée par le script d'activation.
+mesuré par `StaticCallGasProbe` ; l'`eth_call` ajoute ≈ 21–25 k d'intrinsèque. Ces mesures historiques de la
+dernière ligne avaient conduit à retenir 448. Elles ne couvrent pas le pire chunk complet de 60 paiements :
+la répétition sur fork ci-dessous invalide cette conclusion et valide 384 dans les scénarios mesurés.
 
 Tailles : `reports/mask-bets-v1/bytecode-sizes.json` (moteur 22 379 → 23 130, vault 15 435 (master ; 16 072 pour `0x6e84` en place) → 15 038,
 `RouletteMaskBetLib` 3 008, `RoulettePayoutSweepLib` 7 599 → 8 318, `RouletteLiabilityMathLib` 2 317 → 2 674).
@@ -106,13 +107,58 @@ Les suites SideBet historiques (et les suites de couverture qui exercent `lockSi
 `contracts/test/legacy/LegacySideBetBankVault4626.sol`, copie figée **de test** du vault précédent : SideBet est
 inchangé (D20) mais ne peut plus placer de ticket sur le nouveau vault, ce qui est précisément l'objectif.
 
-Pas de test fork mainnet (décision du 06/11/2026) : il est remplacé par `test/MaskBetsMainnetUpgradeScript.test.ts`,
+La PR initiale ne demandait pas de fork mainnet (décision du 06/11/2026) : elle utilisait `test/MaskBetsMainnetUpgradeScript.test.ts`,
 qui exécute les deux scripts de déploiement sur le réseau Hardhat local (31337, jamais un fork) contre une réplique
 de la forme mainnet (moteur en place, dix bibliothèques existantes, vault précédent derrière un beacon, SideBet
 désactivé) : dry run sans transaction, exécution complète moteur puis beacon, post-vérifications, activation,
 pari classique + masque réglés par le scheduler, désactivation d'urgence, refus en `Settling`, avec side bets
 actifs, avec une implémentation de beacon inattendue, un mauvais signataire ou un jeu de bibliothèques imprévu.
 `scripts/mask-bets-v1-mainnet.test.cjs` (job de preflight) couvre les gardes réseau/clé/CLI hors ligne.
+
+Une répétition sur fork a été ajoutée le 15/11/2026 à la demande du propriétaire :
+`scripts/rehearseMaskBetsMainnetFork.ts`, avec la configuration autonome `hardhat.fork-only.config.ts`.
+Elle ne charge aucune clé privée. Un relais HTTP n'autorise que des méthodes RPC de lecture vers
+Arbitrum One ; toutes les transactions utilisent le réseau Hardhat local, chain ID 31337.
+
+```sh
+corepack yarn hardhat compile
+MASK_FORK_BLOCK=524517798 MASK_FORK_LEG_CAP=384 corepack yarn hardhat run --no-compile \
+  --config hardhat.fork-only.config.ts scripts/rehearseMaskBetsMainnetFork.ts
+```
+
+Les rapports vont dans `reports/local/mask-bets-fork` (ignoré par git). `MASK_FORK_REPORT_DIR` permet
+de choisir un autre dossier pour archiver une exécution ; les preuves du 15/11 sont dans
+`reports/upgrades/mask-bets-fork-20261115/`. Sans `MASK_FORK_BLOCK`, le script épingle le bloc courant
+au démarrage et enregistre son numéro et son hash.
+
+La répétition compare l'état réel avant/après l'upgrade moteur puis beacon, exige une seule écriture
+du pointeur d'implémentation par transaction dans les traces, puis recommence avec des dépôts, une
+file de retrait et des paris classiques créés sous les anciennes implémentations. Elle vérifie les
+paiements exacts des 37 numéros sur les trois marchés (masques de 2, 24, 25 et 35 numéros mélangés
+aux paris classiques), puis le règlement du plafond choisi par marché par le scheduler réellement
+déployé, le rejet de la jambe suivante et le blocage du drain pendant les mises verrouillées.
+Pour financer ces scénarios, seuls les soldes des joueurs/LP dans les contrats ERC20 externes sont
+modifiés sur le fork ; aucun stockage ni code du protocole n'est réécrit pour fabriquer un résultat.
+Les blocs de placement du scénario à 448 jambes avancent d'une seconde chacun, pour que la latence
+des lectures RPC n'épuise pas la fenêtre réelle de 60 secondes ; `ROUND_DURATION` reste inchangé.
+`MASK_FORK_OUTCOMES=0,7,36` permet un diagnostic ciblé ; le contrôle complet utilise par défaut les 37 numéros.
+
+**Résultat de la répétition : le stockage est compatible, mais la recommandation historique de 448 jambes
+ne respecte pas la cible de 1,5 M gaz sur tous les chunks.** Sur le scheduler mainnet réel (1 lane,
+60 paiements), le pire chunk de 60 gagnants coûte **1 520 395 gaz internes** à 448 jambes, contre
+**1 359 415** à 384 jambes, avant l'intrinsèque de l'`eth_call`. Les mesures historiques ci-dessus
+ne regardaient que la toute dernière ligne d'une lane et sous-estimaient ce cas intermédiaire.
+
+Pour cette release, retenir **384 jambes**, avec activation explicite marché par marché après l'upgrade.
+Le script d'activation et le modèle du bilan hebdomadaire conservent leur borne historique de 448 :
+ils doivent être corrigés ou leurs hypothèses de gaz validées avant de suivre une recommandation supérieure
+à 384. Donner explicitement `384` au script d'activation ; l'upgrade seul livre toujours les masques désactivés.
+Le test fork accepte `MASK_FORK_LEG_CAP` pour reproduire les deux mesures, conserve les échecs de budget
+dans son rapport et sort avec un code non nul si la cible de gaz est dépassée.
+
+Le relais local utilise le port 18551 pour réutiliser le cache RPC de Hardhat ; `MASK_FORK_GATEWAY_PORT=0`
+choisit un port libre. Le hash du bloc du cache est confronté à celui du RPC source. `ARBITRUM_FORK_URL`
+permet d'utiliser un RPC configuré par l'opérateur ; son URL n'est pas enregistrée dans les rapports.
 
 `test/VrfCallbackBudget.test.ts` n'écrit plus aucun fichier suivi par git ; `VRF_BUDGET_REPORT_DIR=reports/local`
 (ignoré) enregistre les mesures. `reports/mask-bets-v1/vrf-callback-budget.json` et
@@ -150,11 +196,11 @@ MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=<clé> \
   node scripts/mask-bets-v1-mainnet.cjs --execute
 
 # 3. Activation par marché, valeurs explicites (dry run, calldata multisig, exécution)
-node scripts/mask-bets-v1-activate.cjs --market 1:448:1000 --market 2:448:1000 --market 3:448:1000 \
+node scripts/mask-bets-v1-activate.cjs --market 1:384:1000 --market 2:384:1000 --market 3:384:1000 \
   --expected-engine-implementation <adresse du journal>
-node scripts/mask-bets-v1-activate.cjs --market 1:448:1000 --print-calldata
+node scripts/mask-bets-v1-activate.cjs --market 1:384:1000 --print-calldata
 MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=<clé> \
-  node scripts/mask-bets-v1-activate.cjs --market 1:448:1000 --execute
+  node scripts/mask-bets-v1-activate.cjs --market 1:384:1000 --execute
 # Désactivation d'urgence d'un marché : --market <id>:0:0 --execute
 ```
 

@@ -1,0 +1,165 @@
+TAP version 13
+# Subtest: mainnet mode accepts chain 42161 without Hardhat metadata
+ok 1 - mainnet mode accepts chain 42161 without Hardhat metadata
+  ---
+  duration_ms: 1.953832
+  ...
+# Subtest: mainnet mode rejects another chain and any Hardhat node or fork
+ok 2 - mainnet mode rejects another chain and any Hardhat node or fork
+  ---
+  duration_ms: 2.190032
+  ...
+# Subtest: execution needs the typed confirmation
+ok 3 - execution needs the typed confirmation
+  ---
+  duration_ms: 1.249968
+  ...
+# Subtest: local mode only accepts a non-forked Hardhat chain 31337
+ok 4 - local mode only accepts a non-forked Hardhat chain 31337
+  ---
+  duration_ms: 0.770053
+  ...
+# Subtest: the dry-run provider refuses every sending or state-altering method
+ok 5 - the dry-run provider refuses every sending or state-altering method
+  ---
+  duration_ms: 3.072491
+  ...
+# Subtest: the operator key comes only from the environment and must be the admin key
+ok 6 - the operator key comes only from the environment and must be the admin key
+  ---
+  duration_ms: 71.497912
+  ...
+# Subtest: runtime normalisation ignores metadata, library self-address and immutables only
+ok 7 - runtime normalisation ignores metadata, library self-address and immutables only
+  ---
+  duration_ms: 1.692306
+  ...
+# Subtest: linking replaces every placeholder and refuses a missing library
+ok 8 - linking replaces every placeholder and refuses a missing library
+  ---
+  duration_ms: 0.992261
+  ...
+# Subtest: selector detection reads the disassembled dispatcher, including selectors with a leading zero byte
+ok 9 - selector detection reads the disassembled dispatcher, including selectors with a leading zero byte
+  ---
+  duration_ms: 5.468677
+  ...
+# Subtest: the live vault runtime 0x6e84…f3cC dispatches exactly the ABI of its reconstructed source, drain and fee setter included
+ok 10 - the live vault runtime 0x6e84…f3cC dispatches exactly the ABI of its reconstructed source, drain and fee setter included
+  ---
+  duration_ms: 56.149854
+  ...
+# Subtest: the mainnet manifest yields the live engine constructor arguments and the reviewed redeploy set
+ok 11 - the mainnet manifest yields the live engine constructor arguments and the reviewed redeploy set
+  ---
+  duration_ms: 4.812777
+  ...
+# Subtest: upgrade CLI: dry run by default, unknown flags rejected, --out only for a dry run
+ok 12 - upgrade CLI: dry run by default, unknown flags rejected, --out only for a dry run
+  ---
+  duration_ms: 0.85629
+  ...
+# Subtest: activation CLI: explicit values only, bounded, launch cap enforced
+ok 13 - activation CLI: explicit values only, bounded, launch cap enforced
+  ---
+  duration_ms: 1.523122
+  ...
+# Subtest: the manifest points at the proven live vault 0x6e84…f3cC and expects its archived runtime
+ok 14 - the manifest points at the proven live vault 0x6e84…f3cC and expects its archived runtime
+  ---
+  duration_ms: 8.819443
+  ...
+# Subtest: the preflight refuses a vault build that drops setFlatWithdrawFee or drainWithdrawalQueue
+ok 15 - the preflight refuses a vault build that drops setFlatWithdrawFee or drainWithdrawalQueue
+  ---
+  duration_ms: 1.729994
+  ...
+# Subtest: proxy slots match ERC-1967 derivation
+ok 16 - proxy slots match ERC-1967 derivation
+  ---
+  duration_ms: 4.236879
+  ...
+# Subtest: rejects absent, empty and non-address storage instead of inventing an implementation
+ok 17 - rejects absent, empty and non-address storage instead of inventing an implementation
+  ---
+  duration_ms: 2.288447
+  ...
+# Subtest: detects empty subscription and unregistered consumer independently
+ok 18 - detects empty subscription and unregistered consumer independently
+  ---
+  duration_ms: 1.179257
+  ...
+# Subtest: a positive subscription balance is not a funding guarantee
+ok 19 - a positive subscription balance is not a funding guarantee
+  ---
+  duration_ms: 0.342674
+  ...
+# Subtest: wrong chain fails before reading protocol state
+ok 20 - wrong chain fails before reading protocol state
+  ---
+  duration_ms: 1.502973
+  ...
+# Subtest: pins all reads and keeps locked funds separate without approving an upgrade
+ok 21 - pins all reads and keeps locked funds separate without approving an upgrade
+  ---
+  duration_ms: 10.633253
+  ...
+# Subtest: rejects a changed block hash instead of saving inconsistent evidence
+ok 22 - rejects a changed block hash instead of saving inconsistent evidence
+  ---
+  duration_ms: 2.10149
+  ...
+# Subtest: BRB-only keeper deployment does not require USDC or a CRE receiver
+ok 23 - BRB-only keeper deployment does not require USDC or a CRE receiver
+  ---
+  duration_ms: 3.947962
+  ...
+# Subtest: legacy CRE manifests keep their USDC default and require their receiver
+ok 24 - legacy CRE manifests keep their USDC default and require their receiver
+  ---
+  duration_ms: 0.971844
+  ...
+# Subtest: rejects unknown mode, wrong default, zero bank and mixed keeper/CRE settings
+ok 25 - rejects unknown mode, wrong default, zero bank and mixed keeper/CRE settings
+  ---
+  duration_ms: 0.533041
+  ...
+# Subtest: accepts the verified deployment cloudflare-keeper mode without introducing a CRE receiver
+ok 26 - accepts the verified deployment cloudflare-keeper mode without introducing a CRE receiver
+  ---
+  duration_ms: 0.377063
+  ...
+# Subtest: by default the Sepolia snapshot side-bet.ts is never written and the refusal explains the mainnet path
+ok 27 - by default the Sepolia snapshot side-bet.ts is never written and the refusal explains the mainnet path
+  ---
+  duration_ms: 31.227211
+  ...
+# Subtest: merged-errors.json gains every missing engine, vault, mask-library and SideBet error, append-only
+ok 28 - merged-errors.json gains every missing engine, vault, mask-library and SideBet error, append-only
+  ---
+  duration_ms: 22.577689
+  ...
+# Subtest: --sepolia-snapshot rewrites side-bet.ts from the SideBet artifact
+ok 29 - --sepolia-snapshot rewrites side-bet.ts from the SideBet artifact
+  ---
+  duration_ms: 19.39166
+  ...
+# Subtest: --check writes nothing and reports what is missing
+ok 30 - --check writes nothing and reports what is missing
+  ---
+  duration_ms: 16.808571
+  ...
+# Subtest: a missing artifact fails loudly instead of silently skipping errors
+ok 31 - a missing artifact fails loudly instead of silently skipping errors
+  ---
+  duration_ms: 15.835474
+  ...
+1..31
+# tests 31
+# suites 0
+# pass 31
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 739.763019
