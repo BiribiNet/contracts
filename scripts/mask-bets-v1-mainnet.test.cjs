@@ -108,11 +108,14 @@ test('upgrade CLI: dry run by default, unknown flags rejected, --out only for a 
 test('activation CLI: explicit values only, bounded, launch cap enforced',()=>{
   assert.throws(()=>Activate.parseArgs([]),/no default values/);
   assert.throws(()=>Activate.parseArgs(['--market','1']),/Expected --market/);
-  assert.throws(()=>Activate.parseArgs(['--market','1:449:1000']),/launch cap 448/);
-  assert.throws(()=>Activate.parseArgs(['--market','1:448:1000','--market','1:10:10']),/once/);
+  assert.throws(()=>Activate.parseArgs(['--market','1:353:1000']),/launch cap 352/);
+  assert.throws(()=>Activate.parseArgs(['--market','1:352:1000','--market','1:10:10']),/once/);
   assert.equal(Activate.parseArgs(['--market','2:0:0','--print-calldata']).mode,'print-calldata');
-  assert.deepEqual(Activate.parseArgs(['--market','1:448:1000']).settings,[{marketId:1,maxLegsPerRound:448,maxLiabilityBps:1000}]);
-  assert.equal(C.LAUNCH_MASK_LEG_CAP,448);
+  assert.deepEqual(Activate.parseArgs(['--market','1:352:1000']).settings,[{marketId:1,maxLegsPerRound:352,maxLiabilityBps:1000}]);
+  assert.equal(C.LAUNCH_MASK_LEG_CAP,352);
+  assert.throws(()=>Activate.parseArgs(['--market','1:384:1000']),/launch cap 352/);
+  assert.throws(()=>Activate.parseArgs(['--market','1:448:1000']),/launch cap 352/);
+  assert.equal(Activate.parseArgs(['--market','1:448:1000','--allow-above-launch-cap']).settings[0].maxLegsPerRound,448);
 });
 test('the manifest points at the proven live vault 0x6e84…f3cC and expects its archived runtime',()=>{
   const fs=require('node:fs'),path=require('node:path'),{keccak256}=require('ethers');

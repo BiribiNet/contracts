@@ -16,7 +16,7 @@
 //
 // Fenêtre : --days <n> | --from <date ISO, UTC> [--to <date ISO>] | --from-block <n> [--to-block <n>] (fin par défaut : dernier bloc).
 // Bornes : --chunk-blocks (100000), --max-log-requests (200), --max-receipts (600), --max-state-reads (3000).
-// Règle : --eth-call-gas-cap <gaz> (sans lui, jamais plus de 448 jambes), --settlement-gas-limit <gaz> (2500000),
+// Règle : --eth-call-gas-cap <gaz> (sans lui, jamais plus de 352 jambes), --settlement-gas-limit <gaz> (2500000),
 //         --min-mask-rounds <n> (20). Historique des plafonds : --limits-from-block (startBlock du manifeste).
 // RPC : ARBITRUM_RPC_URL, sinon le RPC public https://arb1.arbitrum.io/rpc (non archive : la liquidité libre des blocs
 // anciens est alors approchée par la valeur actuelle, signalée « approximative »). L'URL n'est jamais écrite.
@@ -24,6 +24,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
+const {createHash}=require('node:crypto');
 const {Interface,AbiCoder,getAddress}=require('ethers');
 const C=require('./mask-bets-v1-common.cjs');
 
@@ -46,8 +47,8 @@ const LIMITS_CHUNK_BLOCKS=10_000_000;
  */
 const RULE=Object.freeze({
   gasMarginBps:3000,                 // garder ≥ 30 % de marge sous chaque limite de gaz
-  hardLegCeiling:1024,               // jamais au-delà sans nouvelle mesure (point mesuré D18)
-  launchLegCap:C.LAUNCH_MASK_LEG_CAP, // 448 : plafond tant que le plafond eth_call CRE/keeper n'est pas confirmé
+  hardLegCeiling:C.LAUNCH_MASK_LEG_CAP, // pas de recommandation au-delà du domaine de mesure complet
+  launchLegCap:C.LAUNCH_MASK_LEG_CAP, // 352 : plafond validé sur fork et sur tous les chunks
   legStep:32,                        // valeurs de jambes multiples de 32
   legDemandRatio:0.7,                // monter si p95(jambes) ≥ 70 % du plafond…
   legCapHitRate:0.05,                // …ou si ≥ 5 % des tours avec masques atteignent le plafond
@@ -60,13 +61,24 @@ const RULE=Object.freeze({
   minMaskRounds:20,                  // en dessous : données insuffisantes, rien ne change
   settlementGasLimit:2_500_000,      // writeGasLimit CRE par défaut (scripts/generateCreLaneConfigs.ts)
 });
-/**
- * Coût de l'`eth_call` `UpkeepScheduler.checkUpkeep(lane)` sur le dernier bloc d'une lane, en fonction des jambes
- * masque (docs/mask-bets-v1-implementation.md, « Mesures » : 10 lanes / 10 paiements, la configuration la plus chère).
- * Ce coût n'apparaît dans aucun reçu (appel hors chaîne) : il est modélisé, pas observé.
- */
-const ETH_CALL_MODEL=Object.freeze({anchorLegs:448,anchorGas:1_380_331,gasPerLeg:3_316,intrinsicGas:25_000,
-  source:'checkUpkeep(lane), 10 lanes / 10 paiements : 1 380 331 gaz à 448 jambes, 1 486 443 à 480 (pente 3 316 gaz/jambe), + ≈ 25 k intrinsèque'});
+/** Measured envelope, rounded UP to the next sample. Never extrapolate from the last winner alone. */
+const GAS_PROFILE_FILE='reports/mask-bets-v1/full-chunk-gas-profile.json';
+const gasProfile=JSON.parse(fs.readFileSync(path.join(C.ROOT,GAS_PROFILE_FILE),'utf8'));
+assert.equal(gasProfile.launchMaskLegCap,C.LAUNCH_MASK_LEG_CAP,'Gas profile is stale: rerun MASK_GAS_CURVE=1');
+assert.equal(gasProfile.releaseLockSha256,createHash('sha256').update(fs.readFileSync(C.RELEASE_LOCK)).digest('hex'),
+  'Gas profile does not match the release lock: rerun MASK_GAS_CURVE=1');
+assert.equal(C.LAUNCH_MASK_LEG_CAP%RULE.legStep,0,'Launch cap must be a measured step');
+let envelope=0;
+const samples=Array.from({length:C.LAUNCH_MASK_LEG_CAP/RULE.legStep+1},(_,i)=>{
+  const legs=i*RULE.legStep;
+  const values=[[1,60],[10,10]].map(([lanes,payouts])=>Number(gasProfile[`checkUpkeepGas_${legs}legs_${lanes}lanes_${payouts}payouts`]));
+  assert(values.every(gas=>Number.isSafeInteger(gas)&&gas>0),'Incomplete full-chunk gas profile at '+legs+' legs');
+  envelope=Math.max(envelope,...values);
+  return Object.freeze({legs,innerGas:envelope});
+});
+const ETH_CALL_MODEL=Object.freeze({maxMeasuredLegs:C.LAUNCH_MASK_LEG_CAP,step:RULE.legStep,
+  innerGasMargin:25_000,intrinsicGas:25_000,samples:Object.freeze(samples),
+  source:GAS_PROFILE_FILE+'; all full chunks, 1 lane/60 payouts and 10 lanes/10 payouts; +25k inner margin, +25k intrinsic; no extrapolation'});
 
 const ENGINE=new Interface([
   'event BetRecorded(uint32 marketId,uint64 localRound,address player,uint256 totalAmount,bytes betData)',
@@ -89,7 +101,6 @@ const num=value=>Number(BigInt(value));
 const posOf=log=>({blockNumber:num(log.blockNumber),logIndex:num(log.logIndex)});
 const before=(a,b)=>a.blockNumber<b.blockNumber||(a.blockNumber===b.blockNumber&&a.logIndex<=b.logIndex);
 const ceilStep=(value,step)=>Math.ceil(value/step)*step;
-const floorStep=(value,step)=>Math.floor(value/step)*step;
 const round2=value=>Math.round(value*100)/100;
 
 /** Wraps a JSON-RPC `send` so that only the read methods above can ever reach the node. */
@@ -127,14 +138,18 @@ function summarize(values) {
 }
 
 function predictEthCallGas(legs,model=ETH_CALL_MODEL) {
-  return model.anchorGas+model.intrinsicGas+model.gasPerLeg*(legs-model.anchorLegs);
+  if(!Number.isSafeInteger(legs)||legs<0||legs>model.maxMeasuredLegs)return null;
+  const sample=model.samples.find(sample=>sample.legs>=legs);
+  return sample.innerGas+model.innerGasMargin+model.intrinsicGas;
 }
 /** Largest leg cap (multiple of `legStep`) allowed by the gas rule. */
 function legCeiling({ethCallGasCap=null,rule=RULE,model=ETH_CALL_MODEL}={}) {
-  if(!ethCallGasCap)return Math.min(rule.hardLegCeiling,rule.launchLegCap);
+  const maximum=Math.min(rule.hardLegCeiling,model.maxMeasuredLegs);
+  if(!ethCallGasCap)return Math.min(maximum,rule.launchLegCap);
   const budget=ethCallGasCap*(BPS-rule.gasMarginBps)/BPS;
-  const modelled=model.anchorLegs+Math.floor((budget-model.anchorGas-model.intrinsicGas)/model.gasPerLeg);
-  return Math.max(0,Math.min(rule.hardLegCeiling,floorStep(modelled,rule.legStep)));
+  let ceiling=0;
+  for(let legs=rule.legStep;legs<=maximum;legs+=rule.legStep)if(predictEthCallGas(legs,model)<=budget)ceiling=legs;
+  return ceiling;
 }
 
 /**
@@ -156,7 +171,7 @@ function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,ga
   const blocked=gasMissing.length?'hausse bloquée : aucune observation de gaz ('+gasMissing.join(' ; ')+')':null;
   if(maxLegs>ceiling) {
     maxLegs=ceiling;
-    reasons.push('jambes ramenées à '+ceiling+' : plafond de gaz ('+(ethCallGasCap?'eth_call '+ethCallGasCap+' − 30 %':'448 sans plafond eth_call confirmé')+')');
+    reasons.push('jambes ramenées à '+ceiling+' : plafond de gaz ('+(ethCallGasCap?'eth_call '+ethCallGasCap+' − 30 %, limité aux mesures':'plafond de lancement mesuré '+rule.launchLegCap)+')');
   } else if(!enough) {
     reasons.push('jambes inchangées : '+maskRounds+' tour(s) avec masques < '+rule.minMaskRounds+' (données insuffisantes)');
   } else {
@@ -167,7 +182,7 @@ function recommendMarket({current,maskRounds,legs,capHitRate,capUse,gasFreeze,ga
     else {
       const target=Math.min(ceiling,ceilStep(maxLegs*rule.legGrowth,rule.legStep));
       if(target>maxLegs){reasons.push('jambes '+maxLegs+' → '+target+' : p95 '+legs.p95+', '+round2(capHitRate*100)+' % de tours au plafond');maxLegs=target;}
-      else reasons.push('demande de jambes, mais déjà au plafond de gaz ('+ceiling+(ethCallGasCap?'':' ; fournir --eth-call-gas-cap après confirmation du plafond CRE/keeper')+')');
+      else reasons.push('demande de jambes, mais déjà au plafond de gaz mesuré ('+ceiling+' ; toute hausse nécessite de nouvelles mesures complètes et un plafond keeper confirmé)');
     }
   }
   if(!enough)reasons.push('maxBps inchangé : données insuffisantes');
@@ -497,7 +512,7 @@ function formatReport(report) {
   lines.push('Gaz du règlement (L2 par transaction), limite '+g.settlement.withMasks.limit+' :');
   for(const [label,s] of [['avec masques',g.settlement.withMasks],['sans masques',g.settlement.withoutMasks]])
     lines.push('  '+label+' : '+s.count+' tx, moyenne '+fmt(s.mean)+', p95 '+fmt(s.p95)+', max '+fmt(s.max)+(s.max===null?'':' ('+s.maxShareOfLimit+' % de la limite)'));
-  lines.push('eth_call checkUpkeep (modèle, non observable) : plafond eth_call '+fmt(g.ethCallModel.ethCallGasCap)+', plafond de jambes autorisé '+g.ethCallModel.legCeiling);
+  lines.push('eth_call checkUpkeep (enveloppe mesurée, non observable dans les reçus) : plafond eth_call '+fmt(g.ethCallModel.ethCallGasCap)+', plafond de jambes autorisé '+g.ethCallModel.legCeiling);
   if(g.missing.length)lines.push('Hausses BLOQUÉES : '+g.missing.join(' ; '));
   if(g.freeze.length)lines.push('GEL des hausses de jambes : '+g.freeze.join(' ; '));
   for(const m of report.markets) {

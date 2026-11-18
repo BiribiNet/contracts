@@ -1,0 +1,30 @@
+{
+  "completedOn": "2026-11-18",
+  "sharedLaunchLegCap": 352,
+  "gasModel": "measured step envelope, no extrapolation above validated cap",
+  "tests": {
+    "nodePassing": 66,
+    "upgradeAndStoragePassing": 25,
+    "fullChunkRegressionsPassing": 4,
+    "smokePassing": 38,
+    "failing": 0
+  },
+  "fork": {
+    "passed": true,
+    "sourceBlock": 524517798,
+    "sourceBlockHash": "0x739339c476e7b4ecfde3e1070c6dfac69110d1d992229c2700ed79c2dee3ca0e",
+    "marketOutcomes": 111,
+    "worstCheckUpkeepInnerGas": "1301351",
+    "mainnetImplementationsUnchanged": true
+  },
+  "mixedFullChunkInnerGas": {
+    "352_1lane60": 1383449,
+    "352_10lanes10": 1188501,
+    "384_1lane60": 1474821,
+    "448_1lane60": 1645745
+  },
+  "releaseLockSha256": "c71f8ec88df61e90ace90c29df6c794cfbc4c3e8d60423a32864a3e44d6d6ec7",
+  "latestReadOnlyPreflightBlock": 525384493,
+  "mainnetTransactionsSent": 0,
+  "productionKeeperRpcGasCapConfirmed": false
+}

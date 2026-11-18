@@ -1,5 +1,8 @@
 # Contrôle de l'upgrade des paris par masque
 
+> Correctif du 18/11 : le test mixte complet conduit à **352 jambes**, avec garde et modèle corrigés.
+> Voir [le correctif de release](release-fix-20261118/README.md). Les mesures à 384 ci-dessous restent historiques.
+
 Campagne commencée le 15 novembre 2026, complétée le 18 novembre. Contrats testés :
 `d2fb7981f6aeafea22c9683d8871badc3fa04c6e`, après les PR [61](https://github.com/BiribiNet/contracts/pull/61)
 et [62](https://github.com/BiribiNet/contracts/pull/62), déjà mergées.

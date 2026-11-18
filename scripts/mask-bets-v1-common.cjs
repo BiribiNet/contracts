@@ -22,12 +22,13 @@ const PHASES=['Unset','Open','Locked','Settling','Completed'];
 /** Upgrade window (spec §6.1): Open or Completed, never Settling; Locked (VRF in flight) is also refused. */
 const UPGRADE_PHASES=new Set(['Open','Completed']);
 /**
- * Recommended launch cap of mask legs per (round, market). At 448 legs the last chunk of a lane costs
- * ≈ 1.37–1.38M gas for one `UpkeepScheduler.checkUpkeep(lane)` eth_call (1 lane/60 payouts and 10 lanes/10
- * payouts, `test/VrfCallbackBudget.test.ts`), i.e. ≈ 1.40M with the intrinsic cost: under the ~1.5M target.
- * ≈ 2.7k gas per extra leg; 480 legs already reach 1.45–1.49M, 1 024 legs ≈ 2.93M.
+ * Launch cap per (round, market), validated on fork and on complete payout chunks.
+ * 448 legs exceed the 1.5M target on the live scheduler. An aligned classic/mask mix at 384 legs
+ * reaches 1,474,821 inner-call gas, leaving almost no room for eth_call intrinsic gas. At 352 legs
+ * the same full-chunk benchmark peaks at 1,383,449, below the 1.45M inner-call budget.
+ * See reports/mask-bets-v1/full-chunk-gas-profile.json and VrfCallbackBudget.test.ts.
  */
-const LAUNCH_MASK_LEG_CAP=448;
+const LAUNCH_MASK_LEG_CAP=352;
 const MAX_MASK_LEGS=65535;
 const MAX_BPS=10000;
 

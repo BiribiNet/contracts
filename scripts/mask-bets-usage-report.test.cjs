@@ -4,6 +4,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {AbiCoder,getAddress}=require('ethers');
 const R=require('./mask-bets-usage-report.cjs');
+const LAUNCH=R.RULE.launchLegCap;
 
 const ENGINE_ADDRESS=getAddress('0x'+'e1'.repeat(20));
 const BANKS=['0x'+'b1'.repeat(20),'0x'+'b2'.repeat(20),'0x'+'b3'.repeat(20)].map(a=>getAddress(a));
@@ -100,25 +101,45 @@ test('should return mean, nearest-rank p95 and max, and nulls when there is no s
   assert.deepEqual(R.summarize(values),{count:20,mean:10.5,p95:19,max:20});
 });
 
-test('should cap legs at 448 without a confirmed eth_call cap and never above 1 024',()=>{
-  assert.equal(R.legCeiling(),448);
-  // 30 % de marge : 0,7 × 2 M = 1,4 M < 1,405 M (448 jambes + intrinsèque) ⇒ 416.
-  assert.equal(R.legCeiling({ethCallGasCap:2_000_000}),416);
-  assert.equal(R.legCeiling({ethCallGasCap:50_000_000}),1024);
+test('should stay inside the complete measured gas profile, even with a large RPC allowance',()=>{
+  assert.equal(LAUNCH,352);
+  assert.equal(R.legCeiling(),LAUNCH);
+  assert.equal(R.legCeiling({ethCallGasCap:2_000_000}),320);
+  assert.equal(R.legCeiling({ethCallGasCap:1_000_000}),64);
+  assert.equal(R.legCeiling({ethCallGasCap:50_000_000}),LAUNCH);
   assert.equal(R.legCeiling({ethCallGasCap:10_000}),0);
-  assert(R.predictEthCallGas(448)<1_500_000&&R.predictEthCallGas(480)>R.predictEthCallGas(448));
+  assert.equal(R.predictEthCallGas(384),null);
+  assert.equal(R.predictEthCallGas(448),null);
+  assert.equal(R.predictEthCallGas(-1),null);
+  assert.equal(R.predictEthCallGas(1.5),null);
+});
+test('should round up between samples and preserve a monotone envelope',()=>{
+  assert.equal(R.predictEthCallGas(1),R.predictEthCallGas(32));
+  assert.equal(R.predictEthCallGas(33),R.predictEthCallGas(64));
+  let previous=0;
+  for(let legs=0;legs<=LAUNCH;legs++) {
+    const gas=R.predictEthCallGas(legs);
+    assert(gas>=previous);
+    previous=gas;
+  }
+  assert(R.predictEthCallGas(320)<=2_000_000*0.7);
+  assert(R.predictEthCallGas(LAUNCH)>2_000_000*0.7);
 });
 
 const demand={maskRounds:30,legs:{p95:400},capHitRate:0.2,capUse:{p95:0.2},gasFreeze:[]};
 test('should keep the launch cap when legs saturate but no eth_call cap is confirmed',()=>{
-  const r=R.recommendMarket({...demand,current:{maxLegsPerRound:448,maxLiabilityBps:1000}});
+  const r=R.recommendMarket({...demand,current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:1000}});
   assert.equal(r.changed,false);
   assert.match(r.reasons.join('\n'),/déjà au plafond de gaz/);
 });
+test('should reduce a historical unsafe cap even when demand data are insufficient',()=>{
+  const r=R.recommendMarket({...demand,maskRounds:0,current:{maxLegsPerRound:448,maxLiabilityBps:1000}});
+  assert.deepEqual([r.maxLegsPerRound,r.changed],[LAUNCH,true]);
+});
 test('should raise legs by one 1.5× step under the gas ceiling when demand is high',()=>{
-  const r=R.recommendMarket({...demand,current:{maxLegsPerRound:448,maxLiabilityBps:1000},ethCallGasCap:5_000_000});
-  assert.deepEqual([r.maxLegsPerRound,r.maxLiabilityBps,r.changed],[672,1000,true]);
-  assert.equal(R.recommendMarket({...demand,current:{maxLegsPerRound:896,maxLiabilityBps:1000},ethCallGasCap:50_000_000}).maxLegsPerRound,1024);
+  const r=R.recommendMarket({...demand,current:{maxLegsPerRound:128,maxLiabilityBps:1000},ethCallGasCap:5_000_000});
+  assert.deepEqual([r.maxLegsPerRound,r.maxLiabilityBps,r.changed],[192,1000,true]);
+  assert.equal(R.recommendMarket({...demand,current:{maxLegsPerRound:896,maxLiabilityBps:1000},ethCallGasCap:50_000_000}).maxLegsPerRound,LAUNCH);
 });
 test('should freeze leg raises when an observed gas margin is under 30 %',()=>{
   const r=R.recommendMarket({...demand,gasFreeze:['callback VRF 1900000 gaz > 70 %'],current:{maxLegsPerRound:256,maxLiabilityBps:1000}});
@@ -126,11 +147,11 @@ test('should freeze leg raises when an observed gas margin is under 30 %',()=>{
   assert.match(r.reasons.join('\n'),/gelées/);
 });
 test('should lower legs back under the gas ceiling even without demand',()=>{
-  const r=R.recommendMarket({...demand,legs:{p95:1},capHitRate:0,current:{maxLegsPerRound:448,maxLiabilityBps:1000},ethCallGasCap:2_000_000});
-  assert.deepEqual([r.maxLegsPerRound,r.changed],[416,true]);
+  const r=R.recommendMarket({...demand,legs:{p95:1},capHitRate:0,current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:1000},ethCallGasCap:2_000_000});
+  assert.deepEqual([r.maxLegsPerRound,r.changed],[320,true]);
 });
 test('should change nothing when data is insufficient or the market is disabled',()=>{
-  const few=R.recommendMarket({...demand,maskRounds:3,capUse:{p95:0.99},current:{maxLegsPerRound:448,maxLiabilityBps:1000}});
+  const few=R.recommendMarket({...demand,maskRounds:3,capUse:{p95:0.99},current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:1000}});
   assert.equal(few.changed,false);
   assert.match(few.reasons.join('\n'),/données insuffisantes/);
   const off=R.recommendMarket({...demand,current:{maxLegsPerRound:0,maxLiabilityBps:0}});
@@ -140,15 +161,16 @@ test('should change nothing when data is insufficient or the market is disabled'
 });
 test('should raise maxBps only when p95 liability use reaches 70 % of the cap, never above 2 500',()=>{
   const base={...demand,legs:{p95:1},capHitRate:0};
-  assert.equal(R.recommendMarket({...base,capUse:{p95:0.69},current:{maxLegsPerRound:448,maxLiabilityBps:1000}}).maxLiabilityBps,1000);
-  assert.equal(R.recommendMarket({...base,capUse:{p95:0.7},current:{maxLegsPerRound:448,maxLiabilityBps:1000}}).maxLiabilityBps,1500);
-  assert.equal(R.recommendMarket({...base,capUse:{p95:0.9},current:{maxLegsPerRound:448,maxLiabilityBps:2000}}).maxLiabilityBps,2500);
-  const top=R.recommendMarket({...base,capUse:{p95:0.9},current:{maxLegsPerRound:448,maxLiabilityBps:2500}});
+  assert.equal(R.recommendMarket({...base,capUse:{p95:0.69},current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:1000}}).maxLiabilityBps,1000);
+  assert.equal(R.recommendMarket({...base,capUse:{p95:0.7},current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:1000}}).maxLiabilityBps,1500);
+  assert.equal(R.recommendMarket({...base,capUse:{p95:0.9},current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:2000}}).maxLiabilityBps,2500);
+  const top=R.recommendMarket({...base,capUse:{p95:0.9},current:{maxLegsPerRound:LAUNCH,maxLiabilityBps:2500}});
   assert.equal(top.changed,false);
   assert.match(top.reasons.join('\n'),/décision du propriétaire/);
 });
-test('should print the activation command with --allow-above-launch-cap only above 448 legs',()=>{
-  assert.equal(R.activationCommand(2,{maxLegsPerRound:448,maxLiabilityBps:1500}),'node scripts/mask-bets-v1-activate.cjs --market 2:448:1500 --print-calldata');
+test('should print the activation command with --allow-above-launch-cap only above the validated launch cap',()=>{
+  assert.equal(R.activationCommand(2,{maxLegsPerRound:LAUNCH,maxLiabilityBps:1500}),`node scripts/mask-bets-v1-activate.cjs --market 2:${LAUNCH}:1500 --print-calldata`);
+  assert.match(R.activationCommand(2,{maxLegsPerRound:448,maxLiabilityBps:1000}),/--allow-above-launch-cap$/);
   assert.match(R.activationCommand(1,{maxLegsPerRound:672,maxLiabilityBps:1000}),/--market 1:672:1000 --print-calldata --allow-above-launch-cap$/);
 });
 
@@ -190,7 +212,7 @@ test('should parse the window options and reject conflicting ones',()=>{
 /** Week of traffic: market 1 saturates its 64-leg cap, market 2 its 100 bps cap, market 3 has classic bets only. */
 function trafficChain() {
   const chain=fakeChain({latest:1000,archiveFrom:600});
-  chain.setLimits(1,64,1000,5);chain.setLimits(2,448,100,5);chain.setLimits(3,448,1000,5);
+  chain.setLimits(1,64,1000,5);chain.setLimits(2,448,100,5);chain.setLimits(3,LAUNCH,1000,5);
   chain.totalAssets.set(1,20_000n*UNIT);chain.totalAssets.set(2,6_000n*UNIT);chain.totalAssets.set(3,1_000n*UNIT);
   for(let index=0;index<25;index++) {
     const roundId=100+index,block=100+index*30;
@@ -222,13 +244,13 @@ test('should report legs, cap hits, liability, gas and recommend new limits from
   assert.deepEqual([m1.recommendation.maxLegsPerRound,m1.recommendation.maxLiabilityBps,m1.recommendation.changed],[96,1000,true]);
   assert.equal(m2.liability.bpsOfFreeLiquidity.max,89.95);
   assert.equal(m2.liability.roundsNearCap,0);
-  assert.deepEqual([m2.recommendation.maxLegsPerRound,m2.recommendation.maxLiabilityBps],[448,250]);
+  assert.deepEqual([m2.recommendation.maxLegsPerRound,m2.recommendation.maxLiabilityBps],[LAUNCH,250]);
   assert.equal(m3.activity.roundsWithBets,25);
   assert.equal(m3.activity.roundsWithMasks,0);
   assert.equal(m3.recommendation.changed,false);
   assert.deepEqual(report.commands,[
     'node scripts/mask-bets-v1-activate.cjs --market 1:96:1000 --print-calldata',
-    'node scripts/mask-bets-v1-activate.cjs --market 2:448:250 --print-calldata']);
+    `node scripts/mask-bets-v1-activate.cjs --market 2:${LAUNCH}:250 --print-calldata`]);
   assert.equal(report.gas.vrfCallback.withMasks.count,25);
   assert.equal(report.gas.vrfCallback.withMasks.max,474_000-50_000);
   assert.equal(report.gas.vrfCallback.budgetCallbackGasWithMasks,1_054_426);
@@ -238,7 +260,7 @@ test('should report legs, cap hits, liability, gas and recommend new limits from
   assert.equal(m1.refusals.measurable,false);
   const text=R.formatReport(report);
   assert.match(text,/Marché 1 .* 64 jambes \/ 1000 bps/);
-  assert.match(text,/--market 2:448:250 --print-calldata/);
+  assert(text.includes(`--market 2:${LAUNCH}:250 --print-calldata`));
   assert.doesNotMatch(JSON.stringify(report,(_k,v)=>typeof v==='bigint'?String(v):v),/https?:\/\//);
 });
 
@@ -284,11 +306,11 @@ test('should report no data and recommend nothing when the engine does not serve
 
 test('should keep limits unchanged when masks are enabled but nobody played them',async()=>{
   const chain=fakeChain({latest:1000});
-  chain.setLimits(1,448,1000,5);
+  chain.setLimits(1,LAUNCH,1000,5);
   chain.bet(10,1,[straight()],100);
   const report=await R.buildReport({send:chain.send,d:DEPLOYMENT,budget:BUDGET,options:{fromBlock:1,toBlock:1000}});
   assert.equal(report.hasData,false);
-  assert.deepEqual(report.markets[0].current,{maxLegsPerRound:448,maxLiabilityBps:1000});
+  assert.deepEqual(report.markets[0].current,{maxLegsPerRound:LAUNCH,maxLiabilityBps:1000});
   assert.equal(report.markets[0].recommendation.changed,false);
   assert.match(report.markets[0].recommendation.reasons.join('\n'),/données insuffisantes/);
   assert.deepEqual(report.commands,[]);
@@ -302,9 +324,10 @@ test('should block every raise and say why when no gas observation covers the ma
   assert.match(report.gas.missing.join('\n'),/aucune observation de gaz du règlement/);
   const [m1,m2]=report.markets;
   assert.deepEqual([m1.recommendation.maxLegsPerRound,m1.recommendation.changed],[64,false]);
-  assert.deepEqual([m2.recommendation.maxLiabilityBps,m2.recommendation.changed],[100,false]);
+  assert.deepEqual([m2.recommendation.maxLiabilityBps,m2.recommendation.changed],[100,true]);
   assert.match(m1.recommendation.reasons.join('\n'),/hausse bloquée : aucune observation de gaz/);
-  assert.deepEqual(report.commands,[]);
+  assert.equal(m2.recommendation.maxLegsPerRound,LAUNCH);
+  assert.deepEqual(report.commands,[`node scripts/mask-bets-v1-activate.cjs --market 2:${LAUNCH}:100 --print-calldata`]);
   assert.match(R.formatReport(report),/Hausses BLOQUÉES/);
 });
 

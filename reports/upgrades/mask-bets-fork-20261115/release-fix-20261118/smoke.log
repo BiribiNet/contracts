@@ -1,0 +1,60 @@
+
+
+  Linked engine storage compatibility
+    ✔ preserves every existing mapped type and the v1 ERC-7201 Layout prefix (1935ms)
+    ✔ preserves every existing mapped type and the v2 ERC-7201 Layout prefix (778ms)
+
+  PayoutMathLib
+    ✔ caps payout to pool size when needed (723ms)
+    ✔ computes basis-point percentages
+
+  Zero-amount bet leg rejection (C-5)
+    ✔ accepts a multi-leg bet where every leg carries a positive stake (517ms)
+    ✔ rejects a bet whose individual leg has a zero stake even when the aggregate meets minBet (417ms)
+    ✔ rejects the 37-number dust jackpot-ticket payload (432ms)
+
+  E2E upkeep flow
+    ✔ settles zero splits correctly for outcome 0 and rejects 0/4 at placement (3341ms)
+    ✔ settles zero splits correctly for outcome 1 and rejects 0/4 at placement (1690ms)
+    ✔ settles zero splits correctly for outcome 2 and rejects 0/4 at placement (1688ms)
+    ✔ settles zero splits correctly for outcome 3 and rejects 0/4 at placement (1666ms)
+    ✔ settles zero splits correctly for outcome 4 and rejects 0/4 at placement (1621ms)
+    ✔ runs full rounds end-to-end and keeps upkeep surface consistent (17819ms)
+
+  Upkeep forwarder gate
+    ✔ refuses to unset the forwarder authority (H-7) (521ms)
+    ✔ rejects performUpkeep from non-forwarder when forwarder authority is set (660ms)
+
+  retryVrf
+    ✔ reverts before VRF has been requested (266ms)
+    ✔ reverts when called before the 24 hour delay (544ms)
+    ✔ rejects non-admin callers even after the delay (562ms)
+    ✔ lets admin request a new VRF after 24 hours and ignores the stale callback (777ms)
+    ✔ enforces the delay again after a retry (597ms)
+    ✔ reverts after VRF has already been fulfilled (707ms)
+    ✔ allows retry on a pre-upgrade round with no vrfRequestedAt once lockAt + delay elapsed (871ms)
+    ✔ allows retry immediately when both timestamps are unset (pre-upgrade stuck round) (904ms)
+
+  SideBet deployment compatibility gate
+    ✔ accepts the tested candidate within the deployed code size limit
+    ✔ rejects a candidate missing the deployed settlement selector
+    ✔ rejects an oversized implementation even if local Hardhat allows it
+    ✔ rejects the ambiguous preview format that caused the Sepolia failure
+
+  Exact side-bet economics and rounding policy
+    ✔ matches the cross-repository probability/pricing fingerprint
+    ✔ matches independent closed forms for the old catalogue
+    ✔ preserves old rules and chooses the largest multiplier that never undercuts 5% (67ms)
+    ✔ independently matches all X100 counts
+    ✔ bounds token rounding for all stakes above the 100000 policy floor (75ms)
+    ✔ bounds token rounding for all stakes above the 1000000 policy floor (43ms)
+    ✔ rejects odds that cannot meet the tolerance and malformed rules
+    ✔ retires only identical historical prices in the same market and is rerunnable
+
+  Window challenge pricing
+    ✔ prices all eight offers exactly and leaves stake limits disabled (59ms)
+    ✔ never raises cheap odds to the existing 5x band
+    ✔ matches closed form probabilities and rejects malformed sum bounds
+
+
+  38 passing (39s)

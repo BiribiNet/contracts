@@ -1,0 +1,14 @@
+
+
+  checkUpkeep eth_call cost at the recommended mask leg cap
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":352,"classicCount":128,"checkUpkeepGas":"1383449"}
+    ✔ stays under 1450000 gas with 352 masks, 1 lane(s), 60 payouts per call (33619ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":352,"classicCount":148,"checkUpkeepGas":"1188501"}
+    ✔ stays under 1450000 gas with 352 masks, 10 lane(s), 10 payouts per call (28615ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":384,"classicCount":156,"checkUpkeepGas":"1474821"}
+    ✔ exposes the historical cap above 1450000 gas with 384 masks, 1 lane(s), 60 payouts per call (34149ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":448,"classicCount":152,"checkUpkeepGas":"1645745"}
+    ✔ exposes the historical cap above 1450000 gas with 448 masks, 1 lane(s), 60 payouts per call (34487ms)
+
+
+  4 passing (2m)

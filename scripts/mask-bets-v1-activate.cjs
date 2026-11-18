@@ -3,19 +3,18 @@
 // Calls RouletteEngine.setMaskBetLimits(marketId, maxLegsPerRound, maxLiabilityBps) for the markets given.
 // Every value is explicit: there is no default leg cap and no default bps.
 //
-//   node scripts/mask-bets-v1-activate.cjs --market 1:448:1000 --market 2:448:1000    # dry run (default)
-//   node scripts/mask-bets-v1-activate.cjs --market 1:448:1000 --print-calldata        # to/value/data for a multisig
+//   node scripts/mask-bets-v1-activate.cjs --market 1:352:1000 --market 2:352:1000    # dry run (default)
+//   node scripts/mask-bets-v1-activate.cjs --market 1:352:1000 --print-calldata        # to/value/data for a multisig
 //   MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=… \
-//     node scripts/mask-bets-v1-activate.cjs --market 1:448:1000 --execute
+//     node scripts/mask-bets-v1-activate.cjs --market 1:352:1000 --execute
 //   node scripts/mask-bets-v1-activate.cjs --market 2:0:0 --execute …                  # emergency disable
 //
 // --market <marketId>:<maxLegsPerRound>:<maxLiabilityBps>
 //   maxLegsPerRound   0..65535; 0 disables masks on that market (masks already placed still settle).
 //   maxLiabilityBps   0..10000, cap on the round's summed mask payouts in bps of free liquidity (D18: 1000).
-// Launch leg cap: 448. The last payout chunk of a lane walks every mask leg (≈ 2.7k gas each): at 448 legs one
-// UpkeepScheduler.checkUpkeep(lane) eth_call costs ≈ 1.37–1.38M gas (≈ 1.40M with intrinsic), under ~1.5M;
-// 480 legs ≈ 1.45–1.49M, 1 024 legs (D18) ≈ 2.93M. Above 448 the script refuses unless
-// --allow-above-launch-cap is given, after confirming the CRE/keeper eth_call gas cap.
+// Launch leg cap: 352. The real scheduler exceeds the 1.5M inner-call target at 448 legs when a
+// complete payout chunk is measured. Above 352, --allow-above-launch-cap requires new full-chunk
+// measurements and confirmation of the production keeper RPC gas allowance.
 // --expected-engine-implementation <address>: the implementation from the upgrade journal (recommended).
 //
 // RPC: ARBITRUM_RPC_URL, else the public https://arb1.arbitrum.io/rpc.
@@ -46,7 +45,7 @@ function validateSettings(settings,{allowAboveLaunchCap=false}={}) {
   for(const s of settings) {
     if(s.maxLegsPerRound>C.LAUNCH_MASK_LEG_CAP)assert(allowAboveLaunchCap,
       'Market '+s.marketId+': '+s.maxLegsPerRound+' legs exceeds the launch cap '+C.LAUNCH_MASK_LEG_CAP+
-      ' (checkUpkeep eth_call > ~1.5M gas). Pass --allow-above-launch-cap only after confirming the CRE/keeper eth_call gas cap');
+      ' (higher limits need new full-chunk gas measurements). Pass --allow-above-launch-cap only after validating those measurements and the keeper RPC gas cap');
     if(s.maxLegsPerRound>0)assert(s.maxLiabilityBps>0,'Market '+s.marketId+': enabling masks with maxLiabilityBps 0 would reject every mask');
   }
   return settings;

@@ -1,7 +1,8 @@
 import { network, viem } from "hardhat";
 import { time } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import { mkdirSync, writeFileSync } from "fs";
+import { mkdirSync, readFileSync, writeFileSync } from "fs";
+import { createHash } from "node:crypto";
 import { join } from "path";
 import { encodeAbiParameters, encodeFunctionData, parseUnits, zeroAddress } from "viem";
 import { deployProtocolStack } from "./helpers/deployProtocolStack";
@@ -22,8 +23,8 @@ function saveMeasurement(fileName: string, payload: string) {
 }
 
 /** Recommended launch value of `maxMaskLegsPerMarketRound` (docs/mask-bets-v1-implementation.md, activation script). */
-const LAUNCH_MASK_LEG_CAP = 448;
-/** Budget of one `checkUpkeep` eth_call on the last chunk of a lane (inner gas; ~21–25k intrinsic come on top). */
+const { LAUNCH_MASK_LEG_CAP } = require("../scripts/mask-bets-v1-common.cjs");
+/** Budget of one `checkUpkeep` eth_call on every full chunk of a lane (inner gas; ~21–25k intrinsic come on top). */
 const PREVIEW_ETH_CALL_TARGET = 1_450_000n;
 
 describe("VRF callback budget at the production ten-lane setting", function () {
@@ -97,7 +98,7 @@ describe("VRF callback budget with mask bets at the launch leg cap", function ()
     after(function () {
         if (Object.keys(results).length === 0) return;
         saveMeasurement("mask-vrf-callback-budget.json", JSON.stringify({
-            scope: "Local exact engine callback from impersonated configured coordinator (same method as deployments/vrf-callback-budget-2026-10-15.json); preview cost = gas of one previewPayoutBundle eth_call on the last chunk of a lane, measured by StaticCallGasProbe",
+            scope: "Local exact engine callback from impersonated configured coordinator (same method as deployments/vrf-callback-budget-2026-10-15.json); preview cost = gas of one previewPayoutBundle eth_call on every full chunk of a lane, measured by StaticCallGasProbe",
             gasLimit: 2_500_000, laneCount: 10, marketCount: 3, straightLegsPerMarket: 100, maskLegsPerMarket: MASK_LEGS_PER_MARKET,
             ...results,
         }, toJson, 2) + "\n");
@@ -207,12 +208,20 @@ describe("checkUpkeep eth_call cost at the recommended mask leg cap", function (
     const results: Record<string, string> = {};
     after(function () {
         if (Object.keys(results).length === 0) return;
-        saveMeasurement("mask-preview-launch-cap.json", JSON.stringify({ launchMaskLegCap: LAUNCH_MASK_LEG_CAP, ...results }, null, 2) + "\n");
+        saveMeasurement("mask-preview-launch-cap.json", JSON.stringify({
+            launchMaskLegCap: LAUNCH_MASK_LEG_CAP,
+            releaseLockSha256: createHash("sha256").update(readFileSync(join(__dirname, "../reports/mask-bets-v1/mainnet-release-lock.json"))).digest("hex"),
+            measurementScope: "Every full payout cursor plus last winner; classic prefix aligned to fill the last chunk; edge lanes 0 and laneCount-1",
+            ...results,
+        }, null, 2) + "\n");
     });
 
     // [payout lanes, maxPayoutsPerCall]: Arbitrum One automation today (1 lane, 60) and the engine default (10 lanes, 10).
-    for (const [laneCount, maxPayoutsPerCall] of [[1, 60], [10, 10]] as const) {
-        it(`stays under ${PREVIEW_ETH_CALL_TARGET} gas with ${LAUNCH_MASK_LEG_CAP} masks, ${laneCount} lane(s), ${maxPayoutsPerCall} payouts per call`, async function () {
+    const curve = process.env.MASK_GAS_CURVE === "1";
+    const caps: number[] = curve ? Array.from({ length: LAUNCH_MASK_LEG_CAP / 32 + 1 }, (_, i) => i * 32) : [LAUNCH_MASK_LEG_CAP, 384, 448];
+    for (const legCap of caps) for (const [laneCount, maxPayoutsPerCall] of [[1, 60], [10, 10]] as const) {
+        if (!curve && legCap > LAUNCH_MASK_LEG_CAP && laneCount !== 1) continue;
+        it(`${legCap <= LAUNCH_MASK_LEG_CAP ? "stays under" : "exposes the historical cap above"} ${PREVIEW_ETH_CALL_TARGET} gas with ${legCap} masks, ${laneCount} lane(s), ${maxPayoutsPerCall} payouts per call`, async function () {
             const s = await deployProtocolStack({ roundDuration: 3600, maxPayoutsPerCall });
             await s.engine.write.setPayoutLaneCount([laneCount]);
             const vaultImpl = await viem.deployContract("BankVault4626");
@@ -225,11 +234,14 @@ describe("checkUpkeep eth_call cost at the recommended mask leg cap", function (
             await asset.write.mint([s.admin, parseUnits("1000000", 6)]);
             await asset.write.approve([bank.address, parseUnits("1000000", 6)]);
             await bank.write.deposit([parseUnits("500000", 6), s.admin]);
-            await s.engine.write.setMaskBetLimits([1, LAUNCH_MASK_LEG_CAP, 10_000]);
-            const straights = Array.from({ length: 100 }, () => ({ betType: 1n, number: 7n, amount }));
-            await bank.write.placeBet([100n * amount, encodeMultiBet(straights), zeroAddress], { gas: 25_000_000n });
-            for (let done = 0; done < LAUNCH_MASK_LEG_CAP;) {
-                const count = Math.min(64, LAUNCH_MASK_LEG_CAP - done);
+            await s.engine.write.setMaskBetLimits([1, legCap, 10_000]);
+            // Keep a classic prefix and align the final mask with a full payout chunk in every lane.
+            const chunkWidth = laneCount * maxPayoutsPerCall;
+            const classicCount = 100 + (chunkWidth - (100 + legCap) % chunkWidth) % chunkWidth;
+            const straights = Array.from({ length: classicCount }, () => ({ betType: 1n, number: 7n, amount }));
+            await bank.write.placeBet([BigInt(classicCount) * amount, encodeMultiBet(straights), zeroAddress], { gas: 25_000_000n });
+            for (let done = 0; done < legCap;) {
+                const count = Math.min(64, legCap - done);
                 // Every mask covers the winning number 7, so the whole array is winners: the worst case.
                 const legs = Array.from({ length: count }, (_, k) => {
                     const index = (done + k) % 36;
@@ -252,7 +264,8 @@ describe("checkUpkeep eth_call cost at the recommended mask leg cap", function (
             } finally {
                 await network.provider.send("hardhat_stopImpersonatingAccount", [coordinator]);
             }
-            // Jump each lane's cursor to its last winner (a mask at the end of the array) through the harness.
+            // Inspect every full payout chunk and the final single winner. Align the classic prefix so
+            // the last mask is paid in a FULL chunk, which the old last-winner-only test missed.
             const harnessImpl = await viem.deployContract(
                 "RouletteEngineHarness",
                 [s.vrf.address, `0x${"11".repeat(32)}`, `0x${"11".repeat(32)}`, `0x${"11".repeat(32)}`, 1, zeroAddress],
@@ -264,19 +277,27 @@ describe("checkUpkeep eth_call cost at the recommended mask leg cap", function (
             let worst = 0n;
             for (const lane of laneCount === 1 ? [0] : [0, laneCount - 1]) {
                 const shardTotal = await harness.read.harnessWinningCountByShard([1n, 1, lane]);
-                await harness.write.harnessSetPayoutCursor([1n, 1, lane, shardTotal - 1n]);
-                const checkData = encodeAbiParameters([{ type: "uint256" }], [BigInt(lane)]);
-                const [needed, performData] = await s.scheduler.read.checkUpkeep([checkData]);
-                expect(needed).to.equal(true);
-                expect(performData.length > 2).to.equal(true);
-                const gas = await probe.read.measure([s.scheduler.address, encodeFunctionData({
-                    abi: s.scheduler.abi, functionName: "checkUpkeep", args: [checkData],
-                })]);
-                if (gas > worst) worst = gas;
+                const cursors = new Set<bigint>([shardTotal - 1n]);
+                for (let cursor = 0n; cursor < shardTotal; cursor += BigInt(maxPayoutsPerCall)) cursors.add(cursor);
+                for (const cursor of cursors) {
+                    await harness.write.harnessSetPayoutCursor([1n, 1, lane, cursor]);
+                    const checkData = encodeAbiParameters([{ type: "uint256" }], [BigInt(lane)]);
+                    const [needed, performData] = await s.scheduler.read.checkUpkeep([checkData]);
+                    expect(needed).to.equal(true);
+                    expect(performData.length > 2).to.equal(true);
+                    const gas = await probe.read.measure([s.scheduler.address, encodeFunctionData({
+                        abi: s.scheduler.abi, functionName: "checkUpkeep", args: [checkData],
+                    })]);
+                    if (gas > worst) worst = gas;
+                }
             }
-            results[`checkUpkeepGas_${laneCount}lanes_${maxPayoutsPerCall}payouts`] = worst.toString();
-            console.log("MASK_PREVIEW_LAUNCH_CAP", JSON.stringify({ laneCount, maxPayoutsPerCall, legs: LAUNCH_MASK_LEG_CAP, checkUpkeepGas: worst.toString() }));
-            expect(worst < PREVIEW_ETH_CALL_TARGET).to.equal(true);
+            results[`checkUpkeepGas_${legCap}legs_${laneCount}lanes_${maxPayoutsPerCall}payouts`] = worst.toString();
+            console.log("MASK_PREVIEW_LAUNCH_CAP", JSON.stringify({ laneCount, maxPayoutsPerCall, legs: legCap, classicCount, checkUpkeepGas: worst.toString() }));
+            expect(worst < PREVIEW_ETH_CALL_TARGET).to.equal(legCap <= LAUNCH_MASK_LEG_CAP);
+            if (!curve && legCap <= LAUNCH_MASK_LEG_CAP) {
+                const model = require("../scripts/mask-bets-usage-report.cjs");
+                expect(Number(worst) + model.ETH_CALL_MODEL.intrinsicGas).to.be.lte(model.predictEthCallGas(legCap));
+            }
         });
     }
 });

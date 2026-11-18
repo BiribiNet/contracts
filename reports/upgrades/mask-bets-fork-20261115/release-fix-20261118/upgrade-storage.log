@@ -1,0 +1,44 @@
+
+
+  Mask bets v1 — mainnet upgrade script (local Hardhat network only)
+    ✔ dry run: passes the preflight, plans 4 deployments + engine then beacon upgrade, sends nothing (3973ms)
+confirmed: Deploy RouletteMaskBetLib (0x89ecf074b1e0205341d1b7e45bf5d5234f9b843c58136a6d3246d3144c4c5a10)
+confirmed: Deploy RouletteEngine implementation (0xed7f9afd3fe4d6dba183537122819f25eccf83960c024d5803ece4d8ff18f406)
+confirmed: Deploy BankVault4626 implementation (0x8e01861d98aad768e26f295fc3d5a4e515754a511760b3590001bf2e9d27a55f)
+confirmed: Upgrade RouletteEngine proxy (UUPS, masks disabled) (0xd174b156b25ad5456c85d02fbc246f32f0b79df15bead016f752a93e28940965)
+confirmed: Upgrade BankVault4626 beacon (0xadf6b64a0ed2f56c1597bba00e02647d462f319f35506e902472787a80384ff1)
+confirmed: market 1 → 352 legs, 1000 bps (0x250d808ae2e0e14fe6c7f8de4328ef8a1ba232eacf7ffed60101d520805b6e78)
+confirmed: market 1 → 0 legs, 0 bps (0x5e658a8ce020a2571389bc011da5bc554c357659351e1702cba15419a56a18fb)
+    ✔ executes the plan: engine first, then beacon; post-checks; masks disabled until activation (4778ms)
+    ✔ refuses while the round is Settling, with the VRF pending or fulfilled (2299ms)
+    ✔ refuses while side bets are enabled (704ms)
+    ✔ refuses when the live beacon implementation is not the one in the manifest (785ms)
+    ✔ refuses an unexpected library redeploy set, a wrong signer, a non-admin owner and a fork-less mainnet mode (761ms)
+    ✔ activation refuses implicit values, values above the launch cap and a not-yet-upgraded engine (629ms)
+
+  Linked engine storage compatibility
+    ✔ preserves every existing mapped type and the v1 ERC-7201 Layout prefix (1258ms)
+    ✔ preserves every existing mapped type and the v2 ERC-7201 Layout prefix (1368ms)
+
+  Mask bets v1 — storage layouts (engine append-only, vault unchanged)
+    ✔ engine: ERC-7201 Layout keeps all 45 fields and appends exactly the five mask fields (1729ms)
+    ✔ vault: 14 fields with identical slots/offsets/types vs master and vs the deployed mainnet layout (1505ms)
+
+  Mask bets v1 — EIP-170 / EIP-3860 sizes without any size bypass
+    ✔ RouletteEngine fits under 24 576 / 49 152 bytes
+    ✔ BankVault4626 fits under 24 576 / 49 152 bytes
+    ✔ RouletteMaskBetLib fits under 24 576 / 49 152 bytes
+    ✔ RoulettePayoutSweepLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteLiabilityMathLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteUpkeepScanLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteJackpotCollectLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteExposureLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteBetCodecLib fits under 24 576 / 49 152 bytes
+    ✔ JackpotBatchLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteBetLib fits under 24 576 / 49 152 bytes
+    ✔ RoulettePayoutMulLib fits under 24 576 / 49 152 bytes
+    ✔ RouletteLib fits under 24 576 / 49 152 bytes
+    ✔ MarketFeeLib fits under 24 576 / 49 152 bytes
+
+
+  25 passing (20s)

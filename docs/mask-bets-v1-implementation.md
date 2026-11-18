@@ -3,7 +3,7 @@
 > Spécification : [`spec-mask-bets-v1.md`](spec-mask-bets-v1.md) (décisions D1–D21). Ce document ne décrit que
 > ce qui a été implémenté, les écarts et les mesures. **Aucun upgrade mainnet** n'a été effectué par cette campagne.
 > Une répétition sur fork a été ajoutée à la demande du propriétaire après la décision initiale du 06/11/2026.
-> **Mise à jour du contrôle fork : recommander 384 jambes, pas les 448 historiques**, voir [Tests](#tests).
+> **Correctif du 18/11 : plafond de lancement à 352 jambes après mesure des chunks complets**, voir [Tests](#tests).
 > L'upgrade livre les masques désactivés ; l'activation reste explicite par marché.
 
 ## Ce qui est livré
@@ -39,7 +39,7 @@ Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` 
   - **Arrondi** : à 35 numéros, la perte d'arrondi est inférieure à 35 unités de base par jambe, en défaveur du
     joueur ; retour espéré `35/37 × 36/35 = 36/37`.
   - **Gaz** : le callback VRF reste O(1) en nombre de masques et l'aperçu de paiement coûte une lecture par jambe,
-    indépendamment de `|S|` ; `reports/mask-bets-v1/vrf-callback-budget.json` et le plafond de lancement de 448
+    indépendamment de `|S|` ; `reports/mask-bets-v1/vrf-callback-budget.json` et le plafond de lancement corrigé de 352
     jambes sont donc inchangés. Seul l'enregistrement d'une jambe coûte un peu plus (popcount sur 35 bits) :
     282 796 gaz pour un masque de 35 numéros contre 278 070 à 24 (tableau ci-dessous).
 
@@ -63,7 +63,7 @@ Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` 
    (spec : ≈ 2,2 M). Le coût est un `SLOAD` froid par jambe (≈ 2,7 k gaz) : aucune optimisation simple de
    `_sweepMasks` ne le supprime (retirer le contrôle de bornes en assembleur ne gagnerait que ≈ 5–7 %, sur un
    chemin de paiement non audité) ; changer le stockage des masques pour les tasser n'est pas une modification
-   simple. **Plafond de lancement retenu : 448 jambes** par (round, marché), voir ci-dessous. Plafond de gaz des
+   simple. **Plafond de lancement corrigé : 352 jambes** par (round, marché), voir ci-dessous. Plafond de gaz des
    `eth_call` CRE toujours à confirmer avant de relever la valeur.
 7. **Ordre de traitement** : dans une transaction mixte, les jambes classiques sont enregistrées dans la boucle
    du moteur, puis toutes les jambes masque en un seul appel de bibliothèque.
@@ -90,7 +90,7 @@ Le moteur est livré **masques désactivés** : `maxMaskLegsPerMarketRound = 0` 
 Pente mesurée : ≈ 2,7 k gaz par jambe masque supplémentaire (1 lane). Les valeurs `checkUpkeep` sont le gaz interne
 mesuré par `StaticCallGasProbe` ; l'`eth_call` ajoute ≈ 21–25 k d'intrinsèque. Ces mesures historiques de la
 dernière ligne avaient conduit à retenir 448. Elles ne couvrent pas le pire chunk complet de 60 paiements :
-la répétition sur fork ci-dessous invalide cette conclusion et valide 384 dans les scénarios mesurés.
+la répétition sur fork ci-dessous invalide cette conclusion et valide initialement 384 dans les scénarios mesurés ; les tests mixtes renforcés conduisent ensuite à 352.
 
 Tailles : `reports/mask-bets-v1/bytecode-sizes.json` (moteur 22 379 → 23 130, vault 15 435 (master ; 16 072 pour `0x6e84` en place) → 15 038,
 `RouletteMaskBetLib` 3 008, `RoulettePayoutSweepLib` 7 599 → 8 318, `RouletteLiabilityMathLib` 2 317 → 2 674).
@@ -122,7 +122,7 @@ Arbitrum One ; toutes les transactions utilisent le réseau Hardhat local, chain
 
 ```sh
 corepack yarn hardhat compile
-MASK_FORK_BLOCK=524517798 MASK_FORK_LEG_CAP=384 corepack yarn hardhat run --no-compile \
+MASK_FORK_BLOCK=524517798 MASK_FORK_LEG_CAP=352 corepack yarn hardhat run --no-compile \
   --config hardhat.fork-only.config.ts scripts/rehearseMaskBetsMainnetFork.ts
 ```
 
@@ -139,7 +139,7 @@ aux paris classiques), puis le règlement du plafond choisi par marché par le s
 déployé, le rejet de la jambe suivante et le blocage du drain pendant les mises verrouillées.
 Pour financer ces scénarios, seuls les soldes des joueurs/LP dans les contrats ERC20 externes sont
 modifiés sur le fork ; aucun stockage ni code du protocole n'est réécrit pour fabriquer un résultat.
-Les blocs de placement du scénario à 448 jambes avancent d'une seconde chacun, pour que la latence
+Les blocs de placement du scénario de charge avancent d'une seconde chacun, pour que la latence
 des lectures RPC n'épuise pas la fenêtre réelle de 60 secondes ; `ROUND_DURATION` reste inchangé.
 `MASK_FORK_OUTCOMES=0,7,36` permet un diagnostic ciblé ; le contrôle complet utilise par défaut les 37 numéros.
 
@@ -149,12 +149,33 @@ ne respecte pas la cible de 1,5 M gaz sur tous les chunks.** Sur le scheduler ma
 **1 359 415** à 384 jambes, avant l'intrinsèque de l'`eth_call`. Les mesures historiques ci-dessus
 ne regardaient que la toute dernière ligne d'une lane et sous-estimaient ce cas intermédiaire.
 
-Pour cette release, retenir **384 jambes**, avec activation explicite marché par marché après l'upgrade.
-Le script d'activation et le modèle du bilan hebdomadaire conservent leur borne historique de 448 :
-ils doivent être corrigés ou leurs hypothèses de gaz validées avant de suivre une recommandation supérieure
-à 384. Donner explicitement `384` au script d'activation ; l'upgrade seul livre toujours les masques désactivés.
-Le test fork accepte `MASK_FORK_LEG_CAP` pour reproduire les deux mesures, conserve les échecs de budget
-dans son rapport et sort avec un code non nul si la cible de gaz est dépassée.
+Le test renforcé aligne un préfixe de paris classiques pour que le dernier masque tombe dans un
+**chunk complet**, et vérifie tous les curseurs de paiement. À 384 jambes, il mesure **1 474 821 gaz
+internes**, donc presque 1,5 M avec l'intrinsèque et sans la marge prévue. À **352 jambes**, le pire
+chunk mesuré coûte **1 383 449 gaz internes** (1 lane / 60 paiements), contre 1 188 501 (10 lanes / 10).
+La nouvelle répétition complète sur fork à 352 passe aussi, à 1 301 351 gaz internes au pire.
+
+Le plafond de lancement du script d'activation est désormais **352**. Les demandes supérieures sont
+refusées sans dérogation explicite, après de nouvelles mesures complètes et confirmation du budget
+RPC keeper. L'upgrade seul livre toujours les masques désactivés.
+
+Le modèle du bilan utilise `reports/mask-bets-v1/full-chunk-gas-profile.json` : mesures tous les 32
+masques, de 0 à 352, pour les deux configurations de lanes. Il arrondit au point supérieur, conserve
+une enveloppe monotone, ajoute 25 k de marge interne et 25 k d'intrinsèque, et **n'extrapole jamais**
+au-delà du domaine validé. Même un grand `--eth-call-gas-cap` ne peut donc plus recommander 448.
+Le profil est lié au SHA-256 du verrou de release ; un profil incomplet ou périmé bloque le bilan.
+
+Pour renouveler le profil :
+
+```sh
+MASK_GAS_CURVE=1 VRF_BUDGET_REPORT_DIR=reports/local/mask-gas-curve corepack yarn hardhat test \
+  test/VrfCallbackBudget.test.ts --grep 'checkUpkeep eth_call cost'
+cp reports/local/mask-gas-curve/mask-preview-launch-cap.json reports/mask-bets-v1/full-chunk-gas-profile.json
+```
+
+Le test fork accepte `MASK_FORK_LEG_CAP` pour comparer les plafonds ; sa valeur par défaut suit
+`LAUNCH_MASK_LEG_CAP`. Les tests locaux conservent les contre-exemples 384 et 448 et exigent qu'ils
+dépassent la marge interne de 1,45 M. Les résultats précédents restent archivés.
 
 Le relais local utilise le port 18551 pour réutiliser le cache RPC de Hardhat ; `MASK_FORK_GATEWAY_PORT=0`
 choisit un port libre. Le hash du bloc du cache est confronté à celui du RPC source. `ARBITRUM_FORK_URL`
@@ -196,11 +217,11 @@ MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=<clé> \
   node scripts/mask-bets-v1-mainnet.cjs --execute
 
 # 3. Activation par marché, valeurs explicites (dry run, calldata multisig, exécution)
-node scripts/mask-bets-v1-activate.cjs --market 1:384:1000 --market 2:384:1000 --market 3:384:1000 \
+node scripts/mask-bets-v1-activate.cjs --market 1:352:1000 --market 2:352:1000 --market 3:352:1000 \
   --expected-engine-implementation <adresse du journal>
-node scripts/mask-bets-v1-activate.cjs --market 1:384:1000 --print-calldata
+node scripts/mask-bets-v1-activate.cjs --market 1:352:1000 --print-calldata
 MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=<clé> \
-  node scripts/mask-bets-v1-activate.cjs --market 1:384:1000 --execute
+  node scripts/mask-bets-v1-activate.cjs --market 1:352:1000 --execute
 # Désactivation d'urgence d'un marché : --market <id>:0:0 --execute
 ```
 
@@ -312,9 +333,9 @@ n'aura `RouletteMaskLeg` sur mainnet qu'après son propre redéploiement. Il ne 
   n'envoie normalement pas une transaction dont `estimateGas` échoue. Le bilan donne deux indicateurs indirects :
   les tours au plafond de jambes et les tours à 95 % ou plus du plafond de passif. Les tentatives échouées côté
   frontend remontent par `/api/logs/bets/attempt` (Telegram).
-- Le coût de l'`eth_call` `checkUpkeep(lane)` n'apparaît dans aucun reçu. Il est **modélisé** à partir des mesures
-  ci-dessus : 1 380 331 gaz à 448 jambes, plus 3 316 gaz par jambe (10 lanes, la configuration la plus chère),
-  plus environ 25 000 gaz d'intrinsèque.
+- Le coût de l'`eth_call` `checkUpkeep(lane)` n'apparaît dans aucun reçu. Le modèle utilise désormais le profil
+  de chunks complets ci-dessus, arrondi au point supérieur avec 25 k de marge interne et 25 k d'intrinsèque.
+  L'ancienne extrapolation depuis la dernière ligne à 448 jambes a été supprimée.
 
 ### Lire la recommandation
 
@@ -328,8 +349,9 @@ La règle (`RULE` dans le script) est la suivante :
    absente** (aucun reçu de callback ou de règlement sur les tours avec masques, par exemple avec `--max-receipts`
    trop bas) ne vaut jamais marge suffisante : toute hausse, de jambes comme de `maxBps`, est bloquée
    (`gas.missing`, « Hausses BLOQUÉES »). **Sans ce
-   plafond confirmé, jamais plus de 448 jambes** (plafond de lancement). Les jambes sont des multiples de 32.
-2. **Jamais plus de 1 024 jambes** sans nouvelle mesure, car c'est le point mesuré de la D18.
+   plafond confirmé, jamais plus de 352 jambes** (plafond de lancement). Les jambes sont des multiples de 32.
+2. **Jamais plus de 352 jambes dans une recommandation automatique**, même si le budget RPC est grand :
+   il faut un nouveau profil de chunks complets pour étendre le domaine validé.
 3. **Hausse des jambes** seulement si le p95 atteint 70 % du plafond, ou si au moins 5 % des tours avec masques
    l'atteignent. Le palier est de × 1,5 au plus, sous les plafonds 1 et 2. Un plafond au-dessus de la limite de
    gaz est ramené à cette limite ; c'est la seule baisse automatique.
@@ -340,8 +362,8 @@ La règle (`RULE` dans le script) est la suivante :
    aucune recommandation.
 
 Le script imprime une commande par marché à changer, par exemple
-`node scripts/mask-bets-v1-activate.cjs --market 1:672:1000 --print-calldata --allow-above-launch-cap`. Le flag
-`--allow-above-launch-cap` n'apparaît qu'au-delà de 448 jambes. Si aucun réglage ne change, il imprime « Aucune
+`node scripts/mask-bets-v1-activate.cjs --market 1:320:1000 --print-calldata`. Une dérogation manuelle au-delà
+  de 352 requiert `--allow-above-launch-cap` et de nouvelles mesures ; le bilan ne propose pas cette dérogation. Si aucun réglage ne change, il imprime « Aucune
 commande : réglages inchangés ». Il ne lance pas ces commandes lui-même.
 
 ### Qui applique
@@ -349,8 +371,8 @@ commande : réglages inchangés ». Il ne lance pas ces commandes lui-même.
 L'**admin** du protocole (`ENGINE_ROUND_ROLE`) applique les réglages. Il relit le bilan (`--out`), lance la commande
 imprimée en dry run ou en `--print-calldata` pour le multisig, puis l'exécute avec
 `MASK_BETS_V1_MAINNET_CONFIRM=arbitrum-one:42161 MASK_BETS_V1_ADMIN_KEY=… node scripts/mask-bets-v1-activate.cjs
---market id:legs:bps --execute`. Au-delà de 448 jambes, le script d'activation exige `--allow-above-launch-cap`,
-qui n'est à passer qu'une fois le plafond `eth_call` CRE/keeper confirmé.
+--market id:legs:bps --execute`. Au-delà de 352 jambes, le script d'activation exige `--allow-above-launch-cap`,
+qui requiert de nouvelles mesures des chunks complets et un plafond `eth_call` CRE/keeper confirmé.
 
 ### Essai du 08/11/2026 sur Arbitrum One (avant l'upgrade)
 

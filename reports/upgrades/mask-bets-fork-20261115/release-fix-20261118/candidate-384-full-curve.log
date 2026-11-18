@@ -1,0 +1,70 @@
+
+
+  checkUpkeep eth_call cost at the recommended mask leg cap
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":0,"classicCount":120,"checkUpkeepGas":"571209"}
+    ✔ stays under 1450000 gas with 0 masks, 1 lane(s), 60 payouts per call (8258ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":0,"classicCount":100,"checkUpkeepGas":"202099"}
+    ✔ stays under 1450000 gas with 0 masks, 10 lane(s), 10 payouts per call (4547ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":32,"classicCount":148,"checkUpkeepGas":"610814"}
+    ✔ stays under 1450000 gas with 32 masks, 1 lane(s), 60 payouts per call (8613ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":32,"classicCount":168,"checkUpkeepGas":"335375"}
+    ✔ stays under 1450000 gas with 32 masks, 10 lane(s), 10 payouts per call (8073ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":64,"classicCount":116,"checkUpkeepGas":"608828"}
+    ✔ stays under 1450000 gas with 64 masks, 1 lane(s), 60 payouts per call (8904ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":64,"classicCount":136,"checkUpkeepGas":"406415"}
+    ✔ stays under 1450000 gas with 64 masks, 10 lane(s), 10 payouts per call (8774ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":96,"classicCount":144,"checkUpkeepGas":"699753"}
+    ✔ stays under 1450000 gas with 96 masks, 1 lane(s), 60 payouts per call (12598ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":96,"classicCount":104,"checkUpkeepGas":"474955"}
+    ✔ stays under 1450000 gas with 96 masks, 10 lane(s), 10 payouts per call (9160ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":128,"classicCount":112,"checkUpkeepGas":"779305"}
+    ✔ stays under 1450000 gas with 128 masks, 1 lane(s), 60 payouts per call (13828ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":128,"classicCount":172,"checkUpkeepGas":"580217"}
+    ✔ stays under 1450000 gas with 128 masks, 10 lane(s), 10 payouts per call (14717ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":160,"classicCount":140,"checkUpkeepGas":"870677"}
+    ✔ stays under 1450000 gas with 160 masks, 1 lane(s), 60 payouts per call (15425ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":160,"classicCount":140,"checkUpkeepGas":"659769"}
+    ✔ stays under 1450000 gas with 160 masks, 10 lane(s), 10 payouts per call (13697ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":192,"classicCount":108,"checkUpkeepGas":"950229"}
+    ✔ stays under 1450000 gas with 192 masks, 1 lane(s), 60 payouts per call (15144ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":192,"classicCount":108,"checkUpkeepGas":"739321"}
+    ✔ stays under 1450000 gas with 192 masks, 10 lane(s), 10 payouts per call (13450ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":224,"classicCount":136,"checkUpkeepGas":"1041601"}
+    ✔ stays under 1450000 gas with 224 masks, 1 lane(s), 60 payouts per call (19058ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":224,"classicCount":176,"checkUpkeepGas":"844583"}
+    ✔ stays under 1450000 gas with 224 masks, 10 lane(s), 10 payouts per call (17997ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":256,"classicCount":104,"checkUpkeepGas":"1121153"}
+    ✔ stays under 1450000 gas with 256 masks, 1 lane(s), 60 payouts per call (18956ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":256,"classicCount":144,"checkUpkeepGas":"924135"}
+    ✔ stays under 1450000 gas with 256 masks, 10 lane(s), 10 payouts per call (18627ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":288,"classicCount":132,"checkUpkeepGas":"1212525"}
+    ✔ stays under 1450000 gas with 288 masks, 1 lane(s), 60 payouts per call (22632ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":288,"classicCount":112,"checkUpkeepGas":"1003687"}
+    ✔ stays under 1450000 gas with 288 masks, 10 lane(s), 10 payouts per call (19629ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":320,"classicCount":100,"checkUpkeepGas":"1292077"}
+    ✔ stays under 1450000 gas with 320 masks, 1 lane(s), 60 payouts per call (22750ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":320,"classicCount":180,"checkUpkeepGas":"1108949"}
+    ✔ stays under 1450000 gas with 320 masks, 10 lane(s), 10 payouts per call (24663ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":352,"classicCount":128,"checkUpkeepGas":"1383449"}
+    ✔ stays under 1450000 gas with 352 masks, 1 lane(s), 60 payouts per call (25080ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":352,"classicCount":148,"checkUpkeepGas":"1188501"}
+    ✔ stays under 1450000 gas with 352 masks, 10 lane(s), 10 payouts per call (25244ms)
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":1,"maxPayoutsPerCall":60,"legs":384,"classicCount":156,"checkUpkeepGas":"1474821"}
+    1) stays under 1450000 gas with 384 masks, 1 lane(s), 60 payouts per call
+MASK_PREVIEW_LAUNCH_CAP {"laneCount":10,"maxPayoutsPerCall":10,"legs":384,"classicCount":116,"checkUpkeepGas":"1268053"}
+    ✔ stays under 1450000 gas with 384 masks, 10 lane(s), 10 payouts per call (26205ms)
+
+
+  25 passing (7m)
+  1 failing
+
+  1) checkUpkeep eth_call cost at the recommended mask leg cap
+       stays under 1450000 gas with 384 masks, 1 lane(s), 60 payouts per call:
+
+      AssertionError: expected false to equal true
+      + expected - actual
+
+      -false
+      +true
+
+      at Context.<anonymous> (test/VrfCallbackBudget.test.ts:288:56)

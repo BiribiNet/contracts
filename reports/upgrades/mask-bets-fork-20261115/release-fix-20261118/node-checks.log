@@ -1,0 +1,340 @@
+TAP version 13
+# Subtest: matches root and imported Solidity source, normalizing only line endings
+ok 1 - matches root and imported Solidity source, normalizing only line endings
+  ---
+  duration_ms: 28.396261
+  ...
+# Subtest: rejects changed imports, unknown compiler and missing ABI
+ok 2 - rejects changed imports, unknown compiler and missing ABI
+  ---
+  duration_ms: 11.016454
+  ...
+# Subtest: accepts local chain 31337 backed by Arbitrum 42161
+ok 3 - accepts local chain 31337 backed by Arbitrum 42161
+  ---
+  duration_ms: 2.586075
+  ...
+# Subtest: fork mode rejects a mainnet execution provider before touching the signer
+ok 4 - fork mode rejects a mainnet execution provider before touching the signer
+  ---
+  duration_ms: 3.30805
+  ...
+# Subtest: fork mode requires actual Hardhat metadata
+ok 5 - fork mode requires actual Hardhat metadata
+  ---
+  duration_ms: 0.608406
+  ...
+# Subtest: fork mode rejects another source chain
+ok 6 - fork mode rejects another source chain
+  ---
+  duration_ms: 1.069319
+  ...
+# Subtest: mainnet mode rejects chain 31337
+ok 7 - mainnet mode rejects chain 31337
+  ---
+  duration_ms: 0.667136
+  ...
+# Subtest: mainnet mode is gated by explicit confirmation
+ok 8 - mainnet mode is gated by explicit confirmation
+  ---
+  duration_ms: 1.1189
+  ...
+# Subtest: unknown execution mode fails closed
+ok 9 - unknown execution mode fails closed
+  ---
+  duration_ms: 1.020837
+  ...
+# Subtest: mainnet guard accepts 42161 only with confirmation and without Hardhat metadata
+ok 10 - mainnet guard accepts 42161 only with confirmation and without Hardhat metadata
+  ---
+  duration_ms: 0.650995
+  ...
+# Subtest: mainnet mode rejects a Hardhat fork even if configured as chain 42161
+ok 11 - mainnet mode rejects a Hardhat fork even if configured as chain 42161
+  ---
+  duration_ms: 2.240355
+  ...
+# Subtest: a different signer is rejected before loading artifacts or submitting transactions
+ok 12 - a different signer is rejected before loading artifacts or submitting transactions
+  ---
+  duration_ms: 1.910548
+  ...
+# Subtest: should decode only BET_MASK legs and reserve floor(amount × 36 / |S|) when the payload is mixed
+ok 13 - should decode only BET_MASK legs and reserve floor(amount × 36 / |S|) when the payload is mixed
+  ---
+  duration_ms: 18.05644
+  ...
+# Subtest: should return mean, nearest-rank p95 and max, and nulls when there is no sample
+ok 14 - should return mean, nearest-rank p95 and max, and nulls when there is no sample
+  ---
+  duration_ms: 0.866153
+  ...
+# Subtest: should stay inside the complete measured gas profile, even with a large RPC allowance
+ok 15 - should stay inside the complete measured gas profile, even with a large RPC allowance
+  ---
+  duration_ms: 0.844332
+  ...
+# Subtest: should round up between samples and preserve a monotone envelope
+ok 16 - should round up between samples and preserve a monotone envelope
+  ---
+  duration_ms: 0.838333
+  ...
+# Subtest: should keep the launch cap when legs saturate but no eth_call cap is confirmed
+ok 17 - should keep the launch cap when legs saturate but no eth_call cap is confirmed
+  ---
+  duration_ms: 1.167735
+  ...
+# Subtest: should reduce a historical unsafe cap even when demand data are insufficient
+ok 18 - should reduce a historical unsafe cap even when demand data are insufficient
+  ---
+  duration_ms: 0.367834
+  ...
+# Subtest: should raise legs by one 1.5× step under the gas ceiling when demand is high
+ok 19 - should raise legs by one 1.5× step under the gas ceiling when demand is high
+  ---
+  duration_ms: 0.62738
+  ...
+# Subtest: should freeze leg raises when an observed gas margin is under 30 %
+ok 20 - should freeze leg raises when an observed gas margin is under 30 %
+  ---
+  duration_ms: 0.354639
+  ...
+# Subtest: should lower legs back under the gas ceiling even without demand
+ok 21 - should lower legs back under the gas ceiling even without demand
+  ---
+  duration_ms: 0.940326
+  ...
+# Subtest: should change nothing when data is insufficient or the market is disabled
+ok 22 - should change nothing when data is insufficient or the market is disabled
+  ---
+  duration_ms: 1.519827
+  ...
+# Subtest: should raise maxBps only when p95 liability use reaches 70 % of the cap, never above 2 500
+ok 23 - should raise maxBps only when p95 liability use reaches 70 % of the cap, never above 2 500
+  ---
+  duration_ms: 1.071235
+  ...
+# Subtest: should print the activation command with --allow-above-launch-cap only above the validated launch cap
+ok 24 - should print the activation command with --allow-above-launch-cap only above the validated launch cap
+  ---
+  duration_ms: 1.024187
+  ...
+# Subtest: should page eth_getLogs, halve the chunk on a range error and stop at the request bound
+ok 25 - should page eth_getLogs, halve the chunk on a range error and stop at the request bound
+  ---
+  duration_ms: 13.706135
+  ...
+# Subtest: should find the first block at or after a timestamp
+ok 26 - should find the first block at or after a timestamp
+  ---
+  duration_ms: 1.430515
+  ...
+# Subtest: should refuse every RPC method that is not a read
+ok 27 - should refuse every RPC method that is not a read
+  ---
+  duration_ms: 1.876103
+  ...
+# Subtest: should parse the window options and reject conflicting ones
+ok 28 - should parse the window options and reject conflicting ones
+  ---
+  duration_ms: 2.400569
+  ...
+# Subtest: should report legs, cap hits, liability, gas and recommend new limits from a week of traffic
+ok 29 - should report legs, cap hits, liability, gas and recommend new limits from a week of traffic
+  ---
+  duration_ms: 676.156735
+  ...
+# Subtest: should freeze leg raises when a settlement transaction uses more than 70 % of its gas limit
+ok 30 - should freeze leg raises when a settlement transaction uses more than 70 % of its gas limit
+  ---
+  duration_ms: 511.495453
+  ...
+# Subtest: should use the limit in force at each round when limits change inside the window
+ok 31 - should use the limit in force at each round when limits change inside the window
+  ---
+  duration_ms: 481.450174
+  ...
+# Subtest: should report no data and recommend nothing when the engine does not serve mask bets yet
+ok 32 - should report no data and recommend nothing when the engine does not serve mask bets yet
+  ---
+  duration_ms: 23.633714
+  ...
+# Subtest: should keep limits unchanged when masks are enabled but nobody played them
+ok 33 - should keep limits unchanged when masks are enabled but nobody played them
+  ---
+  duration_ms: 10.049237
+  ...
+# Subtest: should block every raise and say why when no gas observation covers the mask rounds
+ok 34 - should block every raise and say why when no gas observation covers the mask rounds
+  ---
+  duration_ms: 454.863764
+  ...
+# Subtest: should show but never count rounds that the window cuts at either end
+ok 35 - should show but never count rounds that the window cuts at either end
+  ---
+  duration_ms: 458.574918
+  ...
+# Subtest: mainnet mode accepts chain 42161 without Hardhat metadata
+ok 36 - mainnet mode accepts chain 42161 without Hardhat metadata
+  ---
+  duration_ms: 3.631313
+  ...
+# Subtest: mainnet mode rejects another chain and any Hardhat node or fork
+ok 37 - mainnet mode rejects another chain and any Hardhat node or fork
+  ---
+  duration_ms: 2.973771
+  ...
+# Subtest: execution needs the typed confirmation
+ok 38 - execution needs the typed confirmation
+  ---
+  duration_ms: 1.942173
+  ...
+# Subtest: local mode only accepts a non-forked Hardhat chain 31337
+ok 39 - local mode only accepts a non-forked Hardhat chain 31337
+  ---
+  duration_ms: 1.24734
+  ...
+# Subtest: the dry-run provider refuses every sending or state-altering method
+ok 40 - the dry-run provider refuses every sending or state-altering method
+  ---
+  duration_ms: 6.022426
+  ...
+# Subtest: the operator key comes only from the environment and must be the admin key
+ok 41 - the operator key comes only from the environment and must be the admin key
+  ---
+  duration_ms: 98.358615
+  ...
+# Subtest: runtime normalisation ignores metadata, library self-address and immutables only
+ok 42 - runtime normalisation ignores metadata, library self-address and immutables only
+  ---
+  duration_ms: 2.589828
+  ...
+# Subtest: linking replaces every placeholder and refuses a missing library
+ok 43 - linking replaces every placeholder and refuses a missing library
+  ---
+  duration_ms: 2.357592
+  ...
+# Subtest: selector detection reads the disassembled dispatcher, including selectors with a leading zero byte
+ok 44 - selector detection reads the disassembled dispatcher, including selectors with a leading zero byte
+  ---
+  duration_ms: 7.221329
+  ...
+# Subtest: the live vault runtime 0x6e84…f3cC dispatches exactly the ABI of its reconstructed source, drain and fee setter included
+ok 45 - the live vault runtime 0x6e84…f3cC dispatches exactly the ABI of its reconstructed source, drain and fee setter included
+  ---
+  duration_ms: 71.05105
+  ...
+# Subtest: the mainnet manifest yields the live engine constructor arguments and the reviewed redeploy set
+ok 46 - the mainnet manifest yields the live engine constructor arguments and the reviewed redeploy set
+  ---
+  duration_ms: 6.900199
+  ...
+# Subtest: upgrade CLI: dry run by default, unknown flags rejected, --out only for a dry run
+ok 47 - upgrade CLI: dry run by default, unknown flags rejected, --out only for a dry run
+  ---
+  duration_ms: 1.136903
+  ...
+# Subtest: activation CLI: explicit values only, bounded, launch cap enforced
+ok 48 - activation CLI: explicit values only, bounded, launch cap enforced
+  ---
+  duration_ms: 3.07409
+  ...
+# Subtest: the manifest points at the proven live vault 0x6e84…f3cC and expects its archived runtime
+ok 49 - the manifest points at the proven live vault 0x6e84…f3cC and expects its archived runtime
+  ---
+  duration_ms: 17.284091
+  ...
+# Subtest: the preflight refuses a vault build that drops setFlatWithdrawFee or drainWithdrawalQueue
+ok 50 - the preflight refuses a vault build that drops setFlatWithdrawFee or drainWithdrawalQueue
+  ---
+  duration_ms: 1.702237
+  ...
+# Subtest: proxy slots match ERC-1967 derivation
+ok 51 - proxy slots match ERC-1967 derivation
+  ---
+  duration_ms: 5.56733
+  ...
+# Subtest: rejects absent, empty and non-address storage instead of inventing an implementation
+ok 52 - rejects absent, empty and non-address storage instead of inventing an implementation
+  ---
+  duration_ms: 2.182996
+  ...
+# Subtest: detects empty subscription and unregistered consumer independently
+ok 53 - detects empty subscription and unregistered consumer independently
+  ---
+  duration_ms: 1.515474
+  ...
+# Subtest: a positive subscription balance is not a funding guarantee
+ok 54 - a positive subscription balance is not a funding guarantee
+  ---
+  duration_ms: 0.35721
+  ...
+# Subtest: wrong chain fails before reading protocol state
+ok 55 - wrong chain fails before reading protocol state
+  ---
+  duration_ms: 1.435853
+  ...
+# Subtest: pins all reads and keeps locked funds separate without approving an upgrade
+ok 56 - pins all reads and keeps locked funds separate without approving an upgrade
+  ---
+  duration_ms: 9.876349
+  ...
+# Subtest: rejects a changed block hash instead of saving inconsistent evidence
+ok 57 - rejects a changed block hash instead of saving inconsistent evidence
+  ---
+  duration_ms: 4.317445
+  ...
+# Subtest: BRB-only keeper deployment does not require USDC or a CRE receiver
+ok 58 - BRB-only keeper deployment does not require USDC or a CRE receiver
+  ---
+  duration_ms: 3.918389
+  ...
+# Subtest: legacy CRE manifests keep their USDC default and require their receiver
+ok 59 - legacy CRE manifests keep their USDC default and require their receiver
+  ---
+  duration_ms: 1.044201
+  ...
+# Subtest: rejects unknown mode, wrong default, zero bank and mixed keeper/CRE settings
+ok 60 - rejects unknown mode, wrong default, zero bank and mixed keeper/CRE settings
+  ---
+  duration_ms: 0.59783
+  ...
+# Subtest: accepts the verified deployment cloudflare-keeper mode without introducing a CRE receiver
+ok 61 - accepts the verified deployment cloudflare-keeper mode without introducing a CRE receiver
+  ---
+  duration_ms: 0.389714
+  ...
+# Subtest: by default the Sepolia snapshot side-bet.ts is never written and the refusal explains the mainnet path
+ok 62 - by default the Sepolia snapshot side-bet.ts is never written and the refusal explains the mainnet path
+  ---
+  duration_ms: 44.844466
+  ...
+# Subtest: merged-errors.json gains every missing engine, vault, mask-library and SideBet error, append-only
+ok 63 - merged-errors.json gains every missing engine, vault, mask-library and SideBet error, append-only
+  ---
+  duration_ms: 77.156147
+  ...
+# Subtest: --sepolia-snapshot rewrites side-bet.ts from the SideBet artifact
+ok 64 - --sepolia-snapshot rewrites side-bet.ts from the SideBet artifact
+  ---
+  duration_ms: 21.202803
+  ...
+# Subtest: --check writes nothing and reports what is missing
+ok 65 - --check writes nothing and reports what is missing
+  ---
+  duration_ms: 23.859765
+  ...
+# Subtest: a missing artifact fails loudly instead of silently skipping errors
+ok 66 - a missing artifact fails loudly instead of silently skipping errors
+  ---
+  duration_ms: 35.630577
+  ...
+1..66
+# tests 66
+# suites 0
+# pass 66
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3599.312782

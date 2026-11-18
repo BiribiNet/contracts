@@ -126,11 +126,11 @@ describe("Mask bets v1 — mainnet upgrade script (local Hardhat network only)",
         const mask = encodeMultiBet([{ betType: 16n, number: (1n << 7n) | (1n << 8n), amount: SIX }]);
         const usdcBank = await viem.getContractAt("BankVault4626", banks[0]);
         await expect(usdcBank.write.placeBet([SIX, mask, zeroAddress])).to.be.rejected;
-        const settings = [Activate.parseMarketSetting("1:448:1000")];
+        const settings = [Activate.parseMarketSetting("1:352:1000")];
         const plan = await Activate.planActivation({ ...options(d), settings });
         expect(plan.calls[0].before.maxLegsPerRound).to.equal(0);
         const activation = await Activate.executeActivation({ ...options(d), signer, settings });
-        expect(activation.transactions[0].after).to.deep.equal({ maxLegsPerRound: 448, maxLiabilityBps: 1000 });
+        expect(activation.transactions[0].after).to.deep.equal({ maxLegsPerRound: 352, maxLiabilityBps: 1000 });
         // A mask and a classic bet now settle through the real scheduler.
         await usdcBank.write.placeBet([SIX, mask, zeroAddress]);
         await usdcBank.write.placeBet([SIX, encodeMultiBet([{ betType: 1n, number: 7n, amount: SIX }]), zeroAddress]);
@@ -188,13 +188,13 @@ describe("Mask bets v1 — mainnet upgrade script (local Hardhat network only)",
     it("activation refuses implicit values, values above the launch cap and a not-yet-upgraded engine", async function () {
         const { d } = await deployLegacyShape();
         expect(() => Activate.parseArgs([])).to.throw(/no default values/);
-        expect(() => Activate.parseArgs(["--market", "1:448"])).to.throw(/Expected --market/);
-        expect(() => Activate.parseArgs(["--market", "1:1024:1000"])).to.throw(/launch cap 448/);
+        expect(() => Activate.parseArgs(["--market", "1:352"])).to.throw(/Expected --market/);
+        expect(() => Activate.parseArgs(["--market", "1:1024:1000"])).to.throw(/launch cap 352/);
         expect(() => Activate.parseArgs(["--market", "1:70000:1000", "--allow-above-launch-cap"])).to.throw(/65535/);
         expect(() => Activate.parseArgs(["--market", "1:10:10001"])).to.throw(/10000/);
-        expect(() => Activate.parseArgs(["--market", "1:448:0"])).to.throw(/maxLiabilityBps 0/);
+        expect(() => Activate.parseArgs(["--market", "1:352:0"])).to.throw(/maxLiabilityBps 0/);
         expect(Activate.parseArgs(["--market", "1:1024:1000", "--allow-above-launch-cap"]).settings[0].maxLegsPerRound).to.equal(1024);
-        await expect(Activate.planActivation({ ...options(d), settings: [Activate.parseMarketSetting("1:448:1000")] }))
+        await expect(Activate.planActivation({ ...options(d), settings: [Activate.parseMarketSetting("1:352:1000")] }))
             .to.be.rejectedWith(/pre-mask implementation/);
     });
 });

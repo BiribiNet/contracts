@@ -33,7 +33,7 @@ async function main() {
         sourceRevision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: C.ROOT, encoding: "utf8" }).trim(),
         upstreamMethods: {}, upstreamRetries: 0, blockedBroadcastProbe: false,
         upgrades: [], cases: [], fixtureTokenBalanceOverrides: [], transactions: [] };
-    const legCap = Number(process.env.MASK_FORK_LEG_CAP ?? 448);
+    const legCap = Number(process.env.MASK_FORK_LEG_CAP ?? C.LAUNCH_MASK_LEG_CAP);
     assert(Number.isInteger(legCap) && legCap >= 1 && legCap <= 65535, "Invalid fork leg cap");
     const save = (name: string, value: unknown) => writeFileSync(join(output, name), C.stringify(value));
     let latestBlockCache: { result: unknown; expires: number } | undefined;

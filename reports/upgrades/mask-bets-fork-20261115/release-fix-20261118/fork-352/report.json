@@ -1,0 +1,3098 @@
+{
+  "passed": true,
+  "mode": "local-fork-only",
+  "sourceChainId": 42161,
+  "localChainId": 31337,
+  "sourceRevision": "3c5e972c6df17612f48f77743040cec4b07fbefa",
+  "upstreamMethods": {
+    "eth_chainId": 2,
+    "eth_getBlockByNumber": 1,
+    "eth_getStorageAt": 2,
+    "eth_call": 2,
+    "eth_blockNumber": 18,
+    "eth_feeHistory": 2
+  },
+  "upstreamRetries": 0,
+  "blockedBroadcastProbe": true,
+  "upgrades": [
+    {
+      "label": "actual-state",
+      "storage": {
+        "engineFieldsBefore": 45,
+        "engineFieldsAfter": 50,
+        "appended": [
+          "roundMaskBets",
+          "roundMaskWinCounts",
+          "roundMaskWeightedPayout",
+          "maxMaskLegsPerMarketRound",
+          "maxMaskLiabilityBps"
+        ],
+        "vaultFieldsDeployed": 14,
+        "vaultFieldsAfter": 14,
+        "renamed": {
+          "sideBetController": "_deprecatedSideBetController"
+        }
+      },
+      "statePreserved": true,
+      "writes": [
+        {
+          "label": "Upgrade RouletteEngine proxy (UUPS, masks disabled)",
+          "hash": "0xf8f3c7ffe042625e4dc687211ee37342ea792451f29baacf5c1848413a3cac18",
+          "stores": [
+            {
+              "depth": 2,
+              "slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+              "value": "0x000000000000000000000000d0821efa201af10cd468c0d26c3317527a0e6e17"
+            }
+          ]
+        },
+        {
+          "label": "Upgrade BankVault4626 beacon",
+          "hash": "0xf024a47db8c0d841a579b1205306d5b538583c0139b0cb110e668ada9bd2dcaf",
+          "stores": [
+            {
+              "depth": 1,
+              "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+              "value": "0x0000000000000000000000000a141596be287535aa9499bceb27cb358a8e5f8f"
+            }
+          ]
+        }
+      ],
+      "localOnlyAddresses": {
+        "RouletteLib": "0x487695f12853c259D745B15cd214b85aa4C3F636",
+        "RouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
+        "JackpotBatchLib": "0xb426ca0701025C50776A502973ac0cF2a40D0A53",
+        "RoulettePayoutMulLib": "0xB04c59Db0Be2190F7e4B3845aa94B5cfbdd4B8Db",
+        "RouletteExposureLib": "0x44641e1e3328ac759a88599438c663B291a357E7",
+        "RouletteJackpotCollectLib": "0xdf573C57309c453ABAF7a1c4d25d6b69debff5C8",
+        "RouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+        "RoulettePayoutSweepLib": "0xfF46D89F88189c7A7ca91f262D1Ce85aA2c5A7C9",
+        "RouletteLiabilityMathLib": "0xB220aBf131c3924FD76B7eFA38c1F07c1722f3F1",
+        "RouletteUpkeepScanLib": "0x5A46eFCC7B4ED27049A310eb77c4a0444F363525",
+        "RouletteMaskBetLib": "0x4D7B3b0EF59f40F1130385A0C5B031303f903395",
+        "RouletteEngine": "0xd0821EFa201Af10Cd468C0D26C3317527a0E6E17",
+        "BankVault4626": "0x0A141596be287535Aa9499BCeB27CB358A8E5F8F"
+      },
+      "liveBalancesBefore": [
+        {
+          "marketId": 1,
+          "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+          "totalAssets": "302498646844651296788841",
+          "totalSupply": "274523634831654689002891394529"
+        },
+        {
+          "marketId": 2,
+          "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+          "totalAssets": "5950000",
+          "totalSupply": "6000000000000"
+        },
+        {
+          "marketId": 3,
+          "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+          "totalAssets": "6900000000000000000",
+          "totalSupply": "6000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "label": "populated-state",
+      "storage": {
+        "engineFieldsBefore": 45,
+        "engineFieldsAfter": 50,
+        "appended": [
+          "roundMaskBets",
+          "roundMaskWinCounts",
+          "roundMaskWeightedPayout",
+          "maxMaskLegsPerMarketRound",
+          "maxMaskLiabilityBps"
+        ],
+        "vaultFieldsDeployed": 14,
+        "vaultFieldsAfter": 14,
+        "renamed": {
+          "sideBetController": "_deprecatedSideBetController"
+        }
+      },
+      "statePreserved": true,
+      "writes": [
+        {
+          "label": "Upgrade RouletteEngine proxy (UUPS, masks disabled)",
+          "hash": "0xb5e286e205d84150c6d9f89e172847437722831679c4578c2d216c5fe6cef099",
+          "stores": [
+            {
+              "depth": 2,
+              "slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+              "value": "0x000000000000000000000000d0821efa201af10cd468c0d26c3317527a0e6e17"
+            }
+          ]
+        },
+        {
+          "label": "Upgrade BankVault4626 beacon",
+          "hash": "0x95ada7470f4fcd332ca315b1f93148f0d21ef3772617263ee1e39dccbe75572c",
+          "stores": [
+            {
+              "depth": 1,
+              "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+              "value": "0x0000000000000000000000000a141596be287535aa9499bceb27cb358a8e5f8f"
+            }
+          ]
+        }
+      ],
+      "localOnlyAddresses": {
+        "RouletteLib": "0x487695f12853c259D745B15cd214b85aa4C3F636",
+        "RouletteBetLib": "0x21FaB94a7771402876B0772523B90856679C1e3E",
+        "JackpotBatchLib": "0xb426ca0701025C50776A502973ac0cF2a40D0A53",
+        "RoulettePayoutMulLib": "0xB04c59Db0Be2190F7e4B3845aa94B5cfbdd4B8Db",
+        "RouletteExposureLib": "0x44641e1e3328ac759a88599438c663B291a357E7",
+        "RouletteJackpotCollectLib": "0xdf573C57309c453ABAF7a1c4d25d6b69debff5C8",
+        "RouletteBetCodecLib": "0x482AEA76783eD79306E45b6FFd73040fa24109D1",
+        "RoulettePayoutSweepLib": "0xfF46D89F88189c7A7ca91f262D1Ce85aA2c5A7C9",
+        "RouletteLiabilityMathLib": "0xB220aBf131c3924FD76B7eFA38c1F07c1722f3F1",
+        "RouletteUpkeepScanLib": "0x5A46eFCC7B4ED27049A310eb77c4a0444F363525",
+        "RouletteMaskBetLib": "0x4D7B3b0EF59f40F1130385A0C5B031303f903395",
+        "RouletteEngine": "0xd0821EFa201Af10Cd468C0D26C3317527a0E6E17",
+        "BankVault4626": "0x0A141596be287535Aa9499BCeB27CB358A8E5F8F"
+      },
+      "liveBalancesBefore": [
+        {
+          "marketId": 1,
+          "bank": "0x5F9332b04b2590850c7681850cA445dDF7f64aa9",
+          "totalAssets": "332498646844651296788841",
+          "totalSupply": "301749241064462412246992622694"
+        },
+        {
+          "marketId": 2,
+          "bank": "0x46206B1C1fc631Fd6Fcf2Aa2503f9cb022dA96bA",
+          "totalAssets": "20105950000",
+          "totalSupply": "20274907534637389"
+        },
+        {
+          "marketId": 3,
+          "bank": "0x137dD55e422b1881Ad1566ce21E2E4F393bB37B2",
+          "totalAssets": "20106900000000000000000",
+          "totalSupply": "17484260869565217391684310018"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "outcome": 0,
+      "round": "177",
+      "callbackGas": "326519",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100051968571428571428571",
+          "payout": "21968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100051968571",
+          "payout": "21968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100051968571428571428571",
+          "payout": "21968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 1,
+      "round": "177",
+      "callbackGas": "430298",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100051968571428571428571",
+          "payout": "21968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100051968571",
+          "payout": "21968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100051968571428571428571",
+          "payout": "21968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 2,
+      "round": "177",
+      "callbackGas": "458371",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 3,
+      "round": "177",
+      "callbackGas": "430679",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 4,
+      "round": "177",
+      "callbackGas": "434940",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 5,
+      "round": "177",
+      "callbackGas": "462333",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 6,
+      "round": "177",
+      "callbackGas": "435156",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 7,
+      "round": "177",
+      "callbackGas": "434985",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100069968571428571428571",
+          "payout": "39968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100069968571",
+          "payout": "39968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100069968571428571428571",
+          "payout": "39968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 8,
+      "round": "177",
+      "callbackGas": "463389",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 9,
+      "round": "177",
+      "callbackGas": "434232",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 10,
+      "round": "177",
+      "callbackGas": "434940",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 11,
+      "round": "177",
+      "callbackGas": "463389",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 12,
+      "round": "177",
+      "callbackGas": "434298",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 13,
+      "round": "177",
+      "callbackGas": "434940",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 14,
+      "round": "177",
+      "callbackGas": "462597",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 15,
+      "round": "177",
+      "callbackGas": "435156",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 16,
+      "round": "177",
+      "callbackGas": "434214",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 17,
+      "round": "177",
+      "callbackGas": "463389",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 18,
+      "round": "177",
+      "callbackGas": "434496",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 19,
+      "round": "177",
+      "callbackGas": "434388",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 20,
+      "round": "177",
+      "callbackGas": "463431",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 21,
+      "round": "177",
+      "callbackGas": "434670",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 22,
+      "round": "177",
+      "callbackGas": "434982",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 23,
+      "round": "177",
+      "callbackGas": "462969",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100033968571",
+          "payout": "3968571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100033968571428571428571",
+          "payout": "3968571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 24,
+      "round": "177",
+      "callbackGas": "435198",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100032468571428571428571",
+          "payout": "2468571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100032468571",
+          "payout": "2468571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100032468571428571428571",
+          "payout": "2468571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 25,
+      "round": "177",
+      "callbackGas": "434586",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 26,
+      "round": "177",
+      "callbackGas": "463431",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 27,
+      "round": "177",
+      "callbackGas": "434868",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 28,
+      "round": "177",
+      "callbackGas": "434982",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 29,
+      "round": "177",
+      "callbackGas": "463431",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 30,
+      "round": "177",
+      "callbackGas": "434934",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 31,
+      "round": "177",
+      "callbackGas": "434982",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 32,
+      "round": "177",
+      "callbackGas": "463233",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 33,
+      "round": "177",
+      "callbackGas": "435198",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 34,
+      "round": "177",
+      "callbackGas": "406240",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100031028571",
+          "payout": "1028571"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100031028571428571428571",
+          "payout": "1028571428571428571"
+        }
+      ]
+    },
+    {
+      "outcome": 35,
+      "round": "177",
+      "callbackGas": "305132",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100030000000000000000000",
+          "payout": "0"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100030000000",
+          "payout": "0"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100030000000000000000000",
+          "payout": "0"
+        }
+      ]
+    },
+    {
+      "outcome": 36,
+      "round": "177",
+      "callbackGas": "265959",
+      "markets": [
+        {
+          "marketId": 1,
+          "expectedBalance": "100030000000000000000000",
+          "payout": "0"
+        },
+        {
+          "marketId": 2,
+          "expectedBalance": "100030000000",
+          "payout": "0"
+        },
+        {
+          "marketId": 3,
+          "expectedBalance": "100030000000000000000000",
+          "payout": "0"
+        }
+      ]
+    }
+  ],
+  "fixtureTokenBalanceOverrides": [
+    {
+      "asset": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+      "account": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "mappingSlot": "0"
+    },
+    {
+      "asset": "0x58871cf545f8F0dF790443492a80EdC414df4504",
+      "account": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "mappingSlot": "0"
+    },
+    {
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "account": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "mappingSlot": "9"
+    },
+    {
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "account": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "mappingSlot": "9"
+    },
+    {
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "account": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "mappingSlot": "2"
+    },
+    {
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "account": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "mappingSlot": "2"
+    }
+  ],
+  "transactions": [
+    {
+      "label": "local token approval",
+      "hash": "0x2f909cb396364785538b7dc2a74f7f02e3c4974cccc840c18c9418bceeaf8ea2",
+      "gasUsed": "46655"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x41f52718d7dd38bcca56646e23bcae277a331f34a4de426a116c66ece25cf4b4",
+      "gasUsed": "46655"
+    },
+    {
+      "label": "legacy LP deposit",
+      "hash": "0x35e22e009e1a387cc6993e141451b8d32668bce5340fa6b1e9f4afd0bbfb7c15",
+      "gasUsed": "109071"
+    },
+    {
+      "label": "legacy withdrawal queued",
+      "hash": "0x7de1c8399d45341676686c14d76464e0b4d748e4df4d16d3c8b37e2ad41018df",
+      "gasUsed": "254004"
+    },
+    {
+      "label": "legacy classic bet before upgrade",
+      "hash": "0x4a04c117171461b9cc089e67d34fae7eba7d45089878e8344ab03aeec71484cc",
+      "gasUsed": "425611"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x67aab6d52f62aa4ab2cb8ea64145c144b9c48335da887ec54d08ef2948471536",
+      "gasUsed": "55785"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x21d18b1ed9fefef64cfdeceb2c33184a43a47f6dc5714c2efda0d6b1fe110bed",
+      "gasUsed": "55785"
+    },
+    {
+      "label": "legacy LP deposit",
+      "hash": "0xf89605c2deb184ab7e5a7a10fa1e40ffa2c27dd88520da2f489e94a48321b201",
+      "gasUsed": "124170"
+    },
+    {
+      "label": "legacy withdrawal queued",
+      "hash": "0x7ba80317dd98b63fe9b4f33d72b5a2dda1fc89c40826fc310b17f03221260929",
+      "gasUsed": "278766"
+    },
+    {
+      "label": "legacy classic bet before upgrade",
+      "hash": "0x32dc10a58bf3dbe219d72f5b116411983fcc37ccb972e8ef63d9128db08abab9",
+      "gasUsed": "380784"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x46b436b2eb491cb86df97756f1bd54bc46169094aebd47aa53738cb7681ec04e",
+      "gasUsed": "46401"
+    },
+    {
+      "label": "local token approval",
+      "hash": "0x1114e8dcd3556bb946b86b6d7c6a15632076e235eabcb32f9998d520cd6e910b",
+      "gasUsed": "46401"
+    },
+    {
+      "label": "legacy LP deposit",
+      "hash": "0xed58ed17efa61e0cca0113459a13368c555996fbcee0a533964aceb02525c66e",
+      "gasUsed": "108274"
+    },
+    {
+      "label": "legacy withdrawal queued",
+      "hash": "0x6ac1baf9d29a0736813555b931175041805b7ea4f02b5d7c36f2be1ac168d276",
+      "gasUsed": "270660"
+    },
+    {
+      "label": "legacy classic bet before upgrade",
+      "hash": "0xf9cabf359a91f23e32726617b3e54e54d2fbfb5bd9f9934378b27ca6a035ee87",
+      "gasUsed": "365715"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x71ba1fb9364b20e937181e4c8ea747c57064249fc898c64db55c1f1524e809ab",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x9dc91f515589f4b3890c31078cf53b91384aace8c99ca6b092a33e7f348050f7",
+      "gasUsed": "433950"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xd26f0c43bc5b5557a5303ff3e700ed1ce8f69cbe001e1d8168ecfe07f8935047",
+      "gasUsed": "423373"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x5ddc0877f2ee204053adbfbff6bf1dcbe893a226d4f8ddbe3a46d25822494e1a",
+      "gasUsed": "420702"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x550bd98f438e8228e8e9941858b0f9198cb8b5789d60c2fb5cbeaeacce116a90",
+      "gasUsed": "413801"
+    },
+    {
+      "label": "local mask activation",
+      "hash": "0x3d879521bef72a290ed825c613f96f6ed40f2e624d00cbcd7e0d400790be4f71",
+      "gasUsed": "92149"
+    },
+    {
+      "label": "local mask activation",
+      "hash": "0x94706c74e4f416146c4c8d2d0c647ecdcc1938d16d34f36d108f4c6fec4edec4",
+      "gasUsed": "92149"
+    },
+    {
+      "label": "local mask activation",
+      "hash": "0xd0b5a9fda9212b7b5d5a5185fdb7d71f49d435f9a4d3b653d554ecb3b187e8dc",
+      "gasUsed": "92149"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x1425ad97d24596f9d5a0b7a167c34dc869331d7856976748d0156f401b9f546b",
+      "gasUsed": "326519"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x5b25568380f72c7adc1e5a019e040ccf39aee3d85e2b1402f58b22e4639c9517",
+      "gasUsed": "345974"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x683880ed9151b7177a6fd87bb42505ad7908ff585532075b1b2b3ce992fcaca0",
+      "gasUsed": "344486"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x46e7ba52a84b2c738b5fe189dd5cf0a10bcd9e1ca1727853bb31b782bfa3e64d",
+      "gasUsed": "336105"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xf5be7a89e433a58dcf793669b1f8d1d3b3df740bf58b7e00f8b054f267f43d22",
+      "gasUsed": "430298"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x6bfbe27bc7c69bf35e79dc5695413a2b438fe5d2d015850b8fcc0aaf55851ebc",
+      "gasUsed": "345974"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfc471a520c07a071051963ab7f2f328a79f5513dee1a36030be1185cbb79de38",
+      "gasUsed": "344486"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x9d2b1acffa8ab29f6940404d2efb8423c0c3c3585ca62fa7c8ff80bdcbc3d7bb",
+      "gasUsed": "336105"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x66cc85ca6353b6c20b7dfd44ea198a88a5ce80c483ef3d192d0917178deb69ba",
+      "gasUsed": "458371"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xaa20ead377b89d9a04293a7b86ed5f12c84d4377d79f3f1841fbf7cc7f1419b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x778bcf5e3d196654bcc12d9a55623f4bbebd9274a6c953da47f1eaeff121e874",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x185c28a2eef70a99dd65bc4cea19d9b0ae4159e7d5503dbccde4709107f03e4f",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xa990ffafe3898f093bd86f2d430fa2a6606d7528e1a9e360eb88a66d36810401",
+      "gasUsed": "430679"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8a9bccc97184e36ce4f2f89ec7caa376eee7c994fe41741e6cccf9a85b8fd7de",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x61654666529cb656810ea5d8c74b089215745c86bf174d280a6ee80e23562607",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x9faf29e0223812d1a1f8fe113cbcf97ad4407c058419036945854f148ab01284",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x4e6f6f16ead3d3382bdf171bb2075708d8f8e0bbf21268cfdd3283ecd515d3b8",
+      "gasUsed": "434940"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x25ad75dc958772b4dd80bc72d97bb98edc8eb858add30bad3caaf773bea8b0b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xd7f96667320c91708c032894e6a198ce3f4e051a8df09ba0a048939763b67a06",
+      "gasUsed": "462333"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xe32b61d53aa3914de5b4857d26474cb4fc78003810f419eba15c432fa7b65fe2",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xe223f32c0b5332e221aa503b51e9ff6481134df51c5b10394aed66936ae5f153",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x7555d5219e8e1d37b4562551f7268c1a640b13baed55e25e88fcffadf5c2b46c",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xb300099d52ffee721bb119b4faadd1d6d89b9719d28f88f2b977590fefb262fa",
+      "gasUsed": "435156"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x25ad75dc958772b4dd80bc72d97bb98edc8eb858add30bad3caaf773bea8b0b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x2cdc7b72b9d09fb634ac44521feb9c7e040669b10a2eb37008d0462b68d10a33",
+      "gasUsed": "434985"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa4bb853e1eb7a12762588f19fb379784ee0d591d8d899ac095d66fbc64e73efc",
+      "gasUsed": "345986"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbc477f5dd7a87da97fc69c44115f7a89e053aae7db18d328ee36693df963b32a",
+      "gasUsed": "344474"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xaae709760119aadba3a2c25a8785037c026dd00e45193f24e6878ff823f7d382",
+      "gasUsed": "336117"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x0a61542329626142a7debe3bbd27da379f7723bbb845ad2ecc221f510be4fecf",
+      "gasUsed": "463389"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x01a7771b03a7c08a40df7b2df813677a49569d04277b8044ff53c0a7f9960f93",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbda41a966ddb8d7779f0e00ab1fe86a31706a7fd78cae52b000a3ee3c01087fa",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa7fac89e143526331eb85fdea3321448faa2cc5fc3b93ff39b21202c51d4bad7",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xff69f5212e48b6e8f8da7d0d6e6e46866dbe4b85a717de8312f6831942292790",
+      "gasUsed": "434232"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xef8475eb20784287d15c3a9a2b9489dbeb54967131527690c5c14f0e0a7eb3a6",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xff3aa01dae827e14dd07ef8ec1a103e347ded78d593ade062a442934f70a1f0e",
+      "gasUsed": "434940"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x25ad75dc958772b4dd80bc72d97bb98edc8eb858add30bad3caaf773bea8b0b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x8b1bb13335eca7f174c08c1ad0b60702cf334c87e502fe055437c42570e78c74",
+      "gasUsed": "463389"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x01a7771b03a7c08a40df7b2df813677a49569d04277b8044ff53c0a7f9960f93",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbda41a966ddb8d7779f0e00ab1fe86a31706a7fd78cae52b000a3ee3c01087fa",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa7fac89e143526331eb85fdea3321448faa2cc5fc3b93ff39b21202c51d4bad7",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x62284c2913adc9e76ac4fd7a7e4cbde5409e30e942411d0ed7832aa194ecc233",
+      "gasUsed": "434298"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xef8475eb20784287d15c3a9a2b9489dbeb54967131527690c5c14f0e0a7eb3a6",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x91a91c0eab1123f3327a7d499253bf4331b3ddf7d531b55b93136fb8f5cf2583",
+      "gasUsed": "434940"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x25ad75dc958772b4dd80bc72d97bb98edc8eb858add30bad3caaf773bea8b0b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x1a0b90be0fd3f41098af8dc8023633b63771dced0250fee6e43f95b977ae36ee",
+      "gasUsed": "462597"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4aff1e658d856508e10bee41d5c9803d4fb0e8fafef3842e0434f6e2f20d78cb",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8fa3cfa4da93ddc40906a463a65fe0f5539889cef30b6577367714de2d0087a5",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xd6af8af83ab09fc33da7cb3c101ae76b59760a318e1c8a319b67fd26b9ea74d3",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x9df4fe5efead10a5d038ff416ce5ecb898bb988c4077252bf480d392e7f20a05",
+      "gasUsed": "435156"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x25ad75dc958772b4dd80bc72d97bb98edc8eb858add30bad3caaf773bea8b0b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x47e078f98520da114c4d229b65f0e872bf46c2aeb172984f891ff0d6c89dab6a",
+      "gasUsed": "434214"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xef8475eb20784287d15c3a9a2b9489dbeb54967131527690c5c14f0e0a7eb3a6",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x0e1541995b295166e4a7e4a2e3635d7515872a3baeb9eb183ccf6f70c617d5fa",
+      "gasUsed": "463389"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x01a7771b03a7c08a40df7b2df813677a49569d04277b8044ff53c0a7f9960f93",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbda41a966ddb8d7779f0e00ab1fe86a31706a7fd78cae52b000a3ee3c01087fa",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa7fac89e143526331eb85fdea3321448faa2cc5fc3b93ff39b21202c51d4bad7",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x45f983fed8696931f7a5000f246e48286a066980523ee963049745604c4d3fa7",
+      "gasUsed": "434496"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xef8475eb20784287d15c3a9a2b9489dbeb54967131527690c5c14f0e0a7eb3a6",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xff21e88db3eace197b336d6e0380f41301c46332ea0b52fbbcced771780cef75",
+      "gasUsed": "434388"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xef8475eb20784287d15c3a9a2b9489dbeb54967131527690c5c14f0e0a7eb3a6",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x4493d80f75ea42470a07a1f1a5f78bdefd53fe7690477ab62f72daabdb632e37",
+      "gasUsed": "463431"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x01a7771b03a7c08a40df7b2df813677a49569d04277b8044ff53c0a7f9960f93",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbda41a966ddb8d7779f0e00ab1fe86a31706a7fd78cae52b000a3ee3c01087fa",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa7fac89e143526331eb85fdea3321448faa2cc5fc3b93ff39b21202c51d4bad7",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x6eb33993963e3753e0f6f7a546ffad48f5f23f96e71229e2fad248f6dc24493a",
+      "gasUsed": "434670"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xef8475eb20784287d15c3a9a2b9489dbeb54967131527690c5c14f0e0a7eb3a6",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x6a451a34dfcf324ba1fde28965f5ae6872a4dc8c1d4e37c0d3beecf89087c513",
+      "gasUsed": "434982"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x25ad75dc958772b4dd80bc72d97bb98edc8eb858add30bad3caaf773bea8b0b3",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xc39afd0f6c71630ce26da1f489bbdbf00766ae8eeac4b09cc918050838cbfd28",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x82a34c727ca5da0995353ca0056023599653e041ea4bb54688a43f2d9ac50771",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x5ac0b170e2a35abf3ce28be2c535cc19f2ff77c1d1f7bcbab7497f3c8cf58c50",
+      "gasUsed": "462969"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4aff1e658d856508e10bee41d5c9803d4fb0e8fafef3842e0434f6e2f20d78cb",
+      "gasUsed": "463987"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8fa3cfa4da93ddc40906a463a65fe0f5539889cef30b6577367714de2d0087a5",
+      "gasUsed": "501658"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xd6af8af83ab09fc33da7cb3c101ae76b59760a318e1c8a319b67fd26b9ea74d3",
+      "gasUsed": "453599"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x86923dc8fccde604593f4f7931f819e9c07c1b42f916995d0243e2d08c59c64a",
+      "gasUsed": "435198"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x441335ea11aef564f9643f5976987d81746e7cab4e50ffb4ce7bde2f18280ae4",
+      "gasUsed": "454596"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x7e86ee962cb76754f1143cd3fe6065c3c53357103e670b5539dd422cfa762961",
+      "gasUsed": "490419"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8f4abd91943158404863feb692a38bdfe348678b8a0499f5bda51e3799b6a383",
+      "gasUsed": "444727"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x36479f6e7f01b7962ce3e86fd8ad6c84b1d364a367aa76952b234d110529b176",
+      "gasUsed": "434586"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x3742c98a9bb1fd370ed8ae382952fa725dc7dcc8c90b252e38b34765696810df",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xe3847361a057f3e244853176ca5a8164bbbe2e3a470d0cf609d62a885e950e5d",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xdc9d752d8ba52d13947123c881ad047dea6e17eee213d782f50d787dcab555e5",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x0395770536e3b4d00ecb08dc1ea80a57376dcc3ae94676daaa8aeb507284311f",
+      "gasUsed": "463431"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa311d4f9f277dcae1ad928766689c75d3e1b40048d04b36331808f99510b9d2c",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4a0fb89d227731cd289341eb7d99bf8ea6a8cf202d31bc524dddba6ed989ff5f",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x285e55878d0d345cea3e32d0ba4dfb744b7aacc5d0a7fe14529525f732955663",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xde493c687f893b518b86b85d98340c4337bfcbef5050b8f67d51ca20474711c1",
+      "gasUsed": "434868"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4848cf3d67263064c4afe89faed7627406e93d9fd0f1d7a843e3c4975a1e8596",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfc016a8d315581869e6c416be68b583dd6edb11555e89cbd1d2586d079af373e",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb989e3c8a19b942d608af4579066784bfb332902b086bca2514b7fa6cb18687b",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xf1546fec65b308a32ddfba539cd758eafc2bf511bc17fffb310c8e3dbead3f5c",
+      "gasUsed": "434982"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4848cf3d67263064c4afe89faed7627406e93d9fd0f1d7a843e3c4975a1e8596",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfc016a8d315581869e6c416be68b583dd6edb11555e89cbd1d2586d079af373e",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb989e3c8a19b942d608af4579066784bfb332902b086bca2514b7fa6cb18687b",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x59c0f10989324408ef90f638f315ec2fcc7593af6d4f4ce3de0609e6fcce99a2",
+      "gasUsed": "463431"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa311d4f9f277dcae1ad928766689c75d3e1b40048d04b36331808f99510b9d2c",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4a0fb89d227731cd289341eb7d99bf8ea6a8cf202d31bc524dddba6ed989ff5f",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x285e55878d0d345cea3e32d0ba4dfb744b7aacc5d0a7fe14529525f732955663",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x13b55914a5aea33d52239f17454a852a2d673e7d1396d8eaaaeae48f907e5292",
+      "gasUsed": "434934"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4848cf3d67263064c4afe89faed7627406e93d9fd0f1d7a843e3c4975a1e8596",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfc016a8d315581869e6c416be68b583dd6edb11555e89cbd1d2586d079af373e",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb989e3c8a19b942d608af4579066784bfb332902b086bca2514b7fa6cb18687b",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xb96d0a42ea9c8740a77c5a85e008f2d5255192127e07c6fb94df9aa695f1b702",
+      "gasUsed": "434982"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4848cf3d67263064c4afe89faed7627406e93d9fd0f1d7a843e3c4975a1e8596",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfc016a8d315581869e6c416be68b583dd6edb11555e89cbd1d2586d079af373e",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb989e3c8a19b942d608af4579066784bfb332902b086bca2514b7fa6cb18687b",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x8a27f11bdf702d3571829d9ecd1fabb658eb25686be16ab08a0e820c205be2e2",
+      "gasUsed": "463233"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xa311d4f9f277dcae1ad928766689c75d3e1b40048d04b36331808f99510b9d2c",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4a0fb89d227731cd289341eb7d99bf8ea6a8cf202d31bc524dddba6ed989ff5f",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x285e55878d0d345cea3e32d0ba4dfb744b7aacc5d0a7fe14529525f732955663",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xc9a56b99c3089dedffcf9f94f0c47f047f54d86070a5c9f131b7f102e895d0f3",
+      "gasUsed": "435198"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4848cf3d67263064c4afe89faed7627406e93d9fd0f1d7a843e3c4975a1e8596",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xfc016a8d315581869e6c416be68b583dd6edb11555e89cbd1d2586d079af373e",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb989e3c8a19b942d608af4579066784bfb332902b086bca2514b7fa6cb18687b",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xceef7ae6b9932a428dc6abcbecb17d27373589adcb495d4241fd16a6ffa9a2a1",
+      "gasUsed": "406240"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8710aaa8da3844474edc8983666cda557e3df51e0db5da4e584cd9d7753e0885",
+      "gasUsed": "445224"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x4299e25ab399113b4c4a3de42d4803188b6e9dddec6eda1c2830b07d0beaf94c",
+      "gasUsed": "479211"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x22dae4f8d37e2f6dacd54e2e5d39f4ed8535c97b99fd0632742e1a0654a048f9",
+      "gasUsed": "435874"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x6867577e9b92ed8a7d4954147d1459a030bc9ef45444ebac716c2689de24d307",
+      "gasUsed": "305132"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xbb9c4f01a3f476e2024f8ccb898f4810a47975a437335b05bc5ebde97dca3a1f",
+      "gasUsed": "327744"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x9e471fabd5341287bc9fa4a2db3f2e3c1c564229df17e229b8c7497c4b8596e2",
+      "gasUsed": "359907"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x415f575bf3dff9db88f0f8efd77d11f26be2940b6a654e6a36bcfa7f99a9e29a",
+      "gasUsed": "318913"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x73752292831707e1e0d65b82882edb1634158b289400db18c45ca953febeb69d",
+      "gasUsed": "775020"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0x122836ee9e1ab25ba6008ef7546a98e0a76b31230c81b2e1cc3b0c1a2330f84e",
+      "gasUsed": "730049"
+    },
+    {
+      "label": "local mixed ticket",
+      "hash": "0xe3771b8bddf068ec8b3bce5ffdeb5b26aafce46ffe1922f3ad721d75087d8cd7",
+      "gasUsed": "715124"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x35ae3d0b66d9074a4465d87b48362e2b6fd7a3687945041570e5e86521dc9b0b",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0xd36128971fed1faf7ee04397e3144b3bab78b5e1b616d44cd278ea0541a770dd",
+      "gasUsed": "265959"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x7319801541b37cd6e9a6dd2df424c0a52bced43b9da3f6a5f4b9d38da2e70617",
+      "gasUsed": "327744"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x1eeb1dacac51fc9c07063fdb044040244ed21379220ab2514c117b79b2184d04",
+      "gasUsed": "359907"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x48287265b5602f499c7c41d14c2fad8a5998eed20567c70fa178c180b04b555e",
+      "gasUsed": "318913"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x882cd4a9d63f381af49e30bc63ec74bbb82af5fedf5b32495dfad872aeff3211",
+      "gasUsed": "4172174"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xc05ae2f35109b1f3c2396ae472a92f2fa9f0f4d23d5b548515d94605a1cbad98",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xaae840f2f88ea204fd92dd0b69c8e9c11546cf5647db1a4590be7d20714a0e02",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x59e70c0da454af3e211607077d57f0f76d475226f3f2cedade58c56913a817bb",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xf02ed7bf57abe4bb7d78d1aac857ec48db28eca168b5378a5a82cce4ef7f80c7",
+      "gasUsed": "3950617"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x2751c2734ca9d3dc4204c33cf798d37587faf9d2d3bcf4dfc58112ab703918ff",
+      "gasUsed": "2078767"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x0472106ca1a9f105c3ebbe3334a77f63a6bc18da4604bc1ca9ab0a3c47bb4471",
+      "gasUsed": "4125079"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xd2a5a2601f5f5aa9e9ddfa94ddc5bed3512b32be29a795faac7dc7d0a553c0aa",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xbdc18d736e4f9515904d8540f280890ea4cacfd4f986e4004d6a3879d5bb404a",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x2c9b9d853a03b44cb2b232217cd4d6b40d8b6f331ea0519ea7fe808d27fb1ef9",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xcc90d4157bc8cfe4383750c042e1c19c4142943377ca3716a3378d6db95618bf",
+      "gasUsed": "3962843"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x151e199dbbf909518376e0d8e0a71e10d7c900e2082c1b47cae624161a42273f",
+      "gasUsed": "2092133"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xa5ebd71fbddb650792f60532a787b202818642d75e5e2b16334440ffa2d9f9e9",
+      "gasUsed": "4112278"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x2084def3cc4fdf5874ad88f7d79f6b96a2e1109c7415d5e6365fcbdb287958ed",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xb6cdbdad9713dfa3f7957af2eda656c71f39b8519fcefe37de34d452ab4a3094",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xddd87f1bc0a04a5a6918efa9955c7bc69537548ba33aae7f605af6cd318c4c56",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0xb2146e8ca78586547a912cd6ba369b0bf065f0e262855678446a2c89eec4bd63",
+      "gasUsed": "3950042"
+    },
+    {
+      "label": "local launch cap masks",
+      "hash": "0x3d4d72b8b503b76fd5369b5cf3e9d2b526d85a862cae696ec0bdc5b7df149b9f",
+      "gasUsed": "2078192"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xb47cbc91c9a9c3f32bff3c7f58c3baa3c23734d7914e7a4c240a7fe3ce2480de",
+      "gasUsed": "263431"
+    },
+    {
+      "label": "local VRF callback",
+      "hash": "0x9d3a3f2c0c94c103db9562ea90c44c91b6b05504050770da13eb668c2d3400ef",
+      "gasUsed": "326519"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x68cec33a532d11ebc069ba4dfe50fd06df055ecc1913cf979146d7b6cf03fef6",
+      "gasUsed": "804688"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x6755fc16363db44ef55de4f291a6d1985e27c7c0ae9a08b227d34fe78564b729",
+      "gasUsed": "763418"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x8fd91c1adffbd04c4dd9fd652bf9814045e26b3eaf5427a815c82f762afa7b9c",
+      "gasUsed": "746318"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x2a28634d6367e0f4eb280bb9052cf0f1ffcd2a34ceb880a31717508a924802a3",
+      "gasUsed": "746318"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x6192aadbed6c585bf06710f1f4670d5f350684345f57343f48475293d7736157",
+      "gasUsed": "746318"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x80be43e3076d0e29112e190883714ba0694441286d5dc0d49132b1025e44e467",
+      "gasUsed": "741503"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x76f1d9194e9d994b8a176b2efbd1e490734a2f685cb37a388474c406919ead67",
+      "gasUsed": "918500"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x59cf77d12bfb8e706b54620cce121c0950e86f2a0ac468ea6504961dfe8f8d0c",
+      "gasUsed": "879230"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x7485d45e8fcd81eb4ad91bf59b9138c0017843f80d60c9006e044cb92fabe450",
+      "gasUsed": "862130"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x3c9a68725d689a69088ba6c2ed578f878e79215638e053a278c27560ede68788",
+      "gasUsed": "862130"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x73e86c8f2d5e0d67bcdcf71301e458cfccfb96135f5b33fa722d850db96a903b",
+      "gasUsed": "862130"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x033809cbc7fef756dfed38d69499f93d3da2450b48a5dcd43bb86bceb6e3ca4b",
+      "gasUsed": "827495"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x881bc99db6207f55f406c1f0df030fb5eeeb6a8da1deb65c4b25427942847d29",
+      "gasUsed": "769420"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xe0e75840f7d03b5d618ddbda3d35801315d308a6c9d25cc873f5d5861ef8640f",
+      "gasUsed": "730150"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x18e070d758979807374558ddef7b70225142760d5915b3ede0f9dacc91b14cae",
+      "gasUsed": "713050"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xf8fc0bd86429d4fa75ab9ab400e10a8d92a14dfc1e1427ea14345da16fb98cb0",
+      "gasUsed": "713050"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0x635a13d64ea4f0c59402a17dafb06043e0db9eb577e5f26f817d97c77eec8c8f",
+      "gasUsed": "713050"
+    },
+    {
+      "label": "local upkeep",
+      "hash": "0xaa76e225d6c53058434b498defd704be515d14fc7e34070cc9ce9344f2eb2513",
+      "gasUsed": "706722"
+    }
+  ],
+  "sourceBlock": 524517798,
+  "sourceBlockHash": "0x739339c476e7b4ecfde3e1070c6dfac69110d1d992229c2700ed79c2dee3ca0e",
+  "implementationsBefore": {
+    "engine": "0xa50F1EF3Ae42D8aCE07d1C0747a33A1C8f030193",
+    "vault": "0x6e84c0ED4056bA6E94dFF5008aBE811738f8f3cC"
+  },
+  "disabledMasksRejectedOnAllMarkets": true,
+  "checkUpkeepMeasurements": [
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 1,
+        "marketId": 0,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 0
+      },
+      "gas": "51303"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "549751"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 60,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "710731"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 120,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "871711"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 180,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1032691"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 240,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1193671"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 1,
+        "roundId": "177",
+        "nextCursor": 300,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1296587"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "552133"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 60,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "713113"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 120,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "874093"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 180,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1035073"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 240,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1196053"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 2,
+        "roundId": "177",
+        "nextCursor": 300,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1298969"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 0,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "554515"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 60,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "715495"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 120,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "876475"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 180,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1037455"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 240,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1198435"
+    },
+    {
+      "kind": 0,
+      "lane": "0",
+      "job": {
+        "kind": 2,
+        "marketId": 3,
+        "roundId": "177",
+        "nextCursor": 300,
+        "payoutShardIndex": 0,
+        "payoutShardWidth": 1
+      },
+      "gas": "1301351"
+    }
+  ],
+  "legacyBetsAndWithdrawalsSurvived": true,
+  "launchCap": {
+    "legsPerMarket": 352,
+    "markets": [
+      {
+        "marketId": 1,
+        "expectedBalance": "100045057142857142856992"
+      },
+      {
+        "marketId": 2,
+        "expectedBalance": "100045056992"
+      },
+      {
+        "marketId": 3,
+        "expectedBalance": "100045057142857142856992"
+      }
+    ],
+    "round": "177",
+    "callbackGas": "326519",
+    "worstCheckUpkeepInnerCallGas": "1301351",
+    "gasTarget": "1500000",
+    "withinGasTarget": true,
+    "rejectedNextLeg": true,
+    "blockedWithdrawalDrainWhileBetsLocked": true,
+    "placementClock": "one local EVM second per placement block; real ROUND_DURATION unchanged",
+    "payoutLaneCount": 1,
+    "maxPayoutsPerCall": 60
+  },
+  "mainnetImplementationsUnchanged": true,
+  "functionalChecksPassed": true
+}
