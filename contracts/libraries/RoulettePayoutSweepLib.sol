@@ -5,6 +5,8 @@ import { IBankVault } from "../interfaces/IBankVault.sol";
 import { RouletteBetLib } from "./RouletteBetLib.sol";
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
 import { RouletteMaskBetLib } from "./RouletteMaskBetLib.sol";
+import { RouletteDualBetLib } from "./RouletteDualBetLib.sol";
+import { RouletteDualBetRules } from "./RouletteDualBetRules.sol";
 import { RoulettePayoutMulLib } from "./RoulettePayoutMulLib.sol";
 
 /// @dev Linked library: flattened winner-stream traversal for payout preview (offloads `RouletteEngine`).
@@ -23,13 +25,12 @@ library RoulettePayoutSweepLib {
         uint256 modWin = randomWords[0] % 37;
         uint8 winningNumber = uint8(modWin);
         gr.winningNumber = winningNumber;
-        snapshotRoundMarketWinningCounts($, roundId, winningNumber);
-
         uint8 jackpotNumber = uint8(randomWords[1] % 37);
         $.roundJackpotNumber[roundId] = jackpotNumber;
         if (winningNumber == jackpotNumber) {
             gr.jackpotTriggered = true;
         }
+        snapshotRoundMarketWinningCounts($, roundId, winningNumber);
 
         $._pendingRequestId = 0;
 
@@ -216,6 +217,10 @@ library RoulettePayoutSweepLib {
         gPos = _accumulateCountShards(
             RouletteMaskBetLib.winCount($.roundMaskWinCounts[roundId][marketId], winningNumber), gPos, shards, laneCount
         );
+        _accumulateCountShards(
+            RouletteDualBetLib.paymentCount($.roundDualBets[roundId][marketId], winningNumber, $.roundJackpotNumber[roundId]),
+            gPos, shards, laneCount
+        );
 
         RouletteEngineStorageLib.MarketRoundState storage mr = $.marketRoundStateByRound[roundId][marketId];
         uint256 total;
@@ -301,6 +306,7 @@ library RoulettePayoutSweepLib {
         c = _sweepDozen($, c, out, wt);
         c = _sweepFlats($, c, out, wt);
         c = _sweepMasks($, c, out, winningNumber);
+        _sweepDual($, c, out, winningNumber);
 
         written = c.payoutCount;
         assembly {
@@ -510,6 +516,35 @@ library RoulettePayoutSweepLib {
             }
         }
         return c;
+    }
+
+    function _sweepDual(
+        RouletteEngineStorageLib.Layout storage $,
+        PayoutSweepCtx memory c,
+        IBankVault.Payout[] memory out,
+        uint8 winningNumber
+    ) private view {
+        if (c.payoutCount >= c.payoutMax) return;
+        RouletteEngineStorageLib.DualBetEntry[] storage bets = $.roundDualBets[c.rid][c.mid].bets;
+        uint256 len = bets.length;
+        if (len == 0) return;
+        uint8 jackpot = $.roundJackpotNumber[c.rid];
+        for (uint256 i; i < len && c.payoutCount < c.payoutMax; ++i) {
+            RouletteEngineStorageLib.DualBetEntry storage entry = bets[i];
+            uint8 result = RouletteDualBetRules.outcome(
+                entry.variant, entry.rouletteMask, entry.jackpotMask, winningNumber, jackpot
+            );
+            if (result == 0) continue;
+            uint256 position = c.gPos++;
+            if (c.shardWidth > 1) {
+                if (position % c.shardWidth != c.shardIndex || c.shardSeen++ < c.cursorStart) continue;
+            } else if (position < c.cursorStart) {
+                continue;
+            }
+            uint256 amount = entry.amount;
+            if (result == 2) amount = amount * entry.payoutNumerator / entry.payoutDenominator;
+            out[c.payoutCount++] = IBankVault.Payout(entry.player, amount);
+        }
     }
 
     function _consumeBucket(

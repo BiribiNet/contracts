@@ -4,6 +4,8 @@ pragma solidity ^0.8.27;
 import { IBankVault } from "../interfaces/IBankVault.sol";
 import { IRouletteBetErrors } from "../interfaces/IRouletteBetErrors.sol";
 import { RouletteEngineStorageLib } from "./RouletteEngineStorageLib.sol";
+import { RouletteDualBetLib } from "./RouletteDualBetLib.sol";
+import { RouletteDualBetRules } from "./RouletteDualBetRules.sol";
 
 /// @notice Linked library: mask bets (`BET_MASK = 16`, `docs/spec-mask-bets-v1.md`).
 /// @dev A mask leg covers an arbitrary set `S ⊂ {0..36}`, `2 ≤ |S| ≤ 35`, and pays `floor(amount × 36 / |S|)`
@@ -58,12 +60,9 @@ library RouletteMaskBetLib {
         uint256[3] counts;
     }
 
-    /// @notice Records every `BET_MASK` leg of one `recordBet` payload; classic legs are skipped.
-    /// @dev Caller (the engine) has already summed every leg into the transaction total. Checks per leg:
-    /// encoding/size, zero stake, `minBet` per leg, guard; then the per-market leg cap once for the batch.
-    /// The liability cap is enforced by `RouletteLiabilityMathLib.assertSolventAfterBet` with the same
-    /// free-liquidity figure as the solvency check.
-    function recordMaskLegs(
+    /// @notice Records mask and two-ball legs of one roulette ticket.
+    /// @dev The engine checks the ticket total and market solvency after recording.
+    function recordSpecialLegs(
         RouletteEngineStorageLib.Layout storage $,
         uint64 roundId,
         uint32 marketId,
@@ -71,32 +70,56 @@ library RouletteMaskBetLib {
         address bank,
         uint256[] memory betTypes,
         uint256[] memory numbers,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint8 specialLegs
     ) external {
-        uint32 maxLegs = $.maxMaskLegsPerMarketRound[marketId];
-        if (maxLegs == 0) revert MaskBetsDisabled();
+        bool hasMask = specialLegs & 1 != 0;
+        if (hasMask && $.maxMaskLegsPerMarketRound[marketId] == 0) revert MaskBetsDisabled();
 
         LegContext memory ctx;
         ctx.roundId = roundId;
         ctx.marketId = marketId;
         ctx.player = player;
         ctx.minBet = IBankVault(bank).minBet();
-        uint256[3] storage counters = $.roundMaskWinCounts[roundId][marketId];
-        ctx.counts = [counters[0], counters[1], counters[2]];
-
-        uint256 legCount = betTypes.length;
-        for (uint256 i; i < legCount; ) {
-            if (betTypes[i] == BET_MASK) _recordLeg($, ctx, numbers[i], amounts[i]);
-            unchecked {
-                ++i;
-            }
+        if (hasMask) {
+            uint256[3] storage counters = $.roundMaskWinCounts[roundId][marketId];
+            ctx.counts = [counters[0], counters[1], counters[2]];
         }
 
-        if ($.roundMaskBets[roundId][marketId].length > maxLegs) revert MaskLegCapExceeded();
+        for (uint256 i; i < betTypes.length; ++i) {
+            if (betTypes[i] == BET_MASK) _recordLeg($, ctx, numbers[i], amounts[i]);
+            else if (betTypes[i] == RouletteDualBetRules.BET_DUAL) _recordDualLeg($, ctx, numbers[i], amounts[i]);
+        }
+
+        _finalizeSpecialLegs($, ctx, hasMask);
+    }
+
+    function _finalizeSpecialLegs(RouletteEngineStorageLib.Layout storage $, LegContext memory ctx, bool hasMask)
+        private
+    {
+        uint256 maskLegCount = $.roundMaskBets[ctx.roundId][ctx.marketId].length;
+        RouletteDualBetLib.checkCombinedCapacity(maskLegCount, $.roundDualBets[ctx.roundId][ctx.marketId].bets.length);
+        if (!hasMask) return;
+        if (maskLegCount > $.maxMaskLegsPerMarketRound[ctx.marketId]) revert MaskLegCapExceeded();
+        uint256[3] storage counters = $.roundMaskWinCounts[ctx.roundId][ctx.marketId];
         counters[0] = ctx.counts[0];
         counters[1] = ctx.counts[1];
         counters[2] = ctx.counts[2];
-        $.roundMaskWeightedPayout[roundId][marketId] += ctx.addedPayout;
+        $.roundMaskWeightedPayout[ctx.roundId][ctx.marketId] += ctx.addedPayout;
+    }
+
+    function _recordDualLeg(RouletteEngineStorageLib.Layout storage $, LegContext memory ctx, uint256 raw, uint256 amount)
+        private
+    {
+        RouletteDualBetLib.record(
+            $.roundDualBets[ctx.roundId][ctx.marketId], $.dualBetLimits[ctx.marketId], ctx.player, ctx.minBet, raw, amount
+        );
+    }
+
+    function setDualBetLimits(
+        RouletteEngineStorageLib.Layout storage $, uint32 marketId, uint32 maxLegs, uint16 liabilityBps, uint8 variants
+    ) external {
+        RouletteDualBetLib.setLimits($, marketId, maxLegs, liabilityBps, variants);
     }
 
     function setMaskBetLimits(
