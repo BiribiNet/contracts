@@ -104,11 +104,11 @@ describe("Mask bets v1 — validation and encoding", function () {
         }
     });
 
-    it("rejects a zero-stake mask leg (ZeroBetAmount) and bet types above 16 (InvalidBetType)", async function () {
+    it("rejects a zero-stake mask leg (ZeroBetAmount) and bet types above 17 (InvalidBetType)", async function () {
         const s = await deployMaskFixture({ maxLegs: LAUNCH_MAX_LEGS });
         await expect(place(s, [{ betType: 1n, number: 7n, amount: s.unit }, maskLeg([1, 2], 0n)]))
             .to.be.rejectedWith(rejectWith("ZeroBetAmount()"));
-        await expect(place(s, [{ betType: 17n, number: maskOf([1, 2]), amount: s.unit }]))
+        await expect(place(s, [{ betType: 18n, number: maskOf([1, 2]), amount: s.unit }]))
             .to.be.rejectedWith(rejectWith("InvalidBetType()"));
     });
 

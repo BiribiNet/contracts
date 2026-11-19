@@ -154,6 +154,34 @@ library RouletteEngineStorageLib {
         mapping(uint32 => uint32) maxMaskLegsPerMarketRound;
         /// @dev Per market cap on `roundMaskWeightedPayout`, in bps of the free liquidity at bet time.
         mapping(uint32 => uint16) maxMaskLiabilityBps;
+        mapping(uint64 => mapping(uint32 => DualRound)) roundDualBets;
+        mapping(uint32 => DualLimits) dualBetLimits;
+    }
+
+    struct DualLimits {
+        uint32 maxLegs;
+        uint16 liabilityBps;
+        uint8 enabledVariants;
+    }
+
+    struct DualBetEntry {
+        address player;
+        uint40 rouletteMask;
+        uint40 jackpotMask;
+        uint8 variant;
+        uint128 amount;
+        uint16 payoutNumerator;
+        uint16 payoutDenominator;
+    }
+
+    struct DualRound {
+        DualBetEntry[] bets;
+        uint256 weightedPayout;
+        uint32[8] fixedCounts;
+        mapping(uint256 => uint32) winningPairs;
+        mapping(uint256 => uint32) refundMaskPairs;
+        uint32[37] refundRoulette;
+        uint32[37] refundJackpot;
     }
 
     /// @dev Two slots: `player | mask | size` (slot 0) then `amount` (slot 1).

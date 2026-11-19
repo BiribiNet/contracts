@@ -51,6 +51,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     uint8 private constant BET_TRIO_023 = 15;
     /// @dev Arbitrary set of 2..35 numbers, recorded by `RouletteMaskBetLib` (never through `BetEntry`).
     uint8 private constant BET_MASK = 16;
+    uint8 private constant BET_DUAL = 17;
 
     uint32 public constant DEFAULT_PAYOUT_LANE_COUNT = 10;
     /// @dev Matches Chainlink VRF request expiry: fund LINK inside this window and the original request fulfills.
@@ -195,6 +196,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
     event UpkeepSchedulerUpdated(address previousScheduler, address newScheduler);
     /// @dev Emitted by `RouletteMaskBetLib.setMaskBetLimits` (declared here for the engine ABI).
     event MaskBetLimitsUpdated(uint32 marketId, uint32 maxLegsPerRound, uint16 maxLiabilityBps);
+    event DualBetLimitsUpdated(uint32 marketId, uint32 maxLegs, uint16 liabilityBps, uint8 enabledVariants);
 
     modifier onlyScheduler() {
         if (msg.sender != _s().UPKEEP_SCHEDULER) revert UnauthorizedScheduler();
@@ -376,6 +378,21 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         _registerMarket(marketId, bank);
     }
 
+    /// @notice Configures future Two balls stakes for a market. Zero in any limit disables placement.
+    /// @dev Bits 0..7 enable individual variants. Accepted legs settle independently of this setting.
+    function setDualBetLimits(uint32 marketId, uint32 maxLegs, uint16 liabilityBps, uint8 enabledVariants)
+        external onlyRole(ENGINE_ROUND_ROLE)
+    {
+        RouletteMaskBetLib.setDualBetLimits(_s(), marketId, maxLegs, liabilityBps, enabledVariants);
+    }
+
+    function dualBetState(uint32 marketId)
+        external view returns (uint32 maxLegs, uint16 liabilityBps, uint8 enabledVariants)
+    {
+        RouletteEngineStorageLib.DualLimits storage limits = _s().dualBetLimits[marketId];
+        return (limits.maxLegs, limits.liabilityBps, limits.enabledVariants);
+    }
+
     function _registerMarket(uint32 marketId, address bank) private {
         IMarketRegistry.MarketConfig memory cfg = _s().REGISTRY.getMarket(marketId);
         if (bank != cfg.bank) revert InvalidRound();
@@ -413,7 +430,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
             emit RoundCountdownStarted(roundId, marketId, lockAt);
         }
 
-        (uint256 runningSum, bool hasMaskLeg) = _recordMultiBetPayload($, roundId, marketId, player, betData, cfg.bank);
+        (uint256 runningSum, uint8 specialLegs) = _recordMultiBetPayload($, roundId, marketId, player, betData, cfg.bank);
         if (runningSum != amount) revert IRouletteBetErrors.InvalidBetNumber();
         mr.totals.addBet(amount);
         emit BetRecorded(marketId, roundId, player, amount, betData);
@@ -423,7 +440,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         // (this round's roulette stakes, `amount` included); the stakes back this market's own liability,
         // so they are added back, and `amount` once more for the tokens still to arrive.
         uint256 freeLiquidity = IERC4626(cfg.bank).totalAssets() + mr.totals.totalAmount + amount;
-        RouletteLiabilityMathLib.assertSolventAfterBet($, roundId, marketId, freeLiquidity, hasMaskLeg);
+        RouletteLiabilityMathLib.assertSolventAfterBet($, roundId, marketId, freeLiquidity, specialLegs);
     }
 
     function _applyReferral(address player, uint256 amount, address referral) private {
@@ -448,7 +465,7 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         address player,
         bytes calldata betData,
         address bank
-    ) private returns (uint256 runningSum, bool hasMaskLeg) {
+    ) private returns (uint256 runningSum, uint8 specialLegs) {
         (uint256[] memory betTypes, uint256[] memory numbers, uint256[] memory amounts) =
             abi.decode(betData, (uint256[], uint256[], uint256[]));
         uint256 len = betTypes.length;
@@ -458,13 +475,13 @@ contract RouletteEngine is Initializable, AccessControlUpgradeable, UUPSUpgradea
         for (uint256 i; i < len; ) {
             a = amounts[i];
             runningSum += a;
-            if (betTypes[i] == BET_MASK) hasMaskLeg = true;
+            if (betTypes[i] == BET_MASK) specialLegs |= 1;
+            else if (betTypes[i] == BET_DUAL) specialLegs |= 2;
             else _recordSingleBet($, roundId, marketId, player, a, betTypes[i], numbers[i]);
             unchecked { ++i; }
         }
-        // One library call validates and records every mask leg (minBet and previous outcome read once).
-        if (hasMaskLeg) {
-            RouletteMaskBetLib.recordMaskLegs($, roundId, marketId, player, bank, betTypes, numbers, amounts);
+        if (specialLegs != 0) {
+            RouletteMaskBetLib.recordSpecialLegs($, roundId, marketId, player, bank, betTypes, numbers, amounts, specialLegs);
         }
     }
 

@@ -63,7 +63,7 @@ function compareLayout(before: Layout, after: Layout, renamed: Record<string, st
 }
 
 describe("Mask bets v1 — storage layouts (engine append-only, vault unchanged)", function () {
-    it("engine: ERC-7201 Layout keeps all 45 fields and appends exactly the five mask fields", async function () {
+    it("engine: ERC-7201 Layout preserves the existing fields and appends the special-bet fields", async function () {
         const baseline = readJson("reports/mask-bets-v1/storage-baseline-master.json").engine as Layout;
         const now = await probeLayout("EngineStorageLayoutProbe");
         compareLayout(baseline, now);
@@ -74,6 +74,8 @@ describe("Mask bets v1 — storage layouts (engine append-only, vault unchanged)
             ["roundMaskWeightedPayout", "mapping(uint64 => mapping(uint32 => uint256))"],
             ["maxMaskLegsPerMarketRound", "mapping(uint32 => uint32)"],
             ["maxMaskLiabilityBps", "mapping(uint32 => uint16)"],
+            ["roundDualBets", "mapping(uint64 => mapping(uint32 => struct RouletteEngineStorageLib.DualRound))"],
+            ["dualBetLimits", "mapping(uint32 => struct RouletteEngineStorageLib.DualLimits)"],
         ]);
         // Every new field takes a fresh slot after the last existing one.
         const lastSlot = BigInt(baseline.storage[baseline.storage.length - 1].slot);

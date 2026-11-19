@@ -13,6 +13,7 @@ library RouletteLiabilityMathLib {
     /// @dev Same selector as `RouletteEngine.InsufficientBankForMaxPayout`.
     error InsufficientBankForMaxPayout();
     error MaskLiabilityCapExceeded();
+    error DualLiabilityCapExceeded();
 
     /// @notice Single post-bet check: buffered liability (classic + mask term) against free liquidity, then
     /// the per-market mask liability cap when this bet carried a mask leg.
@@ -26,15 +27,18 @@ library RouletteLiabilityMathLib {
         uint64 roundId,
         uint32 marketId,
         uint256 freeLiquidity,
-        bool hasMaskLeg
+        uint8 specialLegs
     ) external view {
         if (freeLiquidity < bufferedMarketMaxLiabilityFromRound($, roundId, marketId)) {
             revert InsufficientBankForMaxPayout();
         }
-        if (!hasMaskLeg) return;
-        uint256 maskPayout = $.roundMaskWeightedPayout[roundId][marketId];
-        if (maskPayout * BPS_DENOMINATOR > uint256($.maxMaskLiabilityBps[marketId]) * freeLiquidity) {
+        if (specialLegs & 1 != 0 && $.roundMaskWeightedPayout[roundId][marketId] * BPS_DENOMINATOR
+            > uint256($.maxMaskLiabilityBps[marketId]) * freeLiquidity) {
             revert MaskLiabilityCapExceeded();
+        }
+        if (specialLegs & 2 != 0 && $.roundDualBets[roundId][marketId].weightedPayout * BPS_DENOMINATOR
+            > uint256($.dualBetLimits[marketId].liabilityBps) * freeLiquidity) {
+            revert DualLiabilityCapExceeded();
         }
     }
     function assertPayoutWithinLiability(
@@ -110,7 +114,7 @@ library RouletteLiabilityMathLib {
         i.col2 = $.roundColumnBetsSum[rid][mid][2];
         i.col3 = $.roundColumnBetsSum[rid][mid][3];
         i.otherBetsWeightedPayout = $.roundOtherBetsWeightedPayout[rid][mid];
-        i.maskWeightedPayout = $.roundMaskWeightedPayout[rid][mid];
+        i.maskWeightedPayout = $.roundMaskWeightedPayout[rid][mid] + $.roundDualBets[rid][mid].weightedPayout;
         return bufferedMarketMaxLiability(i);
     }
 }

@@ -81,7 +81,10 @@ describe("Mask bets v1 — mainnet upgrade script (local Hardhat network only)",
         expect(plan.steps[3].to).to.equal(d.engine);
         expect(plan.steps[4].to).to.equal(d.beacon);
         expect(plan.checks.window.phase).to.equal("Open");
-        expect(plan.checks.storage.appended).to.have.length(5);
+        expect(plan.checks.storage.appended).to.deep.equal([
+            "roundMaskBets", "roundMaskWinCounts", "roundMaskWeightedPayout", "maxMaskLegsPerMarketRound",
+            "maxMaskLiabilityBps", "roundDualBets", "dualBetLimits",
+        ]);
         expect(plan.checks.libraries.rows.filter((r: { action: string }) => r.action === "reuse")).to.have.length(10);
         expect(Upgrade.printPlan(plan, d)).to.include("DRY RUN");
     });
