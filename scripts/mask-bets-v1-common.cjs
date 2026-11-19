@@ -246,7 +246,8 @@ function probeLayout(root,probe) {
   return {storage:layout.types[layout.storage[0].type].members,types:layout.types};
 }
 /**
- * Engine: master layout (deployed engine) is a strict prefix of the new one, the five mask fields appended.
+ * Engine: the baseline is a strict prefix of the compiled layout. The only supported suffixes are
+ * the five mask fields, or those same fields followed by the two Two balls fields.
  * Vault: the deployed 14-field layout (incident report) is unchanged, one field renamed. Both contracts keep
  * no ordinary (non-namespaced) storage.
  */
@@ -256,7 +257,9 @@ function validateStorage(artifacts,root=ROOT) {
   const engineNow=probeLayout(root,'EngineStorageLayoutProbe');
   compareLayout(engineBefore,engineNow);
   const appended=engineNow.storage.slice(engineBefore.storage.length).map(member=>member.label);
-  assert.deepEqual(appended,['roundMaskBets','roundMaskWinCounts','roundMaskWeightedPayout','maxMaskLegsPerMarketRound','maxMaskLiabilityBps'],'Unexpected appended engine fields');
+  const expected=['roundMaskBets','roundMaskWinCounts','roundMaskWeightedPayout','maxMaskLegsPerMarketRound','maxMaskLiabilityBps'];
+  if(appended.length===expected.length+2)expected.push('roundDualBets','dualBetLimits');
+  assert.deepEqual(appended,expected,'Unexpected appended engine fields');
   const vaultDeployed=read('reports/incident-2026-11-04/storage-validation.json').contracts
     .find(row=>row.name==='BankVault4626').layouts.afterRemoval.custom;
   const vaultNow=probeLayout(root,'VaultStorageLayoutProbe');
